@@ -1,0 +1,13 @@
+[package]
+name = "wordchuck"
+version = "0.0.10"
+description = "Rename stub crate for wordchipper"
+repository.workspace = true
+rust-version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true
