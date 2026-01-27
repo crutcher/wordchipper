@@ -9,8 +9,8 @@ members = [
 ]
 
 [workspace.package]
-version = "0.0.9"
-repository = "https://github.com/crutcher/brn-nanochat"
+version = "0.0.10"
+repository = "https://github.com/crutcher/wordchipper"
 rust-version = "1.93.0"
 edition = "2024"
 license = "MIT"

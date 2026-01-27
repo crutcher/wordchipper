@@ -2,20 +2,17 @@
 <module type="EMPTY_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/crates/nanochat/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/crates/nanochat-data/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/crates/poke/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/crates/nanochat-data/examples" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/crates/nanochat-data/examples/pull/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/crates/wordchuck/examples" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/crates/wordchuck/examples/tokenizer_trainer/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/crates/wordchuck/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/crates/nanochat-data/examples/pull_shards/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/crates/wordchuck-trainer/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/crates/wordchuck/examples/token-cli/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/wordchipper-data/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/wordchipper-data/examples/pull/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/wordchipper-data/examples/pull_shards/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/wordchipper-data/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/wordchipper/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/wordchipper/examples/token-cli/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/wordchipper/examples/tokenizer_trainer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/wordchipper/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/crates/nanochat/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
-      <excludeFolder url="file://$MODULE_DIR$/crates/wordchuck/target" />
+      <excludeFolder url="file://$MODULE_DIR$/crates/wordchipper/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

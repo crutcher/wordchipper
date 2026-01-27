@@ -1,0 +1,18 @@
+[package]
+name = "pull_shards"
+repository.workspace = true
+rust-version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+burn = { workspace = true, features = ["network"] }
+wordchipper-data = { path = "../.." }
+
+clap = { workspace = true, features = ["derive"] }
+anyhow = { workspace = true }
+

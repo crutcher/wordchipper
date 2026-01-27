@@ -1,0 +1,108 @@
+[package]
+name = "wordchipper"
+description = "LLM Tokenizer Library"
+repository.workspace = true
+version.workspace = true
+license.workspace = true
+
+edition.workspace = true
+rust-version.workspace = true
+
+[package.metadata.docs.rs]
+all-features = true
+
+
+[lints]
+workspace = true
+
+
+[features]
+default = [
+    "client",
+]
+
+# Features for typical client usage.
+client = [
+    "ahash",
+    "rayon",
+    "std",
+]
+
+# Enable to have access to the vocab training code.
+training = [
+    "compact_str",
+    "dary_heap",
+    "std",
+]
+
+
+# Tested in CI; but I'm unsure I've fully covered it.
+# When "std" is not enabled, "no_std" is required.
+std = [
+    "anyhow/std",
+    "dep:base64",
+    "dep:parking_lot",
+    "fancy-regex/default",
+    "log/std",
+    "num-traits/std",
+    "regex/default",
+]
+no_std = [
+    "hashbrown/alloc"
+]
+
+# We can switch HashMap/HashSet implementations for the whole crate.
+# This is done in the "src/types.rs" file.
+#
+# - mac hardware: fasster to enable ahash
+# - 2020 desktop linux: faster decode, no encode benefit.
+ahash = [
+    "dep:ahash",
+    "std",
+]
+
+# Enable rayon based parallelism.
+rayon = [
+    "dep:rayon",
+    "std"
+]
+
+# Enable tracing instrumentation.
+tracing = [
+    "tracing/attributes",
+]
+
+
+[dependencies]
+fancy-regex = { workspace = true, features = ["unicode"] }
+regex = { workspace = true, features = ["unicode"] }
+
+# no-default deps
+anyhow = { workspace = true }
+log = { workspace = true }
+num-traits = { workspace = true }
+
+# "std" feature deps:
+base64 = { workspace = true, optional = true }
+parking_lot = { workspace = true, optional = true }
+
+# "no_std" feature deps:
+hashbrown = { workspace = true, optional = true }
+
+# "ahash" feature deps:
+ahash = { workspace = true, optional = true }
+
+# "tracing" feature deps:
+tracing = { workspace = true, optional = true }
+
+# "rayon" feature deps:
+rayon = { workspace = true, optional = true }
+
+# "training" feature deps:
+compact_str = { workspace = true, optional = true }
+dary_heap = { workspace = true, optional = true }
+
+
+[dev-dependencies]
+compact_str = { workspace = true }
+tempdir = { workspace = true }

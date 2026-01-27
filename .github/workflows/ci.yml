@@ -42,10 +42,10 @@ jobs:
         run: cargo clippy --no-deps
 
       - name: Test
-        run: cargo test --workspace --exclude nanochat
+        run: cargo test --workspace
 
       - name: Test Training
-        run: cargo test -p wordchuck --features training
+        run: cargo test -p wordchipper --features training
 
       - name: Test no-default-features
-        run: cargo test -p wordchuck --no-default-features --features no_std --tests
+        run: cargo test -p wordchipper --no-default-features --features no_std --tests

@@ -1,12 +1,5 @@
 # wordchipper - HPC Rust BPE Tokenizer
 
-## Crates
-
-- [wordchipper](crates/wordchipper) - HPC BPE Tokenizer; soon to be extracted into its own crate.
-- [wordchipper-data](crates/wordchipper-data) - Nanochat Data Shard Pull / Cache lib.
-
-## Overview
-
 This is a high-performance rust BPE tokenizer trainer/encoder/decoder.
 
 It is inspired by [nanochat rustbpe](https://github.com/karpathy/nanochat/tree/master/rustbpe)
