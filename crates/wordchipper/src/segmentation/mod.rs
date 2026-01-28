@@ -12,5 +12,7 @@
 pub mod segmentation_config;
 pub mod text_segmentor;
 
+#[doc(inline)]
 pub use segmentation_config::SegmentationConfig;
+#[doc(inline)]
 pub use text_segmentor::{SpanRef, TextSegmentor};

@@ -30,5 +30,7 @@
 pub mod merge_heap_encoder;
 pub mod token_encoder;
 
+#[doc(inline)]
 pub use merge_heap_encoder::MergeHeapVocabEncoder;
+#[doc(inline)]
 pub use token_encoder::TokenEncoder;

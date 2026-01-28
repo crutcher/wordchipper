@@ -32,8 +32,13 @@ pub mod token_vocab;
 pub mod unified_vocab;
 pub mod utility;
 
+#[doc(inline)]
 pub use byte_vocab::ByteMapVocab;
+#[doc(inline)]
 pub use pair_vocab::PairMapVocab;
+#[doc(inline)]
 pub use span_vocab::SpanMapVocab;
+#[doc(inline)]
 pub use token_vocab::TokenVocab;
+#[doc(inline)]
 pub use unified_vocab::UnifiedTokenVocab;

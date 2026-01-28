@@ -78,6 +78,7 @@ pub mod rayon;
 pub mod training;
 
 #[cfg(feature = "download")]
+#[doc(inline)]
 pub use wordchipper_disk_cache as disk_cache;
 
 pub mod decoders;

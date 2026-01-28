@@ -1,4 +1,4 @@
-//! # wordchipper-disk-cache
+//! # Wordchipper Disk Cache
 #![warn(missing_docs)]
 
 use crate::path_resolver::PathResolver;
@@ -7,6 +7,7 @@ pub mod disk_cache;
 pub mod path_resolver;
 pub mod path_utils;
 
+#[doc(inline)]
 pub use disk_cache::{WordchipperDiskCache, WordchipperDiskCacheOptions};
 
 /// Environment variable key to override the default cache directory.

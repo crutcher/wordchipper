@@ -39,14 +39,16 @@
 //! [`regex_pool_supplier`]; which in some build environments will provide
 //! a thread local clone regex supplier, and in some, a simple clone implementation.
 
-pub mod exact_match_union;
 #[cfg(feature = "std")]
 pub mod regex_pool;
 
+pub mod exact_match_union;
 pub mod regex_supplier;
 pub mod regex_wrapper;
 
+#[doc(inline)]
 pub use regex_supplier::{RegexSupplier, RegexSupplierHandle};
+#[doc(inline)]
 pub use regex_wrapper::{ErrorWrapper, RegexWrapper, RegexWrapperHandle, RegexWrapperPattern};
 
 /// Build a [`RegexSupplierHandle`].

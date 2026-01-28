@@ -5,5 +5,7 @@
 mod rayon_decoder;
 mod rayon_encoder;
 
+#[doc(inline)]
 pub use rayon_decoder::ParallelRayonDecoder;
+#[doc(inline)]
 pub use rayon_encoder::ParallelRayonEncoder;
