@@ -15,5 +15,4 @@ arrow = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 similar = { workspace = true }
 wordchipper-data = { path = "../../../wordchipper-data" }
-wordchipper-disk-cache = { path = "../../../wordchipper-disk-cache" }
 wordchipper = { path = "../..", features = ["training"] }

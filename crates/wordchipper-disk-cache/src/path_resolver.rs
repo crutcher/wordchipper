@@ -31,6 +31,20 @@ impl PathResolver {
     }
 
     /// Resolve the cache directory for this config.
+    ///
+    /// Resolution Order:
+    /// 1. `path`, if present.
+    /// 2. ``env[$VAR]`` for each `self.cache_env_vars`; in order.
+    /// 3. `self.project_dirs().cache_dir()`, if present.
+    /// 4. `None`
+    ///
+    /// ## Project Dirs Behavior
+    ///
+    /// |Platform | Value                                                                 | Example                                             |
+    /// | ------- | --------------------------------------------------------------------- | --------------------------------------------------- |
+    /// | Linux   | `$XDG_CACHE_HOME`/`_project_path_` or `$HOME`/.cache/`_project_path_` | /home/alice/.cache/barapp                           |
+    /// | macOS   | `$HOME`/Library/Caches/`_project_path_`                               | /Users/Alice/Library/Caches/com.Foo-Corp.Bar-App    |
+    /// | Windows | `{FOLDERID_LocalAppData}`\\`_project_path_`\\cache                    | C:\Users\Alice\AppData\Local\Foo Corp\Bar App\cache |
     pub fn resolve_cache_dir<P: AsRef<Path>>(
         &self,
         path: Option<P>,
@@ -53,6 +67,20 @@ impl PathResolver {
     }
 
     /// Resolve the data directory for this config.
+    ///
+    /// Resolution Order:
+    /// 1. `path`, if present.
+    /// 2. ``env[$VAR]`` for each `self.data_env_vars`; in order.
+    /// 3. `self.project_dirs().data_dirs()`, if present.
+    /// 4. `None`
+    ///
+    /// ## Project Dirs Behavior
+    ///
+    /// |Platform | Value                                                                      | Example                                                       |
+    /// | ------- | -------------------------------------------------------------------------- | ------------------------------------------------------------- |
+    /// | Linux   | `$XDG_DATA_HOME`/`_project_path_` or `$HOME`/.local/share/`_project_path_` | /home/alice/.local/share/barapp                               |
+    /// | macOS   | `$HOME`/Library/Application Support/`_project_path_`                       | /Users/Alice/Library/Application Support/com.Foo-Corp.Bar-App |
+    /// | Windows | `{FOLDERID_LocalAppData}`\\`_project_path_`\\data                          | C:\Users\Alice\AppData\Local\Foo Corp\Bar App\data            |
     pub fn resolve_data_dir<P: AsRef<Path>>(
         &self,
         path: Option<P>,

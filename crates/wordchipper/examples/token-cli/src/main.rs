@@ -5,6 +5,7 @@ use similar::{ChangeTag, TextDiff};
 use std::sync::Arc;
 use std::time::Duration;
 use wordchipper::decoders::{DictionaryDecoder, TokenDecoder};
+use wordchipper::disk_cache::WordchipperDiskCache;
 use wordchipper::encoders::{MergeHeapVocabEncoder, TokenEncoder};
 use wordchipper::rayon::{ParallelRayonDecoder, ParallelRayonEncoder};
 use wordchipper::regex::{RegexWrapperPattern, regex_pool_supplier};
@@ -15,7 +16,6 @@ use wordchipper::vocab::public::openai::{
     OA_GPT2_R50K_BASE_TIKTOKEN, OA_GPT2_R50K_WORD_PATTERN, oa_gpt2_r50k_specials,
 };
 use wordchipper_data::dataset::DatasetCacheConfig;
-use wordchipper_disk_cache::disk_cache::WordchipperDiskCache;
 
 /// Example encoders trainer.
 #[derive(Parser, Debug)]

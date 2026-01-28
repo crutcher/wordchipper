@@ -10,7 +10,6 @@ use std::path::{Path, PathBuf};
 #[derive(Clone, Default, Debug)]
 pub struct WordchipperDiskCacheOptions {
     /// Optional path to the cache directory.
-    ///
     pub cache_dir: Option<PathBuf>,
 
     /// Optional path to the data directory.

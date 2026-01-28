@@ -7,6 +7,8 @@ pub mod disk_cache;
 pub mod path_resolver;
 pub mod path_utils;
 
+pub use disk_cache::{WordchipperDiskCache, WordchipperDiskCacheOptions};
+
 /// Environment variable key to override the default cache directory.
 pub const WORDCHIPPER_CACHE_DIR: &str = "WORDCHIPPER_CACHE_DIR";
 /// Environment variable key to override the default data directory.
