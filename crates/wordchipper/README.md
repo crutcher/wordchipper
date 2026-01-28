@@ -1,5 +1,11 @@
 # wordchipper - HPC Rust BPE Tokenizer
 
+[![Crates.io Version](https://img.shields.io/crates/v/wordchipper)](https://crates.io/crates/wordchipper)
+[![Documentation](https://img.shields.io/docsrs/wordchipper)](https://docs.rs/wordchipper/latest/wordchipper/)
+[![Test Status](https://github.com/crutcher/wordchipper/actions/workflows/ci.yml/badge.svg)](https://github.com/crutcher/wordchipper/actions/workflows/ci.yml)
+[![license](https://shields.io/badge/license-MIT-blue)](LICENSE)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/crutcher/wordchipper)
+
 ## Overview
 
 This is a high-performance rust BPE tokenizer trainer/encoder/decoder.
