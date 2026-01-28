@@ -4,8 +4,6 @@
 
 This is a high-performance rust BPE tokenizer trainer/encoder/decoder.
 
-It is inspired by [nanochat rustbpe](https://github.com/karpathy/nanochat/tree/master/rustbpe)
-
 The current status is productionization towards an alpha release.
 
 ## Crate Features
@@ -62,7 +60,7 @@ as well, to structure more direct ``regex`>`encode`` pipeline parallelism.
 This enables a number of ``tracing`` instrumentation points.
 This is only useful for timing tracing of the library itself.
 
-## Clients
+## Client Usage
 
 ### UnifiedTokenVocab
 
@@ -176,7 +174,7 @@ fn example<T: TokenType>(
 }
 ```
 
-### Training
+## Training Overview
 
 See `examples/tokenizer_trainer`.
 
@@ -310,3 +308,10 @@ real    3m36.164s
 user    10m34.735s
 sys     0m43.929s
 ```
+
+## Acknowledgements
+
+* Thank you to [@karpathy](https://github.com/karpathy) and [nanochat](https://github.com/karpathy/nanochat)
+  for the work on `rustbpe`.
+* Thank you to [tiktoken](https://github.com/openai/tiktoken) for their initial work in the rust tokenizer space.
+
