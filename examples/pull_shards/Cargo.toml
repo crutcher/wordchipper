@@ -11,7 +11,7 @@ workspace = true
 
 [dependencies]
 burn = { workspace = true, features = ["network"] }
-wordchipper-data = { path = "../.." }
+wordchipper-data = { path = "../../crates/wordchipper-data" }
 
 clap = { workspace = true, features = ["derive"] }
 anyhow = { workspace = true }

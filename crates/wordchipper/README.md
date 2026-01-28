@@ -97,26 +97,14 @@ use wordchipper::encoders::{MergeHeapVocabEncoder, TokenEncoder};
 use wordchipper::rayon::{ParallelRayonDecoder, ParallelRayonEncoder};
 use wordchipper::regex::{regex_pool_supplier, RegexWrapperPattern};
 use wordchipper::segmentation::{SegmentationConfig, TextSegmentor};
-use wordchipper::vocab::io::tiktoken_io::load_span_map_from_tiktoken_path;
-use wordchipper::vocab::public::openai::{oa_gpt2_r50k_specials, OA_GPT2_R50K_BASE_TIKTOKEN, OA_GPT2_R50K_WORD_PATTERN};
+use wordchipper::vocab::public::openai::load_o200k_harmony_vocab;
 use wordchipper::vocab::UnifiedTokenVocab;
+use wordchipper::disk_cache::WordchipperDiskCache;
 
 type T = u32;
 
-let pattern: RegexWrapperPattern = OA_GPT2_R50K_WORD_PATTERN.into();
-
-let r50k_tiktoken = OA_GPT2_R50K_BASE_TIKTOKEN;
-// If we had a download cache, we'd use OA_GPT_R50K_BASE_TIKTOKEN.url here:
-let span_map = load_span_map_from_tiktoken_path(tokenizer_file)?;
-
-let segmentation = SegmentationConfig::<T>::from_pattern(pattern.clone()).with_special_words(
-    oa_gpt2_r50k_specials()
-        .iter()
-        .map(|(s, t)| (s, T::from_usize(*t).unwrap())),
-);
-
-let vocab: Arc<UnifiedTokenVocab<T>> =
-    UnifiedTokenVocab::from_span_vocab(segmentation, span_map.into()).into();
+let mut disk_cache = WordchipperDiskCache::default();
+let vocab: Arc<UnifiedTokenVocab<T>> = load_o200k_harmony_vocab(&mut disk_cache)?.into();
 
 let encoder: MergeHeapVocabEncoder<T> =
     MergeHeapVocabEncoder::<T>::init_with_factory(vocab.clone(), regex_pool_supplier);

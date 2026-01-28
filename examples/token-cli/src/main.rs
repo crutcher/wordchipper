@@ -10,7 +10,7 @@ use wordchipper::rayon::{ParallelRayonDecoder, ParallelRayonEncoder};
 use wordchipper::regex::regex_pool_supplier;
 use wordchipper::segmentation::TextSegmentor;
 use wordchipper::vocab::UnifiedTokenVocab;
-use wordchipper::vocab::public::openai::experimental_load_gpt2_r50k;
+use wordchipper::vocab::public::openai::load_o200k_harmony_vocab;
 use wordchipper_data::dataset::DatasetCacheConfig;
 
 /// Example encoders trainer.
@@ -60,7 +60,7 @@ fn run_load(args: &Args) -> anyhow::Result<()> {
         .init()?;
 
     let mut disk_cache = WordchipperDiskCache::default();
-    let vocab: Arc<UnifiedTokenVocab<T>> = experimental_load_gpt2_r50k(&mut disk_cache)?.into();
+    let vocab: Arc<UnifiedTokenVocab<T>> = load_o200k_harmony_vocab(&mut disk_cache)?.into();
 
     let encoder: MergeHeapVocabEncoder<T> =
         MergeHeapVocabEncoder::<T>::init_with_factory(vocab.clone(), regex_pool_supplier);

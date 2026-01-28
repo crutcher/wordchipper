@@ -1,5 +1,6 @@
 [package]
 name = "wordchipper-disk-cache"
+description = "A disk cache for Wordchipper downloads"
 version.workspace = true
 repository.workspace = true
 rust-version.workspace = true
