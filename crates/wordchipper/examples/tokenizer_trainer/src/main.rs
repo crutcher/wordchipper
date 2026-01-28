@@ -10,7 +10,7 @@ use wordchipper::encoders::{MergeHeapVocabEncoder, TokenEncoder};
 use wordchipper::rayon::{ParallelRayonDecoder, ParallelRayonEncoder};
 use wordchipper::training::BinaryPairVocabTrainerOptions;
 use wordchipper::vocab::byte_vocab::ByteMapVocab;
-use wordchipper::vocab::io::tiktoken_io::save_span_map_to_tiktoken_path;
+use wordchipper::vocab::io::tiktoken_io::save_tiktoken_vocab_path;
 use wordchipper::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
 use wordchipper::vocab::{TokenVocab, UnifiedTokenVocab};
 use wordchipper_data::dataset::DatasetCacheConfig;
@@ -128,7 +128,7 @@ fn main() -> anyhow::Result<()> {
     println!("- vocab_size: {:?}", vocab.max_token());
 
     if let Some(path) = args.tiktoken_save_path {
-        save_span_map_to_tiktoken_path(vocab.span_vocab.span_map(), &path)?;
+        save_tiktoken_vocab_path(vocab.span_vocab.span_map(), &path)?;
         println!("- tiktoken vocab: {path:?}");
     }
 

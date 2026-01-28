@@ -124,7 +124,7 @@ use wordchipper::encoders::{MergeHeapVocabEncoder, TokenEncoder};
 use wordchipper::rayon::{ParallelRayonDecoder, ParallelRayonEncoder};
 use wordchipper::regex::{regex_pool_supplier, RegexWrapperPattern};
 use wordchipper::segmentation::{SegmentationConfig, TextSegmentor};
-use wordchipper::vocab::io::tiktoken_io::load_span_map_from_tiktoken_path;
+use wordchipper::vocab::io::load_tiktoken_vocab_path;
 use wordchipper::vocab::public::openai::{oa_gpt2_r50k_specials, OA_GPT2_R50K_BASE_TIKTOKEN, OA_GPT2_R50K_WORD_PATTERN};
 use wordchipper::vocab::UnifiedTokenVocab;
 
@@ -134,7 +134,7 @@ let pattern: RegexWrapperPattern = OA_GPT2_R50K_WORD_PATTERN.into();
 
 let r50k_tiktoken = OA_GPT2_R50K_BASE_TIKTOKEN;
 // If we had a download cache, we'd use OA_GPT_R50K_BASE_TIKTOKEN.url here:
-let span_map = load_span_map_from_tiktoken_path(tokenizer_file)?;
+let span_map = load_tiktoken_vocab_path(tokenizer_file)?;
 
 let segmentation = SegmentationConfig::<T>::from_pattern(pattern.clone()).with_special_words(
     oa_gpt2_r50k_specials()
@@ -230,7 +230,7 @@ Here:
 
 ```rust,no_run
 use wordchipper::training::bpe_trainer::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions};
-use wordchipper::vocab::io::tiktoken_io::save_span_map_to_tiktoken_path;
+use wordchipper::vocab::io::save_tiktoken_vocab_path;
 use wordchipper::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
 use wordchipper::vocab::{ByteMapVocab, UnifiedTokenVocab};
 use wordchipper::encoders::MergeHeapVocabEncoder;
@@ -276,7 +276,7 @@ fn example<I, S>(
         .into();
 
     if let Some(path) = tiktoken_save_path {
-        save_span_map_to_tiktoken_path(&vocab.span_vocab.span_map(), &path)
+        save_tiktoken_vocab_path(&vocab.span_vocab.span_map(), &path)
             .expect("failed to save tiktoken vocab");
         println!("- tiktoken vocab: {path:?}");
     }

@@ -10,7 +10,7 @@ use wordchipper::rayon::{ParallelRayonDecoder, ParallelRayonEncoder};
 use wordchipper::regex::{RegexWrapperPattern, regex_pool_supplier};
 use wordchipper::segmentation::{SegmentationConfig, TextSegmentor};
 use wordchipper::vocab::UnifiedTokenVocab;
-use wordchipper::vocab::io::tiktoken_io::load_span_map_from_tiktoken_path;
+use wordchipper::vocab::io::tiktoken_io::load_tiktoken_vocab_path;
 use wordchipper::vocab::public::openai::{
     OA_GPT2_R50K_BASE_TIKTOKEN, OA_GPT2_R50K_WORD_PATTERN, oa_gpt2_r50k_specials,
 };
@@ -73,7 +73,7 @@ fn run_load(
 
     let r50k_tiktoken = OA_GPT2_R50K_BASE_TIKTOKEN;
     // If we had a download cache, we'd use OA_GPT_R50K_BASE_TIKTOKEN.url here:
-    let span_map = load_span_map_from_tiktoken_path(tokenizer_file)?;
+    let span_map = load_tiktoken_vocab_path(tokenizer_file)?;
 
     let segmentation = SegmentationConfig::<T>::from_pattern(pattern.clone()).with_special_words(
         oa_gpt2_r50k_specials()

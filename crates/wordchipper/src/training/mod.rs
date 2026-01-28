@@ -37,7 +37,7 @@
 //!
 //! ```rust,no_run
 //! use wordchipper::training::bpe_trainer::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions};
-//! use wordchipper::vocab::io::tiktoken_io::save_span_map_to_tiktoken_path;
+//! use wordchipper::vocab::io::tiktoken_io::save_tiktoken_vocab_path;
 //! use wordchipper::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
 //! use wordchipper::vocab::{ByteMapVocab, UnifiedTokenVocab};
 //! use wordchipper::encoders::MergeHeapVocabEncoder;
@@ -83,7 +83,7 @@
 //!         .into();
 //!
 //!     if let Some(path) = tiktoken_save_path {
-//!         save_span_map_to_tiktoken_path(&vocab.span_vocab.span_map(), &path)
+//!         save_tiktoken_vocab_path(&vocab.span_vocab.span_map(), &path)
 //!             .expect("failed to save tiktoken vocab");
 //!         println!("- tiktoken vocab: {path:?}");
 //!     }
