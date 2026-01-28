@@ -1,27 +1,12 @@
 # wordchipper - HPC Rust BPE Tokenizer
 
+## Overview
+
 This is a high-performance rust BPE tokenizer trainer/encoder/decoder.
 
 It is inspired by [nanochat rustbpe](https://github.com/karpathy/nanochat/tree/master/rustbpe)
 
 The current status is productionization towards an alpha release.
-
-TODO:
-
-- New Name / New Repo. ( `wordchipper` conflicts, alas)
-- Pluggable URL/Local File Cache
-    - PreTrained
-    - TrainingShards
-- Benchmarks.
-- More complete Error handling (as `Result`s, not panics).
-- Tuning
-    - Instrument `tiktoken` (via `tracing`).
-    - Compare / fix perf differences.
-- Python/C*/Java Bindings?
-
-See:
-
-- [examples/tokenizer_trainer](examples/tokenizer_trainer)
 
 ## Crate Features
 

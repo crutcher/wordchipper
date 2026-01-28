@@ -1,5 +1,14 @@
 # wordchipper - HPC Rust BPE Tokenizer
 
+[![Crates.io Version](https://img.shields.io/crates/v/wordchipper)](https://crates.io/crates/wordchipper)
+[![Documentation](https://img.shields.io/docsrs/wordchipper)](https://docs.rs/wordchipper/latest/wordchipper/)
+[![Test Status](https://github.com/crutcher/wordchipper/actions/workflows/ci.yml/badge.svg)](https://github.com/crutcher/wordchipper/actions/workflows/ci.yml)
+[![license](https://shields.io/badge/license-MIT-blue)](LICENSE)
+
+I am usually available as `@crutcher` on the Burn Discord:
+
+* Burn Discord: [![Discord](https://img.shields.io/discord/1038839012602941528.svg?color=7289da&&logo=discord)](https://discord.gg/uPEBbYYDB6)
+
 ## Crates
 
 - [wordchipper](crates/wordchipper) - HPC BPE Tokenizer; soon to be extracted into its own crate.
@@ -28,7 +37,7 @@ TODO:
 
 See:
 
-- [examples/tokenizer_trainer](examples/tokenizer_trainer)
+- [examples/tokenizer_trainer](crates/wordchipper/examples/tokenizer_trainer)
 
 ## Crate Features
 
