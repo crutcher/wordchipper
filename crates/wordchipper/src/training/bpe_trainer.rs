@@ -420,7 +420,7 @@ where
 mod tests {
     use crate::alloc::sync::Arc;
     use crate::decoders::{DictionaryDecoder, TokenDecoder};
-    use crate::encoders::{MergeHeapVocabEncoder, TokenEncoder};
+    use crate::encoders::{DefaultTokenEncoder, TokenEncoder};
     use crate::training::BinaryPairVocabTrainerOptions;
     use crate::training::bpe_trainer::MergeJob;
     use crate::types::{check_is_send, check_is_sync};
@@ -469,7 +469,7 @@ mod tests {
 
         let vocab: Arc<UnifiedTokenVocab<T>> = trainer.train(byte_vocab.clone()).unwrap().into();
 
-        let encoder = MergeHeapVocabEncoder::<T>::init(vocab.clone());
+        let encoder = DefaultTokenEncoder::<T>::init(vocab.clone());
         check_is_send(&encoder);
         check_is_sync(&encoder);
 

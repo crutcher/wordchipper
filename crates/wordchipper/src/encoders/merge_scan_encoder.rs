@@ -9,14 +9,11 @@ use crate::types::TokenType;
 use crate::vocab::special_vocab::SpecialVocab;
 use crate::vocab::unified_vocab::UnifiedTokenVocab;
 
-/// A Span-lookup / ``(T, T) -> T`` merge heap [`TokenEncoder`].
+/// A Span-lookup / ``(T, T) -> T`` merge scan [`TokenEncoder`].
 ///
 /// Builds a working set on the append buffer.
-///
-/// More complex than [`super::merge_scan_encoder::MergeScanVocabEncoder`],
-/// but triggers fewer pair lookups.
 #[derive(Clone)]
-pub struct MergeHeapVocabEncoder<T: TokenType> {
+pub struct MergeScanVocabEncoder<T: TokenType> {
     /// Data for the encoders.
     pub data: Arc<UnifiedTokenVocab<T>>,
 
@@ -24,7 +21,7 @@ pub struct MergeHeapVocabEncoder<T: TokenType> {
     pub segmentor: Arc<TextSegmentor>,
 }
 
-impl<T: TokenType> MergeHeapVocabEncoder<T> {
+impl<T: TokenType> MergeScanVocabEncoder<T> {
     /// Construct an encoder from data.
     ///
     /// ## Arguments
@@ -82,7 +79,7 @@ impl<T: TokenType> MergeHeapVocabEncoder<T> {
     }
 }
 
-impl<T: TokenType> TokenEncoder<T> for MergeHeapVocabEncoder<T> {
+impl<T: TokenType> TokenEncoder<T> for MergeScanVocabEncoder<T> {
     fn segmentor(&self) -> &Arc<TextSegmentor> {
         &self.segmentor
     }
@@ -103,76 +100,33 @@ impl<T: TokenType> TokenEncoder<T> for MergeHeapVocabEncoder<T> {
             return;
         }
 
-        // We reuse the output buffer as our working memory.
-        // - `start` is the first index of the working memory buffer.
+        // Reuse the output buffer as our working memory.
+        // Append the byte-tokens to the buffer.
         let start = tokens.len();
-
-        // Define CURRENT as `tokens[start..end]`.
-        // - CURRENT[i] := tokens[start + i]
         self.append_tokens(span, tokens);
-        let mut end = tokens.len();
 
-        // Define PAIR_RANKS as `tokens[end..]`
-        // - there are `(end - start) - 1` items in PAIR_RANKS.
-        // - PAIR_RANKS[i] := tokens[end + i]
-        // - PAIR_RANKS[i] = pairs.get(&(CURRENT[i], CURRENT[i + 1]))
+        // Incrementally shrink the working memory (the new buffer end)
+        // Until we can no longer find pairs to merge.
+        let stop = start + 2;
+        while tokens.len() >= stop {
+            // Find the lowest ranked merge available.
+            if let Some((token, idx)) = tokens[start..]
+                .windows(2)
+                .enumerate()
+                .filter_map(|(idx, w)| self.lookup_pair(&(w[0], w[1])).map(|&token| (token, idx)))
+                .min()
+            {
+                // Adjust the window index.
+                let idx = start + idx;
 
-        let get_pair_rank = {
-            |tok: &mut [T], i: usize| {
-                let pair = &(tok[start + i], tok[start + i + 1]);
-                match self.lookup_pair(pair) {
-                    Some(&token) => token,
-                    None => T::max_value(),
-                }
-            }
-        };
-
-        for i in 1..(end - start) {
-            let rank = get_pair_rank(tokens, i - 1);
-            tokens.push(rank);
-        }
-
-        while let Some((t, i)) = tokens[end..]
-            .iter()
-            .enumerate()
-            .filter_map(|(i, &t)| {
-                if t == T::max_value() {
-                    None
-                } else {
-                    Some((t, i))
-                }
-            })
-            .min()
-        {
-            // At this point, i selects CURRENT[i], PAIR_RANKS[i] such that:
-            // - PAIR_RANKS[i] != max_value
-            // - PAIR_RANKS[i] is smallest
-
-            // We need to merge CURRENT[i..=i+1] and PAIR_RANKS[i..=i+1]
-
-            // Set CURRENT[i] to the new target rank.
-            tokens[start + i] = t;
-
-            if i > 0 {
-                // If there is a preceding token, recompute PAIR_RANKS[i-1].
-                tokens[end + i - 1] = get_pair_rank(tokens, i - 1);
-            }
-
-            // Drop PAIR_RANKS[i] and CURRENT[i+1].
-            // Order matters here for the indices.
-            tokens.remove(end + i);
-            tokens.remove(start + i + 1);
-
-            end -= 1;
-
-            if end + i < tokens.len() {
-                // If there is a following token, recompute PAIR_RANKS[i].
-                tokens[end + i] = get_pair_rank(tokens, i);
+                // buf[idx..=idx+1] (a, b) -> buf[idx] t
+                tokens[idx] = token;
+                tokens.remove(idx + 1);
+            } else {
+                // No more merges possible
+                break;
             }
         }
-
-        // Drop the PAIR_RANKS buffer.
-        tokens.truncate(end);
     }
 }
 
@@ -209,7 +163,7 @@ mod tests {
 
         let special_sample = "hello <|HI|> world";
 
-        let encoder = MergeHeapVocabEncoder::<T>::init(vocab.clone());
+        let encoder = MergeScanVocabEncoder::<T>::init(vocab.clone());
         check_is_send(&encoder);
         check_is_sync(&encoder);
 

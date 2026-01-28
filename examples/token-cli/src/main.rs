@@ -5,7 +5,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use wordchipper::decoders::{DictionaryDecoder, TokenDecoder};
 use wordchipper::disk_cache::WordchipperDiskCache;
-use wordchipper::encoders::{MergeHeapVocabEncoder, TokenEncoder};
+use wordchipper::encoders::{DefaultTokenEncoder, TokenEncoder};
 use wordchipper::rayon::{ParallelRayonDecoder, ParallelRayonEncoder};
 use wordchipper::regex::regex_pool_supplier;
 use wordchipper::segmentation::TextSegmentor;
@@ -62,8 +62,8 @@ fn run_load(args: &Args) -> anyhow::Result<()> {
     let mut disk_cache = WordchipperDiskCache::default();
     let vocab: Arc<UnifiedTokenVocab<T>> = load_o200k_harmony_vocab(&mut disk_cache)?.into();
 
-    let encoder: MergeHeapVocabEncoder<T> =
-        MergeHeapVocabEncoder::<T>::init_with_factory(vocab.clone(), regex_pool_supplier);
+    let encoder: DefaultTokenEncoder<T> =
+        DefaultTokenEncoder::<T>::init_with_factory(vocab.clone(), regex_pool_supplier);
     let encoder = ParallelRayonEncoder::new(encoder);
 
     let decoder = DictionaryDecoder::from_unified_vocab(vocab.clone());
