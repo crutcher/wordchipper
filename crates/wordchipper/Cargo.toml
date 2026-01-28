@@ -1,6 +1,6 @@
 [package]
 name = "wordchipper"
-description = "LLM Tokenizer Library"
+description = "HPC Rust LLM Tokenizer Library"
 repository.workspace = true
 version.workspace = true
 license.workspace = true

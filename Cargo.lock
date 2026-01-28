@@ -7622,6 +7622,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "wordchuck"
+version = "0.0.10"
+
+[[package]]
 name = "wrapcenum-derive"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
