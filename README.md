@@ -10,11 +10,6 @@ I am usually available as `@crutcher` on the Burn Discord:
 
 * Burn Discord: [![Discord](https://img.shields.io/discord/1038839012602941528.svg?color=7289da&&logo=discord)](https://discord.gg/uPEBbYYDB6)
 
-## Crates
-
-- [wordchipper](crates/wordchipper) - HPC BPE Tokenizer; soon to be extracted into its own crate.
-- [wordchipper-data](crates/wordchipper-data) - Nanochat Data Shard Pull / Cache lib.
-
 ## Overview
 
 This is a high-performance rust BPE tokenizer trainer/encoder/decoder.
