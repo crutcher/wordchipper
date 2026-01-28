@@ -6358,7 +6358,6 @@ dependencies = [
  "similar",
  "wordchipper",
  "wordchipper-data",
- "wordchipper-disk-cache",
 ]
 
 [[package]]
@@ -7681,6 +7680,7 @@ dependencies = [
  "regex",
  "tempdir",
  "tracing",
+ "wordchipper-disk-cache",
 ]
 
 [[package]]
