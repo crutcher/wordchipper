@@ -3,8 +3,8 @@
 
 use crate::path_resolver::PathResolver;
 
-pub mod path_resolver;
 pub mod disk_cache;
+pub mod path_resolver;
 
 /// Environment variable key to override the default cache directory.
 pub const WORDCHIPPER_CACHE_DIR: &str = "WORDCHIPPER_CACHE_DIR";

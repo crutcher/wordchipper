@@ -1,8 +1,8 @@
 //! # Wordchipper Disk Cache
 
-use std::path::PathBuf;
-use anyhow::Context;
 use crate::WORDCHIPPER_CACHE_CONFIG;
+use anyhow::Context;
+use std::path::{Path, PathBuf};
 
 /// Options for [`DiskDownloadCache`].
 #[derive(Clone, Default, Debug)]
@@ -25,6 +25,30 @@ pub struct DiskDownloadCache {
     pub data_dir: PathBuf,
 }
 
+/// Extend a path with a context and filename.
+///
+/// * Does not check that the path exists.
+/// * Does not initialize the containing directories.
+///
+/// # Arguments
+/// * `context` - prefix dirs, inserted between `self.cache_dir` and `file`.
+/// * `file` - the final file name.
+pub fn extend_path<P, S, F>(
+    path: P,
+    context: &[S],
+    filename: F,
+) -> PathBuf
+where
+    P: AsRef<Path>,
+    S: AsRef<str>,
+    F: AsRef<str>,
+{
+    let mut path = path.as_ref().to_path_buf();
+    path.extend(context.iter().map(|s| s.as_ref()));
+    path.push(filename.as_ref());
+    path
+}
+
 impl DiskDownloadCache {
     /// Construct a new [`DiskDownloadCache`].
     pub fn init(options: DiskDownloadCacheOptions) -> anyhow::Result<Self> {
@@ -41,15 +65,55 @@ impl DiskDownloadCache {
             data_dir,
         })
     }
+
+    /// Get the cache path for the given key.
+    ///
+    /// * Does not check that the path exists.
+    /// * Does not initialize the containing directories.
+    ///
+    /// # Arguments
+    /// * `context` - prefix dirs, inserted between `self.cache_dir` and `file`.
+    /// * `file` - the final file name.
+    pub fn cache_path<C, F>(
+        &self,
+        context: &[C],
+        file: F,
+    ) -> PathBuf
+    where
+        C: AsRef<str>,
+        F: AsRef<str>,
+    {
+        extend_path(&self.cache_dir, context, file)
+    }
+
+    /// Get the data path for the given key.
+    ///
+    /// * Does not check that the path exists.
+    /// * Does not initialize the containing directories.
+    ///
+    /// # Arguments
+    /// * `context` - prefix dirs, inserted between `self.cache_dir` and `file`.
+    /// * `file` - the final file name.
+    pub fn data_path<C, F>(
+        &self,
+        context: &[C],
+        file: F,
+    ) -> PathBuf
+    where
+        C: AsRef<str>,
+        F: AsRef<str>,
+    {
+        extend_path(&self.data_dir, context, file)
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::env;
-    use std::path::PathBuf;
-    use serial_test::serial;
     use crate::disk_cache::{DiskDownloadCache, DiskDownloadCacheOptions};
     use crate::{WORDCHIPPER_CACHE_CONFIG, WORDCHIPPER_CACHE_DIR, WORDCHIPPER_DATA_DIR};
+    use serial_test::serial;
+    use std::env;
+    use std::path::PathBuf;
 
     #[test]
     #[serial]
@@ -112,5 +176,19 @@ mod tests {
             Ok(original) => unsafe { env::set_var(WORDCHIPPER_DATA_DIR, original) },
             Err(_) => unsafe { env::remove_var(WORDCHIPPER_DATA_DIR) },
         }
+    }
+
+    #[test]
+    fn test_data_path() {
+        let cache = DiskDownloadCache::init(DiskDownloadCacheOptions::default()).unwrap();
+        let path = cache.data_path(&["prefix"], "file.txt");
+        assert_eq!(path, cache.data_dir.join("prefix").join("file.txt"));
+    }
+
+    #[test]
+    fn test_cache_path() {
+        let cache = DiskDownloadCache::init(DiskDownloadCacheOptions::default()).unwrap();
+        let path = cache.cache_path(&["prefix"], "file.txt");
+        assert_eq!(path, cache.cache_dir.join("prefix").join("file.txt"));
     }
 }
