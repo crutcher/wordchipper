@@ -70,7 +70,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::decoders::{DictionaryDecoder, TokenDecoder};
-    use crate::encoders::{MergeHeapVocabEncoder, TokenEncoder};
+    use crate::encoders::{DefaultTokenEncoder, TokenEncoder};
     use crate::rayon::rayon_encoder::ParallelRayonEncoder;
     use crate::segmentation::SegmentationConfig;
     use crate::types::{check_is_send, check_is_sync};
@@ -98,7 +98,7 @@ mod tests {
 
         let special_sample = "hello <|HI|> world";
 
-        let encoder = MergeHeapVocabEncoder::<T>::init(vocab.clone());
+        let encoder = DefaultTokenEncoder::<T>::init(vocab.clone());
         check_is_send(&encoder);
         check_is_sync(&encoder);
 

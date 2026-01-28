@@ -101,7 +101,7 @@ A loading example exists in the `examples/token-cli` crate.
 
 ```rust,no_run
 use wordchipper::decoders::{DictionaryDecoder, TokenDecoder};
-use wordchipper::encoders::{MergeHeapVocabEncoder, TokenEncoder};
+use wordchipper::encoders::{DefaultTokenEncoder, TokenEncoder};
 use wordchipper::rayon::{ParallelRayonDecoder, ParallelRayonEncoder};
 use wordchipper::regex::{regex_pool_supplier, RegexWrapperPattern};
 use wordchipper::segmentation::{SegmentationConfig, TextSegmentor};
@@ -114,8 +114,8 @@ type T = u32;
 let mut disk_cache = WordchipperDiskCache::default();
 let vocab: Arc<UnifiedTokenVocab<T>> = load_o200k_harmony_vocab(&mut disk_cache)?.into();
 
-let encoder: MergeHeapVocabEncoder<T> =
-    MergeHeapVocabEncoder::<T>::init_with_factory(vocab.clone(), regex_pool_supplier);
+let encoder: DefaultTokenEncoder<T> =
+    DefaultTokenEncoder::init_with_factory(vocab.clone(), regex_pool_supplier);
 let encoder = ParallelRayonEncoder::new(encoder);
 
 let decoder = DictionaryDecoder::from_unified_vocab(vocab.clone());
@@ -126,12 +126,12 @@ let decoder = ParallelRayonDecoder::new(decoder);
 
 Encoder clients should use:
 
-* `MergeHeapVocabEncoder` - the current default (only?) `TokenEncoder`.
+* `DefaultTokenEncoder` - the current default (only?) `TokenEncoder`.
 * `ParallelRayonEncoder` - a batch parallelism wrapper around any `TokenEncoder`.
 
 ```rust,no_run
 use wordchipper::vocab::UnifiedTokenVocab;
-use wordchipper::encoders::MergeHeapVocabEncoder;
+use wordchipper::encoders::DefaultTokenEncoder;
 use wordchipper::encoders::TokenEncoder;
 use wordchipper::types::TokenType;
 use std::sync::Arc;
@@ -140,7 +140,7 @@ fn example<T: TokenType>(
     vocab: Arc<UnifiedTokenVocab<T>>,
     batch: &[String],
 ) -> Vec<Vec<T>> {
-    let encoder: MergeHeapVocabEncoder<T> = MergeHeapVocabEncoder::init(vocab);
+    let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::init(vocab);
 
     #[cfg(feature = "rayon")]
     let encoder = wordchipper::rayon::ParallelRayonEncoder::new(encoder);
@@ -202,7 +202,7 @@ use wordchipper::training::bpe_trainer::{BinaryPairVocabTrainer, BinaryPairVocab
 use wordchipper::vocab::io::tiktoken_io::save_span_map_to_tiktoken_path;
 use wordchipper::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
 use wordchipper::vocab::{ByteMapVocab, UnifiedTokenVocab};
-use wordchipper::encoders::MergeHeapVocabEncoder;
+use wordchipper::encoders::DefaultTokenEncoder;
 use wordchipper::decoders::DictionaryDecoder;
 use wordchipper::rayon::{ParallelRayonEncoder, ParallelRayonDecoder};
 use std::sync::Arc;
@@ -250,7 +250,7 @@ fn example<I, S>(
         println!("- tiktoken vocab: {path:?}");
     }
 
-    let encoder: MergeHeapVocabEncoder<T> = MergeHeapVocabEncoder::init(vocab.clone());
+    let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::init(vocab.clone());
     let encoder = ParallelRayonEncoder::new(encoder);
 
     let decoder = DictionaryDecoder::from_unified_vocab(vocab.clone());

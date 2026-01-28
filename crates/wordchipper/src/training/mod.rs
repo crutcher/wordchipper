@@ -40,7 +40,7 @@
 //! use wordchipper::vocab::io::tiktoken_io::save_tiktoken_vocab_path;
 //! use wordchipper::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
 //! use wordchipper::vocab::{ByteMapVocab, UnifiedTokenVocab};
-//! use wordchipper::encoders::MergeHeapVocabEncoder;
+//! use wordchipper::encoders::DefaultTokenEncoder;
 //! use wordchipper::decoders::DictionaryDecoder;
 //! use wordchipper::rayon::{ParallelRayonEncoder, ParallelRayonDecoder};
 //! use std::sync::Arc;
@@ -88,7 +88,7 @@
 //!         println!("- tiktoken vocab: {path:?}");
 //!     }
 //!
-//!     let encoder: MergeHeapVocabEncoder<T> = MergeHeapVocabEncoder::init(vocab.clone());
+//!     let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::init(vocab.clone());
 //!     let encoder = ParallelRayonEncoder::new(encoder);
 //!
 //!     let decoder = DictionaryDecoder::from_unified_vocab(vocab.clone());

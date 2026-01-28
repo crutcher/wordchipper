@@ -6,7 +6,7 @@ use std::collections::HashSet;
 use std::sync::Arc;
 use std::time::Duration;
 use wordchipper::decoders::{DictionaryDecoder, TokenDecoder};
-use wordchipper::encoders::{MergeHeapVocabEncoder, TokenEncoder};
+use wordchipper::encoders::{DefaultTokenEncoder, TokenEncoder};
 use wordchipper::rayon::{ParallelRayonDecoder, ParallelRayonEncoder};
 use wordchipper::training::BinaryPairVocabTrainerOptions;
 use wordchipper::vocab::byte_vocab::ByteMapVocab;
@@ -133,7 +133,7 @@ fn main() -> anyhow::Result<()> {
     }
 
     if args.time_encode_decode {
-        let encoder: MergeHeapVocabEncoder<T> = MergeHeapVocabEncoder::<T>::init(vocab.clone());
+        let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::init(vocab.clone());
         let encoder = ParallelRayonEncoder::new(encoder);
 
         let decoder = DictionaryDecoder::from_unified_vocab(vocab);
