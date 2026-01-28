@@ -9,7 +9,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.0.10"
+version = "0.1.0"
 repository = "https://github.com/crutcher/wordchipper"
 rust-version = "1.93.0"
 edition = "2024"
@@ -27,7 +27,7 @@ doc_markdown = "deny"
 [workspace.dependencies]
 ahash = "^0.8"
 arrow = "^57.1"
-base64 = "^0.22.1"
+base64 = "^0.22"
 bimm-contracts = "^0.19.2"
 burn = "^0.20.0"
 clap = "^4.5"
@@ -36,8 +36,8 @@ dary_heap = "^0.3"
 directories-next = "^2.0"
 downloader = "^0.2"
 edit-distance = "^2.2"
-hashbrown = "0.16.1"
-parking_lot = "^0.12.5"
+hashbrown = "^0.16"
+parking_lot = "^0.12"
 parquet = "^57.1"
 rayon = "^1.11"
 serde = "^1.0"
