@@ -3,7 +3,7 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ConstUrlResource {
     /// The URL associated with this resource.
-    pub url: &'static str,
+    pub urls: &'static [&'static str],
 
     /// The hash associated with this resource, if available.
     pub hash: Option<&'static str>,
@@ -12,14 +12,14 @@ pub struct ConstUrlResource {
 impl ConstUrlResource {
     /// Create a new [`ConstUrlResource`].
     pub const fn new(
-        url: &'static str,
+        urls: &'static [&'static str],
         hash: Option<&'static str>,
     ) -> Self {
-        Self { url, hash }
+        Self { urls, hash }
     }
 
     /// Create a new [`ConstUrlResource`] with no hash.
-    pub const fn no_hash(url: &'static str) -> Self {
-        Self::new(url, None)
+    pub const fn no_hash(urls: &'static [&'static str]) -> Self {
+        Self::new(urls, None)
     }
 }

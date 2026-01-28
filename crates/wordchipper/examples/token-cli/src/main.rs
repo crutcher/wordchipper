@@ -1,5 +1,4 @@
 use arrow::array::StringArray;
-use arrow::datatypes::ArrowNativeType;
 use clap::Parser;
 use similar::{ChangeTag, TextDiff};
 use std::sync::Arc;
@@ -8,13 +7,10 @@ use wordchipper::decoders::{DictionaryDecoder, TokenDecoder};
 use wordchipper::disk_cache::WordchipperDiskCache;
 use wordchipper::encoders::{MergeHeapVocabEncoder, TokenEncoder};
 use wordchipper::rayon::{ParallelRayonDecoder, ParallelRayonEncoder};
-use wordchipper::regex::{RegexWrapperPattern, regex_pool_supplier};
-use wordchipper::segmentation::{SegmentationConfig, TextSegmentor};
+use wordchipper::regex::regex_pool_supplier;
+use wordchipper::segmentation::TextSegmentor;
 use wordchipper::vocab::UnifiedTokenVocab;
-use wordchipper::vocab::io::tiktoken_io::load_tiktoken_vocab_path;
-use wordchipper::vocab::public::openai::{
-    OA_GPT2_R50K_BASE_TIKTOKEN, OA_GPT2_R50K_WORD_PATTERN, oa_gpt2_r50k_specials,
-};
+use wordchipper::vocab::public::openai::experimental_load_gpt2_r50k;
 use wordchipper_data::dataset::DatasetCacheConfig;
 
 /// Example encoders trainer.
@@ -64,25 +60,7 @@ fn run_load(args: &Args) -> anyhow::Result<()> {
         .init()?;
 
     let mut disk_cache = WordchipperDiskCache::default();
-
-    let r50k_tiktoken = OA_GPT2_R50K_BASE_TIKTOKEN;
-
-    let span_map = load_tiktoken_vocab_path(disk_cache.load_cached_path(
-        &["openai", "gpt2-r50k"],
-        &[OA_GPT2_R50K_BASE_TIKTOKEN.url],
-        true,
-    )?)?;
-
-    let pattern: RegexWrapperPattern = OA_GPT2_R50K_WORD_PATTERN.into();
-
-    let segmentation = SegmentationConfig::<T>::from_pattern(pattern.clone()).with_special_words(
-        oa_gpt2_r50k_specials()
-            .iter()
-            .map(|(s, t)| (s, T::from_usize(*t).unwrap())),
-    );
-
-    let vocab: Arc<UnifiedTokenVocab<T>> =
-        UnifiedTokenVocab::from_span_vocab(segmentation, span_map.into()).into();
+    let vocab: Arc<UnifiedTokenVocab<T>> = experimental_load_gpt2_r50k(&mut disk_cache)?.into();
 
     let encoder: MergeHeapVocabEncoder<T> =
         MergeHeapVocabEncoder::<T>::init_with_factory(vocab.clone(), regex_pool_supplier);
