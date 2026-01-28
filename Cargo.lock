@@ -6358,6 +6358,7 @@ dependencies = [
  "similar",
  "wordchipper",
  "wordchipper-data",
+ "wordchipper-disk-cache",
 ]
 
 [[package]]
@@ -7695,11 +7696,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "wordchipper-download-cache"
+name = "wordchipper-disk-cache"
 version = "0.0.10"
 dependencies = [
  "anyhow",
  "directories-next",
+ "downloader",
  "serial_test",
 ]
 

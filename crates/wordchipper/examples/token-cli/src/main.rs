@@ -15,6 +15,7 @@ use wordchipper::vocab::public::openai::{
     OA_GPT2_R50K_BASE_TIKTOKEN, OA_GPT2_R50K_WORD_PATTERN, oa_gpt2_r50k_specials,
 };
 use wordchipper_data::dataset::DatasetCacheConfig;
+use wordchipper_disk_cache::disk_cache::WordchipperDiskCache;
 
 /// Example encoders trainer.
 #[derive(Parser, Debug)]
@@ -35,11 +36,7 @@ pub struct Args {
 #[derive(Parser, Debug)]
 pub enum Command {
     /// Load a tokenizer.
-    Load {
-        /// Path to tokenizer file.
-        #[arg(long)]
-        tokenizer_file: String,
-    },
+    Load {},
 }
 
 fn main() -> anyhow::Result<()> {
@@ -49,8 +46,8 @@ fn main() -> anyhow::Result<()> {
     }
 
     match &args.command {
-        Some(Command::Load { tokenizer_file }) => {
-            run_load(&args, tokenizer_file)?;
+        Some(Command::Load { .. }) => {
+            run_load(&args)?;
         }
         None => unreachable!(),
     }
@@ -59,21 +56,24 @@ fn main() -> anyhow::Result<()> {
 }
 
 #[allow(unused)]
-fn run_load(
-    args: &Args,
-    tokenizer_file: &String,
-) -> anyhow::Result<()> {
-    let mut cache = DatasetCacheConfig::new()
+fn run_load(args: &Args) -> anyhow::Result<()> {
+    type T = u32;
+
+    let mut dataset_cache = DatasetCacheConfig::new()
         .with_cache_dir(args.dataset_dir.clone())
         .init()?;
 
-    type T = u32;
-
-    let pattern: RegexWrapperPattern = OA_GPT2_R50K_WORD_PATTERN.into();
+    let mut disk_cache = WordchipperDiskCache::default();
 
     let r50k_tiktoken = OA_GPT2_R50K_BASE_TIKTOKEN;
-    // If we had a download cache, we'd use OA_GPT_R50K_BASE_TIKTOKEN.url here:
-    let span_map = load_tiktoken_vocab_path(tokenizer_file)?;
+
+    let span_map = load_tiktoken_vocab_path(disk_cache.load_cached_path(
+        &["openai", "gpt2-r50k"],
+        &[OA_GPT2_R50K_BASE_TIKTOKEN.url],
+        true,
+    )?)?;
+
+    let pattern: RegexWrapperPattern = OA_GPT2_R50K_WORD_PATTERN.into();
 
     let segmentation = SegmentationConfig::<T>::from_pattern(pattern.clone()).with_special_words(
         oa_gpt2_r50k_specials()
@@ -97,11 +97,11 @@ fn run_load(
 
     println!("Loading Shards: {shards:?}");
     println!("...");
-    cache.load_shards(&shards)?;
+    dataset_cache.load_shards(&shards)?;
 
     let mut samples = Vec::new();
     {
-        for batch in cache
+        for batch in dataset_cache
             .read_cached_batches(shards[0])?
             .take(num_timing_batches)
         {

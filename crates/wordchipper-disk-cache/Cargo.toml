@@ -1,5 +1,5 @@
 [package]
-name = "wordchipper-download-cache"
+name = "wordchipper-disk-cache"
 version.workspace = true
 repository.workspace = true
 rust-version.workspace = true
@@ -14,6 +14,9 @@ workspace = true
 [dependencies]
 anyhow = { workspace = true }
 directories-next = { workspace = true }
+
+# features=["tui"} incompatible with conflicting indicatif versions.
+downloader = { workspace = true }
 
 
 [dev-dependencies]
