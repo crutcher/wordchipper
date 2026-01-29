@@ -47,11 +47,12 @@ where
         self.inner.incremental_decode(ctx)
     }
 
-    fn try_decode_batch_to_bytes(
+    fn try_decode_batch_to_bytes<V: AsRef<[T]>>(
         &self,
-        batch: &[Vec<T>],
+        batch: &[V],
     ) -> anyhow::Result<Vec<Vec<u8>>> {
         use rayon::prelude::*;
+        let batch: Vec<&[T]> = batch.iter().map(|v| v.as_ref()).collect();
 
         batch
             .into_par_iter()
@@ -59,11 +60,13 @@ where
             .collect()
     }
 
-    fn try_decode_batch_to_strings(
+    fn try_decode_batch_to_strings<V: AsRef<[T]>>(
         &self,
-        batch: &[Vec<T>],
+        batch: &[V],
     ) -> anyhow::Result<Vec<String>> {
         use rayon::prelude::*;
+
+        let batch: Vec<&[T]> = batch.iter().map(|v| v.as_ref()).collect();
 
         batch
             .into_par_iter()
@@ -79,58 +82,28 @@ where
 mod tests {
     use super::*;
     use crate::alloc::sync::Arc;
-    use crate::decoders::DictionaryDecoder;
-    use crate::encoders::DefaultTokenEncoder;
-    use crate::encoders::token_encoder::TokenEncoder;
+    use crate::decoders::utility::pair_decoder::PairExpansionDecoder;
+    use crate::decoders::utility::test_utils::common_decoder_unit_test;
     use crate::segmentation::SegmentationConfig;
-    use crate::types::{check_is_send, check_is_sync};
     use crate::vocab::UnifiedTokenVocab;
-    use crate::vocab::byte_vocab::ByteMapVocab;
+    use crate::vocab::byte_vocab::build_test_shift_byte_vocab;
     use crate::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
     use crate::vocab::utility::testing::build_test_vocab;
-    use num_traits::FromPrimitive;
 
     #[test]
-    fn test_decoder() {
+    fn test_rayon_decoder() {
         type T = u16;
 
-        let samples = vec![
-            "hello world",
-            "hello san francisco",
-            "it's not the heat, it's the salt",
-        ];
-
-        let byte_vocab: Arc<ByteMapVocab<T>> = Arc::new(Default::default());
         let vocab: Arc<UnifiedTokenVocab<T>> = build_test_vocab(
-            byte_vocab.clone(),
+            build_test_shift_byte_vocab(10),
             SegmentationConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN),
         )
         .into();
 
-        let encoder = DefaultTokenEncoder::<T>::init(vocab.clone());
+        let decoder = PairExpansionDecoder::from_pair_vocab(&vocab.pair_vocab);
 
-        let decoder = ParallelRayonDecoder::new(DictionaryDecoder::from_unified_vocab(vocab));
-        check_is_send(&decoder);
-        check_is_sync(&decoder);
+        let decoder = ParallelRayonDecoder::new(decoder);
 
-        for sample in samples.iter() {
-            let tokens = encoder.try_encode(sample).unwrap();
-            let decoded = decoder.try_decode_to_string(&tokens).unwrap();
-            assert_eq!(&decoded, sample);
-        }
-
-        let token_batch: Vec<Vec<T>> = samples
-            .iter()
-            .map(|s| {
-                s.as_bytes()
-                    .iter()
-                    .map(|b| T::from_u8(*b).unwrap())
-                    .collect()
-            })
-            .collect();
-
-        // Test the batch interfaces.
-        let string_batch = decoder.try_decode_batch_to_strings(&token_batch).unwrap();
-        assert_eq!(string_batch, samples);
+        common_decoder_unit_test(vocab, &decoder);
     }
 }

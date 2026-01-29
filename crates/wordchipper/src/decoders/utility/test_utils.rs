@@ -6,6 +6,7 @@ use crate::alloc::vec::Vec;
 use crate::decoders::TokenDecoder;
 use crate::encoders::{DefaultTokenEncoder, TokenEncoder};
 use crate::types::{TokenType, check_is_send, check_is_sync};
+use crate::vocab::utility::strings::string_from_lossy_utf8;
 use crate::vocab::{TokenVocab, UnifiedTokenVocab};
 
 /// Common Unittest for TokenDecoder implementations.
@@ -25,9 +26,19 @@ pub fn common_decoder_unit_test<T: TokenType, D: TokenDecoder<T>>(
     let encoder = DefaultTokenEncoder::<T>::init(vocab.clone());
 
     let token_batch = encoder.try_encode_batch(&samples).unwrap();
-    let decoded_batch = decoder.try_decode_batch_to_strings(&token_batch).unwrap();
+    let decoded_strings = decoder.try_decode_batch_to_strings(&token_batch).unwrap();
 
-    assert_eq!(decoded_batch, samples);
+    assert_eq!(
+        &decoder
+            .try_decode_batch_to_bytes(&token_batch)
+            .unwrap()
+            .into_iter()
+            .map(string_from_lossy_utf8)
+            .collect::<Vec<_>>(),
+        &decoded_strings
+    );
+
+    assert_eq!(decoded_strings, samples);
 
     let novel_token = vocab.max_token() + T::one();
     let mut broken_tail = vec![novel_token];

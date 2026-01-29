@@ -77,9 +77,9 @@ pub trait TokenDecoder<T: TokenType>: Send + Sync {
     ///
     /// ## Returns
     /// A `Result` containing a vector of decoded byte vectors or an error if any decoding fails.
-    fn try_decode_batch_to_bytes(
+    fn try_decode_batch_to_bytes<V: AsRef<[T]>>(
         &self,
-        batch: &[Vec<T>],
+        batch: &[V],
     ) -> anyhow::Result<Vec<Vec<u8>>> {
         self.try_decode_batch_to_context(batch)?
             .into_iter()
@@ -112,12 +112,16 @@ pub trait TokenDecoder<T: TokenType>: Send + Sync {
     ///
     /// ## Returns
     /// A `Result` containing a vector of decoded strings or an error if any decoding fails.
-    fn try_decode_batch_to_strings(
+    fn try_decode_batch_to_strings<V: AsRef<[T]>>(
         &self,
-        batch: &[Vec<T>],
+        batch: &[V],
     ) -> anyhow::Result<Vec<String>> {
-        self.try_decode_batch_to_bytes(batch)
-            .map(|batch| batch.into_iter().map(string_from_lossy_utf8).collect())
+        self.try_decode_batch_to_bytes(batch).map(|bytes_batch| {
+            bytes_batch
+                .into_iter()
+                .map(string_from_lossy_utf8)
+                .collect()
+        })
     }
 }
 
