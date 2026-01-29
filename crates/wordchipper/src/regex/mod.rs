@@ -80,3 +80,28 @@ pub fn regex_pool_supplier(regex: RegexWrapperHandle) -> RegexSupplierHandle {
     #[cfg(not(feature = "std"))]
     regex
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::alloc::string::ToString;
+
+    #[test]
+    fn test_default_regex_supplier() {
+        let regex = RegexWrapperPattern::Basic("hello world".to_string())
+            .compile()
+            .unwrap();
+        let supplier = default_regex_supplier(regex.into());
+        assert_eq!(supplier.get_regex().as_str(), "hello world");
+    }
+
+    #[test]
+    fn test_regex_pool_supplier() {
+        let regex = RegexWrapperPattern::Basic("hello world".to_string())
+            .compile()
+            .unwrap();
+        let supplier = regex_pool_supplier(regex.into());
+
+        assert_eq!(supplier.get_regex().as_str(), "hello world");
+    }
+}
