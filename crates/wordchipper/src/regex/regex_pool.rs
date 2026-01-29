@@ -63,7 +63,17 @@ impl RegexWrapperPool {
         }
     }
 
-    /// Clear the regex pool.
+    /// Returns the number of regex instances in the pool.
+    pub fn len(&self) -> usize {
+        self.pool.read().len()
+    }
+
+    /// Returns true if the pool is empty.
+    pub fn is_empty(&self) -> bool {
+        self.pool.read().is_empty()
+    }
+
+    /// Clear the internal regex pool.
     pub fn clear(&self) {
         self.pool.write().clear();
     }
@@ -92,18 +102,29 @@ impl RegexSupplier for RegexWrapperPool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::alloc::string::ToString;
     use crate::regex::regex_wrapper::RegexWrapperPattern;
 
     #[test]
     fn test_regex_pool() {
         let pattern: RegexWrapperPattern = r"foo".into();
-        let regex = pattern.compile().unwrap().into();
+        let regex: Arc<RegexWrapper> = pattern.compile().unwrap().into();
 
-        let pool = RegexWrapperPool::new(regex);
+        let pool: RegexWrapperPool = regex.clone().into();
+        assert_eq!(pool.get_pattern(), r"foo");
+        assert!(format!("{:?}", pool).contains(&format!("{:?}", regex).to_string()));
 
         let r0 = pool.get_regex();
         assert_eq!(r0.as_str(), r"foo");
 
         assert!(Arc::ptr_eq(&r0, &pool.get_regex()));
+
+        assert_eq!(pool.len(), 1);
+        assert!(!pool.is_empty());
+
+        pool.clear();
+
+        assert_eq!(pool.len(), 0);
+        assert!(pool.is_empty());
     }
 }
