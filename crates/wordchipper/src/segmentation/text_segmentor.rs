@@ -221,6 +221,16 @@ mod tests {
     use crate::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
 
     #[test]
+    fn test_span_ref() {
+        let buf = "hello world!";
+        let n_ref = SpanRef::Normal(&buf[..5]);
+        let s_ref = SpanRef::Special(&buf[6..11]);
+
+        assert_eq!(n_ref.as_str(), "hello");
+        assert_eq!(s_ref.as_str(), "world");
+    }
+
+    #[test]
     fn test_split_words() {
         type T = u32;
 
@@ -243,5 +253,17 @@ mod tests {
                 SpanRef::Normal(&buf[28..]),
             ]
         );
+    }
+
+    #[test]
+    fn test_rewrite() {
+        type T = u32;
+
+        let config: SegmentationConfig<T> = SegmentationConfig::from_pattern(r"\w+");
+
+        let segmentor = TextSegmentor::from_config(config, default_regex_supplier);
+
+        let buf = "hello world!";
+        assert_eq!(segmentor.rewrite(buf), "helloworld");
     }
 }

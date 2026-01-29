@@ -77,19 +77,6 @@ impl<T: TokenType> SegmentationConfig<T> {
         Self { specials, ..self }
     }
 
-    /// Add a word to the specials.
-    ///
-    /// ## Arguments
-    /// * `word` - The special word string to add.
-    /// * `token` - The token value for the special word.
-    pub fn add_str_word(
-        &mut self,
-        word: &str,
-        token: T,
-    ) {
-        self.specials.add_str_word(word, token);
-    }
-
     /// Add all of the given special words to the specials.
     ///
     /// ## Arguments
@@ -126,6 +113,14 @@ impl<T: TokenType> SegmentationConfig<T> {
     pub fn special_vocab(&self) -> &SpecialVocab<T> {
         &self.specials
     }
+
+    /// Get a mutable view of the [`SpecialVocab`]
+    ///
+    /// ## Returns
+    /// A mutable reference to the internal `SpecialVocab`.
+    pub fn special_vocab_mut(&mut self) -> &mut SpecialVocab<T> {
+        &mut self.specials
+    }
 }
 
 #[cfg(test)]
@@ -143,7 +138,7 @@ mod tests {
         assert_eq!(config.pattern().as_str(), "hello");
         assert_eq!(config.special_vocab().len(), 0);
 
-        config.add_str_word("hello", 1);
+        config.special_vocab_mut().add_str_word("hello", 1);
         assert_eq!(config.special_vocab().len(), 1);
 
         let config = config.with_pattern("hi");
@@ -151,5 +146,12 @@ mod tests {
             &config.pattern,
             &RegexWrapperPattern::Adaptive("hi".to_string())
         );
+
+        let mut specials = SpecialVocab::default();
+        specials.add_str_word("apple", 1);
+        specials.add_str_word("pear", 1);
+
+        let config = config.with_specials(specials.clone());
+        assert_eq!(config.special_vocab(), &specials);
     }
 }

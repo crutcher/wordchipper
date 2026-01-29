@@ -229,7 +229,7 @@ mod tests {
         let vocab = build_test_vocab(byte_vocab.clone(), segmentation);
 
         let mut seg = vocab.segmentation.clone();
-        seg.add_str_word("<|HI|>", 3000);
+        seg.special_vocab_mut().add_str_word("<|HI|>", 3000);
 
         let vocab: Arc<UnifiedTokenVocab<T>> =
             UnifiedTokenVocab::init(seg, vocab.span_vocab, vocab.pair_vocab).into();
