@@ -88,13 +88,10 @@ impl<T: TokenType> TokenDecoder<T> for PairExpansionDecoder<T> {
 mod tests {
     use super::*;
     use crate::alloc::sync::Arc;
-    use crate::alloc::vec;
-    use crate::encoders::merge_heap_encoder::MergeHeapVocabEncoder;
-    use crate::encoders::token_encoder::TokenEncoder;
+    use crate::decoders::utility::test_utils::common_decoder_unit_test;
     use crate::segmentation::SegmentationConfig;
-    use crate::types::{check_is_send, check_is_sync};
     use crate::vocab::UnifiedTokenVocab;
-    use crate::vocab::byte_vocab::ByteMapVocab;
+    use crate::vocab::byte_vocab::build_test_shift_byte_vocab;
     use crate::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
     use crate::vocab::utility::testing::build_test_vocab;
 
@@ -102,33 +99,16 @@ mod tests {
     fn test_pair_decoder() {
         type T = u16;
 
-        let samples = vec![
-            "hello world",
-            "hello san francisco",
-            "it's not the heat, it's the salt",
-        ];
-
-        let byte_vocab: Arc<ByteMapVocab<T>> = Arc::new(Default::default());
         let vocab: Arc<UnifiedTokenVocab<T>> = build_test_vocab(
-            byte_vocab.clone(),
+            build_test_shift_byte_vocab(10),
             SegmentationConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN),
         )
         .into();
 
-        assert_eq!(vocab.pair_vocab.byte_vocab(), &byte_vocab);
-
-        let encoder = MergeHeapVocabEncoder::<T>::init(vocab.clone());
-
         let decoder = PairExpansionDecoder::from_pair_vocab(&vocab.pair_vocab);
-        check_is_send(&decoder);
-        check_is_sync(&decoder);
 
-        assert_eq!(decoder.byte_vocab(), &byte_vocab);
+        assert_eq!(decoder.byte_vocab(), vocab.byte_vocab());
 
-        for sample in samples {
-            let tokens = encoder.try_encode(sample).unwrap();
-            let decoded = decoder.try_decode_to_string(&tokens).unwrap();
-            assert_eq!(decoded, sample);
-        }
+        common_decoder_unit_test(vocab, &decoder);
     }
 }

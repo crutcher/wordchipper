@@ -1,10 +1,26 @@
 //! # Byte/Token Mapping Table
 
+use crate::alloc::sync::Arc;
 use crate::alloc::vec;
 use crate::alloc::vec::Vec;
 use crate::types::{CommonHashMap, TokenType};
 use crate::vocab::TokenVocab;
 use core::fmt::Debug;
+
+/// Build a [`ByteMapVocab`] with all tokens shifted by `shift`.
+///
+/// This is a purposely stupid byte map; useful for testing.
+pub fn build_test_shift_byte_vocab<T: TokenType>(shift: usize) -> Arc<ByteMapVocab<T>> {
+    // This is a purposely stupid byte map.
+    ByteMapVocab::<T>::from_byte_to_token(
+        &ByteMapVocab::<T>::default()
+            .byte_to_token()
+            .iter()
+            .map(|&t| t + T::from_usize(shift).unwrap())
+            .collect::<Vec<T>>(),
+    )
+    .into()
+}
 
 /// ``0..=255`` Rank Byte/Token Bijection Table
 ///
@@ -187,7 +203,6 @@ impl<T: TokenType> TokenVocab<T> for ByteMapVocab<T> {
 mod tests {
     use super::*;
     use crate::alloc::format;
-    use num_traits::FromPrimitive;
 
     #[test]
     fn test_byte_vocab_default() {
@@ -221,18 +236,15 @@ mod tests {
     #[test]
     fn test_byte_vocab() {
         type T = u32;
-        let byte_to_token: Vec<T> = (0..256)
-            .map(|i| T::from_usize(i).unwrap() + 100)
-            .collect::<Vec<_>>();
 
-        let table: ByteMapVocab<T> = ByteMapVocab::from_byte_to_token(&byte_to_token);
+        let vocab = build_test_shift_byte_vocab::<T>(100);
 
-        assert_eq!(table.get_token(0_u8), 100);
-        assert_eq!(table.get_token(255_u8), 355);
+        assert_eq!(vocab.get_token(0_u8), 100);
+        assert_eq!(vocab.get_token(255_u8), 355);
 
-        assert_eq!(table.get_byte(99_u32), None);
-        assert_eq!(table.get_byte(100_u32), Some(0));
-        assert_eq!(table.get_byte(355_u32), Some(255));
-        assert_eq!(table.get_byte(356_u32), None);
+        assert_eq!(vocab.get_byte(99_u32), None);
+        assert_eq!(vocab.get_byte(100_u32), Some(0));
+        assert_eq!(vocab.get_byte(355_u32), Some(255));
+        assert_eq!(vocab.get_byte(356_u32), None);
     }
 }

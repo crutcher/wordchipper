@@ -58,12 +58,18 @@ where
         self.inner.try_encode_append(text, tokens)
     }
 
-    fn try_encode_batch(
+    fn try_encode_batch<S: AsRef<str>>(
         &self,
-        batch: &[String],
+        batch: &[S],
     ) -> anyhow::Result<Vec<Vec<T>>> {
         use rayon::prelude::*;
-        batch.par_iter().map(|text| self.try_encode(text)).collect()
+        batch
+            .iter()
+            .map(|s| s.as_ref())
+            .collect::<Vec<_>>()
+            .par_iter()
+            .map(|text| self.try_encode(text))
+            .collect()
     }
 }
 
