@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="no_std Test" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+  <configuration default="false" name="Test Default" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
     <option name="buildProfileId" value="dev" />
-    <option name="command" value="test -p wordchipper --no-default-features --features no_std --tests" />
+    <option name="command" value="test" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <envs />
     <option name="emulateTerminal" value="true" />
@@ -13,6 +13,10 @@
     <option name="backtrace" value="SHORT" />
     <option name="isRedirectInput" value="false" />
     <option name="redirectInputPath" value="" />
-    <method v="2" />
+    <method v="2">
+      <option name="RunConfigurationTask" enabled="true" run_configuration_name="Fix" run_configuration_type="CargoCommandRunConfiguration" />
+      <option name="RunConfigurationTask" enabled="true" run_configuration_name="Format" run_configuration_type="CargoCommandRunConfiguration" />
+      <option name="RunConfigurationTask" enabled="true" run_configuration_name="Doc" run_configuration_type="CargoCommandRunConfiguration" />
+    </method>
   </configuration>
 </component>
