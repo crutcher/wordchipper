@@ -8,7 +8,7 @@ use crate::regex::{RegexSupplierHandle, RegexWrapperHandle};
 use crate::segmentation::segmentation_config::SegmentationConfig;
 use crate::types::TokenType;
 use crate::vocab::TokenVocab;
-use crate::vocab::public::size_hints::EXPECTED_BYTES_PER_TOKEN;
+use crate::vocab::size_hints::EXPECTED_BYTES_PER_TOKEN;
 use core::ops::Range;
 
 /// Word Reference for [`TextSegmentor`].

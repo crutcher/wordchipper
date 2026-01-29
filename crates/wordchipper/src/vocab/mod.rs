@@ -31,6 +31,7 @@ pub mod special_vocab;
 pub mod token_vocab;
 pub mod unified_vocab;
 pub mod utility;
+pub mod size_hints;
 
 #[doc(inline)]
 pub use byte_vocab::ByteMapVocab;
