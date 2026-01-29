@@ -26,6 +26,7 @@ pub mod io;
 pub mod byte_vocab;
 pub mod pair_vocab;
 pub mod public;
+pub mod size_hints;
 pub mod span_vocab;
 pub mod special_vocab;
 pub mod token_vocab;

@@ -6,7 +6,7 @@ use crate::alloc::vec::Vec;
 use crate::segmentation::TextSegmentor;
 use crate::segmentation::text_segmentor::SpanRef;
 use crate::types::TokenType;
-use crate::vocab::public::size_hints::EXPECTED_BYTES_PER_TOKEN;
+use crate::vocab::size_hints::EXPECTED_BYTES_PER_TOKEN;
 use crate::vocab::special_vocab::SpecialVocab;
 
 /// A trait for token encoders.

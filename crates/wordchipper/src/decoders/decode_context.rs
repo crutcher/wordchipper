@@ -2,7 +2,7 @@
 
 use crate::alloc::vec::Vec;
 use crate::types::TokenType;
-use crate::vocab::public::size_hints::EXPECTED_BYTES_PER_TOKEN;
+use crate::vocab::size_hints::EXPECTED_BYTES_PER_TOKEN;
 
 /// Representation of a token decoding context.
 #[derive(Clone)]

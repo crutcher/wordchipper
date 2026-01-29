@@ -137,7 +137,7 @@ mod tests {
     use crate::segmentation::SegmentationConfig;
     use crate::types::{check_is_send, check_is_sync};
     use crate::vocab::ByteMapVocab;
-    use crate::vocab::public::openai::OA_GPT3_CL100K_WORD_PATTERN;
+    use crate::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
     use crate::vocab::utility::testing::build_test_vocab;
     use alloc::vec;
 

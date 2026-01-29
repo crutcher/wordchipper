@@ -4,7 +4,7 @@ use crate::regex::{RegexSupplierHandle, RegexWrapper};
 use crate::training::token_span_buffer::TokenSpanBuf;
 use crate::types::{CommonHashMap, CountType, StringChunkType, TokenType};
 use crate::vocab::byte_vocab::ByteMapVocab;
-use crate::vocab::public::size_hints::EXPECTED_WORD_LENGTH;
+use crate::vocab::size_hints::EXPECTED_WORD_LENGTH;
 use std::fmt::Debug;
 
 /// Update word counts in-place from text using a regular expression.
