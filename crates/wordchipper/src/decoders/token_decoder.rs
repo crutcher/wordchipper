@@ -30,13 +30,30 @@ pub trait TokenDecoder<T: TokenType>: Send + Sync {
     ///
     /// ## Returns
     /// A `TokenDecodeContext` containing the decoded bytes and any remaining tokens.
-    fn decode_to_context<S: AsRef<[T]>>(
+    fn try_decode_to_context<S: AsRef<[T]>>(
         &self,
         tokens: S,
-    ) -> TokenDecodeContext<T> {
+    ) -> anyhow::Result<TokenDecodeContext<T>> {
         let mut context = tokens.as_ref().to_vec().into();
         self.incremental_decode(&mut context);
-        context
+        Ok(context)
+    }
+
+    /// Decodes a batch of tokens to [`TokenDecodeContext`].
+    ///
+    /// ## Arguments
+    /// * `batch` - The batch of tokens to decode.
+    ///
+    /// ## Returns
+    /// A `Result` containing the partial decode contexts.
+    fn try_decode_batch_to_context<S: AsRef<[T]>>(
+        &self,
+        batch: &[S],
+    ) -> anyhow::Result<Vec<TokenDecodeContext<T>>> {
+        batch
+            .iter()
+            .map(|tokens| self.try_decode_to_context(tokens))
+            .collect()
     }
 
     /// Decode tokens into bytes, returning an error if the decoding fails.
@@ -50,7 +67,7 @@ pub trait TokenDecoder<T: TokenType>: Send + Sync {
         &self,
         tokens: S,
     ) -> anyhow::Result<Vec<u8>> {
-        self.decode_to_context(tokens).try_result()
+        self.try_decode_to_context(tokens)?.try_result()
     }
 
     /// Decodes a batch of tokens into a vector of byte vectors, returning an error if the decoding fails.
@@ -64,7 +81,10 @@ pub trait TokenDecoder<T: TokenType>: Send + Sync {
         &self,
         batch: &[Vec<T>],
     ) -> anyhow::Result<Vec<Vec<u8>>> {
-        batch.iter().map(|t| self.try_decode_to_bytes(t)).collect()
+        self.try_decode_batch_to_context(batch)?
+            .into_iter()
+            .map(|ctx| ctx.try_result())
+            .collect()
     }
 
     /// Decodes tokens into a string, returning an error if the decoding fails.
@@ -96,11 +116,8 @@ pub trait TokenDecoder<T: TokenType>: Send + Sync {
         &self,
         batch: &[Vec<T>],
     ) -> anyhow::Result<Vec<String>> {
-        Ok(self
-            .try_decode_batch_to_bytes(batch)?
-            .into_iter()
-            .map(string_from_lossy_utf8)
-            .collect())
+        self.try_decode_batch_to_bytes(batch)
+            .map(|batch| batch.into_iter().map(string_from_lossy_utf8).collect())
     }
 }
 

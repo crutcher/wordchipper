@@ -1,6 +1,5 @@
 //! # Token Encoder Trait
 
-use crate::alloc::string::String;
 use crate::alloc::sync::Arc;
 use crate::alloc::vec::Vec;
 use crate::segmentation::TextSegmentor;
@@ -59,9 +58,9 @@ pub trait TokenEncoder<T: TokenType>: Send + Sync {
     ///
     /// ## Returns
     /// A `Result` containing the vector of token vectors or an error.
-    fn try_encode_batch(
+    fn try_encode_batch<S: AsRef<str>>(
         &self,
-        batch: &[String],
+        batch: &[S],
     ) -> anyhow::Result<Vec<Vec<T>>> {
         batch.iter().map(|s| self.try_encode(s)).collect()
     }
