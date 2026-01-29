@@ -1,9 +1,11 @@
 //! # Thread Regex Pool
 #![allow(unused)]
+
 use crate::alloc::sync::Arc;
 use crate::regex::regex_supplier::RegexSupplier;
 use crate::regex::regex_wrapper::RegexWrapper;
 use crate::types::CommonHashMap;
+use core::fmt::Debug;
 use core::num::NonZero;
 use parking_lot::RwLock;
 use std::thread::ThreadId;
@@ -22,6 +24,17 @@ pub struct RegexWrapperPool {
 
     max_pool: u64,
     pool: Arc<RwLock<CommonHashMap<u64, Arc<RegexWrapper>>>>,
+}
+
+impl Debug for RegexWrapperPool {
+    fn fmt(
+        &self,
+        f: &mut core::fmt::Formatter<'_>,
+    ) -> core::fmt::Result {
+        f.debug_struct("RegexPool")
+            .field("regex", &self.regex)
+            .finish()
+    }
 }
 
 impl From<Arc<RegexWrapper>> for RegexWrapperPool {

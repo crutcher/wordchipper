@@ -171,6 +171,19 @@ pub enum RegexWrapper {
     Fancy(fancy_regex::Regex),
 }
 
+impl PartialEq for RegexWrapper {
+    fn eq(
+        &self,
+        other: &Self,
+    ) -> bool {
+        match (self, other) {
+            (Self::Basic(a), Self::Basic(b)) => a.as_str() == b.as_str(),
+            (Self::Fancy(a), Self::Fancy(b)) => a.as_str() == b.as_str(),
+            _ => false,
+        }
+    }
+}
+
 impl From<regex::Regex> for RegexWrapper {
     fn from(regex: regex::Regex) -> Self {
         Self::Basic(regex)
@@ -272,19 +285,65 @@ impl<'r, 'h> Iterator for MatchesWrapper<'r, 'h> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::alloc::format;
+    use crate::join_patterns;
+
+    #[test]
+    fn test_partial_eq() {
+        let b0 = RegexWrapperPattern::Basic("hello world".to_string())
+            .compile()
+            .unwrap();
+        let b1 = RegexWrapperPattern::Basic("world".to_string())
+            .compile()
+            .unwrap();
+
+        let f0 = RegexWrapperPattern::Fancy("hello world".to_string())
+            .compile()
+            .unwrap();
+        let f1 = RegexWrapperPattern::Fancy("world".to_string())
+            .compile()
+            .unwrap();
+
+        assert_eq!(&b0, &b0);
+        assert_eq!(&b1, &b1);
+        assert_ne!(&b0, &b1);
+        assert_ne!(&b1, &b0);
+
+        assert_eq!(&f0, &f0);
+        assert_eq!(&f1, &f1);
+        assert_ne!(&f0, &f1);
+        assert_ne!(&f1, &f0);
+
+        assert_ne!(&b0, &f0);
+        assert_ne!(&f0, &b0);
+
+        assert_ne!(&b1, &f1);
+        assert_ne!(&f1, &b1);
+    }
 
     #[test]
     fn test_const_pattern() {
-        const CONST_PATTERN: ConstRegexWrapperPattern =
-            ConstRegexWrapperPattern::Basic("hello world");
-        assert_eq!(CONST_PATTERN.as_str(), "hello world");
+        const BASIC: ConstRegexWrapperPattern = ConstRegexWrapperPattern::Basic("hello world");
+        assert_eq!(BASIC.as_str(), "hello world");
 
-        let rw = CONST_PATTERN.compile().unwrap();
+        let rw = BASIC.compile().unwrap();
         assert_eq!(rw.as_str(), "hello world");
         assert!(rw.is_basic());
+        assert!(!rw.is_fancy());
 
-        let pattern = CONST_PATTERN.to_pattern();
+        let pattern = BASIC.to_pattern();
         assert_eq!(pattern.as_str(), "hello world");
+
+        const FANCY: ConstRegexWrapperPattern = ConstRegexWrapperPattern::Fancy("hello");
+        assert_eq!(FANCY.as_str(), "hello");
+
+        let rw = FANCY.compile().unwrap();
+        assert_eq!(rw.as_str(), "hello");
+        assert!(!rw.is_basic());
+        assert!(rw.is_fancy());
+
+        let pattern = FANCY.to_pattern();
+        assert_eq!(pattern.as_str(), "hello");
     }
 
     #[test]
@@ -318,5 +377,43 @@ mod tests {
         assert_eq!(rw.as_str(), "hello world");
         assert!(rw.is_basic());
         assert!(!rw.is_fancy());
+    }
+
+    const FANCY_PATTERN: &str = join_patterns!(
+        r"'(?:[sdmt]|ll|ve|re)",
+        r" ?\p{L}++",
+        r" ?\p{N}++",
+        r" ?[^\s\p{L}\p{N}]++",
+        r"\s++$",
+        r"\s+(?!\S)",
+        r"\s",
+    );
+
+    #[test]
+    fn test_basic_pattern_failure() {
+        let pattern = RegexWrapperPattern::Basic(FANCY_PATTERN.to_string());
+        let err = pattern.compile().unwrap_err();
+        assert!(matches!(err, ErrorWrapper::Basic(_)));
+
+        assert!(format!("{}", err).contains("regex parse error"));
+    }
+
+    #[test]
+    fn test_fancy_pattern_failure() {
+        let pattern = RegexWrapperPattern::Fancy(r"[".to_string());
+        let err = pattern.compile().unwrap_err();
+        assert!(matches!(err, ErrorWrapper::Fancy(_)));
+
+        assert!(format!("{}", err).contains("Parsing error"));
+    }
+
+    #[test]
+    fn test_adaptive_pattern_fallback() {
+        let pattern: RegexWrapperPattern = FANCY_PATTERN.into();
+        assert!(matches!(pattern, RegexWrapperPattern::Adaptive(_)));
+
+        let rw = pattern.compile().unwrap();
+        assert!(!rw.is_basic());
+        assert!(rw.is_fancy());
     }
 }
