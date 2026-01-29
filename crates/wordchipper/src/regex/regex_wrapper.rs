@@ -71,7 +71,7 @@ impl ConstRegexWrapperPattern {
     /// ## Returns
     /// A new `RegexWrapperPattern` instance.
     pub fn to_pattern(&self) -> RegexWrapperPattern {
-        self.clone().into()
+        (*self).into()
     }
 
     /// Compile the regex pattern into a `RegexWrapper`.
