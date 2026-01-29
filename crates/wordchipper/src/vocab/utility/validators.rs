@@ -33,10 +33,15 @@ mod tests {
     #[test]
     fn test_vocab_size() {
         assert_eq!(expect_vocab_size::<u16>(256), 256);
-        assert_eq!(expect_vocab_size::<u16>(u16::MAX as usize), u16::MAX as usize);
+        assert_eq!(
+            expect_vocab_size::<u16>(u16::MAX as usize),
+            u16::MAX as usize
+        );
 
         assert_eq!(
-        expect_vocab_size::<u16>(u16::MAX as usize + 1), u16::MAX as usize + 1);
+            expect_vocab_size::<u16>(u16::MAX as usize + 1),
+            u16::MAX as usize + 1
+        );
         assert!(try_vocab_size::<u16>(u16::MAX as usize + 2).is_err());
 
         assert_eq!(expect_vocab_size::<u8>(256), 256);

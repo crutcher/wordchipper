@@ -2,7 +2,7 @@
 
 use crate::alloc::sync::Arc;
 use crate::alloc::vec::Vec;
-use crate::types::{CommonHashIter, CommonHashMap, SpanTokenMap, TokenType};
+use crate::types::{CommonHashMap, SpanTokenMap, TokenType};
 use crate::vocab::{ByteMapVocab, PairMapVocab, TokenVocab};
 
 /// Token vocabulary as a dictionary map of ``{ Vec<u8> -> T }``.
@@ -25,16 +25,6 @@ impl<T: TokenType> Default for SpanMapVocab<T> {
 impl<T: TokenType> From<SpanTokenMap<T>> for SpanMapVocab<T> {
     fn from(span_map: SpanTokenMap<T>) -> Self {
         Self::from_span_map(span_map)
-    }
-}
-
-impl<'a, T: TokenType> IntoIterator for &'a SpanMapVocab<T> {
-    type Item = (&'a Vec<u8>, &'a T);
-
-    type IntoIter = CommonHashIter<'a, Vec<u8>, T>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.span_map.iter()
     }
 }
 
@@ -132,23 +122,6 @@ impl<T: TokenType> SpanMapVocab<T> {
         Self::init(byte_vocab, span_map).unwrap()
     }
 
-    /// Build word vocabulary from a [`PairMapVocab<T>`].
-    ///
-    /// ## Arguments
-    /// * `pair_vocab` - The pair vocabulary to build from.
-    ///
-    /// ## Returns
-    /// A new `SpanMapVocab` instance.
-    ///
-    /// ## Panics
-    /// Panics if initialization fails.
-    pub fn from_pair_vocab(pair_vocab: &PairMapVocab<T>) -> Self {
-        let byte_vocab: Arc<ByteMapVocab<T>> = pair_vocab.byte_vocab().clone();
-        let span_map: SpanTokenMap<T> = pair_vocab.span_pairs().collect();
-
-        Self::init(byte_vocab, span_map).unwrap()
-    }
-
     /// Initialize a [`SpanMapVocab`].
     ///
     /// The span map will be the union of the span map,
@@ -198,16 +171,9 @@ impl<T: TokenType> SpanMapVocab<T> {
     ///
     /// ## Returns
     /// The number of spans in the map.
+    #[allow(clippy::len_without_is_empty)]
     pub fn len(&self) -> usize {
         self.span_map.len()
-    }
-
-    /// Returns `true` if the vocabulary contains no words.
-    ///
-    /// ## Returns
-    /// `true` if the span map is empty, `false` otherwise.
-    pub fn is_empty(&self) -> bool {
-        self.span_map.is_empty()
     }
 
     /// Iterate over the words in the vocabulary.
@@ -312,6 +278,7 @@ mod tests {
         let vocab = SpanMapVocab::from(span_map);
 
         assert_eq!(vocab.max_token(), 302);
+        assert_eq!(vocab.len(), 256 + 3);
 
         assert_eq!(
             &vocab.sorted_tokens(),

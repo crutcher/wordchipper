@@ -21,6 +21,8 @@ pub fn string_from_lossy_utf8(v: Vec<u8>) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::alloc::string::ToString;
+    use crate::alloc::vec;
 
     #[test]
     fn test_string_from_lossy_utf8() {

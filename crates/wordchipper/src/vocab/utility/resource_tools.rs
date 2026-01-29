@@ -8,4 +8,3 @@ pub struct ConstUrlResource {
     /// The hash associated with this resource, if available.
     pub hash: Option<&'static str>,
 }
-

@@ -186,6 +186,7 @@ impl<T: TokenType> TokenVocab<T> for ByteMapVocab<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::alloc::format;
     use num_traits::FromPrimitive;
 
     #[test]
