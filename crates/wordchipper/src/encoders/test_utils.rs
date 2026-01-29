@@ -1,15 +1,17 @@
 //! # Encoder Test Utilities
 
-use super::*;
+use crate::alloc::string::String;
+use crate::alloc::sync::Arc;
+use crate::alloc::vec;
+use crate::alloc::vec::Vec;
 use crate::decoders::{DictionaryDecoder, TokenDecoder};
+use crate::encoders::TokenEncoder;
 use crate::segmentation::SegmentationConfig;
 use crate::types::{TokenType, check_is_send, check_is_sync};
 use crate::vocab::byte_vocab::build_test_shift_byte_vocab;
 use crate::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
 use crate::vocab::utility::testing::build_test_vocab;
 use crate::vocab::{TokenVocab, UnifiedTokenVocab};
-use alloc::vec;
-use std::sync::Arc;
 
 /// Build common test vocabulary for [`TokenEncoder`] tests.
 pub fn common_encoder_test_vocab<T: TokenType>() -> Arc<UnifiedTokenVocab<T>> {
