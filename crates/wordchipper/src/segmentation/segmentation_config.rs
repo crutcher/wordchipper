@@ -1,6 +1,4 @@
 //! # Text Segmentation Configuration
-use crate::alloc::string::String;
-use crate::alloc::string::ToString;
 use crate::regex::RegexWrapperPattern;
 use crate::types::TokenType;
 use crate::vocab::special_vocab::SpecialVocab;
@@ -117,8 +115,8 @@ impl<T: TokenType> SegmentationConfig<T> {
     ///
     /// ## Returns
     /// The regex pattern as a `String`.
-    pub fn pattern(&self) -> String {
-        self.pattern.as_str().to_string()
+    pub fn pattern(&self) -> &RegexWrapperPattern {
+        &self.pattern
     }
 
     /// Get the special tokens vocabulary for the text segmentor configuration.
@@ -127,5 +125,31 @@ impl<T: TokenType> SegmentationConfig<T> {
     /// A reference to the internal `SpecialVocab`.
     pub fn special_vocab(&self) -> &SpecialVocab<T> {
         &self.specials
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::alloc::string::ToString;
+
+    #[test]
+    fn test_from_pattern() {
+        type T = u32;
+
+        let pattern = RegexWrapperPattern::Adaptive("hello".to_string());
+
+        let mut config: SegmentationConfig<T> = pattern.into();
+        assert_eq!(config.pattern().as_str(), "hello");
+        assert_eq!(config.special_vocab().len(), 0);
+
+        config.add_str_word("hello", 1);
+        assert_eq!(config.special_vocab().len(), 1);
+
+        let config = config.with_pattern("hi");
+        assert_eq!(
+            &config.pattern,
+            &RegexWrapperPattern::Adaptive("hi".to_string())
+        );
     }
 }

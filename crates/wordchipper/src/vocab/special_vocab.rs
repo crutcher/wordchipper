@@ -56,14 +56,6 @@ impl<T: TokenType> SpecialVocab<T> {
         &self.span_map
     }
 
-    /// Get an iterator over the span slices.
-    ///
-    /// ## Returns
-    /// An iterator over the byte slices of special words.
-    pub fn spans(&self) -> impl Iterator<Item = &[u8]> {
-        self.span_map.keys().map(|chunk| chunk.as_slice())
-    }
-
     /// Add a word to the vocab.
     ///
     /// ## Arguments
@@ -123,5 +115,30 @@ impl<T: TokenType> TokenVocab<T> for SpecialVocab<T> {
         self.span_map
             .iter()
             .map(|(chunk, &token)| (chunk.clone(), token))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_special_vocab() {
+        type T = u32;
+        let mut vocab: SpecialVocab<T> = SpecialVocab::default();
+        assert!(vocab.is_empty());
+        assert_eq!(vocab.len(), 0);
+
+        vocab.add_str_word("hello", 1);
+        assert_eq!(vocab.len(), 1);
+        assert!(!vocab.is_empty());
+
+        assert_eq!(
+            vocab.span_map(),
+            &[("hello".as_bytes().to_vec(), 1)].into_iter().collect()
+        );
+
+        let rebuild: SpecialVocab<T> = vocab.span_map().clone().into();
+        assert_eq!(rebuild, vocab);
     }
 }
