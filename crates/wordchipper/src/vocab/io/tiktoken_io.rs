@@ -1,11 +1,12 @@
 //! # Tiktoken Vocabulary IO
 
+use std::fs::File;
 use crate::types::{SpanTokenMap, TokenType};
 use crate::vocab::io::base64_vocab::{
-    load_base64_span_map_path, read_base64_span_map, save_base64_span_map_path,
+    read_base64_span_map,
     write_base64_span_map,
 };
-use std::io::{BufRead, Write};
+use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::Path;
 
 /// Load a [`SpanTokenMap`] from a tiktoken vocab file.
@@ -17,7 +18,10 @@ where
     T: TokenType,
     P: AsRef<Path>,
 {
-    load_base64_span_map_path(path)
+    let file = File::open(path)?;
+    let reader = BufReader::new(file);
+
+    read_tiktoken_vocab(reader)
 }
 
 /// Update a [`SpanTokenMap`] from a tiktoken vocab [`BufRead`] stream.
@@ -42,7 +46,10 @@ pub fn save_tiktoken_vocab_path<T: TokenType, P: AsRef<Path>>(
     span_map: &SpanTokenMap<T>,
     path: P,
 ) -> anyhow::Result<()> {
-    save_base64_span_map_path(span_map, path)
+    let file = File::create(path)?;
+    let mut writer = BufWriter::new(file);
+
+    write_tiktoken_vocab(span_map, &mut writer)
 }
 
 /// Save a [`SpanTokenMap`] to a [`Write`] writer.
