@@ -16,3 +16,6 @@ clap = { workspace = true, features = ["derive"] }
 similar = { workspace = true }
 wordchipper-data = { path = "../../crates/wordchipper-data" }
 wordchipper = { path = "../../crates/wordchipper", features = ["training"] }
+
+rayon = { workspace = true }
+tiktoken-rs = { workspace = true }
