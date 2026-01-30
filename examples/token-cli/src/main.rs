@@ -137,7 +137,10 @@ fn run_load(args: &Args) -> anyhow::Result<()> {
         let delay = t1.duration_since(t0);
         wc_batch_times_ns.push(delay.as_nanos() as u64);
 
-        total_wc_token_count += wc_encode_batch.iter().map(|tokens| tokens.len()).sum::<usize>();
+        total_wc_token_count += wc_encode_batch
+            .iter()
+            .map(|tokens| tokens.len())
+            .sum::<usize>();
 
         let t0 = std::time::Instant::now();
 
@@ -153,7 +156,10 @@ fn run_load(args: &Args) -> anyhow::Result<()> {
             let delay = t1.duration_since(t0);
             tt_batch_times_ns.push(delay.as_nanos() as u64);
 
-            total_tt_token_count += tt_encode_batch.iter().map(|tokens| tokens.len()).sum::<usize>();
+            total_tt_token_count += tt_encode_batch
+                .iter()
+                .map(|tokens| tokens.len())
+                .sum::<usize>();
         }
 
         token_batches.push(wc_encode_batch);
