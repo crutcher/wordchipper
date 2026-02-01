@@ -1,6 +1,5 @@
 //! # Word Map ``{ Vec<u8> -> T }`` Token Vocabulary
 
-use crate::alloc::sync::Arc;
 use crate::alloc::vec::Vec;
 use crate::types::{CommonHashMap, SpanTokenMap, TokenType};
 use crate::vocab::{ByteMapVocab, PairMapVocab, TokenVocab};
@@ -9,7 +8,7 @@ use crate::vocab::{ByteMapVocab, PairMapVocab, TokenVocab};
 #[derive(Debug, Clone, PartialEq)]
 pub struct SpanMapVocab<T: TokenType> {
     /// The byte/token mapping table.
-    byte_vocab: Arc<ByteMapVocab<T>>,
+    byte_vocab: ByteMapVocab<T>,
 
     /// The regex pattern used for text spl
     /// Map of ``{ Vec<u8> -> T }``.
@@ -18,7 +17,7 @@ pub struct SpanMapVocab<T: TokenType> {
 
 impl<T: TokenType> Default for SpanMapVocab<T> {
     fn default() -> Self {
-        SpanMapVocab::from_byte_vocab(Arc::new(ByteMapVocab::default()))
+        SpanMapVocab::from_byte_vocab(ByteMapVocab::default())
     }
 }
 
@@ -80,12 +79,7 @@ impl<T: TokenType> SpanMapVocab<T> {
     ///
     /// ## Panics
     /// Panics if initialization fails.
-    pub fn from_byte_vocab<B>(byte_vocab: B) -> Self
-    where
-        B: Into<Arc<ByteMapVocab<T>>>,
-    {
-        let byte_vocab = byte_vocab.into();
-
+    pub fn from_byte_vocab(byte_vocab: ByteMapVocab<T>) -> Self {
         let span_map: SpanTokenMap<T> = byte_vocab.span_pairs().collect();
 
         Self::init(byte_vocab, span_map).unwrap()
@@ -116,8 +110,7 @@ impl<T: TokenType> SpanMapVocab<T> {
         ord_table.sort_by_key(|&(k, _)| k);
         let byte_to_token: Vec<T> = ord_table.into_iter().map(|(_, v)| v).collect();
 
-        let byte_vocab: Arc<ByteMapVocab<T>> =
-            ByteMapVocab::from_byte_to_token(&byte_to_token).into();
+        let byte_vocab: ByteMapVocab<T> = ByteMapVocab::from_byte_to_token(&byte_to_token);
 
         Self::init(byte_vocab, span_map).unwrap()
     }
@@ -133,14 +126,10 @@ impl<T: TokenType> SpanMapVocab<T> {
     ///
     /// ## Returns
     /// A `Result` containing the new `SpanMapVocab` instance or an error.
-    pub fn init<B>(
-        byte_vocab: B,
+    pub fn init(
+        byte_vocab: ByteMapVocab<T>,
         mut span_map: SpanTokenMap<T>,
-    ) -> anyhow::Result<Self>
-    where
-        B: Into<Arc<ByteMapVocab<T>>>,
-    {
-        let byte_vocab = byte_vocab.into();
+    ) -> anyhow::Result<Self> {
         try_validate_span_map(&byte_vocab, &span_map)?;
 
         span_map.extend(byte_vocab.span_pairs());
@@ -152,25 +141,16 @@ impl<T: TokenType> SpanMapVocab<T> {
     }
 
     /// Get the byte/token mapping table.
-    ///
-    /// ## Returns
-    /// A reference to the internal `ByteMapVocab` arc.
-    pub fn byte_vocab(&self) -> &Arc<ByteMapVocab<T>> {
+    pub fn byte_vocab(&self) -> &ByteMapVocab<T> {
         &self.byte_vocab
     }
 
     /// Get the span => token map.
-    ///
-    /// ## Returns
-    /// A reference to the internal `SpanTokenMap`.
     pub fn span_map(&self) -> &SpanTokenMap<T> {
         &self.span_map
     }
 
     /// The number of words in the vocabulary.
-    ///
-    /// ## Returns
-    /// The number of spans in the map.
     #[allow(clippy::len_without_is_empty)]
     pub fn len(&self) -> usize {
         self.span_map.len()

@@ -2,7 +2,6 @@
 //!
 //! Mainly used for utility.
 
-use crate::alloc::sync::Arc;
 use crate::decoders::{TokenDecodeContext, TokenDecoder};
 use crate::types::TokenType;
 use crate::vocab::byte_vocab::ByteMapVocab;
@@ -10,7 +9,7 @@ use crate::vocab::byte_vocab::ByteMapVocab;
 /// A decoders that only decodes byte tokens.
 #[derive(Clone, Default)]
 pub struct ByteDecoder<T: TokenType> {
-    byte_vocab: Arc<ByteMapVocab<T>>,
+    byte_vocab: ByteMapVocab<T>,
 }
 
 impl<T: TokenType> ByteDecoder<T> {
@@ -21,13 +20,8 @@ impl<T: TokenType> ByteDecoder<T> {
     ///
     /// ## Returns
     /// A new `ByteDecoder` instance.
-    pub fn new<B>(byte_vocab: B) -> Self
-    where
-        B: Into<Arc<ByteMapVocab<T>>>,
-    {
-        Self {
-            byte_vocab: byte_vocab.into(),
-        }
+    pub fn new(byte_vocab: ByteMapVocab<T>) -> Self {
+        Self { byte_vocab }
     }
 
     /// Get the byte table.

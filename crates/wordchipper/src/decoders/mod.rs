@@ -12,10 +12,9 @@
 //! use wordchipper::decoders::DictionaryDecoder;
 //! use wordchipper::decoders::TokenDecoder;
 //! use wordchipper::types::TokenType;
-//! use std::sync::Arc;
 //!
 //! fn example<T: TokenType>(
-//!     vocab: Arc<UnifiedTokenVocab<T>>,
+//!     vocab: UnifiedTokenVocab<T>,
 //!     batch: &[Vec<T>],
 //! ) -> Vec<String> {
 //!     let decoder: DictionaryDecoder<T> = DictionaryDecoder::from_unified_vocab(vocab);

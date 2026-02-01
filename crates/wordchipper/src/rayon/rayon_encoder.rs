@@ -4,7 +4,6 @@ use crate::encoders::TokenEncoder;
 use crate::segmentation::TextSegmentor;
 use crate::types::TokenType;
 use crate::vocab::special_vocab::SpecialVocab;
-use std::sync::Arc;
 
 /// Batch-Level Parallel Encoder Wrapper.
 ///
@@ -42,7 +41,7 @@ where
     T: TokenType,
     D: TokenEncoder<T>,
 {
-    fn segmentor(&self) -> &Arc<TextSegmentor> {
+    fn segmentor(&self) -> &TextSegmentor {
         self.inner.segmentor()
     }
 
@@ -69,10 +68,10 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::alloc::sync::Arc;
     use crate::encoders::test_utils::{common_encoder_test_vocab, common_encoder_tests};
     use crate::encoders::{DefaultTokenEncoder, TokenEncoder};
     use crate::rayon::rayon_encoder::ParallelRayonEncoder;
+    use crate::regex::RegexSupplier;
     use crate::types::TokenType;
 
     fn test_encoder<T: TokenType>() {
@@ -81,7 +80,10 @@ mod tests {
         let encoder = DefaultTokenEncoder::<T>::init(vocab.clone().into());
         let encoder = ParallelRayonEncoder::new(encoder);
 
-        assert!(Arc::ptr_eq(encoder.segmentor(), encoder.inner.segmentor()));
+        assert_eq!(
+            encoder.segmentor().span_re().get_pattern().as_str(),
+            vocab.segmentation.pattern.as_str()
+        );
         assert_eq!(encoder.special_vocab(), encoder.inner.special_vocab());
 
         common_encoder_tests(vocab, &encoder)

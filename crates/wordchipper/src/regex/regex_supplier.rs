@@ -12,15 +12,9 @@ pub type RegexSupplierHandle = Arc<dyn RegexSupplier>;
 /// Regex Supplier Trait
 pub trait RegexSupplier: Sync + Send + Debug {
     /// Get the regex.
-    ///
-    /// ## Returns
-    /// An `Arc` containing the `RegexWrapper`.
     fn get_regex(&self) -> Arc<RegexWrapper>;
 
     /// Get the regex pattern.
-    ///
-    /// ## Returns
-    /// The regex pattern as a `String`.
     fn get_pattern(&self) -> String {
         self.get_regex().as_str().to_string()
     }

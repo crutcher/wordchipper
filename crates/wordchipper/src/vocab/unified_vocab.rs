@@ -1,6 +1,5 @@
 //! # Unified Token Vocabulary
 
-use crate::alloc::sync::Arc;
 use crate::alloc::vec::Vec;
 use crate::segmentation::segmentation_config::SegmentationConfig;
 use crate::types::{CommonHashMap, CommonHashSet, Pair, SpanTokenMap, TokenType};
@@ -70,12 +69,12 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     /// Panics if the vocabularies are inconsistent.
     pub fn init(
         segmentation: SegmentationConfig<T>,
-        word_vocab: SpanMapVocab<T>,
+        span_vocab: SpanMapVocab<T>,
         pair_vocab: PairMapVocab<T>,
     ) -> Self {
-        assert_eq!(word_vocab.byte_vocab(), pair_vocab.byte_vocab());
+        assert_eq!(span_vocab.byte_vocab(), pair_vocab.byte_vocab());
 
-        let tokens = word_vocab.unordered_tokens().collect::<CommonHashSet<_>>();
+        let tokens = span_vocab.unordered_tokens().collect::<CommonHashSet<_>>();
         for ((a, b), c) in pair_vocab.pairs() {
             for t in [a, b, c].iter() {
                 assert!(
@@ -93,16 +92,13 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
 
         Self {
             segmentation,
-            span_vocab: word_vocab,
+            span_vocab,
             pair_vocab,
         }
     }
 
     /// Get the byte table for the word vocabulary.
-    ///
-    /// ## Returns
-    /// A reference to the internal `ByteMapVocab` arc.
-    pub fn byte_vocab(&self) -> &Arc<ByteMapVocab<T>> {
+    pub fn byte_vocab(&self) -> &ByteMapVocab<T> {
         self.span_vocab.byte_vocab()
     }
 
@@ -112,9 +108,6 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     }
 
     /// Get a mutable view of the [`SpecialVocab`]
-    ///
-    /// ## Returns
-    /// A mutable reference to the internal `SpecialVocab`.
     pub fn special_vocab_mut(&mut self) -> &mut SpecialVocab<T> {
         self.segmentation.special_vocab_mut()
     }

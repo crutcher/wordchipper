@@ -12,10 +12,9 @@
 //! use wordchipper::encoders::DefaultTokenEncoder;
 //! use wordchipper::encoders::TokenEncoder;
 //! use wordchipper::types::TokenType;
-//! use std::sync::Arc;
 //!
 //! fn example<T: TokenType>(
-//!     vocab: Arc<UnifiedTokenVocab<T>>,
+//!     vocab: UnifiedTokenVocab<T>,
 //!     batch: &[&str],
 //! ) -> Vec<Vec<T>> {
 //!     let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::init(vocab);

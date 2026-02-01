@@ -1,6 +1,5 @@
 //! # Byte/Token Mapping Table
 
-use crate::alloc::sync::Arc;
 use crate::alloc::vec;
 use crate::alloc::vec::Vec;
 use crate::types::{CommonHashMap, TokenType};
@@ -10,7 +9,7 @@ use core::fmt::Debug;
 /// Build a [`ByteMapVocab`] with all tokens shifted by `shift`.
 ///
 /// This is a purposely stupid byte map; useful for testing.
-pub fn build_test_shift_byte_vocab<T: TokenType>(shift: usize) -> Arc<ByteMapVocab<T>> {
+pub fn build_test_shift_byte_vocab<T: TokenType>(shift: usize) -> ByteMapVocab<T> {
     // This is a purposely stupid byte map.
     ByteMapVocab::<T>::from_byte_to_token(
         &ByteMapVocab::<T>::default()
@@ -19,7 +18,6 @@ pub fn build_test_shift_byte_vocab<T: TokenType>(shift: usize) -> Arc<ByteMapVoc
             .map(|&t| t + T::from_usize(shift).unwrap())
             .collect::<Vec<T>>(),
     )
-    .into()
 }
 
 /// ``0..=255`` Rank Byte/Token Bijection Table

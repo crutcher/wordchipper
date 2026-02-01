@@ -1,6 +1,5 @@
 //! # Common Decoder Unit Tests
 
-use crate::alloc::sync::Arc;
 use crate::alloc::vec;
 use crate::alloc::vec::Vec;
 use crate::decoders::TokenDecoder;
@@ -11,7 +10,7 @@ use crate::vocab::{TokenVocab, UnifiedTokenVocab};
 
 /// Common Unittest for TokenDecoder implementations.
 pub fn common_decoder_unit_test<T: TokenType, D: TokenDecoder<T>>(
-    vocab: Arc<UnifiedTokenVocab<T>>,
+    vocab: UnifiedTokenVocab<T>,
     decoder: &D,
 ) {
     check_is_send(decoder);

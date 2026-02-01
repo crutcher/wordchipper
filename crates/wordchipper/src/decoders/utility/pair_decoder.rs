@@ -1,6 +1,5 @@
 //! # Pair Expansion ``{ T -> (T, T) }`` Token Decoder
 
-use crate::alloc::sync::Arc;
 use crate::decoders::decode_context::TokenDecodeContext;
 use crate::decoders::token_decoder::TokenDecoder;
 use crate::types::{TokenToPairMap, TokenType};
@@ -10,7 +9,7 @@ use crate::vocab::{ByteMapVocab, PairMapVocab};
 #[derive(Clone)]
 pub struct PairExpansionDecoder<T: TokenType> {
     /// Byte/token mapping table.
-    byte_vocab: Arc<ByteMapVocab<T>>,
+    byte_vocab: ByteMapVocab<T>,
 
     /// Token to pair mapping.
     token_map: TokenToPairMap<T>,
@@ -25,15 +24,13 @@ impl<T: TokenType> PairExpansionDecoder<T> {
     ///
     /// ## Returns
     /// A new `PairExpansionDecoder` instance.
-    pub fn new<B>(
-        byte_vocab: B,
+    pub fn new(
+        byte_vocab: ByteMapVocab<T>,
         token_map: TokenToPairMap<T>,
     ) -> Self
-    where
-        B: Into<Arc<ByteMapVocab<T>>>,
-    {
+where {
         Self {
-            byte_vocab: byte_vocab.into(),
+            byte_vocab,
             token_map,
         }
     }
@@ -55,10 +52,7 @@ impl<T: TokenType> PairExpansionDecoder<T> {
     }
 
     /// Get the byte table.
-    ///
-    /// ## Returns
-    /// A reference to the internal `ByteMapVocab` arc.
-    pub fn byte_vocab(&self) -> &Arc<ByteMapVocab<T>> {
+    pub fn byte_vocab(&self) -> &ByteMapVocab<T> {
         &self.byte_vocab
     }
 }
@@ -87,7 +81,6 @@ impl<T: TokenType> TokenDecoder<T> for PairExpansionDecoder<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::alloc::sync::Arc;
     use crate::decoders::utility::test_utils::common_decoder_unit_test;
     use crate::segmentation::SegmentationConfig;
     use crate::vocab::UnifiedTokenVocab;
@@ -99,11 +92,10 @@ mod tests {
     fn test_pair_decoder() {
         type T = u16;
 
-        let vocab: Arc<UnifiedTokenVocab<T>> = build_test_vocab(
+        let vocab: UnifiedTokenVocab<T> = build_test_vocab(
             build_test_shift_byte_vocab(10),
             SegmentationConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN),
-        )
-        .into();
+        );
 
         let decoder = PairExpansionDecoder::from_pair_vocab(&vocab.pair_vocab);
 

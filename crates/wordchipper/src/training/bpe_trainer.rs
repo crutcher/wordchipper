@@ -237,17 +237,14 @@ where
     /// ## Returns
     /// A `Result` containing the `TrainResults<T>` or an error.
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, byte_vocab)))]
-    fn train_basic_pairs<T, B>(
+    fn train_basic_pairs<T>(
         self,
-        byte_vocab: B,
+        byte_vocab: ByteMapVocab<T>,
     ) -> anyhow::Result<TrainResults<T>>
     where
         T: TokenType,
         C: CountType,
-        B: Into<Arc<ByteMapVocab<T>>>,
     {
-        let byte_vocab = byte_vocab.into();
-
         validators::expect_vocab_size::<T>(self.options.vocab_size);
 
         let num_merges = self.options.vocab_size - U8_SIZE;
@@ -399,14 +396,13 @@ where
     /// ## Returns
     /// A `Result` containing the `UnifiedTokenVocab<T>` or an error.
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, byte_vocab)))]
-    pub fn train<T, B>(
+    pub fn train<T>(
         self,
-        byte_vocab: B,
+        byte_vocab: ByteMapVocab<T>,
     ) -> anyhow::Result<UnifiedTokenVocab<T>>
     where
         T: TokenType,
         C: CountType,
-        B: Into<Arc<ByteMapVocab<T>>>,
     {
         let results = self.train_basic_pairs(byte_vocab)?;
         Ok(UnifiedTokenVocab::from_pair_vocab(
@@ -418,7 +414,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::alloc::sync::Arc;
     use crate::decoders::{DictionaryDecoder, TokenDecoder};
     use crate::encoders::{DefaultTokenEncoder, TokenEncoder};
     use crate::training::BinaryPairVocabTrainerOptions;
@@ -465,9 +460,9 @@ mod tests {
         let mut trainer = options.init::<K, C>();
         trainer.update_from_samples(samples.iter());
 
-        let byte_vocab: Arc<ByteMapVocab<T>> = Arc::new(Default::default());
+        let byte_vocab: ByteMapVocab<T> = Default::default();
 
-        let vocab: Arc<UnifiedTokenVocab<T>> = trainer.train(byte_vocab.clone()).unwrap().into();
+        let vocab: UnifiedTokenVocab<T> = trainer.train(byte_vocab.clone()).unwrap();
 
         let encoder = DefaultTokenEncoder::<T>::init(vocab.clone());
         check_is_send(&encoder);

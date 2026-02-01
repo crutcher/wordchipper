@@ -43,7 +43,6 @@
 //! use wordchipper::encoders::DefaultTokenEncoder;
 //! use wordchipper::decoders::DictionaryDecoder;
 //! use wordchipper::rayon::{ParallelRayonEncoder, ParallelRayonDecoder};
-//! use std::sync::Arc;
 //!
 //! fn example<I, S>(
 //!     vocab_size: usize,
@@ -75,12 +74,11 @@
 //!         trainer.update_from_samples(batch.as_ref());
 //!     }
 //!
-//!     let byte_vocab: Arc<ByteMapVocab<T>> = Arc::new(Default::default());
+//!     let byte_vocab: ByteMapVocab<T> = Default::default();
 //!
-//!     let vocab: Arc<UnifiedTokenVocab<T>> = trainer
+//!     let vocab: UnifiedTokenVocab<T> = trainer
 //!         .train(byte_vocab.clone())
-//!         .expect("training failed")
-//!         .into();
+//!         .expect("training failed");
 //!
 //!     if let Some(path) = tiktoken_save_path {
 //!         save_tiktoken_vocab_path(&vocab.span_vocab.span_map(), &path)

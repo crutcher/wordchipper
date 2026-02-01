@@ -1,9 +1,7 @@
 //! # Encoder for [`UnifiedTokenVocab`].
 
-use crate::alloc::sync::Arc;
 use crate::alloc::vec::Vec;
 use crate::encoders::token_encoder::TokenEncoder;
-use crate::regex::{RegexSupplierHandle, RegexWrapperHandle, default_regex_supplier};
 use crate::segmentation::SpanRef;
 use crate::segmentation::text_segmentor::TextSegmentor;
 use crate::types::TokenType;
@@ -16,10 +14,10 @@ use crate::vocab::unified_vocab::UnifiedTokenVocab;
 #[derive(Clone)]
 pub struct MergeScanVocabEncoder<T: TokenType> {
     /// Data for the encoders.
-    pub data: Arc<UnifiedTokenVocab<T>>,
+    pub data: UnifiedTokenVocab<T>,
 
     /// Text Segmentor.
-    pub segmentor: Arc<TextSegmentor>,
+    pub segmentor: TextSegmentor,
 }
 
 impl<T: TokenType> MergeScanVocabEncoder<T> {
@@ -30,26 +28,8 @@ impl<T: TokenType> MergeScanVocabEncoder<T> {
     ///
     /// ## Returns
     /// A new `MergeHeapVocabEncoder` instance.
-    pub fn init(data: Arc<UnifiedTokenVocab<T>>) -> Self {
-        Self::init_with_factory(data, default_regex_supplier)
-    }
-
-    /// Construct an encoder from data.
-    ///
-    /// ## Arguments
-    /// * `data` - The unified token vocabulary to build the encoder from.
-    /// * `re_factory` - A factory function to create regex suppliers.
-    ///
-    /// ## Returns
-    /// A new `MergeHeapVocabEncoder` instance.
-    pub fn init_with_factory<F>(
-        data: Arc<UnifiedTokenVocab<T>>,
-        re_factory: F,
-    ) -> Self
-    where
-        F: Fn(RegexWrapperHandle) -> RegexSupplierHandle,
-    {
-        let segmentor = TextSegmentor::from_config(data.segmentation.clone(), re_factory).into();
+    pub fn init(data: UnifiedTokenVocab<T>) -> Self {
+        let segmentor = TextSegmentor::from_config(data.segmentation.clone());
 
         Self { data, segmentor }
     }
@@ -127,7 +107,7 @@ impl<T: TokenType> MergeScanVocabEncoder<T> {
 }
 
 impl<T: TokenType> TokenEncoder<T> for MergeScanVocabEncoder<T> {
-    fn segmentor(&self) -> &Arc<TextSegmentor> {
+    fn segmentor(&self) -> &TextSegmentor {
         &self.segmentor
     }
 

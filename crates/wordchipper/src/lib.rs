@@ -94,11 +94,11 @@
 //! type T = u32;
 //!
 //! let mut disk_cache = WordchipperDiskCache::default();
-//! let vocab: Arc<UnifiedTokenVocab<T>> =
+//! let vocab: UnifiedTokenVocab<T> =
 //!     load_o200k_harmony_vocab(&mut disk_cache)?.into();
 //!
-//! let encoder: DefaultTokenEncoder<T> =
-//! DefaultTokenEncoder::init_with_factory(vocab.clone(), regex_pool_supplier);
+//! let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::init_with_factory(
+//!     vocab.clone(), regex_pool_supplier);
 //! let encoder = ParallelRayonEncoder::new(encoder);
 //!
 //! let decoder = DictionaryDecoder::from_unified_vocab(vocab.clone());

@@ -81,7 +81,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::alloc::sync::Arc;
     use crate::decoders::utility::pair_decoder::PairExpansionDecoder;
     use crate::decoders::utility::test_utils::common_decoder_unit_test;
     use crate::segmentation::SegmentationConfig;
@@ -94,11 +93,10 @@ mod tests {
     fn test_rayon_decoder() {
         type T = u16;
 
-        let vocab: Arc<UnifiedTokenVocab<T>> = build_test_vocab(
+        let vocab: UnifiedTokenVocab<T> = build_test_vocab(
             build_test_shift_byte_vocab(10),
             SegmentationConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN),
-        )
-        .into();
+        );
 
         let decoder = PairExpansionDecoder::from_pair_vocab(&vocab.pair_vocab);
 

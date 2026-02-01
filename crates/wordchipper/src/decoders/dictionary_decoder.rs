@@ -22,11 +22,8 @@ impl<T: TokenType> DictionaryDecoder<T> {
     ///
     /// ## Returns
     /// A new `DictionaryDecoder` instance.
-    pub fn from_unified_vocab<V>(unified_vocab: V) -> Self
-    where
-        V: AsRef<UnifiedTokenVocab<T>>,
-    {
-        Self::init(unified_vocab.as_ref().unified_dictionary())
+    pub fn from_unified_vocab(unified_vocab: UnifiedTokenVocab<T>) -> Self {
+        Self::init(unified_vocab.unified_dictionary())
     }
 
     /// Creates a new Decoder.
@@ -62,7 +59,6 @@ impl<T: TokenType> TokenDecoder<T> for DictionaryDecoder<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::alloc::sync::Arc;
     use crate::decoders::utility::test_utils::common_decoder_unit_test;
     use crate::segmentation::SegmentationConfig;
     use crate::vocab::byte_vocab::build_test_shift_byte_vocab;
@@ -73,11 +69,10 @@ mod tests {
     fn test_dictionary_decoder() {
         type T = u16;
 
-        let vocab: Arc<UnifiedTokenVocab<T>> = build_test_vocab(
+        let vocab: UnifiedTokenVocab<T> = build_test_vocab(
             build_test_shift_byte_vocab(10),
             SegmentationConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN),
-        )
-        .into();
+        );
 
         let decoder = DictionaryDecoder::from_unified_vocab(vocab.clone());
 

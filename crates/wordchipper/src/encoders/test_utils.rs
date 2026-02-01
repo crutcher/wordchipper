@@ -1,7 +1,6 @@
 //! # Encoder Test Utilities
 
 use crate::alloc::string::String;
-use crate::alloc::sync::Arc;
 use crate::alloc::vec;
 use crate::alloc::vec::Vec;
 use crate::decoders::{DictionaryDecoder, TokenDecoder};
@@ -14,7 +13,7 @@ use crate::vocab::utility::testing::build_test_vocab;
 use crate::vocab::{TokenVocab, UnifiedTokenVocab};
 
 /// Build common test vocabulary for [`TokenEncoder`] tests.
-pub fn common_encoder_test_vocab<T: TokenType>() -> Arc<UnifiedTokenVocab<T>> {
+pub fn common_encoder_test_vocab<T: TokenType>() -> UnifiedTokenVocab<T> {
     let mut vocab: UnifiedTokenVocab<T> = build_test_vocab(
         build_test_shift_byte_vocab(10),
         SegmentationConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN),
@@ -22,12 +21,12 @@ pub fn common_encoder_test_vocab<T: TokenType>() -> Arc<UnifiedTokenVocab<T>> {
     let hi_token = vocab.max_token() + T::one();
     vocab.special_vocab_mut().add_str_word("<|HI|>", hi_token);
 
-    vocab.into()
+    vocab
 }
 
 /// Common [`TokenEncoder`] tests.
 pub fn common_encoder_tests<T: TokenType, E: TokenEncoder<T>>(
-    vocab: Arc<UnifiedTokenVocab<T>>,
+    vocab: UnifiedTokenVocab<T>,
     encoder: &E,
 ) {
     check_is_send(encoder);

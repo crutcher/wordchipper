@@ -2,13 +2,11 @@ use crate::tokenizer_timer::FullMontyTokenizer;
 use arrow::array::StringArray;
 use clap::Parser;
 use similar::{ChangeTag, TextDiff};
-use std::sync::Arc;
 use std::time::Duration;
 use wordchipper::decoders::{DictionaryDecoder, TokenDecoder};
 use wordchipper::disk_cache::WordchipperDiskCache;
 use wordchipper::encoders::{DefaultTokenEncoder, TokenEncoder};
-use wordchipper::rayon::{ParallelRayonDecoder, ParallelRayonEncoder};
-use wordchipper::regex::regex_pool_supplier;
+use wordchipper::rayon::ParallelRayonDecoder;
 use wordchipper::segmentation::TextSegmentor;
 use wordchipper::vocab::UnifiedTokenVocab;
 use wordchipper::vocab::public::openai::load_o200k_harmony_vocab;
@@ -65,13 +63,10 @@ fn run_load(args: &Args) -> anyhow::Result<()> {
     let tt_bpe = tiktoken_rs::o200k_harmony()?;
 
     let mut disk_cache = WordchipperDiskCache::default();
-    let vocab: Arc<UnifiedTokenVocab<T>> = load_o200k_harmony_vocab(&mut disk_cache)?.into();
+    let vocab: UnifiedTokenVocab<T> = load_o200k_harmony_vocab(&mut disk_cache)?;
 
     let wc_tokenizer = FullMontyTokenizer::init(
-        ParallelRayonEncoder::new(DefaultTokenEncoder::<T>::init_with_factory(
-            vocab.clone(),
-            regex_pool_supplier,
-        )),
+        DefaultTokenEncoder::<T>::init(vocab.clone()),
         ParallelRayonDecoder::new(DictionaryDecoder::from_unified_vocab(vocab.clone())),
     );
 
@@ -126,13 +121,22 @@ fn run_load(args: &Args) -> anyhow::Result<()> {
     let mut total_wc_token_count = 0;
     let mut total_tt_token_count = 0;
 
+    use rayon::prelude::*;
+
     let mut wc_batch_times_ns = vec![];
     let mut tt_batch_times_ns = vec![];
     for (idx, batch) in sample_batches.iter().enumerate() {
         let batch = batch.iter().map(|s| s.as_str()).collect::<Vec<_>>();
 
         let t0 = std::time::Instant::now();
-        let wc_encode_batch: Vec<Vec<T>> = wc_tokenizer.encoder.try_encode_batch(&batch).unwrap();
+        let wc_encode_batch: anyhow::Result<Vec<Vec<T>>> = batch
+            .par_iter()
+            .map(|s| wc_tokenizer.encoder.try_encode(s))
+            .collect();
+
+        let wc_encode_batch = wc_encode_batch?;
+
+        wc_tokenizer.encoder.try_encode_batch(&batch).unwrap();
         let t1 = std::time::Instant::now();
         let delay = t1.duration_since(t0);
         wc_batch_times_ns.push(delay.as_nanos() as u64);
@@ -142,11 +146,9 @@ fn run_load(args: &Args) -> anyhow::Result<()> {
             .map(|tokens| tokens.len())
             .sum::<usize>();
 
-        let t0 = std::time::Instant::now();
 
         {
-            use rayon::prelude::*;
-
+            let t0 = std::time::Instant::now();
             let tt_encode_batch = batch
                 .par_iter()
                 .map(|s| tt_bpe.encode_with_special_tokens(s))
@@ -215,8 +217,7 @@ fn run_load(args: &Args) -> anyhow::Result<()> {
     let num_batches1 = token_batches.len();
     println!("Timing Decode:");
 
-    let segmentor: TextSegmentor =
-        TextSegmentor::from_config(vocab.segmentation.clone(), regex_pool_supplier);
+    let segmentor: TextSegmentor = TextSegmentor::from_config(vocab.segmentation.clone());
 
     let mut wc_batch_times_ns = vec![];
     let mut tt_batch_times_ns = vec![];
@@ -257,7 +258,7 @@ fn run_load(args: &Args) -> anyhow::Result<()> {
 
             let t0 = std::time::Instant::now();
             let tt_decoded = batch
-                .par_iter()
+                .iter()
                 .map(|tokens| tt_bpe.decode(tokens.clone()).unwrap())
                 .collect::<Vec<_>>();
             let t1 = std::time::Instant::now();
