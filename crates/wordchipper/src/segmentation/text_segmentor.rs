@@ -37,8 +37,11 @@ impl<'a> SpanRef<'a> {
 /// Word Split + Special Words Segmentor
 #[derive(Clone)]
 pub struct TextSegmentor {
-    span_re: RegexWrapperPool,
-    special_re: Option<RegexWrapperPool>,
+    /// Regex for splitting words.
+    pub span_re: RegexWrapperPool,
+
+    /// Regex for matching special words.
+    pub special_re: Option<RegexWrapperPool>,
 }
 
 impl TextSegmentor {

@@ -62,7 +62,10 @@ where
         batch: &[&str],
     ) -> anyhow::Result<Vec<Vec<T>>> {
         use rayon::prelude::*;
-        batch.par_iter().map(|text| self.try_encode(text)).collect()
+        batch
+            .par_iter()
+            .map(|text| self.inner.try_encode(text))
+            .collect()
     }
 }
 

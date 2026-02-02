@@ -134,6 +134,8 @@ impl<T: TokenType> SpanMapVocab<T> {
 
         span_map.extend(byte_vocab.span_pairs());
 
+        span_map.shrink_to_fit();
+
         Ok(Self {
             byte_vocab,
             span_map,

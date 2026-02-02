@@ -2,6 +2,7 @@
 
 use crate::alloc::vec::Vec;
 use crate::encoders::token_encoder::TokenEncoder;
+use crate::regex::RegexSupplier;
 use crate::segmentation::SpanRef;
 use crate::segmentation::text_segmentor::TextSegmentor;
 use crate::types::TokenType;
@@ -43,13 +44,6 @@ impl<T: TokenType> MergeHeapVocabEncoder<T> {
         span: &[u8],
         tokens: &mut Vec<T>,
     ) {
-        if let Some(token) = self.data.lookup_token(span) {
-            // 1. Faster;
-            // 2. Correct-or: Some words may not exist in the pair mappings.
-            tokens.push(token);
-            return;
-        }
-
         // We reuse the output buffer as our working memory.
         // - `start` is the first index of the working memory buffer.
         let start = tokens.len();
@@ -137,23 +131,86 @@ impl<T: TokenType> TokenEncoder<T> for MergeHeapVocabEncoder<T> {
     /// ## Arguments
     /// * `text` - The string slice to encode.
     /// * `tokens` - The target token buffer to append to.
-    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, text)))]
     fn try_encode_append(
         &self,
         text: &str,
         tokens: &mut Vec<T>,
     ) -> anyhow::Result<()> {
-        self.segmentor()
-            .split_spans(text)
-            .into_iter()
-            .for_each(|span_ref| match span_ref {
-                SpanRef::Normal(span_str) => {
-                    self.encode_append_span_normal(span_str.as_bytes(), tokens)
+        #[cfg(not(feature = "unroll_split_spans"))]
+        const UNROLL_SPLIT_SPANS: bool = false;
+        #[cfg(feature = "unroll_split_spans")]
+        const UNROLL_SPLIT_SPANS: bool = true;
+
+        if !UNROLL_SPLIT_SPANS {
+            self.segmentor()
+                .split_spans(text)
+                .into_iter()
+                .for_each(|span_ref| match span_ref {
+                    SpanRef::Normal(s) => {
+                        let span = s.as_bytes();
+                        if span.len() == 1 {
+                            tokens.push(self.data.byte_vocab().get_token(span[0]));
+                        } else if let Some(token) = self.data.lookup_token(span) {
+                            // 2. Correct-or: Some words may not exist in the pair mappings.
+                            tokens.push(token);
+                        } else {
+                            self.encode_append_span_normal(s.as_bytes(), tokens)
+                        }
+                    }
+                    SpanRef::Special(s) => {
+                        let special_token =
+                            self.special_vocab().lookup_token(s.as_bytes()).unwrap();
+                        tokens.push(special_token);
+                    }
+                });
+        } else {
+            // SPEED DEBUG: the unrolled version.
+            // This is significantly slower. 228ms vrs 158ms for the "rolled" version.
+
+            let mut current = text;
+            let span_re = self.segmentor.span_re.get_regex();
+            let special_re = self.segmentor.special_re.as_ref().map(|r| r.get_regex());
+
+            loop {
+                if let Some(sre) = special_re
+                    && let Some(m) = sre.find_iter(current).next()
+                {
+                    let special = m.as_str();
+
+                    if let Some(special_token) =
+                        self.special_vocab().lookup_token(special.as_bytes())
+                    {
+                        let range = m.range();
+                        let pre = &current[..range.start];
+
+                        for m in span_re.find_iter(pre) {
+                            self.encode_append_span_normal(m.as_str().as_bytes(), tokens);
+                        }
+
+                        tokens.push(special_token);
+
+                        current = &current[range.end..];
+                        continue;
+                    } else {
+                        panic!("Special token not found in special vocab: {}", special);
+                    }
                 }
-                SpanRef::Special(s) => {
-                    tokens.push(self.special_vocab().lookup_token(s.as_bytes()).unwrap());
+
+                let mut next: Option<&str> = None;
+                for m in span_re.find_iter(current) {
+                    self.encode_append_span_normal(m.as_str().as_bytes(), tokens);
+                    next = Some(&current[m.range().end..])
                 }
-            });
+                #[allow(unused)]
+                if let Some(next) = next {
+                    current = next;
+                }
+
+                break;
+            }
+        }
+
+        // TODO: track consumption, handle last-span
 
         Ok(())
     }

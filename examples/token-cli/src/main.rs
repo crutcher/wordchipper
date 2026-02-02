@@ -1,21 +1,21 @@
-use crate::tokenizer_timer::FullMontyTokenizer;
 use arrow::array::StringArray;
 use clap::Parser;
-use rayon::prelude::*;
 use similar::{ChangeTag, TextDiff};
 use std::time::Duration;
 use wordchipper::decoders::{DictionaryDecoder, TokenDecoder};
 use wordchipper::disk_cache::WordchipperDiskCache;
-use wordchipper::encoders::{DefaultTokenEncoder, TokenEncoder};
-use wordchipper::rayon::{ParallelRayonDecoder, ParallelRayonEncoder};
+use wordchipper::encoders::TokenEncoder;
+use wordchipper::encoders::merge_heap_encoder::MergeHeapVocabEncoder;
 use wordchipper::segmentation::TextSegmentor;
 use wordchipper::vocab::UnifiedTokenVocab;
 use wordchipper::vocab::public::openai::load_o200k_harmony_vocab;
 use wordchipper_data::dataset::DatasetCacheConfig;
 
-mod tokenizer_timer;
+#[cfg(feature = "parallel")]
+use rayon::prelude::*;
 
-fn timeit<F, R>(f: F) -> (Duration, R)
+/// Time an operation; return (duration, result).
+pub fn timeit<F, R>(f: F) -> (Duration, R)
 where
     F: FnOnce() -> R,
 {
@@ -23,6 +23,14 @@ where
     let ret = f();
     let t1 = std::time::Instant::now();
     (t1 - t0, ret)
+}
+
+pub fn format_bps(
+    bytes: usize,
+    duration: Duration,
+) -> String {
+    let bps = bytes as f64 / duration.as_secs_f64();
+    format!(r"{}/s", humansize::format_size_i(bps, humansize::BINARY))
 }
 
 /// Example encoders trainer.
@@ -76,25 +84,19 @@ fn run_load(args: &Args) -> anyhow::Result<()> {
     let mut disk_cache = WordchipperDiskCache::default();
     let vocab: UnifiedTokenVocab<T> = load_o200k_harmony_vocab(&mut disk_cache)?;
 
-    let wc_tokenizer = FullMontyTokenizer::init(
-        ParallelRayonEncoder::new(DefaultTokenEncoder::<T>::init(vocab.clone())),
-        ParallelRayonDecoder::new(DictionaryDecoder::from_unified_vocab(vocab.clone())),
-    );
+    let encoder = MergeHeapVocabEncoder::<T>::init(vocab.clone());
+    #[cfg(feature = "parallel")]
+    let encoder = wordchipper::rayon::ParallelRayonEncoder::new(encoder);
 
-    let shards: Vec<usize> = vec![0];
-    let num_timing_batches = 20;
+    let decoder = DictionaryDecoder::from_unified_vocab(vocab.clone());
+    #[cfg(feature = "parallel")]
+    let decoder = wordchipper::rayon::ParallelRayonDecoder::new(decoder);
+
     let batch_size = 512;
-
-    println!("Loading Shards: {shards:?}");
-    println!("...");
-    dataset_cache.load_shards(&shards)?;
 
     let mut samples = Vec::new();
     {
-        for batch in dataset_cache
-            .read_cached_batches(shards[0])?
-            .take(num_timing_batches)
-        {
+        for batch in dataset_cache.read_batches(0, true)? {
             let batch = batch?;
             let column = batch
                 .column_by_name("text")
@@ -140,13 +142,20 @@ fn run_load(args: &Args) -> anyhow::Result<()> {
     for (idx, batch) in sample_batches.iter().enumerate() {
         let batch = batch.iter().map(|s| s.as_str()).collect::<Vec<_>>();
 
+        // warmup.
+        encoder.try_encode_batch(&batch).unwrap();
+
         let (durationn, wc_batch_tokens) = timeit(|| {
             if true {
-                wc_tokenizer.encoder.try_encode_batch(&batch).unwrap()
+                encoder.try_encode_batch(&batch).unwrap()
             } else {
-                batch
-                    .par_iter()
-                    .map(|s| wc_tokenizer.encoder.try_encode(s))
+                // SPEED DEBUG: this *slows down* runs versus the rayon encoder.
+                #[cfg(feature = "parallel")]
+                let it = batch.par_iter();
+                #[cfg(not(feature = "parallel"))]
+                let it = batch.iter();
+
+                it.map(|s| encoder.try_encode(s))
                     .collect::<anyhow::Result<Vec<Vec<T>>>>()
                     .unwrap()
             }
@@ -160,9 +169,12 @@ fn run_load(args: &Args) -> anyhow::Result<()> {
 
         {
             let (duration, tt_batch_tokens) = timeit(|| {
-                batch
-                    .par_iter()
-                    .map(|s| tt_bpe.encode_with_special_tokens(s))
+                #[cfg(feature = "parallel")]
+                let it = batch.par_iter();
+                #[cfg(not(feature = "parallel"))]
+                let it = batch.iter();
+
+                it.map(|s| tt_bpe.encode_with_special_tokens(s))
                     .collect::<Vec<_>>()
             });
             tt_batch_durations.push(duration);
@@ -181,9 +193,10 @@ fn run_load(args: &Args) -> anyhow::Result<()> {
         ("tiktoken-rs", &tt_batch_durations),
     ] {
         let mean_time = durations.iter().sum::<Duration>() / num_batches as u32;
-        let bps = avg_batch_size_bytes as f64 / mean_time.as_secs_f64();
-
-        println!("- {name}:\t{bps:.1e}b/s, {mean_time:10.1?}");
+        println!(
+            "- {name}:\t{mean_time:>10.1?}, {:>15}",
+            format_bps(avg_batch_size_bytes, mean_time),
+        );
     }
 
     println!();
@@ -215,12 +228,8 @@ fn run_load(args: &Args) -> anyhow::Result<()> {
             .collect::<Vec<_>>();
 
         {
-            let (duration, wc_decoded) = timeit(|| {
-                wc_tokenizer
-                    .decoder
-                    .try_decode_batch_to_strings(batch)
-                    .unwrap()
-            });
+            let (duration, wc_decoded) =
+                timeit(|| decoder.try_decode_batch_to_strings(batch).unwrap());
             wc_batch_decode_durations.push(duration);
 
             verify_decode(&expected, &wc_decoded);
@@ -228,9 +237,12 @@ fn run_load(args: &Args) -> anyhow::Result<()> {
 
         {
             let (duration, tt_decoded) = timeit(|| {
-                batch
-                    .par_iter()
-                    .map(|tokens| tt_bpe.decode(tokens.clone()).unwrap())
+                #[cfg(feature = "parallel")]
+                let it = batch.par_iter();
+                #[cfg(not(feature = "parallel"))]
+                let it = batch.iter();
+
+                it.map(|tokens| tt_bpe.decode(tokens.clone()).unwrap())
                     .collect::<Vec<_>>()
             });
 
@@ -245,7 +257,10 @@ fn run_load(args: &Args) -> anyhow::Result<()> {
         ("tiktoken-rs", &tt_batch_decode_durations),
     ] {
         let mean_time = durations.iter().sum::<Duration>() / num_batches as u32;
-        println!("- {name}: batch {mean_time:10.1?}");
+        println!(
+            "- {name}:\t{mean_time:>10.1?}, {:>15}",
+            format_bps(avg_batch_size_bytes, mean_time),
+        );
     }
 
     Ok(())
@@ -271,37 +286,3 @@ pub fn verify_decode(
         }
     }
 }
-
-/*
-pub fn batch_score(
-    actual: &[String],
-    expected: &[String],
-) -> f64 {
-    score_batch(actual, expected).iter().sum::<f64>() / actual.len() as f64
-}
-
-pub fn score_batch(
-    actual: &[String],
-    expected: &[String],
-) -> Vec<f64> {
-    use rayon::prelude::*;
-    assert_eq!(actual.len(), expected.len());
-    actual
-        .iter()
-        .zip(expected.iter())
-        .collect::<Vec<_>>()
-        .par_iter()
-        .map(|(a, e)| edit_score(a, e))
-        .collect::<Vec<_>>()
-}
-
-pub fn edit_score(
-    actual: &str,
-    expected: &str,
-) -> f64 {
-    let distance = edit_distance(actual, expected);
-    let size = expected.len();
-
-    (size as isize - distance as isize).abs() as f64 / (size as f64)
-}
-*/
