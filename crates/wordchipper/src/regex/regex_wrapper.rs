@@ -114,6 +114,12 @@ impl<S: AsRef<str>> From<S> for RegexWrapperPattern {
     }
 }
 
+impl From<RegexWrapperPattern> for RegexWrapper {
+    fn from(pattern: RegexWrapperPattern) -> Self {
+        pattern.compile().unwrap()
+    }
+}
+
 impl RegexWrapperPattern {
     /// Get the underlying regex pattern.
     ///
@@ -157,7 +163,7 @@ pub type RegexWrapperHandle = Arc<RegexWrapper>;
 
 impl From<RegexWrapperPattern> for RegexWrapperHandle {
     fn from(val: RegexWrapperPattern) -> Self {
-        Arc::new(val.compile().unwrap())
+        Arc::new(val.into())
     }
 }
 
