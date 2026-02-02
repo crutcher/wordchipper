@@ -1,6 +1,6 @@
 //! # Word Counter
 
-use crate::regex::{RegexSupplierHandle, RegexWrapper};
+use crate::regex::RegexWrapper;
 use crate::training::token_span_buffer::TokenSpanBuf;
 use crate::types::{CommonHashMap, CountType, StringChunkType, TokenType};
 use crate::vocab::byte_vocab::ByteMapVocab;
@@ -70,11 +70,11 @@ where
     K: StringChunkType,
     C: CountType,
 {
-    /// The compiled regex pattern.
-    pub regex_supplier: RegexSupplierHandle,
-
     /// The config options.
     pub options: TextSpanCounterOptions,
+
+    /// The compiled regex pattern.
+    pub regex: RegexWrapper,
 
     /// The word counts.
     pub word_counts: CommonHashMap<K, C>,
@@ -87,12 +87,12 @@ where
 {
     /// Create a new word counter.
     pub fn new(
-        regex_supplier: RegexSupplierHandle,
+        regex: RegexWrapper,
         options: TextSpanCounterOptions,
     ) -> Self {
         Self {
             options,
-            regex_supplier,
+            regex,
             word_counts: CommonHashMap::with_capacity(100_000),
         }
     }
@@ -107,7 +107,7 @@ where
         &mut self,
         text: S,
     ) {
-        update_word_counts_from_text(&mut self.word_counts, self.regex_supplier.get_regex(), text)
+        update_word_counts_from_text(&mut self.word_counts, &self.regex, text)
     }
 
     /// Update word counts inplace from a sample iterator.
@@ -118,9 +118,8 @@ where
         I: IntoIterator,
         I::Item: AsRef<str>,
     {
-        let regex = self.regex_supplier.get_regex();
         for sample in samples {
-            update_word_counts_from_text(&mut self.word_counts, regex, sample);
+            update_word_counts_from_text(&mut self.word_counts, &self.regex, sample);
         }
     }
 
@@ -152,7 +151,6 @@ mod tests {
     use crate::regex::RegexWrapperPattern;
     use crate::training::token_span_buffer::TokenSpanBuf;
     use crate::types::{CountType, StringChunkType};
-    use std::sync::Arc;
 
     const PATTERN: &str = r"\w+";
 
@@ -164,7 +162,7 @@ mod tests {
     #[test]
     fn test_word_counter() {
         let mut wc: TextSpanCounter<String, u64> =
-            TextSpanCounter::new(Arc::new(get_regex()), TextSpanCounterOptions::default());
+            TextSpanCounter::new(get_regex(), TextSpanCounterOptions::default());
 
         let samples = vec!["Hello world", "Foo world bar world"];
         wc.update_from_samples(samples.iter());
@@ -200,7 +198,7 @@ mod tests {
         let byte_vocab: ByteMapVocab<T> = Default::default();
 
         let mut word_counts =
-            TextSpanCounter::<K, C>::new(Arc::new(get_regex()), TextSpanCounterOptions::default());
+            TextSpanCounter::<K, C>::new(get_regex(), TextSpanCounterOptions::default());
 
         let samples = vec!["Hello world", "Foo world bar world"];
 

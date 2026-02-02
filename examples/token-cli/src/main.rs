@@ -7,7 +7,6 @@ use wordchipper::decoders::{DictionaryDecoder, TokenDecoder};
 use wordchipper::disk_cache::WordchipperDiskCache;
 use wordchipper::encoders::TokenEncoder;
 use wordchipper::encoders::merge_heap_encoder::MergeHeapVocabEncoder;
-use wordchipper::segmentation::TextSegmentor;
 use wordchipper::vocab::UnifiedTokenVocab;
 use wordchipper::vocab::public::openai::load_o200k_harmony_vocab;
 use wordchipper_data::dataset::DatasetCacheConfig;
@@ -75,11 +74,9 @@ fn run(args: &Args) -> anyhow::Result<()> {
     let mut disk_cache = WordchipperDiskCache::default();
     let vocab: UnifiedTokenVocab<T> = load_o200k_harmony_vocab(&mut disk_cache)?;
 
-    let encoder = MergeHeapVocabEncoder::<T>::init(vocab.clone());
+    let encoder = MergeHeapVocabEncoder::<T>::init(vocab.clone(), args.pool_size);
     #[cfg(feature = "parallel")]
-    let encoder = wordchipper::rayon::ParallelRayonEncoder::new(
-        wordchipper::encoders::pool_encoder::PoolEncoder::new(encoder, args.pool_size),
-    );
+    let encoder = wordchipper::rayon::ParallelRayonEncoder::new(encoder);
 
     let decoder = DictionaryDecoder::from_unified_vocab(vocab.clone());
     #[cfg(feature = "parallel")]
@@ -207,18 +204,12 @@ fn run(args: &Args) -> anyhow::Result<()> {
 
     println!();
     println!("Timing Decode:");
-
-    let segmentor: TextSegmentor = TextSegmentor::from_config(vocab.segmentation.clone());
-
     let mut wc_batch_decode_durations = vec![];
     let mut tt_batch_decode_durations = vec![];
     for (idx, sample) in sample_batches.iter().enumerate() {
         let batch = &wc_token_batches[idx];
 
-        let expected = sample
-            .iter()
-            .map(|s| segmentor.rewrite(s))
-            .collect::<Vec<_>>();
+        let expected = encoder.segmentor().batch_remove_gaps(sample);
 
         {
             let (duration, wc_decoded) =

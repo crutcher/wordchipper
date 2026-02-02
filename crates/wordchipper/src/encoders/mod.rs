@@ -17,7 +17,7 @@
 //!     vocab: UnifiedTokenVocab<T>,
 //!     batch: &[&str],
 //! ) -> Vec<Vec<T>> {
-//!     let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::init(vocab);
+//!     let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::init(vocab, None);
 //!
 //!     #[cfg(feature = "rayon")]
 //!     let encoder = wordchipper::rayon::ParallelRayonEncoder::new(encoder);
@@ -28,7 +28,6 @@
 
 pub mod merge_heap_encoder;
 pub mod merge_scan_encoder;
-pub mod pool_encoder;
 pub mod token_encoder;
 
 #[cfg(test)]

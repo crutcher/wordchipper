@@ -15,7 +15,6 @@ use crate::vocab::{TokenVocab, UnifiedTokenVocab};
 use compact_str::CompactString;
 use core::cmp::Ordering;
 use dary_heap::OctonaryHeap;
-use std::sync::Arc;
 
 /// Options for [`BinaryPairVocabTrainer`].
 #[derive(Debug, Clone)]
@@ -184,12 +183,10 @@ where
     /// A new `BinaryPairVocabTrainer` instance.
     pub fn init(options: BinaryPairVocabTrainerOptions) -> Self {
         let span_counter = TextSpanCounter::<K, C>::new(
-            Arc::new(
-                options
-                    .pattern
-                    .compile()
-                    .expect("regex pattern compilation failed"),
-            ),
+            options
+                .pattern
+                .compile()
+                .expect("regex pattern compilation failed"),
             TextSpanCounterOptions::default(),
         );
 
@@ -464,7 +461,7 @@ mod tests {
 
         let vocab: UnifiedTokenVocab<T> = trainer.train(byte_vocab.clone()).unwrap();
 
-        let encoder = DefaultTokenEncoder::<T>::init(vocab.clone());
+        let encoder = DefaultTokenEncoder::<T>::init(vocab.clone(), None);
         check_is_send(&encoder);
         check_is_sync(&encoder);
 

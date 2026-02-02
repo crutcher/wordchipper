@@ -129,7 +129,7 @@ fn main() -> anyhow::Result<()> {
     }
 
     if args.time_encode_decode {
-        let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::init(vocab.clone());
+        let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::init(vocab.clone(), None);
         let encoder = ParallelRayonEncoder::new(encoder);
 
         let decoder = DictionaryDecoder::from_unified_vocab(vocab);

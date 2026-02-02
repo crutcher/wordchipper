@@ -2,9 +2,9 @@
 
 use crate::alloc::string::String;
 use crate::alloc::vec::Vec;
+use crate::compat::strings::string_from_utf8_lossy;
 use crate::decoders::TokenDecodeContext;
 use crate::types::TokenType;
-use crate::vocab::utility::strings::string_from_utf8_lossy;
 
 /// Trait for token decoders.
 pub trait TokenDecoder<T: TokenType>: Send + Sync {

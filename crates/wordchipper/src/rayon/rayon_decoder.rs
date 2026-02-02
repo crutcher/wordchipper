@@ -1,8 +1,8 @@
 //! # Parallel Decoder
 
+use crate::compat::strings::string_from_utf8_lossy;
 use crate::decoders::{TokenDecodeContext, TokenDecoder};
 use crate::types::TokenType;
-use crate::vocab::utility::strings::string_from_utf8_lossy;
 
 /// Batch-Level Parallel Decoder Wrapper.
 ///

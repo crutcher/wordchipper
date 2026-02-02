@@ -7,6 +7,7 @@ use crate::segmentation::text_segmentor::TextSegmentor;
 use crate::types::TokenType;
 use crate::vocab::special_vocab::SpecialVocab;
 use crate::vocab::unified_vocab::UnifiedTokenVocab;
+use std::num::NonZeroUsize;
 
 /// A Span-lookup / ``(T, T) -> T`` merge scan [`TokenEncoder`].
 ///
@@ -28,58 +29,36 @@ impl<T: TokenType> MergeScanVocabEncoder<T> {
     ///
     /// ## Returns
     /// A new `MergeHeapVocabEncoder` instance.
-    pub fn init(data: UnifiedTokenVocab<T>) -> Self {
-        let segmentor = TextSegmentor::from_config(data.segmentation.clone());
+    pub fn init(
+        data: UnifiedTokenVocab<T>,
+        max_pool: Option<NonZeroUsize>,
+    ) -> Self {
+        let segmentor = TextSegmentor::from_config(data.segmentation.clone(), max_pool);
 
         Self { data, segmentor }
     }
 
-    /// Compiler Hint.
-    fn lookup_normal_token(
-        &self,
-        span: &[u8],
-    ) -> Option<T> {
-        self.data.lookup_token(span)
-    }
-
-    /// Compiler Hint.
-    fn lookup_pair(
-        &self,
-        pair: &(T, T),
-    ) -> Option<T> {
-        self.data.lookup_pair(pair)
-    }
-
-    /// Compiler Hint.
-    fn append_tokens(
-        &self,
-        span: &[u8],
-        tokens: &mut Vec<T>,
-    ) {
-        self.data.byte_vocab().append_tokens(span, tokens);
-    }
-
-    /// Encode a span appending to a target buffer.
+    /// Encodes a single normal "word".
+    ///
+    /// Iteratively re-scans for the best possible merges from the pair vocab,
+    /// iterates until no more merges remain.
+    ///
+    /// - Assumes that the full span has already failed a span map lookup.
+    /// - Appends tokens to `tokens`; uses `tokens` tail as working space.
     ///
     /// ## Arguments
     /// * `span` - The byte span to encode.
     /// * `tokens` - The target token buffer to append to.
-    fn encode_append_span_normal(
+    #[inline(always)]
+    fn encode_append_word(
         &self,
         span: &[u8],
         tokens: &mut Vec<T>,
     ) {
-        if let Some(token) = self.lookup_normal_token(span) {
-            // 1. Faster;
-            // 2. Correct-or: Some words may not exist in the pair mappings.
-            tokens.push(token);
-            return;
-        }
-
         // Reuse the output buffer as our working memory.
         // Append the byte-tokens to the buffer.
         let start = tokens.len();
-        self.append_tokens(span, tokens);
+        self.data.byte_vocab().append_tokens(span, tokens);
 
         // Incrementally shrink the working memory (the new buffer end)
         // Until we can no longer find pairs to merge.
@@ -89,7 +68,11 @@ impl<T: TokenType> MergeScanVocabEncoder<T> {
             if let Some((token, idx)) = tokens[start..]
                 .windows(2)
                 .enumerate()
-                .filter_map(|(idx, w)| self.lookup_pair(&(w[0], w[1])).map(|token| (token, idx)))
+                .filter_map(|(idx, w)| {
+                    self.data
+                        .lookup_pair(&(w[0], w[1]))
+                        .map(|token| (token, idx))
+                })
                 .min()
             {
                 // Adjust the window index.
@@ -130,13 +113,21 @@ impl<T: TokenType> TokenEncoder<T> for MergeScanVocabEncoder<T> {
             .split_spans(text)
             .into_iter()
             .for_each(|span_ref| match span_ref {
-                SpanRef::Normal(range) => {
+                SpanRef::Gap(_) => (),
+                SpanRef::Word(range) => {
                     let span = &text[range].as_bytes();
-                    self.encode_append_span_normal(span, tokens)
+                    if let Some(token) = self.data.lookup_token(span) {
+                        // 1. Faster;
+                        // 2. Correct-or: Some words may not exist in the pair mappings.
+                        tokens.push(token);
+                    } else {
+                        self.encode_append_word(span, tokens)
+                    }
                 }
                 SpanRef::Special(range) => {
                     let span = &text[range].as_bytes();
-                    tokens.push(self.special_vocab().lookup_token(span).unwrap());
+                    let special_token = self.special_vocab().lookup_token(span).unwrap();
+                    tokens.push(special_token);
                 }
             });
 
@@ -151,7 +142,7 @@ mod tests {
 
     fn test_encoder<T: TokenType>() {
         let vocab = common_encoder_test_vocab();
-        let encoder = MergeScanVocabEncoder::<T>::init(vocab.clone());
+        let encoder = MergeScanVocabEncoder::<T>::init(vocab.clone(), None);
         common_encoder_tests(vocab, &encoder)
     }
 

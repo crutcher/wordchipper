@@ -1,11 +1,5 @@
 //! # Regex Utilities
 //!
-//! This module attempts to balance two problems:
-//! * Pattern Complexity
-//! * Concurrence Contention
-//!
-//! ### Pattern Complexity
-//!
 //! A number of popular in-use LLM Tokenizer Regex Patterns require extended regex
 //! machinery provided by the [`fancy_regex`] crate; but naturally, this has performance
 //! costs. We'd prefer to avoid using the [`fancy_regex`] crate when possible, falling back
@@ -21,87 +15,9 @@
 //!
 //! The [`RegexWrapper`] type supports only one operation, ``find_iter()`` which requires
 //! some adaptation of the `Iterator` stream to function.
-//!
-//! ### Concurrence Contention
-//!
-//! There are some observed thread contentions deep in compiled regex objects,
-//! short fights over shared internal buffers. In high parallelism, heavy-regex workloads,
-//! this can have a large performance impact.
-//!
-//! At the same time, per-thread local data structures, locks, and cloning introduce
-//! dependencies which may not be appropriate in all environments.
-//!
-//! The chosen solution to this is the combination of:
-//! * [`RegexSupplier`] / [`RegexSupplierHandle`]
-//! * [`regex_pool_supplier`].
-//!
-//! Users of a [`RegexWrapper`] that *may* be under heavy thread contention should use
-//! [`regex_pool_supplier`]; which in some build environments will provide
-//! a thread local clone regex supplier, and in some, a simple clone implementation.
-
-#[cfg(feature = "std")]
-pub mod regex_pool;
 
 pub mod exact_match_union;
-pub mod regex_supplier;
 pub mod regex_wrapper;
 
 #[doc(inline)]
-pub use regex_supplier::{RegexSupplier, RegexSupplierHandle};
-#[doc(inline)]
 pub use regex_wrapper::{ErrorWrapper, RegexWrapper, RegexWrapperHandle, RegexWrapperPattern};
-
-/// Build a [`RegexSupplierHandle`].
-///
-/// ## Arguments
-/// * `regex` - The regex wrapper handle.
-///
-/// ## Returns
-/// A `RegexSupplierHandle`.
-pub fn default_regex_supplier(regex: RegexWrapperHandle) -> RegexSupplierHandle {
-    regex
-}
-
-/// Build a regex supplier for (potentially) parallel execution.
-///
-/// Users of a [`RegexWrapper`] that *may* be under heavy thread contention should use
-/// [`regex_pool_supplier`]; which in some build environments will provide
-/// a thread local clone regex supplier, and in some, a simple clone implementation.
-///
-/// ## Arguments
-/// * `regex` - The regex wrapper handle.
-///
-/// ## Returns
-/// A `RegexSupplierHandle`.
-pub fn regex_pool_supplier(regex: RegexWrapperHandle) -> RegexSupplierHandle {
-    #[cfg(feature = "std")]
-    return alloc::sync::Arc::new(regex_pool::RegexWrapperPool::new(regex.as_ref().clone()));
-
-    #[cfg(not(feature = "std"))]
-    regex
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::alloc::string::ToString;
-
-    #[test]
-    fn test_default_regex_supplier() {
-        let regex = RegexWrapperPattern::Basic("hello world".to_string())
-            .compile()
-            .unwrap();
-        let supplier = default_regex_supplier(regex.into());
-        assert_eq!(supplier.get_regex().as_str(), "hello world");
-    }
-
-    #[test]
-    fn test_regex_pool_supplier() {
-        let regex = RegexWrapperPattern::Basic("hello world".to_string())
-            .compile()
-            .unwrap();
-        let supplier = regex_pool_supplier(regex.into());
-
-        assert_eq!(supplier.get_regex().as_str(), "hello world");
-    }
-}

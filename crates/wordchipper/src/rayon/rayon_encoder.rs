@@ -77,17 +77,16 @@ mod tests {
     use crate::encoders::test_utils::{common_encoder_test_vocab, common_encoder_tests};
     use crate::encoders::{DefaultTokenEncoder, TokenEncoder};
     use crate::rayon::rayon_encoder::ParallelRayonEncoder;
-    use crate::regex::RegexSupplier;
     use crate::types::TokenType;
 
     fn test_encoder<T: TokenType>() {
         let vocab = common_encoder_test_vocab();
 
-        let encoder = DefaultTokenEncoder::<T>::init(vocab.clone().into());
+        let encoder = DefaultTokenEncoder::<T>::init(vocab.clone().into(), None);
         let encoder = ParallelRayonEncoder::new(encoder);
 
         assert_eq!(
-            encoder.segmentor().span_re().get_pattern().as_str(),
+            encoder.segmentor().word_regex().as_str(),
             vocab.segmentation.pattern.as_str()
         );
         assert_eq!(encoder.special_vocab(), encoder.inner.special_vocab());

@@ -86,7 +86,7 @@
 //!         println!("- tiktoken vocab: {path:?}");
 //!     }
 //!
-//!     let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::init(vocab.clone());
+//!     let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::init(vocab.clone(), None);
 //!     let encoder = ParallelRayonEncoder::new(encoder);
 //!
 //!     let decoder = DictionaryDecoder::from_unified_vocab(vocab.clone());
