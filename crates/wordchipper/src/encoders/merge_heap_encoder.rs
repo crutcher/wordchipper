@@ -69,9 +69,9 @@ impl<T: TokenType> MergeHeapVocabEncoder<T> {
         // - CURRENT[i] := tokens[start + i]
         self.data.byte_vocab().append_tokens(span, tokens);
 
-        let get_pair_rank = {
-            |tok: &[T], i: usize| {
-                let pair = &(tok[start + i], tok[start + i + 1]);
+        let pr_for_tokens = {
+            |tok: &[T], a: usize, b: usize| {
+                let pair = &(tok[start + a], tok[start + b]);
                 self.data
                     .lookup_pair(pair)
                     .unwrap_or_else(|| T::max_value())
@@ -82,7 +82,7 @@ impl<T: TokenType> MergeHeapVocabEncoder<T> {
         // - pair_ranks[i] = pairs.get(&(CURRENT[i], CURRENT[i + 1]))
         // - pair_ranks.len() = CURRENT.len() - 1 = end - start - 1
         pair_ranks.clear();
-        pair_ranks.extend((0..(tokens.len() - start - 1)).map(|i| get_pair_rank(tokens, i)));
+        pair_ranks.extend((0..(tokens.len() - start - 1)).map(|i| pr_for_tokens(tokens, i, i + 1)));
 
         while let Some((new_token, i)) = pair_ranks
             .iter()
@@ -100,25 +100,23 @@ impl<T: TokenType> MergeHeapVocabEncoder<T> {
             // - PAIR_RANKS[i] != max_value
             // - PAIR_RANKS[i] is smallest
 
-            // We need to merge CURRENT[i..=i+1] and PAIR_RANKS[i..=i+1]
-
             // Set CURRENT[i] to the new target rank.
             tokens[start + i] = new_token;
 
             if i > 0 {
                 // If there is a preceding token, recompute PAIR_RANKS[i-1].
-                pair_ranks[i - 1] = get_pair_rank(tokens, i - 1);
+                pair_ranks[i - 1] = pr_for_tokens(tokens, i - 1, i);
+            }
+
+            if i + 2 < tokens.len() - start {
+                // If this pair rank exists,
+                // it will become PAIR_RANKS[i] following the remove below.
+                pair_ranks[i + 1] = pr_for_tokens(tokens, i, i + 2);
             }
 
             // Drop PAIR_RANKS[i] and CURRENT[i+1].
-            // Order matters here for the indices.
             pair_ranks.remove(i);
             tokens.remove(start + i + 1);
-
-            if i + 1 < tokens.len() - start {
-                // If there is a following token, recompute PAIR_RANKS[i].
-                pair_ranks[i] = get_pair_rank(tokens, i);
-            }
         }
     }
 }
