@@ -169,13 +169,7 @@ impl<T: TokenType> ByteMapVocab<T> {
         bytes: &[u8],
         tokens: &mut Vec<T>,
     ) {
-        /*
         tokens.extend(bytes.iter().map(|&b| self.get_token(b)));
-
-         */
-        for &b in bytes {
-            tokens.push(self.byte_to_token[b as usize]);
-        }
     }
 
     /// Get the byte corresponding to a given token, if any.
@@ -189,13 +183,7 @@ impl<T: TokenType> ByteMapVocab<T> {
         &self,
         token: T,
     ) -> Option<u8> {
-        /*
         self.token_to_byte.get(&token).copied()
-         */
-        self.byte_to_token
-            .iter()
-            .position(|&t| t == token)
-            .map(|i| i as u8)
     }
 }
 
