@@ -1,6 +1,7 @@
 //! # Regex Wrapper
 //! This modules provides mechanisms to mix `regex` and `fancy_regex` types.
 
+use crate::alloc::boxed::Box;
 use crate::alloc::string::String;
 use crate::alloc::string::ToString;
 use crate::alloc::sync::Arc;

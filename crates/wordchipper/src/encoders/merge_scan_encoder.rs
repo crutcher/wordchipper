@@ -7,7 +7,7 @@ use crate::segmentation::text_segmentor::TextSegmentor;
 use crate::types::TokenType;
 use crate::vocab::special_vocab::SpecialVocab;
 use crate::vocab::unified_vocab::UnifiedTokenVocab;
-use std::num::NonZeroUsize;
+use core::num::NonZeroUsize;
 
 /// A Span-lookup / ``(T, T) -> T`` merge scan [`TokenEncoder`].
 ///

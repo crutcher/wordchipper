@@ -2,15 +2,14 @@
 
 use crate::alloc::string::String;
 use crate::alloc::vec::Vec;
-use crate::concurrency::pool_toy::PoolToy;
 use crate::regex::exact_match_union::exact_match_union_regex_pattern;
 use crate::regex::{RegexWrapper, RegexWrapperPattern};
 use crate::segmentation::segmentation_config::SegmentationConfig;
 use crate::types::TokenType;
 use crate::vocab::TokenVocab;
 use crate::vocab::size_hints::EXPECTED_BYTES_PER_TOKEN;
+use core::num::NonZeroUsize;
 use core::ops::Range;
-use std::num::NonZeroUsize;
 
 /// Word Reference for [`TextSegmentor`].
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -48,11 +47,21 @@ fn offset_range(
 /// Word Split + Special Words Segmentor
 #[derive(Clone)]
 pub struct TextSegmentor {
+    #[cfg(feature = "std")]
     /// Regex for splitting words.
-    pub word_re_pool: PoolToy<RegexWrapper>,
+    pub word_re: crate::concurrency::PoolToy<RegexWrapper>,
+
+    /// Regex for splitting words.
+    #[cfg(not(feature = "std"))]
+    pub word_re: RegexWrapper,
 
     /// Regex for matching special words.
-    pub special_re_pool: Option<PoolToy<RegexWrapper>>,
+    #[cfg(feature = "std")]
+    pub special_re: Option<crate::concurrency::PoolToy<RegexWrapper>>,
+
+    /// Regex for matching special words.
+    #[cfg(not(feature = "std"))]
+    pub special_re: Option<RegexWrapper>,
 }
 
 impl TextSegmentor {
@@ -118,30 +127,43 @@ impl TextSegmentor {
     /// ## Returns
     /// A new `TextSegmentor` instance.
     pub fn new(
-        word_regex: RegexWrapper,
-        special_regex: Option<RegexWrapper>,
+        word_re: RegexWrapper,
+        special_re: Option<RegexWrapper>,
         max_pool: Option<NonZeroUsize>,
     ) -> Self {
-        let word_re_pool = PoolToy::init(word_regex, max_pool);
-        let special_re_pool = special_regex.map(|r| PoolToy::init(r, max_pool));
+        #[cfg(feature = "std")]
+        let word_re = crate::concurrency::PoolToy::init(word_re, max_pool);
+        #[cfg(feature = "std")]
+        let special_re = special_re.map(|r| crate::concurrency::PoolToy::init(r, max_pool));
+
+        #[cfg(not(feature = "std"))]
+        let _ = max_pool;
 
         Self {
-            word_re_pool,
-            special_re_pool,
+            word_re,
+            special_re,
         }
     }
 
     /// Get the span split regex.
     pub fn word_regex(&self) -> &RegexWrapper {
-        self.word_re_pool.get()
+        #[cfg(feature = "std")]
+        return self.word_re.as_ref();
+
+        #[cfg(not(feature = "std"))]
+        return &self.word_re;
     }
 
     /// Get the optional special split regex.
     pub fn special_regex(&self) -> Option<&RegexWrapper> {
-        match &self.special_re_pool {
+        #[cfg(feature = "std")]
+        return match &self.special_re {
             None => None,
-            Some(pool) => Some(pool.get()),
-        }
+            Some(pool) => Some(pool.as_ref()),
+        };
+
+        #[cfg(not(feature = "std"))]
+        return self.special_re.as_ref();
     }
 
     /// Find the next special span in the text.
@@ -156,13 +178,9 @@ impl TextSegmentor {
         &self,
         text: S,
     ) -> Option<Range<usize>> {
-        match self.special_re_pool {
+        match self.special_regex() {
             None => None,
-            Some(ref pool) => pool
-                .get()
-                .find_iter(text.as_ref())
-                .next()
-                .map(|m| m.range()),
+            Some(re) => re.find_iter(text.as_ref()).next().map(|m| m.range()),
         }
     }
 
@@ -178,7 +196,7 @@ impl TextSegmentor {
         words: &mut Vec<SpanRef>,
     ) -> usize {
         let mut last = 0;
-        for m in self.word_re_pool.get().find_iter(text) {
+        for m in self.word_regex().find_iter(text) {
             let match_range = m.range();
             if last < match_range.start {
                 words.push(SpanRef::Gap(last..match_range.start));

@@ -36,6 +36,15 @@ where
     pool: Vec<T>,
 }
 
+impl<T> AsRef<T> for PoolToy<T>
+where
+    T: Clone + Send,
+{
+    fn as_ref(&self) -> &T {
+        self.get()
+    }
+}
+
 impl<T> PoolToy<T>
 where
     T: Clone + Send,

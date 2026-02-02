@@ -1,6 +1,6 @@
 //! # Thread Utilities
 
-use std::num::NonZeroU64;
+use core::num::NonZeroU64;
 use std::thread;
 
 /// Current Thread -> u64 Pool.
