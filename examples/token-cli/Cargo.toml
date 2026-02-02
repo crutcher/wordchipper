@@ -10,7 +10,7 @@ publish = false
 workspace = true
 
 [features]
-default = []
+default = ["parallel"]
 parallel = []
 
 [dependencies]
