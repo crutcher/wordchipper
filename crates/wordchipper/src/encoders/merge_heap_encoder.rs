@@ -60,10 +60,7 @@ impl<T: TokenType> MergeHeapVocabEncoder<T> {
         let get_pair_rank = {
             |tok: &mut [T], i: usize| {
                 let pair = &(tok[start + i], tok[start + i + 1]);
-                match self.data.lookup_pair(pair) {
-                    Some(token) => token,
-                    None => T::max_value(),
-                }
+                self.data.lookup_pair(pair).unwrap_or_else(|| T::max_value())
             }
         };
 
