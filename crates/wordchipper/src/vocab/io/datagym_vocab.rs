@@ -4,13 +4,13 @@ use crate::types::CommonHashMap;
 use serde_json::Value;
 use std::io::BufRead;
 
-fn data_gym_default_maps() -> (Vec<u8>, CommonHashMap<char, u8>) {
+fn data_gym_default_maps() -> (CommonHashMap<char, u8>, Vec<u8>) {
     let mut rank_to_intbyte: Vec<u8> = vec![];
     rank_to_intbyte.extend(0x21..=0x7E);
     rank_to_intbyte.extend(0xA1..0xAD);
     rank_to_intbyte.extend(0xAE..=0xFF);
 
-    let mut data_gym_byte_to_byte: CommonHashMap<char, u8> = rank_to_intbyte
+    let mut dg_char_to_byte: CommonHashMap<char, u8> = rank_to_intbyte
         .iter()
         .map(|&b| (char::from(b), b))
         .collect();
@@ -18,17 +18,17 @@ fn data_gym_default_maps() -> (Vec<u8>, CommonHashMap<char, u8>) {
     for b in 0..=255 {
         if !rank_to_intbyte.contains(&b) {
             rank_to_intbyte.push(b);
-            data_gym_byte_to_byte.insert(char::from_u32(256 + n).unwrap(), b);
+            dg_char_to_byte.insert(char::from_u32(256 + n).unwrap(), b);
             n += 1;
         }
     }
     assert_eq!(rank_to_intbyte.len(), 256);
 
-    (rank_to_intbyte, data_gym_byte_to_byte)
+    (dg_char_to_byte, rank_to_intbyte)
 }
 
 fn data_gym_blank_ranks() -> (CommonHashMap<char, u8>, CommonHashMap<Vec<u8>, usize>) {
-    let (rank_to_intbyte, data_gym_byte_to_byte) = data_gym_default_maps();
+    let (dg_char_to_byte, rank_to_intbyte) = data_gym_default_maps();
 
     // add the single byte tokens
     let bpe_ranks: CommonHashMap<Vec<u8>, usize> = rank_to_intbyte
@@ -37,7 +37,7 @@ fn data_gym_blank_ranks() -> (CommonHashMap<char, u8>, CommonHashMap<Vec<u8>, us
         .map(|(i, b)| (vec![b], i))
         .collect();
 
-    (data_gym_byte_to_byte, bpe_ranks)
+    (dg_char_to_byte, bpe_ranks)
 }
 
 /// Read a daty gym "vocab.bpe" file.
