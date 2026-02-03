@@ -2,7 +2,7 @@
 
 use crate::types::CommonHashMap;
 use serde_json::Value;
-use std::io::{BufRead, BufReader};
+use std::io::BufRead;
 
 fn data_gym_default_maps() -> (Vec<u8>, CommonHashMap<char, u8>) {
     let mut rank_to_intbyte: Vec<u8> = vec![];
@@ -40,19 +40,12 @@ fn data_gym_blank_ranks() -> (CommonHashMap<char, u8>, CommonHashMap<Vec<u8>, us
     (data_gym_byte_to_byte, bpe_ranks)
 }
 
-/// Parse a data gym "vocab.bpe" file from contents.
+/// Read a daty gym "vocab.bpe" file.
 ///
 /// Handle extended ascii (<https://en.wikipedia.org/wiki/Extended_ASCII>)
 /// Assume ISO/IEC 8859-1 (<https://en.wikipedia.org/wiki/ISO/IEC_8859-1>)
 /// non-whitespace printable character range:
 /// [0x21-0x7E], [0xA1-0xAD), (0xAD-0xFF]
-pub fn parse_vocab_bpe(
-    vocab_bpe_contents: &str
-) -> anyhow::Result<(CommonHashMap<char, u8>, CommonHashMap<Vec<u8>, usize>)> {
-    read_vocab_bpe(BufReader::new(vocab_bpe_contents.as_bytes()))
-}
-
-/// Read a daty gym "vocab.bpe" file.
 pub fn read_vocab_bpe<R>(
     vocab_bpe_reader: R
 ) -> anyhow::Result<(CommonHashMap<char, u8>, CommonHashMap<Vec<u8>, usize>)>
@@ -79,17 +72,6 @@ where
     }
 
     Ok((dg_char_to_byte, bpe_ranks))
-}
-
-/// Parse a data gym "encoder.json" file from contents.
-pub fn parse_encoder_json(
-    encoder_json_contents: &str,
-    dg_char_to_byte: CommonHashMap<char, u8>,
-) -> anyhow::Result<CommonHashMap<Vec<u8>, usize>> {
-    read_encoder_json(
-        BufReader::new(encoder_json_contents.as_bytes()),
-        dg_char_to_byte,
-    )
 }
 
 /// Parse a data gym "encoder.json" file from contents.
@@ -120,22 +102,6 @@ where
     encoder_json_loaded.remove("<|endoftext|>".as_bytes());
 
     Ok(encoder_json_loaded)
-}
-
-/// Handle extended ascii (<https://en.wikipedia.org/wiki/Extended_ASCII>)
-/// Assume ISO/IEC 8859-1 (<https://en.wikipedia.org/wiki/ISO/IEC_8859-1>)
-/// non-whitespace printable character range:
-/// [0x21-0x7E], [0xA1-0xAD), (0xAD-0xFF]
-pub fn parse_data_gym(
-    vocab_bpe_contents: &str,
-    encoder_json_contents: &str,
-    clobber_one_byte_tokens: bool,
-) -> anyhow::Result<CommonHashMap<Vec<u8>, usize>> {
-    read_data_gym(
-        BufReader::new(vocab_bpe_contents.as_bytes()),
-        BufReader::new(encoder_json_contents.as_bytes()),
-        clobber_one_byte_tokens,
-    )
 }
 
 /// Handle extended ascii (<https://en.wikipedia.org/wiki/Extended_ASCII>)
