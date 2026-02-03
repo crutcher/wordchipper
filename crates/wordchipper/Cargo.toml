@@ -53,6 +53,8 @@ std = [
     "log/std",
     "num-traits/std",
     "regex/default",
+    "dep:strum",
+    "dep:strum_macros",
 ]
 no_std = [
     "hashbrown/alloc"
@@ -91,6 +93,8 @@ regex = { workspace = true, features = ["unicode"] }
 # "std" feature deps:
 base64 = { workspace = true, optional = true }
 parking_lot = { workspace = true, optional = true }
+strum = { workspace = true, optional = true }
+strum_macros = { workspace = true, optional = true }
 
 # "no_std" feature deps:
 hashbrown = { workspace = true, optional = true }

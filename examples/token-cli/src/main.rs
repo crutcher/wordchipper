@@ -8,7 +8,7 @@ use wordchipper::disk_cache::WordchipperDiskCache;
 use wordchipper::encoders::TokenEncoder;
 use wordchipper::encoders::merge_heap_encoder::MergeHeapVocabEncoder;
 use wordchipper::vocab::UnifiedTokenVocab;
-use wordchipper::vocab::public::openai::load_o200k_harmony_vocab;
+use wordchipper::vocab::public::openai::OATokenizer;
 use wordchipper_data::dataset::DatasetCacheConfig;
 
 #[cfg(feature = "parallel")]
@@ -72,7 +72,7 @@ fn run(args: &Args) -> anyhow::Result<()> {
     let tt_bpe = tiktoken_rs::o200k_harmony()?;
 
     let mut disk_cache = WordchipperDiskCache::default();
-    let vocab: UnifiedTokenVocab<T> = load_o200k_harmony_vocab(&mut disk_cache)?;
+    let vocab: UnifiedTokenVocab<T> = OATokenizer::O200kHarmony.load(&mut disk_cache)?;
 
     let encoder = MergeHeapVocabEncoder::<T>::init(vocab.clone(), args.pool_size);
     #[cfg(feature = "parallel")]
@@ -135,21 +135,7 @@ fn run(args: &Args) -> anyhow::Result<()> {
         // warmup.
         encoder.try_encode_batch(&batch).unwrap();
 
-        let (durationn, wc_batch_tokens) = timeit(|| {
-            if true {
-                encoder.try_encode_batch(&batch).unwrap()
-            } else {
-                // SPEED DEBUG: this *slows down* runs versus the rayon encoder.
-                #[cfg(feature = "parallel")]
-                let it = batch.par_iter();
-                #[cfg(not(feature = "parallel"))]
-                let it = batch.iter();
-
-                it.map(|s| encoder.try_encode(s))
-                    .collect::<anyhow::Result<Vec<Vec<T>>>>()
-                    .unwrap()
-            }
-        });
+        let (durationn, wc_batch_tokens) = timeit(|| encoder.try_encode_batch(&batch).unwrap());
         wc_batch_durations.push(durationn);
 
         wc_total_token_count += wc_batch_tokens

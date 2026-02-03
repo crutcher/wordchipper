@@ -46,6 +46,8 @@ serial_test = "^3.3"
 shellexpand = "^3.1"
 similar = "^2.7.0"
 stackvec = "^0.2.1"
+strum = "^0.27"
+strum_macros = "^0.27"
 tempdir = "^0.3"
 
 fancy-regex = { version = "0.13.0", default-features = false }

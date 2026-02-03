@@ -18,9 +18,56 @@ use crate::vocab::public::openai::specials::{
     oa_gpt3_cl100k_edit_specials, oa_gpt5_o200k_harmony_specials, oa_gt5_o200k_base_specials,
 };
 use crate::vocab::utility::resource_tools::ConstUrlResource;
+use strum_macros::EnumString;
 
 /// Shared download context key.
 const OA_KEY: &str = "openai";
+
+/// `OpenAI` Pretrained Tokenizer types.
+#[derive(Clone, Debug, PartialEq, EnumString, strum_macros::Display)]
+#[non_exhaustive]
+pub enum OATokenizer {
+    /// GPT-2 "`r50k_base`" tokenizer.
+    #[strum(serialize = "r50k_base")]
+    R50kBase,
+
+    /// GPT-2 "`p50k_base`" tokenizer.
+    #[strum(serialize = "p50k_base")]
+    P50kBase,
+
+    /// GPT-2 "`p50k_edit`" tokenizer.
+    #[strum(serialize = "p50k_edit")]
+    P50kEdit,
+
+    /// GPT-3 "`cl100k_base`" tokenizer.
+    #[strum(serialize = "cl100k_base")]
+    Cl100kBase,
+
+    /// GPT-5 "`o200k_base`" tokenizer.
+    #[strum(serialize = "o200k_base")]
+    O200kBase,
+
+    /// GPT-5 "`o200k_harmony`" tokenizer.
+    #[strum(serialize = "o200k_harmony")]
+    O200kHarmony,
+}
+
+impl OATokenizer {
+    /// Load a pretrained `OpenAI` tokenizer vocabulary.
+    pub fn load<T: TokenType>(
+        &self,
+        disk_cache: &mut WordchipperDiskCache,
+    ) -> anyhow::Result<UnifiedTokenVocab<T>> {
+        match self {
+            OATokenizer::R50kBase => load_r50k_base_vocab::<T>(disk_cache),
+            OATokenizer::P50kBase => load_p50k_base_vocab::<T>(disk_cache),
+            OATokenizer::P50kEdit => load_p50k_edit_vocab::<T>(disk_cache),
+            OATokenizer::Cl100kBase => load_cl100k_base_vocab::<T>(disk_cache),
+            OATokenizer::O200kBase => load_o200k_base_vocab::<T>(disk_cache),
+            OATokenizer::O200kHarmony => load_o200k_harmony_vocab::<T>(disk_cache),
+        }
+    }
+}
 
 fn load_common_vocab<T: TokenType>(
     disk_cache: &mut WordchipperDiskCache,
@@ -121,4 +168,45 @@ pub fn load_o200k_harmony_vocab<T: TokenType>(
         OA_GPT2_R50K_WORD_PATTERN.into(),
         &oa_gpt5_o200k_harmony_specials().to_vec(),
     )
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use core::str::FromStr;
+
+    #[test]
+    fn test_oa_tokenizer() {
+        assert_eq!(OATokenizer::R50kBase.to_string(), "r50k_base");
+        assert_eq!(OATokenizer::P50kBase.to_string(), "p50k_base");
+        assert_eq!(OATokenizer::P50kEdit.to_string(), "p50k_edit");
+        assert_eq!(OATokenizer::Cl100kBase.to_string(), "cl100k_base");
+        assert_eq!(OATokenizer::O200kBase.to_string(), "o200k_base");
+        assert_eq!(OATokenizer::O200kHarmony.to_string(), "o200k_harmony");
+
+        assert_eq!(
+            OATokenizer::from_str("r50k_base").unwrap(),
+            OATokenizer::R50kBase
+        );
+        assert_eq!(
+            OATokenizer::from_str("p50k_base").unwrap(),
+            OATokenizer::P50kBase
+        );
+        assert_eq!(
+            OATokenizer::from_str("p50k_edit").unwrap(),
+            OATokenizer::P50kEdit
+        );
+        assert_eq!(
+            OATokenizer::from_str("cl100k_base").unwrap(),
+            OATokenizer::Cl100kBase
+        );
+        assert_eq!(
+            OATokenizer::from_str("o200k_base").unwrap(),
+            OATokenizer::O200kBase
+        );
+        assert_eq!(
+            OATokenizer::from_str("o200k_harmony").unwrap(),
+            OATokenizer::O200kHarmony
+        );
+    }
 }
