@@ -39,6 +39,7 @@ download = [
 # Enable serde features.
 serde = [
     "dep:serde_json",
+    "std",
 ]
 
 # Enable to have access to the vocab training code.

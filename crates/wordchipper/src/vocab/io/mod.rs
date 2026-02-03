@@ -2,6 +2,8 @@
 
 pub mod base64_vocab;
 pub mod tiktoken_io;
+
+#[cfg(feature = "serde")]
 pub mod datagym_vocab;
 
 #[doc(inline)]
