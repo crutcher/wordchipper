@@ -110,9 +110,13 @@ mod tests {
 
     #[test]
     fn test_pool_toy() {
-        let pool = PoolToy::init(10, Some(NonZeroUsize::new(128).unwrap()));
-        assert_eq!(pool.len(), 12);
-        assert_eq!(&pool.pool, vec![10; 12].as_slice());
+        let max_pool = Some(NonZeroUsize::new(128).unwrap());
+        let pool = PoolToy::init(10, max_pool);
+
+        let size = resolve_max_pool(max_pool);
+
+        assert_eq!(pool.len(), size);
+        assert_eq!(&pool.pool, vec![10; size].as_slice());
 
         assert_eq!(pool.get(), &10);
         assert_eq!(pool.as_ref(), &10);
