@@ -49,8 +49,7 @@ fn data_gym_blank_ranks() -> (CommonHashMap<char, u8>, CommonHashMap<Vec<u8>, us
 pub fn parse_vocab_bpe(
     vocab_bpe_contents: &str
 ) -> anyhow::Result<(CommonHashMap<char, u8>, CommonHashMap<Vec<u8>, usize>)> {
-    let reader = BufReader::new(vocab_bpe_contents.as_bytes());
-    read_vocab_bpe(reader)
+    read_vocab_bpe(BufReader::new(vocab_bpe_contents.as_bytes()))
 }
 
 /// Read a daty gym "vocab.bpe" file.
@@ -60,7 +59,7 @@ pub fn read_vocab_bpe<R>(
 where
     R: BufRead,
 {
-    let (data_gym_byte_to_byte, mut bpe_ranks) = data_gym_blank_ranks();
+    let (dg_char_to_byte, mut bpe_ranks) = data_gym_blank_ranks();
 
     let mut bpe_merges: Vec<(String, String)> = vec![];
     for line in vocab_bpe_reader.lines().skip(1) {
@@ -73,28 +72,30 @@ where
 
     let mut n = bpe_ranks.len();
     for (first, second) in bpe_merges {
-        let mut key = decode_data_gym(first.as_str(), &data_gym_byte_to_byte);
-        key.extend(decode_data_gym(second.as_str(), &data_gym_byte_to_byte));
+        let mut key = decode_data_gym(first.as_str(), &dg_char_to_byte);
+        key.extend(decode_data_gym(second.as_str(), &dg_char_to_byte));
         bpe_ranks.insert(key, n);
         n += 1
     }
 
-    Ok((data_gym_byte_to_byte, bpe_ranks))
+    Ok((dg_char_to_byte, bpe_ranks))
 }
 
 /// Parse a data gym "encoder.json" file from contents.
 pub fn parse_encoder_json(
     encoder_json_contents: &str,
-    data_gym_byte_to_byte: CommonHashMap<char, u8>,
+    dg_char_to_byte: CommonHashMap<char, u8>,
 ) -> anyhow::Result<CommonHashMap<Vec<u8>, usize>> {
-    let reader = BufReader::new(encoder_json_contents.as_bytes());
-    read_encoder_json(reader, data_gym_byte_to_byte)
+    read_encoder_json(
+        BufReader::new(encoder_json_contents.as_bytes()),
+        dg_char_to_byte,
+    )
 }
 
 /// Parse a data gym "encoder.json" file from contents.
 pub fn read_encoder_json<R>(
     encoder_json_reader: R,
-    data_gym_byte_to_byte: CommonHashMap<char, u8>,
+    dg_char_to_byte: CommonHashMap<char, u8>,
 ) -> anyhow::Result<CommonHashMap<Vec<u8>, usize>>
 where
     R: BufRead,
@@ -110,7 +111,7 @@ where
         .iter()
         .map(|(key, val)| {
             (
-                decode_data_gym(key, &data_gym_byte_to_byte),
+                decode_data_gym(key, &dg_char_to_byte),
                 val.as_u64().unwrap() as usize,
             )
         })
@@ -130,10 +131,11 @@ pub fn parse_data_gym(
     encoder_json_contents: &str,
     clobber_one_byte_tokens: bool,
 ) -> anyhow::Result<CommonHashMap<Vec<u8>, usize>> {
-    let v_reader = BufReader::new(vocab_bpe_contents.as_bytes());
-    let e_reader = BufReader::new(encoder_json_contents.as_bytes());
-
-    read_data_gym(v_reader, e_reader, clobber_one_byte_tokens)
+    read_data_gym(
+        BufReader::new(vocab_bpe_contents.as_bytes()),
+        BufReader::new(encoder_json_contents.as_bytes()),
+        clobber_one_byte_tokens,
+    )
 }
 
 /// Handle extended ascii (<https://en.wikipedia.org/wiki/Extended_ASCII>)
@@ -149,9 +151,9 @@ where
     VR: BufRead,
     ER: BufRead,
 {
-    let (data_gym_byte_to_byte, mut bpe_ranks) = read_vocab_bpe(vocab_bpe_reader)?;
+    let (dg_char_to_byte, mut bpe_ranks) = read_vocab_bpe(vocab_bpe_reader)?;
 
-    let encoder_json_loaded = read_encoder_json(encoder_json_reader, data_gym_byte_to_byte)?;
+    let encoder_json_loaded = read_encoder_json(encoder_json_reader, dg_char_to_byte)?;
     if clobber_one_byte_tokens {
         for (k, v) in &encoder_json_loaded {
             if k.len() == 1 {
