@@ -54,8 +54,7 @@ impl<T: TokenType> MergeHeapVocabEncoder<T> {
     /// * `span` - The byte span to encode.
     /// * `tokens` - The target token buffer to append to.
     /// * `pair_ranks` - Working space for pair ranks.
-    #[inline(always)]
-    fn encode_append_word(
+    pub fn encode_append_word(
         &self,
         span: &[u8],
         tokens: &mut Vec<T>,
@@ -119,6 +118,43 @@ impl<T: TokenType> MergeHeapVocabEncoder<T> {
             tokens.remove(start + i + 1);
         }
     }
+
+    /// Encodes a single [`SpanRef`]".
+    ///
+    /// ## Arguments
+    /// * `text` - The source slice.
+    /// * `span_ref` - The labeling and sub-slicing of a span in `text`.
+    /// * `tokens` - The target token buffer to append to.
+    /// * `pair_ranks` - Working space for pair ranks.
+    pub fn encode_append_span_ref(
+        &self,
+        text: &str,
+        span_ref: SpanRef,
+        tokens: &mut Vec<T>,
+        pair_vec: &mut Vec<T>,
+    ) {
+        match span_ref {
+            SpanRef::Gap(_) => (),
+            SpanRef::Word(range) => {
+                let span = &text[range].as_bytes();
+                if let Some(token) = self.data.lookup_token(span) {
+                    // 1. Faster;
+                    // 2. Correct-or: Some words may not exist in the pair mappings.
+                    tokens.push(token);
+                } else {
+                    if pair_vec.len() < span.len() - 1 {
+                        pair_vec.resize(span.len() - 1, T::max_value());
+                    }
+                    self.encode_append_word(span, tokens, pair_vec);
+                }
+            }
+            SpanRef::Special(range) => {
+                let span = &text[range].as_bytes();
+                let special_token = self.special_vocab().lookup_token(span).unwrap();
+                tokens.push(special_token);
+            }
+        }
+    }
 }
 
 impl<T: TokenType> TokenEncoder<T> for MergeHeapVocabEncoder<T> {
@@ -142,29 +178,8 @@ impl<T: TokenType> TokenEncoder<T> for MergeHeapVocabEncoder<T> {
         tokens: &mut Vec<T>,
     ) -> anyhow::Result<()> {
         let mut pair_vec = Vec::with_capacity(16);
-
         self.segmentor().for_each_split(text, &mut |span_ref| {
-            match span_ref {
-                SpanRef::Gap(_) => (),
-                SpanRef::Word(range) => {
-                    let span = &text[range].as_bytes();
-                    if let Some(token) = self.data.lookup_token(span) {
-                        // 1. Faster;
-                        // 2. Correct-or: Some words may not exist in the pair mappings.
-                        tokens.push(token);
-                    } else {
-                        if pair_vec.len() < span.len() - 1 {
-                            pair_vec.resize(span.len() - 1, T::max_value());
-                        }
-                        self.encode_append_word(span, tokens, &mut pair_vec);
-                    }
-                }
-                SpanRef::Special(range) => {
-                    let span = &text[range].as_bytes();
-                    let special_token = self.special_vocab().lookup_token(span).unwrap();
-                    tokens.push(special_token);
-                }
-            }
+            self.encode_append_span_ref(text, span_ref, tokens, &mut pair_vec);
             true
         });
 

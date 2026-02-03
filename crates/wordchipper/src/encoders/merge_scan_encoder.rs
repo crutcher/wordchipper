@@ -87,6 +87,39 @@ impl<T: TokenType> MergeScanVocabEncoder<T> {
             }
         }
     }
+
+    /// Encodes a single [`SpanRef`]".
+    ///
+    /// ## Arguments
+    /// * `text` - The source slice.
+    /// * `span_ref` - The labeling and sub-slicing of a span in `text`.
+    /// * `tokens` - The target token buffer to append to.
+    /// * `pair_ranks` - Working space for pair ranks.
+    pub fn encode_append_span_ref(
+        &self,
+        text: &str,
+        span_ref: SpanRef,
+        tokens: &mut Vec<T>,
+    ) {
+        match span_ref {
+            SpanRef::Gap(_) => (),
+            SpanRef::Word(range) => {
+                let span = &text[range].as_bytes();
+                if let Some(token) = self.data.lookup_token(span) {
+                    // 1. Faster;
+                    // 2. Correct-or: Some words may not exist in the pair mappings.
+                    tokens.push(token);
+                } else {
+                    self.encode_append_word(span, tokens);
+                }
+            }
+            SpanRef::Special(range) => {
+                let span = &text[range].as_bytes();
+                let special_token = self.special_vocab().lookup_token(span).unwrap();
+                tokens.push(special_token);
+            }
+        }
+    }
 }
 
 impl<T: TokenType> TokenEncoder<T> for MergeScanVocabEncoder<T> {
@@ -109,27 +142,10 @@ impl<T: TokenType> TokenEncoder<T> for MergeScanVocabEncoder<T> {
         text: &str,
         tokens: &mut Vec<T>,
     ) -> anyhow::Result<()> {
-        self.segmentor()
-            .split_spans(text)
-            .into_iter()
-            .for_each(|span_ref| match span_ref {
-                SpanRef::Gap(_) => (),
-                SpanRef::Word(range) => {
-                    let span = &text[range].as_bytes();
-                    if let Some(token) = self.data.lookup_token(span) {
-                        // 1. Faster;
-                        // 2. Correct-or: Some words may not exist in the pair mappings.
-                        tokens.push(token);
-                    } else {
-                        self.encode_append_word(span, tokens)
-                    }
-                }
-                SpanRef::Special(range) => {
-                    let span = &text[range].as_bytes();
-                    let special_token = self.special_vocab().lookup_token(span).unwrap();
-                    tokens.push(special_token);
-                }
-            });
+        self.segmentor().for_each_split(text, &mut |span_ref| {
+            self.encode_append_span_ref(text, span_ref, tokens);
+            true
+        });
 
         Ok(())
     }
