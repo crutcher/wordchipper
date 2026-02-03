@@ -11,14 +11,11 @@ publish = false
 workspace = true
 
 [dependencies]
-burn = { workspace = true }
 anyhow = { workspace = true }
-shellexpand = { workspace = true }
-
-parquet = { workspace = true, features = ["arrow"] }
-
-# features=["tui"} incompatible with conflicting indicatif versions.
+burn = { workspace = true }
 downloader = { workspace = true }
+parquet = { workspace = true, features = ["arrow"] }
+shellexpand = { workspace = true }
 
 [dev-dependencies]
 tempdir = { workspace = true }

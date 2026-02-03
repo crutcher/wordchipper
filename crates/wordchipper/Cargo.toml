@@ -26,6 +26,7 @@ client = [
     "ahash",
     "download",
     "rayon",
+    "serde",
     "std",
 ]
 
@@ -33,6 +34,11 @@ client = [
 download = [
     "dep:wordchipper-disk-cache",
     "std",
+]
+
+# Enable serde features.
+serde = [
+    "dep:serde_json",
 ]
 
 # Enable to have access to the vocab training code.
@@ -95,6 +101,9 @@ base64 = { workspace = true, optional = true }
 parking_lot = { workspace = true, optional = true }
 strum = { workspace = true, optional = true }
 strum_macros = { workspace = true, optional = true }
+
+# "serde" feature deps:
+serde_json = { workspace = true, optional = true }
 
 # "no_std" feature deps:
 hashbrown = { workspace = true, optional = true }

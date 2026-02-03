@@ -2,6 +2,7 @@
 
 pub mod base64_vocab;
 pub mod tiktoken_io;
+pub mod datagym_vocab;
 
 #[doc(inline)]
 pub use base64_vocab::{

@@ -7720,6 +7720,7 @@ dependencies = [
  "parking_lot",
  "rayon",
  "regex",
+ "serde_json",
  "strum 0.27.2",
  "strum_macros 0.27.2",
  "tempdir",
