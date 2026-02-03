@@ -4,7 +4,6 @@
 use crate::alloc::boxed::Box;
 use crate::alloc::string::String;
 use crate::alloc::string::ToString;
-use crate::alloc::sync::Arc;
 use core::fmt::Debug;
 
 /// Error wrapper for regex patterns.
@@ -156,15 +155,6 @@ impl RegexWrapperPattern {
                     })
             }
         }
-    }
-}
-
-/// Common Regex Wrapper Handle Type
-pub type RegexWrapperHandle = Arc<RegexWrapper>;
-
-impl From<RegexWrapperPattern> for RegexWrapperHandle {
-    fn from(val: RegexWrapperPattern) -> Self {
-        Arc::new(val.into())
     }
 }
 
@@ -358,7 +348,7 @@ mod tests {
         let pattern = RegexWrapperPattern::Basic("hello world".to_string());
         assert_eq!(pattern.as_str(), "hello world");
 
-        let rw = pattern.compile().unwrap();
+        let rw: RegexWrapper = pattern.into();
         assert_eq!(rw.as_str(), "hello world");
         assert!(rw.is_basic());
         assert!(!rw.is_fancy());

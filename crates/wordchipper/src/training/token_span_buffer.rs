@@ -178,6 +178,7 @@ mod tests {
         let span: TokenSpanBuf<u32> = TokenSpanBuf::from_tokens(vec![1, 2, 3]);
         assert_eq!(span.tokens(), &[1, 2, 3]);
         assert_eq!(span.len(), 3);
+        assert!(!span.is_empty());
     }
 
     #[test]

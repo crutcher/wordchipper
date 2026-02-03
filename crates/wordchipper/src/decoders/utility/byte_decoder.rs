@@ -61,7 +61,7 @@ mod tests {
     #[test]
     fn test_decode_context() {
         type T = u32;
-        let decoder: ByteDecoder<T> = ByteDecoder::init(ByteMapVocab::default());
+        let decoder: ByteDecoder<T> = ByteMapVocab::default().into();
 
         let mut tokens = vec![];
         tokens.extend(

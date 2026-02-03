@@ -331,7 +331,10 @@ mod tests {
 
         let segmentor = TextSegmentor::from_config(config, Some(NonZeroUsize::new(1).unwrap()));
 
-        let buf = "hello world!";
-        assert_eq!(segmentor.remove_gaps(buf), "helloworld");
+        let buf = vec!["hello world!", "abc def"];
+        assert_eq!(
+            segmentor.batch_remove_gaps(&buf),
+            vec!["helloworld", "abcdef"]
+        );
     }
 }

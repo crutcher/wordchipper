@@ -103,3 +103,31 @@ where
             .finish()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_pool_toy() {
+        let max_pool = Some(NonZeroUsize::new(128).unwrap());
+        let pool = PoolToy::init(10, max_pool);
+
+        // This will be different sizes on different systems.
+        let size = resolve_max_pool(max_pool);
+
+        assert_eq!(pool.len(), size);
+        assert_eq!(&pool.pool, vec![10; size].as_slice());
+
+        assert_eq!(pool.get(), &10);
+        assert_eq!(pool.as_ref(), &10);
+
+        assert_eq!(
+            format!("{:?}", pool),
+            format!("PoolToy {{ item: 10, len: {size} }}")
+        );
+
+        let clone = pool.clone();
+        assert_eq!(&clone.pool, &pool.pool);
+    }
+}

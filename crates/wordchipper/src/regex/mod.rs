@@ -20,4 +20,4 @@ pub mod exact_match_union;
 pub mod regex_wrapper;
 
 #[doc(inline)]
-pub use regex_wrapper::{ErrorWrapper, RegexWrapper, RegexWrapperHandle, RegexWrapperPattern};
+pub use regex_wrapper::{ErrorWrapper, RegexWrapper, RegexWrapperPattern};

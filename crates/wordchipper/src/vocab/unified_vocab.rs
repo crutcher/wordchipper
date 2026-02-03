@@ -181,3 +181,33 @@ impl<T: TokenType> TokenVocab<T> for UnifiedTokenVocab<T> {
         self.span_vocab.span_pairs()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_init() {
+        type T = u32;
+        let mut span_vocab: SpanMapVocab<T> = Default::default();
+        span_vocab.span_map.insert("at".as_bytes().to_vec(), 300);
+        span_vocab.span_map.insert("ate".as_bytes().to_vec(), 301);
+
+        let seg_config = SegmentationConfig::from_pattern(r"\w\+");
+
+        let vocab = UnifiedTokenVocab::from_span_vocab(seg_config, span_vocab);
+        let byte_vocab = vocab.byte_vocab();
+
+        assert_eq!(vocab.lookup_token("at".as_bytes()), Some(300));
+        assert_eq!(vocab.lookup_token("ate".as_bytes()), Some(301));
+        assert_eq!(
+            vocab.lookup_token("a".as_bytes()),
+            Some(byte_vocab.get_token(b'a'))
+        );
+
+        assert_eq!(
+            vocab.lookup_pair(&(byte_vocab.get_token(b'a'), byte_vocab.get_token(b't'))),
+            Some(300)
+        );
+    }
+}
