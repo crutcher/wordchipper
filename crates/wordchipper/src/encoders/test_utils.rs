@@ -32,6 +32,8 @@ pub fn common_encoder_tests<T: TokenType, E: TokenEncoder<T>>(
 ) {
     static_is_send_sync_check(encoder);
 
+    let encoder = encoder.clone();
+
     let samples = vec![
         "hello world",
         "hello san francisco",
