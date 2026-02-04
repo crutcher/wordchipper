@@ -200,6 +200,7 @@ where
     ///
     /// ## Arguments
     /// * `samples` - An iterator over string-like samples.
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, samples)))]
     pub fn update_from_samples<I>(
         &mut self,
         samples: I,
