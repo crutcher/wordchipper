@@ -63,7 +63,11 @@ pub use wordchipper_disk_cache as disk_cache;
 #[cfg(feature = "std")]
 pub mod concurrency;
 
+#[cfg(feature = "compat")]
 pub mod compat;
+#[cfg(not(feature = "compat"))]
+mod compat;
+
 pub mod decoders;
 pub mod encoders;
 pub mod regex;
