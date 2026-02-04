@@ -64,7 +64,7 @@ fn main() -> anyhow::Result<()> {
 fn run(args: &Args) -> anyhow::Result<()> {
     type T = u32;
 
-    let mut dataset_cache = DatasetCacheConfig::new()
+    let mut dataset_cache = DatasetCacheConfig::default()
         .with_cache_dir(args.dataset_dir.clone())
         .init()?;
 

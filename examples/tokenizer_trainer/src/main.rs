@@ -1,5 +1,4 @@
 use arrow::array::{Array, StringArray};
-use burn::tensor::{AsIndex, Slice};
 use clap::Parser;
 use similar::{ChangeTag, TextDiff};
 use std::collections::HashSet;
@@ -23,8 +22,8 @@ pub struct Args {
     pub dataset_dir: String,
 
     /// Shards to load.
-    #[arg(short, long, value_delimiter = ',', default_value = "..8")]
-    pub shards: Vec<Slice>,
+    #[arg(long, num_args = 1.., default_values_t = vec![0,1,2,3,4,5,6,7])]
+    pub shards: Vec<usize>,
 
     /// Vocab size.
     #[arg(long, default_value = "65536")]
@@ -57,7 +56,7 @@ fn main() -> anyhow::Result<()> {
         println!("{:#?}", args);
     }
 
-    let cache_config = DatasetCacheConfig::new().with_cache_dir(args.dataset_dir);
+    let cache_config = DatasetCacheConfig::default().with_cache_dir(args.dataset_dir);
     if args.verbose {
         println!("{:#?}", cache_config);
     }
@@ -65,11 +64,9 @@ fn main() -> anyhow::Result<()> {
     let shards: Vec<usize> = {
         let max_shard = cache_config.source.max_shard;
         let mut collected: HashSet<usize> = HashSet::new();
-        for slice in &args.shards {
-            for idx in slice.into_iter() {
-                let shard = idx.expect_elem_index(max_shard);
-                collected.insert(shard);
-            }
+        for &idx in &args.shards {
+            assert!(idx < max_shard, "shard index out of range");
+            collected.insert(idx);
         }
         let mut shards: Vec<usize> = collected.into_iter().collect();
         shards.sort();

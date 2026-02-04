@@ -1,6 +1,5 @@
 //! # Nanochat Dataset Loader
 
-use burn::config::Config;
 use downloader::{Download, Downloader};
 use parquet::arrow::arrow_reader::{ParquetRecordBatchReader, ParquetRecordBatchReaderBuilder};
 use std::fs;
@@ -8,35 +7,39 @@ use std::fs::File;
 use std::path::PathBuf;
 
 /// The upstream dataset URL.
-pub static NANOCHAT_TRAIN_BASE_URL: &str =
+pub const NANOCHAT_TRAIN_BASE_URL: &str =
     "https://huggingface.co/datasets/karpathy/fineweb-edu-100b-shuffle/resolve/main";
 
+/// The shard template.
+pub const NANOCHAT_TRAIN_SHARD_TEMPLATE: &str = "shard_{index}.parquet";
+
 /// The number of shards in the dataset.
-pub static NANOCHAT_TRAIN_MAX_SHARD: usize = 1822;
+pub const NANOCHAT_TRAIN_MAX_SHARD: usize = 1822;
 
 /// Dataset Source Configuration.
-#[derive(Config, Debug)]
+#[derive(Debug, Clone)]
 pub struct DatasetSource {
     /// The upstream dataset URL.
-    #[config(default = "NANOCHAT_TRAIN_BASE_URL.to_string()")]
     pub base_url: String,
 
     /// The number of shards in the dataset.
-    #[config(default = "NANOCHAT_TRAIN_MAX_SHARD")]
     pub max_shard: usize,
 
     /// The 0-pad width of the shard index.
-    #[config(default = "5")]
     pub index_pad_width: usize,
 
     /// The shard template.
-    #[config(default = "\"shard_{index}.parquet\".to_string()")]
     pub shard_template: String,
 }
 
 impl Default for DatasetSource {
     fn default() -> Self {
-        Self::new()
+        DatasetSource {
+            base_url: NANOCHAT_TRAIN_BASE_URL.to_string(),
+            max_shard: NANOCHAT_TRAIN_MAX_SHARD,
+            index_pad_width: 5,
+            shard_template: NANOCHAT_TRAIN_SHARD_TEMPLATE.to_string(),
+        }
     }
 }
 
@@ -63,20 +66,21 @@ impl DatasetSource {
 }
 
 /// Config for [`DatasetCache`].
-#[derive(Config, Debug)]
+#[derive(Debug, Clone)]
 pub struct DatasetCacheConfig {
     /// The dataset cache directory.
-    #[config(default = "\"~/.cache/brn-nanochat/dataset/\".to_string()")]
     pub cache_dir: String,
 
     /// The dataset source configuration.
-    #[config(default = "Default::default()")]
     pub source: DatasetSource,
 }
 
 impl Default for DatasetCacheConfig {
     fn default() -> Self {
-        Self::new()
+        DatasetCacheConfig {
+            cache_dir: "~/.cache/brn-nanochat/dataset/".to_string(),
+            source: DatasetSource::default(),
+        }
     }
 }
 
@@ -93,6 +97,22 @@ impl DatasetCacheConfig {
             source: self.source.clone(),
             downloader,
         })
+    }
+
+    pub fn with_cache_dir(
+        mut self,
+        cache_dir: String,
+    ) -> Self {
+        self.cache_dir = cache_dir;
+        self
+    }
+
+    pub fn with_source(
+        mut self,
+        source: DatasetSource,
+    ) -> Self {
+        self.source = source;
+        self
     }
 }
 
@@ -311,7 +331,7 @@ mod tests {
         let tmpdir = TempDir::new("brn-nanochat-test")?;
         let base_dir = tmpdir.path();
 
-        let cache = DatasetCacheConfig::new()
+        let cache = DatasetCacheConfig::default()
             .with_cache_dir(base_dir.to_string_lossy().to_string())
             .init()?;
 

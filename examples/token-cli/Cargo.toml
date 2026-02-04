@@ -14,13 +14,13 @@ default = ["parallel"]
 parallel = []
 
 [dependencies]
+wordchipper-data = { path = "../../crates/wordchipper-data" }
+wordchipper = { path = "../../crates/wordchipper" }
+
 anyhow = { workspace = true }
 arrow = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 humansize = { workspace = true }
-similar = { workspace = true }
-wordchipper-data = { path = "../../crates/wordchipper-data" }
-wordchipper = { path = "../../crates/wordchipper" }
-
 rayon = { workspace = true }
+similar = { workspace = true }
 tiktoken-rs = { workspace = true }
