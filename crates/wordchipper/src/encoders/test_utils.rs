@@ -3,6 +3,7 @@
 use crate::alloc::string::String;
 use crate::alloc::vec;
 use crate::alloc::vec::Vec;
+use crate::compat::slices::inner_slice_view;
 use crate::compat::traits::static_is_send_sync_check;
 use crate::decoders::{DictionaryDecoder, TokenDecoder};
 use crate::encoders::TokenEncoder;
@@ -45,7 +46,7 @@ pub fn common_encoder_tests<T: TokenType, E: TokenEncoder<T>>(
 
     let token_batch = encoder.try_encode_batch(&samples).unwrap();
     let decoded_strings = decoder
-        .try_decode_batch_to_strings(&token_batch.iter().map(|t| t.as_slice()).collect::<Vec<_>>())
+        .try_decode_batch_to_strings(&inner_slice_view(&token_batch))
         .unwrap()
         .unwrap();
 

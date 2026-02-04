@@ -4,6 +4,7 @@ use clap::Parser;
 use similar::{ChangeTag, TextDiff};
 use std::collections::HashSet;
 use std::time::Duration;
+use wordchipper::compat::slices::{inner_slice_view, inner_str_view};
 use wordchipper::decoders::{DictionaryDecoder, TokenDecoder};
 use wordchipper::encoders::{DefaultTokenEncoder, TokenEncoder};
 use wordchipper::rayon::{ParallelRayonDecoder, ParallelRayonEncoder};
@@ -177,9 +178,8 @@ fn main() -> anyhow::Result<()> {
         let mut total_token_count = 0;
         let batch_times_ns = sample_batches.iter().map(|batch| {
             let t0 = std::time::Instant::now();
-            let token_batch: Vec<Vec<T>> = encoder
-                .try_encode_batch(&batch.iter().map(|s| s.as_str()).collect::<Vec<_>>())
-                .unwrap();
+            let token_batch: Vec<Vec<T>> =
+                encoder.try_encode_batch(&inner_str_view(batch)).unwrap();
             let t1 = std::time::Instant::now();
 
             total_token_count += token_batch.iter().map(|tokens| tokens.len()).sum::<usize>();
@@ -227,9 +227,7 @@ fn main() -> anyhow::Result<()> {
                 .map(|(sample, batch)| {
                     let t0 = std::time::Instant::now();
                     let decoded_sample = decoder
-                        .try_decode_batch_to_strings(
-                            &batch.iter().map(|v| v.as_ref()).collect::<Vec<&[T]>>(),
-                        )
+                        .try_decode_batch_to_strings(&inner_slice_view(batch))
                         .unwrap()
                         .unwrap();
 

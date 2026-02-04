@@ -12,6 +12,7 @@ use wordchipper_data::dataset::DatasetCacheConfig;
 
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
+use wordchipper::compat::slices::{inner_slice_view, inner_str_view};
 
 /// Time an operation; return (duration, result).
 pub fn timeit<F, R>(f: F) -> (Duration, R)
@@ -133,12 +134,9 @@ fn run(args: &Args) -> anyhow::Result<()> {
     let mut wc_batch_durations = vec![];
     let mut tt_batch_durations = vec![];
     for (idx, batch) in sample_batches.iter().enumerate() {
-        let batch = batch.iter().map(|s| s.as_str()).collect::<Vec<_>>();
+        let str_batch = inner_str_view(batch);
 
-        // warmup.
-        // encoder.try_encode_batch(&batch).unwrap();
-
-        let (durationn, wc_batch_tokens) = timeit(|| encoder.try_encode_batch(&batch).unwrap());
+        let (durationn, wc_batch_tokens) = timeit(|| encoder.try_encode_batch(&str_batch).unwrap());
         wc_batch_durations.push(durationn);
 
         wc_total_token_count += wc_batch_tokens
@@ -149,9 +147,9 @@ fn run(args: &Args) -> anyhow::Result<()> {
         {
             let (duration, tt_batch_tokens) = timeit(|| {
                 #[cfg(feature = "parallel")]
-                let it = batch.par_iter();
+                let it = str_batch.par_iter();
                 #[cfg(not(feature = "parallel"))]
-                let it = batch.iter();
+                let it = str_batch.iter();
 
                 it.map(|s| tt_bpe.encode_with_special_tokens(s))
                     .collect::<Vec<_>>()
@@ -205,7 +203,7 @@ fn run(args: &Args) -> anyhow::Result<()> {
 
         let expected: Vec<String> = it.map(|t| encoder.segmentor().remove_gaps(t)).collect();
 
-        let slices = batch.iter().map(|v| v.as_ref()).collect::<Vec<&[T]>>();
+        let slices = inner_slice_view(batch);
 
         {
             let (duration, wc_decoded) = timeit(|| {
@@ -216,7 +214,7 @@ fn run(args: &Args) -> anyhow::Result<()> {
             });
             wc_batch_decode_durations.push(duration);
 
-            verify_decode(&expected, &wc_decoded);
+            verify_decode(&wc_decoded, &expected);
         }
 
         {
@@ -232,7 +230,7 @@ fn run(args: &Args) -> anyhow::Result<()> {
 
             tt_batch_decode_durations.push(duration);
 
-            verify_decode(&expected, &tt_decoded);
+            verify_decode(&tt_decoded, &expected);
         }
     }
 
@@ -251,31 +249,30 @@ fn run(args: &Args) -> anyhow::Result<()> {
 }
 
 pub fn verify_decode(
-    samples: &[String],
-    decoded: &[String],
+    actual: &[String],
+    expected: &[String],
 ) {
+    let sstrs: Vec<&str> = inner_str_view(expected);
+    let dstrs: Vec<&str> = inner_str_view(actual);
+
     #[cfg(feature = "parallel")]
-    let it = samples.par_iter().zip(decoded.par_iter());
+    let it = sstrs.par_iter().zip(dstrs.par_iter());
     #[cfg(not(feature = "parallel"))]
-    let it = samples.iter().zip(decoded.iter());
+    let it = sstrs.iter().zip(dstrs.iter());
 
-    if it.all(|(s, d)| s == d) {
-        return;
-    }
+    let mismatch: Vec<(&str, &str)> = it.filter(|(s, d)| s != d).map(|(&s, &d)| (s, d)).collect();
 
-    for (s, d) in samples.iter().zip(decoded.iter()) {
-        if s != d {
-            let diff = TextDiff::from_lines(s, d);
+    if let Some((s, d)) = mismatch.into_iter().next() {
+        let diff = TextDiff::from_lines(s, d);
 
-            for change in diff.iter_all_changes() {
-                let sign = match change.tag() {
-                    ChangeTag::Delete => "-",
-                    ChangeTag::Insert => "+",
-                    ChangeTag::Equal => " ",
-                };
-                print!("{}{}", sign, change);
-            }
-            panic!("MISMATCH");
+        for change in diff.iter_all_changes() {
+            let sign = match change.tag() {
+                ChangeTag::Delete => "-",
+                ChangeTag::Insert => "+",
+                ChangeTag::Equal => " ",
+            };
+            print!("{}{}", sign, change);
         }
+        panic!("MISMATCH");
     }
 }
