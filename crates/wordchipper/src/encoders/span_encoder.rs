@@ -26,10 +26,10 @@ pub trait SpanEncoder<T: TokenType>: Default {
 }
 
 /// A [`TokenEncoder`] with pluggable [`SpanEncoder`]s.
-pub struct SpanEncoderVocabEncoder<T, C = MergeHeapSpanEncoder<T>>
+pub struct SpanEncoderVocabEncoder<T, S = MergeHeapSpanEncoder<T>>
 where
     T: TokenType,
-    C: SpanEncoder<T>,
+    S: SpanEncoder<T>,
 {
     /// Data for the encoders.
     pub data: UnifiedTokenVocab<T>,
@@ -37,13 +37,13 @@ where
     /// Text Segmentor.
     pub segmentor: TextSegmentor,
 
-    marker: core::marker::PhantomData<fn() -> C>,
+    marker: core::marker::PhantomData<fn() -> S>,
 }
 
-impl<T, C> Clone for SpanEncoderVocabEncoder<T, C>
+impl<T, S> Clone for SpanEncoderVocabEncoder<T, S>
 where
     T: TokenType,
-    C: SpanEncoder<T>,
+    S: SpanEncoder<T>,
 {
     fn clone(&self) -> Self {
         Self {
@@ -54,7 +54,7 @@ where
     }
 }
 
-impl<T: TokenType, C: SpanEncoder<T>> SpanEncoderVocabEncoder<T, C> {
+impl<T: TokenType, S: SpanEncoder<T>> SpanEncoderVocabEncoder<T, S> {
     /// Initialize an encoder.
     ///
     /// ## Arguments
@@ -81,13 +81,13 @@ impl<T: TokenType, C: SpanEncoder<T>> SpanEncoderVocabEncoder<T, C> {
     /// * `text` - The source slice.
     /// * `span_ref` - The labeling and sub-slicing of a span in `text`.
     /// * `tokens` - The target token buffer to append to.
-    /// * `pair_ranks` - Working space for pair ranks.
+    /// * `span_encoder` - The [`SpanEncoder`] context.
     fn encode_append_span_ref(
         &self,
         text: &str,
         span_ref: SpanRef,
         tokens: &mut Vec<T>,
-        context: &mut C,
+        span_encoder: &mut S,
     ) {
         match span_ref {
             SpanRef::Gap(_) => (),
@@ -98,7 +98,7 @@ impl<T: TokenType, C: SpanEncoder<T>> SpanEncoderVocabEncoder<T, C> {
                     // 2. Correct-or: Some words may not exist in the pair mappings.
                     tokens.push(token);
                 } else {
-                    context.encode_append_span(&self.data, span, tokens);
+                    span_encoder.encode_append_span(&self.data, span, tokens);
                 }
             }
             SpanRef::Special(range) => {
@@ -110,7 +110,7 @@ impl<T: TokenType, C: SpanEncoder<T>> SpanEncoderVocabEncoder<T, C> {
     }
 }
 
-impl<T: TokenType, C: SpanEncoder<T>> TokenEncoder<T> for SpanEncoderVocabEncoder<T, C> {
+impl<T: TokenType, S: SpanEncoder<T>> TokenEncoder<T> for SpanEncoderVocabEncoder<T, S> {
     fn segmentor(&self) -> &TextSegmentor {
         &self.segmentor
     }
@@ -128,9 +128,9 @@ impl<T: TokenType, C: SpanEncoder<T>> TokenEncoder<T> for SpanEncoderVocabEncode
         text: &str,
         tokens: &mut Vec<T>,
     ) -> anyhow::Result<()> {
-        let mut context: C = Default::default();
+        let mut span_encoder: S = Default::default();
         self.segmentor().for_each_split(text, &mut |span_ref| {
-            self.encode_append_span_ref(text, span_ref, tokens, &mut context);
+            self.encode_append_span_ref(text, span_ref, tokens, &mut span_encoder);
             true
         });
 
