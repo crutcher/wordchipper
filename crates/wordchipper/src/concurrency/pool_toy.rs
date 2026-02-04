@@ -2,31 +2,7 @@
 
 use crate::compat::threads;
 use core::fmt::Debug;
-use std::env;
 use std::num::NonZeroUsize;
-
-const MAX_POOL_SIZE: usize = 128;
-
-/// Resolve the max pool size.
-///
-/// ``min(max_pool, thread::available_parallelism() || MAX_POOL, env::var("RAYON_NUM_THREADS"))``
-pub(crate) fn resolve_max_pool(max_pool: Option<NonZeroUsize>) -> usize {
-    let sys_max: usize = {
-        let mut p = std::thread::available_parallelism()
-            .unwrap_or(NonZeroUsize::new(MAX_POOL_SIZE).unwrap())
-            .get();
-
-        if let Ok(t) = env::var("RAYON_NUM_THREADS") {
-            p = p.min(t.parse::<usize>().unwrap_or(p));
-        }
-
-        p
-    };
-
-    let max_pool = max_pool.map(|x| x.get()).unwrap_or(sys_max);
-
-    core::cmp::min(max_pool, sys_max)
-}
 
 /// Current Thread -> T Pool.
 pub struct PoolToy<T>
@@ -60,7 +36,7 @@ where
         item: T,
         max_pool: Option<NonZeroUsize>,
     ) -> Self {
-        let max_pool = resolve_max_pool(max_pool);
+        let max_pool = threads::resolve_max_pool(max_pool);
 
         Self::new(vec![item; max_pool])
     }
@@ -107,6 +83,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::compat::threads::resolve_max_pool;
 
     #[test]
     fn test_pool_toy() {
