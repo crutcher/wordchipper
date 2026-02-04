@@ -101,12 +101,12 @@ impl TextSegmentor {
         P: Into<RegexWrapperPattern>,
         S: AsRef<str>,
     {
-        let span_re = word_pattern.into().compile().unwrap();
+        let span_re = word_pattern.into().into();
 
         let special_re = if specials.is_empty() {
             None
         } else {
-            Some(exact_match_union_regex_pattern(specials).compile().unwrap())
+            Some(exact_match_union_regex_pattern(specials).into())
         };
 
         Self::init(span_re, special_re, max_pool)
