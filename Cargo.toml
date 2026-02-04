@@ -50,13 +50,17 @@ stackvec = "^0.2.1"
 strum = "^0.27"
 strum_macros = "^0.27"
 tempdir = "^0.3"
-
-fancy-regex = { version = "0.13.0", default-features = false }
-regex = { version = "1.10.3", default-features = false }
+tiktoken-rs = "^0.9.1"
 
 anyhow = { version = "^1.0", default-features = false }
 log = { version = "^0.4", default-features = false }
 num-traits = { version = "^0.2.19", default-features = false }
 tracing = { version = "^0.1", default-features = false }
 
-tiktoken-rs = "^0.9.1"
+# ATTENTION:
+# Upgrading the regex deps comes with significant performance penalties
+# for concurrent encoding. Something about the multi-thread contention,
+# even with cloned regex instances, has gotten worse.
+fancy-regex = { version = "0.13.0", default-features = false }
+regex = { version = "1.10.3", default-features = false }
+
