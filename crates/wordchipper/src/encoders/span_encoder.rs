@@ -10,7 +10,7 @@ use crate::vocab::special_vocab::SpecialVocab;
 use crate::vocab::unified_vocab::UnifiedTokenVocab;
 use core::num::NonZeroUsize;
 
-/// Merge Context.
+/// Span encoder trait for [`SpanEncoderVocabEncoder`]
 pub trait SpanEncoder<T: TokenType>: Default {
     /// Encodes a single normal "word".
     ///
@@ -25,12 +25,7 @@ pub trait SpanEncoder<T: TokenType>: Default {
     );
 }
 
-/// A Span-lookup / ``(T, T) -> T`` merge heap [`TokenEncoder`].
-///
-/// Builds a working set on the append buffer.
-///
-/// More complex than [`SpanEncoderVocabEncoder`],
-/// but triggers fewer pair lookups.
+/// A [`TokenEncoder`] with pluggable [`SpanEncoder`]s.
 pub struct SpanEncoderVocabEncoder<T, C = MergeHeapSpanEncoder<T>>
 where
     T: TokenType,
