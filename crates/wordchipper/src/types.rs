@@ -76,8 +76,8 @@ pub use hash_types::*;
 #[cfg(test)]
 pub(crate) fn check_is_send<S: Send>(_: S) {}
 
-#[cfg(test)]
 /// Check if a type is `Sync`.
+#[cfg(test)]
 pub(crate) fn check_is_sync<S: Sync>(_: S) {}
 
 #[cfg(test)]
