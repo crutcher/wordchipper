@@ -411,11 +411,11 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::compat::traits::static_is_send_sync_check;
     use crate::decoders::{DictionaryDecoder, TokenDecoder};
     use crate::encoders::{DefaultTokenEncoder, TokenEncoder};
     use crate::training::BinaryPairVocabTrainerOptions;
     use crate::training::bpe_trainer::MergeJob;
-    use crate::types::{check_is_send, check_is_sync};
     use crate::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
     use crate::vocab::{ByteMapVocab, UnifiedTokenVocab};
     use compact_str::CompactString;
@@ -462,12 +462,10 @@ mod tests {
         let vocab: UnifiedTokenVocab<T> = trainer.train(byte_vocab.clone()).unwrap();
 
         let encoder = DefaultTokenEncoder::<T>::init(vocab.clone(), None);
-        check_is_send(&encoder);
-        check_is_sync(&encoder);
+        static_is_send_sync_check(&encoder);
 
         let decoder = DictionaryDecoder::from_unified_vocab(vocab);
-        check_is_send(&decoder);
-        check_is_sync(&decoder);
+        static_is_send_sync_check(&decoder);
 
         for sample in samples {
             let tokens = encoder.try_encode(sample).unwrap();

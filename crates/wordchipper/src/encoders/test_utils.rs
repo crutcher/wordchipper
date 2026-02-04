@@ -3,10 +3,11 @@
 use crate::alloc::string::String;
 use crate::alloc::vec;
 use crate::alloc::vec::Vec;
+use crate::compat::traits::static_is_send_sync_check;
 use crate::decoders::{DictionaryDecoder, TokenDecoder};
 use crate::encoders::TokenEncoder;
 use crate::segmentation::SegmentationConfig;
-use crate::types::{TokenType, check_is_send, check_is_sync};
+use crate::types::TokenType;
 use crate::vocab::byte_vocab::build_test_shift_byte_vocab;
 use crate::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
 use crate::vocab::utility::testing::build_test_vocab;
@@ -29,8 +30,7 @@ pub fn common_encoder_tests<T: TokenType, E: TokenEncoder<T>>(
     vocab: UnifiedTokenVocab<T>,
     encoder: &E,
 ) {
-    check_is_send(encoder);
-    check_is_sync(encoder);
+    static_is_send_sync_check(encoder);
 
     let samples = vec![
         "hello world",
@@ -39,8 +39,7 @@ pub fn common_encoder_tests<T: TokenType, E: TokenEncoder<T>>(
     ];
 
     let decoder = DictionaryDecoder::from_unified_vocab(vocab.clone());
-    check_is_send(&decoder);
-    check_is_sync(&decoder);
+    static_is_send_sync_check(&decoder);
 
     let token_batch = encoder.try_encode_batch(&samples).unwrap();
     let decoded_strings = decoder.try_decode_batch_to_strings(&token_batch).unwrap();

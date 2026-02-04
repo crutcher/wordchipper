@@ -3,9 +3,10 @@
 use crate::alloc::vec;
 use crate::alloc::vec::Vec;
 use crate::compat::strings::string_from_utf8_lossy;
+use crate::compat::traits::static_is_send_sync_check;
 use crate::decoders::TokenDecoder;
 use crate::encoders::{DefaultTokenEncoder, TokenEncoder};
-use crate::types::{TokenType, check_is_send, check_is_sync};
+use crate::types::TokenType;
 use crate::vocab::{TokenVocab, UnifiedTokenVocab};
 
 /// Common Unittest for TokenDecoder implementations.
@@ -13,8 +14,7 @@ pub fn common_decoder_unit_test<T: TokenType, D: TokenDecoder<T>>(
     vocab: UnifiedTokenVocab<T>,
     decoder: &D,
 ) {
-    check_is_send(decoder);
-    check_is_sync(decoder);
+    static_is_send_sync_check(decoder);
 
     let samples = vec![
         "hello world",

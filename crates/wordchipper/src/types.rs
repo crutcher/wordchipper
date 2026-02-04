@@ -72,14 +72,6 @@ mod hash_types {
 }
 pub use hash_types::*;
 
-/// Check if a type is `Send`.
-#[cfg(test)]
-pub(crate) fn check_is_send<S: Send>(_: S) {}
-
-#[cfg(test)]
-/// Check if a type is `Sync`.
-pub(crate) fn check_is_sync<S: Sync>(_: S) {}
-
 #[cfg(test)]
 mod tests {
     use super::*;
