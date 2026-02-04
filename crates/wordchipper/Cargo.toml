@@ -17,11 +17,13 @@ workspace = true
 
 
 [features]
+## The default feature does not enable "training".
 default = [
     "client",
 ]
 
-# Features for typical client usage.
+## The default client is focused on loading vocabularies and running
+## high performance encoders / decoders.
 client = [
     "ahash",
     "download",
@@ -29,13 +31,13 @@ client = [
     "std",
 ]
 
-# Enable to have disk caching of downloaded files.
+## The download feature enables downloading vocabularies from the internet.
 download = [
     "dep:wordchipper-disk-cache",
     "std",
 ]
 
-# Enable to have access to the vocab training code.
+## The training feature enables the training code.
 training = [
     "compact_str",
     "dary_heap",
@@ -43,8 +45,12 @@ training = [
 ]
 
 
-# Tested in CI; but I'm unsure I've fully covered it.
-# When "std" is not enabled, "no_std" is required.
+## The "std" feature enables the use of the `std` library;
+## and the "`no_std`" feature enables deps needed when "std" is not enabled.
+## (Negative feature deps are not stable yet.)
+##
+## Note: I am unsure if this is complete. It is tested CI, but I'm unsure
+## if I've fully covered it; and I haven't worked out a ``no_std`` deploy test yet.
 std = [
     "anyhow/std",
     "dep:base64",
@@ -57,27 +63,32 @@ std = [
     "num-traits/std",
     "regex/default",
 ]
+## See [std].
 no_std = [
     "hashbrown/alloc"
 ]
 
-# We can switch HashMap/HashSet implementations for the whole crate.
-# This is done in the "src/types.rs" file.
-#
-# - mac hardware: fasster to enable ahash
-# - 2020 desktop linux: faster decode, no encode benefit.
+## This swaps all HashMap/HashSet implementations for ``ahash``; which is a performance
+## win on many/(most?) modern CPUs.
+##
+## This is done by the ``types::hash_types::CommonHash{*}`` type alias machinery.
+## See also the ``hashbrown`` dep used by ``no_std``.
 ahash = [
     "dep:ahash",
     "std",
 ]
 
-# Enable rayon based parallelism.
+## This enables some parallelism wrappers using the ``rayon`` crate.
+##
+## TODO: I intend on providing a ``tokio`` based ``async`` parallelism mechanism
+## as well, to structure more direct ``regex find > encode span`` pipeline parallelism.
 rayon = [
     "dep:rayon",
     "std"
 ]
 
-# Enable tracing instrumentation.
+## This enables a number of ``tracing`` instrumentation points.
+## This is only useful for timing tracing of the library itself.
 tracing = [
     "tracing/attributes",
 ]
@@ -86,6 +97,7 @@ tracing = [
 [dependencies]
 # no-default deps
 anyhow = { workspace = true }
+document-features = { workspace = true }
 fancy-regex = { workspace = true, features = ["unicode"] }
 log = { workspace = true }
 num-traits = { workspace = true }

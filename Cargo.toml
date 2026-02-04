@@ -52,6 +52,8 @@ strum_macros = "^0.27"
 tempdir = "^0.3"
 tiktoken-rs = "^0.9.1"
 
+document-features = "^0.2"
+
 anyhow = { version = "^1.0", default-features = false }
 log = { version = "^0.4", default-features = false }
 num-traits = { version = "^0.2.19", default-features = false }

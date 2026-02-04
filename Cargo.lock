@@ -7722,6 +7722,7 @@ dependencies = [
  "base64",
  "compact_str 0.9.0",
  "dary_heap",
+ "document-features",
  "fancy-regex",
  "hashbrown 0.16.1",
  "hashlru",
