@@ -37,8 +37,8 @@ impl<T: TokenType> SpanEncoder<T> for MergeHeapSpanEncoder<T> {
 
         let pr_for_tokens = {
             |tok: &[T], a: usize, b: usize| {
-                let pair = &(tok[start + a], tok[start + b]);
-                data.lookup_pair(pair).unwrap_or_else(|| T::max_value())
+                data.lookup_pair(&(tok[start + a], tok[start + b]))
+                    .unwrap_or(T::max_value())
             }
         };
 
@@ -54,10 +54,10 @@ impl<T: TokenType> SpanEncoder<T> for MergeHeapSpanEncoder<T> {
             .iter()
             .enumerate()
             .filter_map(|(i, &new_token)| {
-                if new_token == T::max_value() {
-                    None
-                } else {
+                if new_token != T::max_value() {
                     Some((new_token, i))
+                } else {
+                    None
                 }
             })
             .min()
