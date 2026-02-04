@@ -32,6 +32,7 @@ pub mod special_vocab;
 pub mod token_vocab;
 pub mod unified_vocab;
 pub mod utility;
+pub mod vocab_types;
 
 #[doc(inline)]
 pub use byte_vocab::ByteMapVocab;
@@ -43,3 +44,8 @@ pub use span_vocab::SpanMapVocab;
 pub use token_vocab::TokenVocab;
 #[doc(inline)]
 pub use unified_vocab::UnifiedTokenVocab;
+#[doc(inline)]
+pub use vocab_types::{
+    ByteTokenArray, ByteTokenMap, PairTokenMap, SpanTokenMap, TokenByteMap, TokenPairMap,
+    TokenSpanMap,
+};

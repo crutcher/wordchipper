@@ -203,7 +203,7 @@ mod tests {
         assert_eq!(span.tokens(), &[104, 101, 108, 108, 111]);
 
         let shifted_tokens = byte_vocab
-            .byte_to_token()
+            .byte_token_array()
             .iter()
             .map(|&token| token + 10)
             .collect::<Vec<_>>();

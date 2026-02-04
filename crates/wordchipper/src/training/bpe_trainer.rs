@@ -4,13 +4,13 @@ use crate::regex::RegexWrapperPattern;
 use crate::training::pair_span_index::{PairIndexMap, PairSpanIndex};
 use crate::training::text_span_counter::{TextSpanCounter, TextSpanCounterOptions};
 use crate::training::token_span_buffer::TokenSpanBuf;
-use crate::types::{
-    CommonHashMap, CommonHashSet, CountType, Pair, PairTokenMap, StringChunkType, TokenType,
-};
+use crate::training::{CountType, StringChunkType};
+use crate::types::{CommonHashMap, CommonHashSet, Pair, TokenType};
 use crate::vocab::byte_vocab::ByteMapVocab;
 use crate::vocab::pair_vocab::PairMapVocab;
 use crate::vocab::utility::validators;
 use crate::vocab::utility::validators::U8_SIZE;
+use crate::vocab::vocab_types::PairTokenMap;
 use crate::vocab::{TokenVocab, UnifiedTokenVocab};
 use compact_str::CompactString;
 use core::cmp::Ordering;

@@ -2,8 +2,9 @@
 
 use crate::decoders::decode_context::TokenDecodeContext;
 use crate::decoders::token_decoder::TokenDecoder;
-use crate::types::{TokenToWordMap, TokenType};
+use crate::types::TokenType;
 use crate::vocab::UnifiedTokenVocab;
+use crate::vocab::vocab_types::TokenSpanMap;
 
 /// A token dictionary [`TokenDecoder<T>`].
 #[derive(Clone)]
@@ -11,7 +12,7 @@ pub struct DictionaryDecoder<T: TokenType> {
     /// Token to bytes mapping.
     ///
     /// Does not include byte-tokens.
-    pub token_to_word: TokenToWordMap<T>,
+    pub token_to_word: TokenSpanMap<T>,
 }
 
 impl<T: TokenType> DictionaryDecoder<T> {
@@ -33,7 +34,7 @@ impl<T: TokenType> DictionaryDecoder<T> {
     ///
     /// ## Returns
     /// A new `DictionaryDecoder` instance.
-    pub fn init(token_to_word: TokenToWordMap<T>) -> Self {
+    pub fn init(token_to_word: TokenSpanMap<T>) -> Self {
         Self { token_to_word }
     }
 }

@@ -1,6 +1,7 @@
 //! # Tiktoken Vocabulary IO
 
-use crate::types::{CommonHashMap, SpanTokenMap, TokenType};
+use crate::types::TokenType;
+use crate::vocab::vocab_types::SpanTokenMap;
 use anyhow::Context;
 use base64::Engine;
 use base64::prelude::BASE64_STANDARD;
@@ -43,7 +44,7 @@ where
     T: TokenType,
     R: BufRead,
 {
-    let mut vocab: CommonHashMap<Vec<u8>, T> = Default::default();
+    let mut vocab = SpanTokenMap::default();
 
     let stream = reader.lines();
     for line in stream {
@@ -127,7 +128,7 @@ mod tests {
     fn test_save_load_tiktoken() {
         type T = u32;
 
-        let mut span_map: CommonHashMap<Vec<u8>, T> = Default::default();
+        let mut span_map: SpanTokenMap<T> = Default::default();
         span_map.insert("apple".as_bytes().to_vec(), 300);
         span_map.insert("banana".as_bytes().to_vec(), 301);
         span_map.insert("pear".as_bytes().to_vec(), 302);

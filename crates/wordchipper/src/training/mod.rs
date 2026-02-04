@@ -98,6 +98,10 @@ pub mod bpe_trainer;
 pub mod pair_span_index;
 pub mod text_span_counter;
 pub mod token_span_buffer;
+pub mod training_types;
 
 #[doc(inline)]
 pub use bpe_trainer::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions};
+
+#[doc(inline)]
+pub use training_types::{CountType, StringChunkType};

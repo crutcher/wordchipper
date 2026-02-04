@@ -1,7 +1,8 @@
 //! # Tiktoken Vocabulary IO
 
-use crate::types::{SpanTokenMap, TokenType};
+use crate::types::TokenType;
 use crate::vocab::io::base64_vocab::{read_base64_span_map, write_base64_span_map};
+use crate::vocab::vocab_types::SpanTokenMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::Path;
@@ -64,13 +65,12 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::CommonHashMap;
 
     #[test]
     fn test_save_load_tiktoken() {
         type T = u32;
 
-        let mut span_map: CommonHashMap<Vec<u8>, T> = Default::default();
+        let mut span_map = SpanTokenMap::<T>::default();
         span_map.insert("apple".as_bytes().to_vec(), 300);
         span_map.insert("banana".as_bytes().to_vec(), 301);
         span_map.insert("pear".as_bytes().to_vec(), 302);

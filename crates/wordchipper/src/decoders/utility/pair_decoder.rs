@@ -2,7 +2,8 @@
 
 use crate::decoders::decode_context::TokenDecodeContext;
 use crate::decoders::token_decoder::TokenDecoder;
-use crate::types::{TokenToPairMap, TokenType};
+use crate::types::TokenType;
+use crate::vocab::vocab_types::TokenPairMap;
 use crate::vocab::{ByteMapVocab, PairMapVocab};
 
 /// A [`TokenDecoder`] based on a token expansion map ``{ T -> (T, T) }``.
@@ -12,7 +13,7 @@ pub struct PairExpansionDecoder<T: TokenType> {
     pub byte_vocab: ByteMapVocab<T>,
 
     /// Token to pair mapping.
-    pub token_map: TokenToPairMap<T>,
+    pub token_map: TokenPairMap<T>,
 }
 
 impl<T: TokenType> PairExpansionDecoder<T> {
@@ -42,7 +43,7 @@ impl<T: TokenType> PairExpansionDecoder<T> {
     /// A new `PairExpansionDecoder` instance.
     pub fn init(
         byte_vocab: ByteMapVocab<T>,
-        token_map: TokenToPairMap<T>,
+        token_map: TokenPairMap<T>,
     ) -> Self {
         Self {
             byte_vocab,

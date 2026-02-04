@@ -3,9 +3,10 @@
 use crate::alloc::vec::Vec;
 use crate::decoders::TokenDecoder;
 use crate::decoders::utility::pair_decoder::PairExpansionDecoder;
-use crate::types::{CommonHashSet, Pair, PairTokenMap, TokenType};
+use crate::types::{CommonHashSet, Pair, TokenType};
 use crate::vocab::byte_vocab::ByteMapVocab;
 use crate::vocab::token_vocab::TokenVocab;
+use crate::vocab::vocab_types::PairTokenMap;
 
 /// Validate that a [`ByteMapVocab`] and [`PairTokenMap`] are compatible.
 ///

@@ -1,7 +1,8 @@
 //! # Vocab Testing Tools
 
 use crate::segmentation::SegmentationConfig;
-use crate::types::{SpanTokenMap, TokenType};
+use crate::types::TokenType;
+use crate::vocab::vocab_types::SpanTokenMap;
 use crate::vocab::{ByteMapVocab, SpanMapVocab, UnifiedTokenVocab};
 
 /// Create a test [`UnifiedTokenVocab`].

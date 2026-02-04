@@ -1,8 +1,9 @@
 //! # Word Map ``{ Vec<u8> -> T }`` Token Vocabulary
 
 use crate::alloc::vec::Vec;
-use crate::types::{CommonHashMap, SpanTokenMap, TokenType};
-use crate::vocab::{ByteMapVocab, PairMapVocab, TokenVocab};
+use crate::types::{CommonHashMap, TokenType};
+use crate::vocab::vocab_types::{ByteTokenMap, SpanTokenMap};
+use crate::vocab::{ByteMapVocab, PairMapVocab, PairTokenMap, TokenVocab};
 
 /// Token vocabulary as a dictionary map of ``{ Vec<u8> -> T }``.
 #[derive(Debug, Clone, PartialEq)]
@@ -28,7 +29,7 @@ impl<T: TokenType> From<SpanTokenMap<T>> for SpanMapVocab<T> {
 }
 
 /// Read the ``{ u8 -> T }`` mapping from a ``{ Vec<u8> -> T }`` mapping.
-pub fn byte_map_from_span_map<T: TokenType>(span_map: &SpanTokenMap<T>) -> CommonHashMap<u8, T> {
+pub fn byte_map_from_span_map<T: TokenType>(span_map: &SpanTokenMap<T>) -> ByteTokenMap<T> {
     span_map
         .iter()
         .filter_map(|(span, &token)| {
@@ -99,7 +100,7 @@ impl<T: TokenType> SpanMapVocab<T> {
     /// ## Panics
     /// If the [`ByteMapVocab`] mapping is not 1:1, or if initialization fails.
     pub fn from_span_map(span_map: SpanTokenMap<T>) -> Self {
-        let mut byte_map: CommonHashMap<u8, T> = byte_map_from_span_map(&span_map);
+        let mut byte_map: ByteTokenMap<T> = byte_map_from_span_map(&span_map);
         for ord in 0..256 {
             let b = ord as u8;
             let token = T::from_usize(ord).unwrap();
@@ -184,7 +185,7 @@ impl<T: TokenType> SpanMapVocab<T> {
     pub fn to_pair_vocab(&self) -> PairMapVocab<T> {
         let byte_vocab = self.byte_vocab.clone();
 
-        let mut pairs = CommonHashMap::default();
+        let mut pairs = PairTokenMap::default();
 
         let token_to_span: CommonHashMap<T, &[u8]> = self
             .span_map
@@ -266,7 +267,7 @@ mod tests {
     fn test_lookup_token() {
         type T = u32;
 
-        let mut span_map: CommonHashMap<Vec<u8>, T> = Default::default();
+        let mut span_map: SpanTokenMap<T> = Default::default();
         span_map.insert("apple".as_bytes().to_vec(), 300);
         span_map.insert("a".as_bytes().to_vec(), 301);
 
@@ -281,7 +282,7 @@ mod tests {
     fn test_build_pair_vocab() {
         type T = u32;
 
-        let mut span_map: CommonHashMap<Vec<u8>, T> = Default::default();
+        let mut span_map: SpanTokenMap<T> = Default::default();
         span_map.insert("at".as_bytes().to_vec(), 300);
         span_map.insert("ate".as_bytes().to_vec(), 301);
         span_map.insert("cat".as_bytes().to_vec(), 302);
@@ -298,7 +299,7 @@ mod tests {
             ]
             .iter()
             .map(|&(a, b)| (a, b))
-            .collect::<CommonHashMap<_, _>>()
+            .collect::<PairTokenMap<T>>()
         );
     }
 }

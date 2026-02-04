@@ -2,7 +2,8 @@
 
 use crate::regex::RegexWrapper;
 use crate::training::token_span_buffer::TokenSpanBuf;
-use crate::types::{CommonHashMap, CountType, StringChunkType, TokenType};
+use crate::training::{CountType, StringChunkType};
+use crate::types::{CommonHashMap, TokenType};
 use crate::vocab::byte_vocab::ByteMapVocab;
 use crate::vocab::size_hints::EXPECTED_WORD_LENGTH;
 use std::fmt::Debug;
@@ -149,8 +150,9 @@ where
 mod tests {
     use super::*;
     use crate::regex::RegexWrapperPattern;
+    use crate::training::CountType;
+    use crate::training::StringChunkType;
     use crate::training::token_span_buffer::TokenSpanBuf;
-    use crate::types::{CountType, StringChunkType};
 
     const PATTERN: &str = r"\w+";
 

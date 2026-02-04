@@ -2,12 +2,13 @@
 
 use crate::alloc::vec::Vec;
 use crate::segmentation::segmentation_config::SegmentationConfig;
-use crate::types::{CommonHashMap, CommonHashSet, Pair, SpanTokenMap, TokenType};
-use crate::vocab::ByteMapVocab;
+use crate::types::{CommonHashSet, Pair, TokenType};
 use crate::vocab::pair_vocab::PairMapVocab;
 use crate::vocab::span_vocab::SpanMapVocab;
 use crate::vocab::special_vocab::SpecialVocab;
 use crate::vocab::token_vocab::TokenVocab;
+use crate::vocab::vocab_types::SpanTokenMap;
+use crate::vocab::{ByteMapVocab, TokenSpanMap};
 
 /// Unified token vocabulary.
 #[derive(Clone)]
@@ -116,8 +117,8 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     ///
     /// ## Returns
     /// A hash map from tokens to their corresponding byte vectors.
-    pub fn unified_dictionary(&self) -> CommonHashMap<T, Vec<u8>> {
-        let mut tmp = CommonHashMap::default();
+    pub fn unified_dictionary(&self) -> TokenSpanMap<T> {
+        let mut tmp = SpanTokenMap::default();
 
         self.span_vocab.iter().for_each(|(chunk, &token)| {
             tmp.insert(chunk.clone(), token);
