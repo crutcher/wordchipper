@@ -87,7 +87,7 @@ impl<T: TokenType, C: SpanEncoder<T>> SpanEncoderVocabEncoder<T, C> {
     /// * `span_ref` - The labeling and sub-slicing of a span in `text`.
     /// * `tokens` - The target token buffer to append to.
     /// * `pair_ranks` - Working space for pair ranks.
-    pub fn encode_append_span_ref(
+    fn encode_append_span_ref(
         &self,
         text: &str,
         span_ref: SpanRef,
@@ -124,11 +124,6 @@ impl<T: TokenType, C: SpanEncoder<T>> TokenEncoder<T> for SpanEncoderVocabEncode
         self.data.segmentation.special_vocab()
     }
 
-    /// Encode bytes into tokens.
-    ///
-    /// ## Arguments
-    /// * `text` - The string slice to encode.
-    /// * `tokens` - The target token buffer to append to.
     #[cfg_attr(
         feature = "tracing",
         tracing::instrument(level = "trace", skip(self, text, tokens))
