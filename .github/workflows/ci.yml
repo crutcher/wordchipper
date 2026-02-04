@@ -44,8 +44,8 @@ jobs:
       - name: Test
         run: cargo test --workspace
 
-      - name: Test Training
-        run: cargo test -p wordchipper --features training
+      - name: Extra Features Training
+        run: cargo test -p wordchipper --features training,experimental
 
       - name: Test no-default-features
         run: cargo test -p wordchipper --no-default-features --features no_std --tests

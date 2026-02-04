@@ -3,6 +3,8 @@ use clap::Parser;
 use similar::{ChangeTag, TextDiff};
 use std::num::NonZeroUsize;
 use std::time::Duration;
+use wordchipper::compat::slices::{inner_slice_view, inner_str_view};
+use wordchipper::compat::timers;
 use wordchipper::decoders::{DictionaryDecoder, TokenDecoder};
 use wordchipper::disk_cache::WordchipperDiskCache;
 use wordchipper::encoders::{DefaultTokenEncoder, TokenEncoder};
@@ -12,18 +14,6 @@ use wordchipper_data::dataset::DatasetCacheConfig;
 
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
-use wordchipper::compat::slices::{inner_slice_view, inner_str_view};
-
-/// Time an operation; return (duration, result).
-pub fn timeit<F, R>(f: F) -> (Duration, R)
-where
-    F: FnOnce() -> R,
-{
-    let t0 = std::time::Instant::now();
-    let ret = f();
-    let t1 = std::time::Instant::now();
-    (t1 - t0, ret)
-}
 
 pub fn format_bps(
     bytes: usize,
@@ -136,7 +126,8 @@ fn run(args: &Args) -> anyhow::Result<()> {
     for (idx, batch) in sample_batches.iter().enumerate() {
         let str_batch = inner_str_view(batch);
 
-        let (durationn, wc_batch_tokens) = timeit(|| encoder.try_encode_batch(&str_batch).unwrap());
+        let (durationn, wc_batch_tokens) =
+            timers::timeit(|| encoder.try_encode_batch(&str_batch).unwrap());
         wc_batch_durations.push(durationn);
 
         wc_total_token_count += wc_batch_tokens
@@ -145,7 +136,7 @@ fn run(args: &Args) -> anyhow::Result<()> {
             .sum::<usize>();
 
         {
-            let (duration, tt_batch_tokens) = timeit(|| {
+            let (duration, tt_batch_tokens) = timers::timeit(|| {
                 #[cfg(feature = "parallel")]
                 let it = str_batch.par_iter();
                 #[cfg(not(feature = "parallel"))]
@@ -206,7 +197,7 @@ fn run(args: &Args) -> anyhow::Result<()> {
         let slices = inner_slice_view(batch);
 
         {
-            let (duration, wc_decoded) = timeit(|| {
+            let (duration, wc_decoded) = timers::timeit(|| {
                 decoder
                     .try_decode_batch_to_strings(&slices)
                     .unwrap()
@@ -218,7 +209,7 @@ fn run(args: &Args) -> anyhow::Result<()> {
         }
 
         {
-            let (duration, tt_decoded) = timeit(|| {
+            let (duration, tt_decoded) = timers::timeit(|| {
                 #[cfg(feature = "parallel")]
                 let it = batch.par_iter();
                 #[cfg(not(feature = "parallel"))]
