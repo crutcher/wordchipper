@@ -26,15 +26,16 @@
 //! }
 //! ```
 
-pub mod merge_heap_encoder;
-pub mod merge_scan_encoder;
-pub mod token_encoder;
-
 #[cfg(test)]
 pub mod test_utils;
 
 #[doc(inline)]
 pub use token_encoder::TokenEncoder;
+
+pub mod merge_heap_encoder;
+pub mod merge_scan_encoder;
+pub mod span_encoder;
+pub mod token_encoder;
 
 /// The default `TokenEncoder` implementation.
 pub type DefaultTokenEncoder<T> = merge_heap_encoder::MergeHeapVocabEncoder<T>;

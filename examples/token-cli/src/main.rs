@@ -5,8 +5,7 @@ use std::num::NonZeroUsize;
 use std::time::Duration;
 use wordchipper::decoders::{DictionaryDecoder, TokenDecoder};
 use wordchipper::disk_cache::WordchipperDiskCache;
-use wordchipper::encoders::TokenEncoder;
-use wordchipper::encoders::merge_heap_encoder::MergeHeapVocabEncoder;
+use wordchipper::encoders::{DefaultTokenEncoder, TokenEncoder};
 use wordchipper::vocab::UnifiedTokenVocab;
 use wordchipper::vocab::public::openai::OATokenizer;
 use wordchipper_data::dataset::DatasetCacheConfig;
@@ -74,7 +73,7 @@ fn run(args: &Args) -> anyhow::Result<()> {
     let mut disk_cache = WordchipperDiskCache::default();
     let vocab: UnifiedTokenVocab<T> = OATokenizer::O200kHarmony.load(&mut disk_cache)?;
 
-    let encoder = MergeHeapVocabEncoder::<T>::init(vocab.clone(), args.pool_size);
+    let encoder = DefaultTokenEncoder::init(vocab.clone(), args.pool_size);
     #[cfg(feature = "parallel")]
     let encoder = wordchipper::rayon::ParallelRayonEncoder::new(encoder);
 
@@ -84,20 +83,24 @@ fn run(args: &Args) -> anyhow::Result<()> {
 
     let batch_size = 512;
 
+    let shards = vec![0, 1];
+
     let mut samples = Vec::new();
     {
-        for batch in dataset_cache.read_batches(0, true)? {
-            let batch = batch?;
-            let column = batch
-                .column_by_name("text")
-                .expect("failed to find 'text' column in batch")
-                .as_any()
-                .downcast_ref::<StringArray>()
-                .unwrap();
+        for shard in shards {
+            for batch in dataset_cache.read_batches(shard, true)? {
+                let batch = batch?;
+                let column = batch
+                    .column_by_name("text")
+                    .expect("failed to find 'text' column in batch")
+                    .as_any()
+                    .downcast_ref::<StringArray>()
+                    .unwrap();
 
-            for val in column {
-                let val = val.unwrap().to_string();
-                samples.push(val);
+                for val in column {
+                    let val = val.unwrap().to_string();
+                    samples.push(val);
+                }
             }
         }
     }
@@ -133,7 +136,7 @@ fn run(args: &Args) -> anyhow::Result<()> {
         let batch = batch.iter().map(|s| s.as_str()).collect::<Vec<_>>();
 
         // warmup.
-        encoder.try_encode_batch(&batch).unwrap();
+        // encoder.try_encode_batch(&batch).unwrap();
 
         let (durationn, wc_batch_tokens) = timeit(|| encoder.try_encode_batch(&batch).unwrap());
         wc_batch_durations.push(durationn);
@@ -195,7 +198,12 @@ fn run(args: &Args) -> anyhow::Result<()> {
     for (idx, sample) in sample_batches.iter().enumerate() {
         let batch = &wc_token_batches[idx];
 
-        let expected = encoder.segmentor().batch_remove_gaps(sample);
+        #[cfg(feature = "parallel")]
+        let it = sample.par_iter();
+        #[cfg(not(feature = "parallel"))]
+        let it = sample.iter();
+
+        let expected: Vec<String> = it.map(|t| encoder.segmentor().remove_gaps(t)).collect();
 
         {
             let (duration, wc_decoded) =
@@ -240,6 +248,15 @@ pub fn verify_decode(
     samples: &[String],
     decoded: &[String],
 ) {
+    #[cfg(feature = "parallel")]
+    let it = samples.par_iter().zip(decoded.par_iter());
+    #[cfg(not(feature = "parallel"))]
+    let it = samples.iter().zip(decoded.iter());
+
+    if it.all(|(s, d)| s == d) {
+        return;
+    }
+
     for (s, d) in samples.iter().zip(decoded.iter()) {
         if s != d {
             let diff = TextDiff::from_lines(s, d);
