@@ -99,9 +99,11 @@ experimental = [
 
 
 [dependencies]
-anyhow = { workspace = true }
+# macro packages.
 cfg-if = { workspace = true }
 document-features = { workspace = true }
+
+anyhow = { workspace = true }
 fancy-regex = { workspace = true, features = ["unicode"] }
 log = { workspace = true }
 num-traits = { workspace = true }
