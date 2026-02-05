@@ -28,13 +28,10 @@
 //! }
 //! ```
 
-pub mod decode_context;
 pub mod dictionary_decoder;
 pub mod token_decoder;
 pub mod utility;
 
-#[doc(inline)]
-pub use decode_context::TokenDecodeContext;
 #[doc(inline)]
 pub use dictionary_decoder::DictionaryDecoder;
 #[doc(inline)]
