@@ -25,7 +25,7 @@ where
     /// The reference vocabulary.
     pub vocab: UnifiedTokenVocab<T>,
 
-    /// Text Segmentor.
+    /// Text Spanner.
     pub spanner: TextSpanner,
 
     marker: core::marker::PhantomData<fn() -> S>,
@@ -73,7 +73,7 @@ impl<T: TokenType, S: SpanPolicy<T>> CompoundSpanVocabEncoder<T, S> {
         vocab: UnifiedTokenVocab<T>,
         max_pool: Option<NonZeroUsize>,
     ) -> Self {
-        let spanner = TextSpanner::from_config(vocab.segmentation.clone(), max_pool);
+        let spanner = TextSpanner::from_config(vocab.spanning.clone(), max_pool);
 
         Self {
             vocab,
@@ -88,13 +88,13 @@ impl<T: TokenType, S: SpanPolicy<T>> CompoundSpanVocabEncoder<T, S> {
     /// * `text` - The source slice.
     /// * `span_ref` - The labeling and sub-slicing of a span in `text`.
     /// * `tokens` - The target token buffer to append to.
-    /// * `span_encoder` - The [`SpanPolicy`] context.
+    /// * `span_policy` - The [`SpanPolicy`] context.
     fn encode_append_span_ref(
         &self,
         text: &str,
         span_ref: SpanRef,
         tokens: &mut Vec<T>,
-        span_encoder: &mut S,
+        span_policy: &mut S,
     ) {
         match span_ref {
             SpanRef::Gap(_) => (),
@@ -105,7 +105,7 @@ impl<T: TokenType, S: SpanPolicy<T>> CompoundSpanVocabEncoder<T, S> {
                     // 2. Correct-or: Some words may not exist in the pair mappings.
                     tokens.push(token);
                 } else {
-                    span_encoder.encode_compound_span(&self.vocab, span, tokens);
+                    span_policy.encode_compound_span(&self.vocab, span, tokens);
                 }
             }
             SpanRef::Special(range) => {
@@ -118,12 +118,12 @@ impl<T: TokenType, S: SpanPolicy<T>> CompoundSpanVocabEncoder<T, S> {
 }
 
 impl<T: TokenType, S: SpanPolicy<T>> TokenEncoder<T> for CompoundSpanVocabEncoder<T, S> {
-    fn segmentor(&self) -> &TextSpanner {
+    fn spanner(&self) -> &TextSpanner {
         &self.spanner
     }
 
     fn special_vocab(&self) -> &SpecialVocab<T> {
-        self.vocab.segmentation.special_vocab()
+        self.vocab.spanning.special_vocab()
     }
 
     #[cfg_attr(
@@ -135,9 +135,9 @@ impl<T: TokenType, S: SpanPolicy<T>> TokenEncoder<T> for CompoundSpanVocabEncode
         text: &str,
         tokens: &mut Vec<T>,
     ) -> anyhow::Result<()> {
-        let mut span_encoder: S = Default::default();
-        self.segmentor().for_each_split_span(text, &mut |span_ref| {
-            self.encode_append_span_ref(text, span_ref, tokens, &mut span_encoder);
+        let mut span_policy: S = Default::default();
+        self.spanner().for_each_split_span(text, &mut |span_ref| {
+            self.encode_append_span_ref(text, span_ref, tokens, &mut span_policy);
             true
         });
 

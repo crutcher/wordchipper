@@ -88,7 +88,7 @@ mod tests {
     use super::*;
     use crate::alloc::string::ToString;
     use crate::alloc::vec;
-    use crate::decoders::utility::byte_decoder::ByteDecoder;
+    use crate::decoders::utility::ByteDecoder;
     use num_traits::FromPrimitive;
 
     #[test]

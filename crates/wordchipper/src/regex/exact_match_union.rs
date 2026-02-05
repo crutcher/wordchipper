@@ -13,7 +13,7 @@ use crate::regex::regex_wrapper::RegexWrapperPattern;
 ///
 /// ## Returns
 /// A new `RegexWrapperPattern::Basic` containing the union pattern.
-pub fn exact_match_union_regex_pattern<S: AsRef<str>>(alts: &[S]) -> RegexWrapperPattern {
+pub fn alternate_choice_regex_pattern<S: AsRef<str>>(alts: &[S]) -> RegexWrapperPattern {
     let parts = alts
         .iter()
         .map(|s| fancy_regex::escape(s.as_ref()))
@@ -31,10 +31,10 @@ mod tests {
     fn test_fixed_alternative_list() {
         let alternatives = ["apple", "[x]", "boat"];
 
-        let pattern = exact_match_union_regex_pattern(&alternatives);
+        let pattern = alternate_choice_regex_pattern(&alternatives);
         assert_eq!(pattern.as_str(), r"(apple|\[x\]|boat)");
 
-        let re: RegexWrapper = exact_match_union_regex_pattern(&alternatives)
+        let re: RegexWrapper = alternate_choice_regex_pattern(&alternatives)
             .compile()
             .unwrap();
 

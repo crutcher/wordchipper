@@ -3,8 +3,8 @@
 use crate::alloc::string::String;
 use crate::alloc::vec::Vec;
 use crate::compat::ranges::offset_range;
-use crate::regex::{RegexWrapper, RegexWrapperPattern, exact_match_union_regex_pattern};
-use crate::spanner::spanner_config::TextSpanConfig;
+use crate::regex::{RegexWrapper, RegexWrapperPattern, alternate_choice_regex_pattern};
+use crate::spanner::spanning_config::TextSpanningConfig;
 use crate::types::TokenType;
 use crate::vocab::TokenVocab;
 use crate::vocab::size_hints::EXPECTED_BYTES_PER_TOKEN;
@@ -60,12 +60,12 @@ cfg_if::cfg_if! {
 }
 
 impl TextSpanner {
-    /// Build a new [`TextSpanner`] from a [`TextSpanConfig`].
+    /// Build a new [`TextSpanner`] from a [`TextSpanningConfig`].
     ///
     /// ## Arguments
     /// * `config` - The spanner configuration.
     pub fn from_config<T>(
-        config: TextSpanConfig<T>,
+        config: TextSpanningConfig<T>,
         max_pool: Option<NonZeroUsize>,
     ) -> Self
     where
@@ -100,7 +100,7 @@ impl TextSpanner {
         let special_re = if specials.is_empty() {
             None
         } else {
-            Some(exact_match_union_regex_pattern(specials).into())
+            Some(alternate_choice_regex_pattern(specials).into())
         };
 
         Self::init(span_re, special_re, max_pool)
@@ -332,7 +332,7 @@ mod tests {
         use SpanRef::*;
         type T = u32;
 
-        let config: TextSpanConfig<T> = TextSpanConfig::from_pattern(r"\w+")
+        let config: TextSpanningConfig<T> = TextSpanningConfig::from_pattern(r"\w+")
             .with_special_words([("<|FNORD|>", 4000), ("<|NORP|>", 4001)]);
 
         let segmentor = TextSpanner::from_config(config, Some(NonZeroUsize::new(1).unwrap()));
@@ -412,8 +412,9 @@ mod tests {
     fn test_split_words() {
         type T = u32;
 
-        let config: TextSpanConfig<T> = TextSpanConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN)
-            .with_special_words([("<|FNORD|>", 4000), ("<|NORP|>", 4001)]);
+        let config: TextSpanningConfig<T> =
+            TextSpanningConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN)
+                .with_special_words([("<|FNORD|>", 4000), ("<|NORP|>", 4001)]);
 
         let segmentor = TextSpanner::from_config(config, Some(NonZeroUsize::new(1).unwrap()));
 
@@ -436,7 +437,7 @@ mod tests {
     fn test_rewrite() {
         type T = u32;
 
-        let config: TextSpanConfig<T> = TextSpanConfig::from_pattern(r"\w+");
+        let config: TextSpanningConfig<T> = TextSpanningConfig::from_pattern(r"\w+");
 
         let segmentor = TextSpanner::from_config(config, Some(NonZeroUsize::new(1).unwrap()));
 

@@ -16,7 +16,7 @@ use crate::vocab::special_vocab::SpecialVocab;
 /// when there is conflict.
 pub trait TokenEncoder<T: TokenType>: Clone + Send + Sync {
     /// Return the attached text segmentor.
-    fn segmentor(&self) -> &TextSpanner;
+    fn spanner(&self) -> &TextSpanner;
 
     /// Return the attached special vocab.
     ///

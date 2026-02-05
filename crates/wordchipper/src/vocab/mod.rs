@@ -11,7 +11,7 @@
 //! ## Unified Vocabulary
 //!
 //! The primary user-oriented vocabulary is [`UnifiedTokenVocab`], which contains:
-//! * `spanner` - a [`crate::spanner::TextSpanConfig`],
+//! * `spanner` - a [`crate::spanner::TextSpanningConfig`],
 //! * `span_vocab` - a [`SpanMapVocab`] ``{ Vec<u8> -> T }`` vocabulary,
 //! * `pair_vocab` - a [`PairMapVocab`] ``{ (T, T) -> T }`` vocabulary.
 //!

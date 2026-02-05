@@ -2,7 +2,7 @@
 
 use crate::alloc::vec::Vec;
 use crate::decoders::TokenDecoder;
-use crate::decoders::utility::pair_decoder::PairExpansionDecoder;
+use crate::decoders::utility::PairExpansionDecoder;
 use crate::types::{CommonHashSet, Pair, TokenType};
 use crate::vocab::byte_vocab::ByteMapVocab;
 use crate::vocab::token_vocab::TokenVocab;

@@ -20,7 +20,7 @@ mod exact_match_union;
 mod regex_wrapper;
 
 #[doc(inline)]
-pub use exact_match_union::exact_match_union_regex_pattern;
+pub use exact_match_union::alternate_choice_regex_pattern;
 #[doc(inline)]
 pub use regex_wrapper::{
     ConstRegexWrapperPattern, ErrorWrapper, RegexWrapper, RegexWrapperPattern,

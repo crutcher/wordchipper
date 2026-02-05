@@ -77,9 +77,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::decoders::utility::pair_decoder::PairExpansionDecoder;
-    use crate::decoders::utility::test_utils::common_decoder_unit_test;
-    use crate::spanner::TextSpanConfig;
+    use crate::decoders::utility::PairExpansionDecoder;
+    use crate::decoders::utility::testing::common_decoder_unit_test;
+    use crate::spanner::TextSpanningConfig;
     use crate::vocab::UnifiedTokenVocab;
     use crate::vocab::byte_vocab::build_test_shift_byte_vocab;
     use crate::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
@@ -91,7 +91,7 @@ mod tests {
 
         let vocab: UnifiedTokenVocab<T> = build_test_vocab(
             build_test_shift_byte_vocab(10),
-            TextSpanConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN),
+            TextSpanningConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN),
         );
 
         let decoder = PairExpansionDecoder::from_pair_vocab(&vocab.pair_vocab);

@@ -38,4 +38,9 @@ pub mod span_encoder;
 pub mod token_encoder;
 
 /// The default `TokenEncoder` implementation.
+///
+/// ## Style Hints
+///
+/// When there is no local ambiguity with other encoders,
+/// prefer `decoder` for instance names.
 pub type DefaultTokenEncoder<T> = merge_heap_encoder::MergeHeapVocabEncoder<T>;

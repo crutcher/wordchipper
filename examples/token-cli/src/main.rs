@@ -192,7 +192,7 @@ fn run(args: &Args) -> anyhow::Result<()> {
         #[cfg(not(feature = "parallel"))]
         let it = sample.iter();
 
-        let expected: Vec<String> = it.map(|t| encoder.segmentor().remove_gaps(t)).collect();
+        let expected: Vec<String> = it.map(|t| encoder.spanner().remove_gaps(t)).collect();
 
         let slices = inner_slice_view(batch);
 

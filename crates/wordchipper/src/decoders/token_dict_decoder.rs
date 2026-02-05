@@ -70,8 +70,8 @@ impl<T: TokenType> TokenDecoder<T> for TokenDictDecoder<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::decoders::utility::test_utils::common_decoder_unit_test;
-    use crate::spanner::TextSpanConfig;
+    use crate::decoders::utility::testing::common_decoder_unit_test;
+    use crate::spanner::TextSpanningConfig;
     use crate::vocab::byte_vocab::build_test_shift_byte_vocab;
     use crate::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
     use crate::vocab::utility::testing::build_test_vocab;
@@ -82,7 +82,7 @@ mod tests {
 
         let vocab: UnifiedTokenVocab<T> = build_test_vocab(
             build_test_shift_byte_vocab(10),
-            TextSpanConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN),
+            TextSpanningConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN),
         );
 
         let decoder = TokenDictDecoder::from_unified_vocab(vocab.clone());

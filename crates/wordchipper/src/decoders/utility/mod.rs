@@ -1,7 +1,12 @@
 //! # Decoder Testing Utilities
 
-pub mod byte_decoder;
-pub mod pair_decoder;
+mod byte_decoder;
+mod pair_decoder;
+
+#[doc(inline)]
+pub use byte_decoder::ByteDecoder;
+#[doc(inline)]
+pub use pair_decoder::PairExpansionDecoder;
 
 #[cfg(test)]
-pub mod test_utils;
+pub mod testing;

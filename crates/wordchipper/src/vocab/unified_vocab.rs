@@ -1,7 +1,7 @@
 //! # Unified Token Vocabulary
 
 use crate::alloc::vec::Vec;
-use crate::spanner::TextSpanConfig;
+use crate::spanner::TextSpanningConfig;
 use crate::types::{CommonHashSet, Pair, TokenType};
 use crate::vocab::pair_vocab::PairMapVocab;
 use crate::vocab::span_vocab::SpanMapVocab;
@@ -13,8 +13,8 @@ use crate::vocab::{ByteMapVocab, TokenSpanMap};
 /// Unified token vocabulary.
 #[derive(Clone)]
 pub struct UnifiedTokenVocab<T: TokenType> {
-    /// Text Segmentation Configuration
-    pub segmentation: TextSpanConfig<T>,
+    /// Text Spanning Configuration
+    pub spanning: TextSpanningConfig<T>,
 
     /// ``{ Vec<u8> -> T }`` vocabulary.
     pub span_vocab: SpanMapVocab<T>,
@@ -27,39 +27,39 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     /// Build a new [`UnifiedTokenVocab`] from a [`SpanMapVocab`].
     ///
     /// ## Arguments
-    /// * `spanner` - The spanner configuration.
+    /// * `span_config` - The spanner configuration.
     /// * `span_vocab` - The span map vocabulary.
     ///
     /// ## Returns
     /// A new `UnifiedTokenVocab` instance.
     pub fn from_span_vocab(
-        segmentation: TextSpanConfig<T>,
+        span_config: TextSpanningConfig<T>,
         span_vocab: SpanMapVocab<T>,
     ) -> Self {
         let pair_vocab = span_vocab.to_pair_vocab();
-        Self::init(segmentation, span_vocab, pair_vocab)
+        Self::init(span_config, span_vocab, pair_vocab)
     }
 
     /// Build a new [`UnifiedTokenVocab`] from a [`PairMapVocab`].
     ///
     /// ## Arguments
-    /// * `spanner` - The spanner configuration.
+    /// * `span_config` - The spanner configuration.
     /// * `pair_vocab` - The pair map vocabulary.
     ///
     /// ## Returns
     /// A new `UnifiedTokenVocab` instance.
     pub fn from_pair_vocab(
-        segmentation: TextSpanConfig<T>,
+        span_config: TextSpanningConfig<T>,
         pair_vocab: PairMapVocab<T>,
     ) -> Self {
         let word_vocab = pair_vocab.span_pairs().collect::<SpanTokenMap<T>>().into();
-        Self::from_span_vocab(segmentation, word_vocab)
+        Self::from_span_vocab(span_config, word_vocab)
     }
 
     /// Initialize a [`UnifiedTokenVocab`].
     ///
     /// ## Arguments
-    /// * `spanner` - The spanner configuration.
+    /// * `span_config` - The spanner configuration.
     /// * `word_vocab` - The span map vocabulary.
     /// * `pair_vocab` - The pair map vocabulary.
     ///
@@ -69,7 +69,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     /// ## Panics
     /// Panics if the vocabularies are inconsistent.
     pub fn init(
-        segmentation: TextSpanConfig<T>,
+        span_config: TextSpanningConfig<T>,
         span_vocab: SpanMapVocab<T>,
         pair_vocab: PairMapVocab<T>,
     ) -> Self {
@@ -84,7 +84,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
                 );
             }
         }
-        for t in segmentation.specials.unordered_tokens() {
+        for t in span_config.specials.unordered_tokens() {
             assert!(
                 !tokens.contains(&t),
                 "special token {t:?} found in word vocab"
@@ -92,7 +92,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
         }
 
         Self {
-            segmentation,
+            spanning: span_config,
             span_vocab,
             pair_vocab,
         }
@@ -105,12 +105,12 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
 
     /// Get a reference to the [`SpecialVocab`]
     pub fn special_vocab(&self) -> &SpecialVocab<T> {
-        self.segmentation.special_vocab()
+        self.spanning.special_vocab()
     }
 
     /// Get a mutable view of the [`SpecialVocab`]
     pub fn special_vocab_mut(&mut self) -> &mut SpecialVocab<T> {
-        self.segmentation.special_vocab_mut()
+        self.spanning.special_vocab_mut()
     }
 
     /// Compiled expansion dictionary.
@@ -131,7 +131,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
             tmp.insert(span, token);
         }
 
-        for (span, t) in self.segmentation.special_vocab().span_pairs() {
+        for (span, t) in self.spanning.special_vocab().span_pairs() {
             tmp.insert(span, t);
         }
 
@@ -175,7 +175,7 @@ impl<T: TokenType> TokenVocab<T> for UnifiedTokenVocab<T> {
     fn unordered_tokens(&self) -> impl Iterator<Item = T> {
         self.span_vocab
             .unordered_tokens()
-            .chain(self.segmentation.specials.unordered_tokens())
+            .chain(self.spanning.specials.unordered_tokens())
     }
 
     fn span_pairs(&self) -> impl Iterator<Item = (Vec<u8>, T)> {
@@ -186,7 +186,7 @@ impl<T: TokenType> TokenVocab<T> for UnifiedTokenVocab<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::spanner::TextSpanConfig;
+    use crate::spanner::TextSpanningConfig;
 
     #[test]
     fn test_init() {
@@ -195,7 +195,7 @@ mod tests {
         span_vocab.span_map.insert("at".as_bytes().to_vec(), 300);
         span_vocab.span_map.insert("ate".as_bytes().to_vec(), 301);
 
-        let seg_config = TextSpanConfig::from_pattern(r"\w\+");
+        let seg_config = TextSpanningConfig::from_pattern(r"\w\+");
 
         let vocab = UnifiedTokenVocab::from_span_vocab(seg_config, span_vocab);
         let byte_vocab = vocab.byte_vocab();

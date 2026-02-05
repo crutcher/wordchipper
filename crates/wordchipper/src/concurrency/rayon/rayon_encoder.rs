@@ -41,8 +41,8 @@ where
     T: TokenType,
     D: TokenEncoder<T>,
 {
-    fn segmentor(&self) -> &TextSpanner {
-        self.inner.segmentor()
+    fn spanner(&self) -> &TextSpanner {
+        self.inner.spanner()
     }
 
     fn special_vocab(&self) -> &SpecialVocab<T> {
@@ -86,8 +86,8 @@ mod tests {
         let encoder = ParallelRayonEncoder::new(encoder);
 
         assert_eq!(
-            encoder.segmentor().word_regex().as_str(),
-            vocab.segmentation.pattern.as_str()
+            encoder.spanner().word_regex().as_str(),
+            vocab.spanning.pattern.as_str()
         );
         assert_eq!(encoder.special_vocab(), encoder.inner.special_vocab());
 

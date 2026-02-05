@@ -2,7 +2,7 @@
 
 use crate::disk_cache::WordchipperDiskCache;
 use crate::regex::RegexWrapperPattern;
-use crate::spanner::TextSpanConfig;
+use crate::spanner::TextSpanningConfig;
 use crate::types::TokenType;
 use crate::vocab::UnifiedTokenVocab;
 use crate::vocab::io::load_tiktoken_vocab_path;
@@ -82,7 +82,7 @@ fn load_common_vocab<T: TokenType>(
         true,
     )?)?;
 
-    let segmentation = TextSpanConfig::<T>::from_pattern(pattern.clone()).with_special_words(
+    let segmentation = TextSpanningConfig::<T>::from_pattern(pattern.clone()).with_special_words(
         special_tokens
             .iter()
             .map(|(s, t)| (s, T::from_usize(*t).unwrap())),
