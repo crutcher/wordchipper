@@ -51,7 +51,7 @@ impl<T: TokenType> TokenDecoder<T> for DictionaryDecoder<T> {
         let mut consumed = 0;
         for t in tokens {
             if let Some(w) = self.token_to_word.get(t) {
-                value.extend_from_slice(w.as_slice());
+                value.extend(w);
                 consumed += 1;
             } else {
                 break;

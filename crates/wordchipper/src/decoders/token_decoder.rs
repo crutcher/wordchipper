@@ -55,7 +55,7 @@ impl<V> DecodeResult<V> {
     /// Convert the result using a conversion function.
     pub fn convert<F, U>(
         self,
-        f: &F,
+        f: F,
     ) -> DecodeResult<U>
     where
         F: Fn(V) -> U,
@@ -155,7 +155,7 @@ pub trait TokenDecoder<T: TokenType>: Send + Sync {
         tokens: &[T],
     ) -> anyhow::Result<DecodeResult<String>> {
         self.try_decode_to_bytes(tokens)
-            .map(|res| res.convert(&string_from_utf8_lossy))
+            .map(|res| res.convert(string_from_utf8_lossy))
     }
 
     /// Decodes a batch of tokens.
