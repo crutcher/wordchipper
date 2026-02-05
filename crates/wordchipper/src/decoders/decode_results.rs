@@ -6,7 +6,8 @@ use core::fmt::Debug;
 /// The result of decoding tokens into bytes.
 #[derive(Debug)]
 pub struct DecodeResult<V>
-where V: Debug
+where
+    V: Debug,
 {
     /// The remaining token count.
     pub remaining: Option<usize>,
@@ -15,18 +16,21 @@ where V: Debug
     pub value: V,
 }
 
-
 impl<V: PartialEq> PartialEq for DecodeResult<V>
-where V: Debug
+where
+    V: Debug,
 {
-    fn eq(&self, other: &Self) -> bool {
-        self.remaining == other.remaining &&
-        self.value == other.value
+    fn eq(
+        &self,
+        other: &Self,
+    ) -> bool {
+        self.remaining == other.remaining && self.value == other.value
     }
 }
 
 impl<V: Clone> Clone for DecodeResult<V>
-where V: Debug
+where
+    V: Debug,
 {
     fn clone(&self) -> Self {
         Self {
@@ -37,7 +41,8 @@ where V: Debug
 }
 
 impl<V> DecodeResult<V>
-where V: Debug
+where
+    V: Debug,
 {
     /// Construct a new result.
     pub fn new(
@@ -95,14 +100,16 @@ where V: Debug
 /// The result of decoding a batch of tokens into bytes.
 #[derive(Debug)]
 pub struct BatchDecodeResult<V>
-where V: Debug
+where
+    V: Debug,
 {
     /// The per-item results.
     pub results: Vec<DecodeResult<V>>,
 }
 
 impl<V> From<Vec<DecodeResult<V>>> for BatchDecodeResult<V>
-where V: Debug
+where
+    V: Debug,
 {
     fn from(results: Vec<DecodeResult<V>>) -> Self {
         Self { results }
@@ -110,7 +117,8 @@ where V: Debug
 }
 
 impl<V> BatchDecodeResult<V>
-where V: Debug
+where
+    V: Debug,
 {
     /// Is the decoding complete for all items?
     pub fn is_complete(&self) -> bool {
@@ -205,10 +213,7 @@ mod tests {
 
     #[test]
     fn test_batch_decode_result_from() {
-        let results = vec![
-            DecodeResult::new(1, None),
-            DecodeResult::new(2, Some(5)),
-        ];
+        let results = vec![DecodeResult::new(1, None), DecodeResult::new(2, Some(5))];
         let batch: BatchDecodeResult<i32> = results.clone().into();
         assert_eq!(&batch.results, &results);
     }
@@ -216,18 +221,12 @@ mod tests {
     #[test]
     fn test_batch_decode_result_is_complete() {
         let complete = BatchDecodeResult {
-            results: vec![
-                DecodeResult::new(1, None),
-                DecodeResult::new(2, None),
-            ],
+            results: vec![DecodeResult::new(1, None), DecodeResult::new(2, None)],
         };
         assert!(complete.is_complete());
 
         let incomplete = BatchDecodeResult {
-            results: vec![
-                DecodeResult::new(1, None),
-                DecodeResult::new(2, Some(5)),
-            ],
+            results: vec![DecodeResult::new(1, None), DecodeResult::new(2, Some(5))],
         };
         assert!(!incomplete.is_complete());
     }
@@ -235,18 +234,12 @@ mod tests {
     #[test]
     fn test_batch_decode_result_try_results() {
         let complete = BatchDecodeResult {
-            results: vec![
-                DecodeResult::new(1, None),
-                DecodeResult::new(2, None),
-            ],
+            results: vec![DecodeResult::new(1, None), DecodeResult::new(2, None)],
         };
         assert_eq!(complete.try_results().unwrap(), vec![1, 2]);
 
         let incomplete = BatchDecodeResult {
-            results: vec![
-                DecodeResult::new(1, None),
-                DecodeResult::new(2, Some(5)),
-            ],
+            results: vec![DecodeResult::new(1, None), DecodeResult::new(2, Some(5))],
         };
         assert!(incomplete.try_results().is_err());
     }
@@ -254,10 +247,7 @@ mod tests {
     #[test]
     fn test_batch_decode_result_unwrap() {
         let complete = BatchDecodeResult {
-            results: vec![
-                DecodeResult::new(1, None),
-                DecodeResult::new(2, None),
-            ],
+            results: vec![DecodeResult::new(1, None), DecodeResult::new(2, None)],
         };
         assert_eq!(complete.unwrap(), vec![1, 2]);
     }
@@ -266,10 +256,7 @@ mod tests {
     #[should_panic]
     fn test_batch_decode_result_unwrap_panic() {
         let incomplete = BatchDecodeResult {
-            results: vec![
-                DecodeResult::new(1, None),
-                DecodeResult::new(2, Some(5)),
-            ],
+            results: vec![DecodeResult::new(1, None), DecodeResult::new(2, Some(5))],
         };
         incomplete.unwrap();
     }
@@ -277,10 +264,7 @@ mod tests {
     #[test]
     fn test_batch_decode_result_convert() {
         let batch = BatchDecodeResult {
-            results: vec![
-                DecodeResult::new(1, None),
-                DecodeResult::new(2, Some(5)),
-            ],
+            results: vec![DecodeResult::new(1, None), DecodeResult::new(2, Some(5))],
         };
         let converted = batch.convert(&|x| x.to_string());
         assert_eq!(converted.results[0].value, "1");
