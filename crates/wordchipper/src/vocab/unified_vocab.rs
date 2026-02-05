@@ -1,7 +1,7 @@
 //! # Unified Token Vocabulary
 
 use crate::alloc::vec::Vec;
-use crate::spanner::TextSpanningConfig;
+use crate::spanning::TextSpanningConfig;
 use crate::types::{CommonHashSet, Pair, TokenType};
 use crate::vocab::pair_vocab::PairMapVocab;
 use crate::vocab::span_vocab::SpanMapVocab;
@@ -27,7 +27,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     /// Build a new [`UnifiedTokenVocab`] from a [`SpanMapVocab`].
     ///
     /// ## Arguments
-    /// * `span_config` - The spanner configuration.
+    /// * `span_config` - The spanning configuration.
     /// * `span_vocab` - The span map vocabulary.
     ///
     /// ## Returns
@@ -43,7 +43,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     /// Build a new [`UnifiedTokenVocab`] from a [`PairMapVocab`].
     ///
     /// ## Arguments
-    /// * `span_config` - The spanner configuration.
+    /// * `span_config` - The spanning configuration.
     /// * `pair_vocab` - The pair map vocabulary.
     ///
     /// ## Returns
@@ -59,7 +59,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     /// Initialize a [`UnifiedTokenVocab`].
     ///
     /// ## Arguments
-    /// * `span_config` - The spanner configuration.
+    /// * `span_config` - The spanning configuration.
     /// * `word_vocab` - The span map vocabulary.
     /// * `pair_vocab` - The pair map vocabulary.
     ///
@@ -186,7 +186,7 @@ impl<T: TokenType> TokenVocab<T> for UnifiedTokenVocab<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::spanner::TextSpanningConfig;
+    use crate::spanning::TextSpanningConfig;
 
     #[test]
     fn test_init() {

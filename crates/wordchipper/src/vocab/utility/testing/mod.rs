@@ -1,6 +1,6 @@
 //! # Vocab Testing Tools
 
-use crate::spanner::TextSpanningConfig;
+use crate::spanning::TextSpanningConfig;
 use crate::types::TokenType;
 use crate::vocab::vocab_types::SpanTokenMap;
 use crate::vocab::{ByteMapVocab, SpanMapVocab, UnifiedTokenVocab};

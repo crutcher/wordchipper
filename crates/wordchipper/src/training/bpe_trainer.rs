@@ -1,9 +1,9 @@
 //! # Vocab Trainer
 
 use crate::regex::RegexWrapperPattern;
-use crate::training::pair_span_index::{PairIndexMap, PairSpanIndex};
-use crate::training::text_span_counter::{TextSpanCounter, TextSpanCounterOptions};
-use crate::training::token_span_buffer::TokenSpanBuf;
+use crate::training::utility::{
+    PairIndexMap, PairSpanIndex, TextSpanCounter, TextSpanCounterOptions, TokenSpanBuf,
+};
 use crate::training::{CountType, StringChunkType};
 use crate::types::{CommonHashMap, CommonHashSet, Pair, TokenType};
 use crate::vocab::byte_vocab::ByteMapVocab;

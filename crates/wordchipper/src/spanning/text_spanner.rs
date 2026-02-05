@@ -4,7 +4,7 @@ use crate::alloc::string::String;
 use crate::alloc::vec::Vec;
 use crate::compat::ranges::offset_range;
 use crate::regex::{RegexWrapper, RegexWrapperPattern, alternate_choice_regex_pattern};
-use crate::spanner::spanning_config::TextSpanningConfig;
+use crate::spanning::spanning_config::TextSpanningConfig;
 use crate::types::TokenType;
 use crate::vocab::TokenVocab;
 use crate::vocab::size_hints::EXPECTED_BYTES_PER_TOKEN;
@@ -63,7 +63,7 @@ impl TextSpanner {
     /// Build a new [`TextSpanner`] from a [`TextSpanningConfig`].
     ///
     /// ## Arguments
-    /// * `config` - The spanner configuration.
+    /// * `config` - The spanning configuration.
     pub fn from_config<T>(
         config: TextSpanningConfig<T>,
         max_pool: Option<NonZeroUsize>,

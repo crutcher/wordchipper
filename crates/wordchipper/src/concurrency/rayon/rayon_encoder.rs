@@ -1,7 +1,7 @@
 //! # Parallel Encoder
 
 use crate::encoders::TokenEncoder;
-use crate::spanner::TextSpanner;
+use crate::spanning::TextSpanner;
 use crate::types::TokenType;
 use crate::vocab::special_vocab::SpecialVocab;
 
@@ -75,7 +75,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::concurrency::rayon::rayon_encoder::ParallelRayonEncoder;
-    use crate::encoders::test_utils::{common_encoder_test_vocab, common_encoder_tests};
+    use crate::encoders::testing::{common_encoder_test_vocab, common_encoder_tests};
     use crate::encoders::{DefaultTokenEncoder, TokenEncoder};
     use crate::types::TokenType;
 

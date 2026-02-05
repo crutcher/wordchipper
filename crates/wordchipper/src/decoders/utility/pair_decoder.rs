@@ -100,7 +100,7 @@ impl<T: TokenType> TokenDecoder<T> for PairExpansionDecoder<T> {
 mod tests {
     use super::*;
     use crate::decoders::utility::testing::common_decoder_unit_test;
-    use crate::spanner::TextSpanningConfig;
+    use crate::spanning::TextSpanningConfig;
     use crate::vocab::UnifiedTokenVocab;
     use crate::vocab::byte_vocab::build_test_shift_byte_vocab;
     use crate::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;

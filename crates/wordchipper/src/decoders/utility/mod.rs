@@ -1,4 +1,4 @@
-//! # Decoder Testing Utilities
+//! # Decoder Implementation Utilities
 
 mod byte_decoder;
 mod pair_decoder;

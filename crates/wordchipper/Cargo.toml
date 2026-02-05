@@ -90,7 +90,10 @@ tracing = [
     "tracing/attributes",
 ]
 
-# This enables some experimental features that may be useful.
+## Enable test-utitilies for downstream users.
+testing = []
+
+## This enables some experimental features that may be useful.
 experimental = [
     "std",
     "dep:parking_lot",

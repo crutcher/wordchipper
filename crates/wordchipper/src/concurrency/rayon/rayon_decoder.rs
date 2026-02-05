@@ -1,7 +1,6 @@
 //! # Parallel Decoder
 
-use crate::decoders::TokenDecoder;
-use crate::decoders::decode_results::{BatchDecodeResult, DecodeResult};
+use crate::decoders::{BatchDecodeResult, DecodeResult, TokenDecoder};
 use crate::types::TokenType;
 
 /// Batch-Level Parallel Decoder Wrapper.
@@ -79,7 +78,7 @@ mod tests {
     use super::*;
     use crate::decoders::utility::PairExpansionDecoder;
     use crate::decoders::utility::testing::common_decoder_unit_test;
-    use crate::spanner::TextSpanningConfig;
+    use crate::spanning::TextSpanningConfig;
     use crate::vocab::UnifiedTokenVocab;
     use crate::vocab::byte_vocab::build_test_shift_byte_vocab;
     use crate::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;

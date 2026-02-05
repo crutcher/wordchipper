@@ -1,7 +1,7 @@
 //! # `PairIndex` Builder
 
 use crate::training::CountType;
-use crate::training::token_span_buffer::TokenSpanBuf;
+use crate::training::utility::token_span_buffer::TokenSpanBuf;
 use crate::types::{CommonHashMap, CommonHashSet, Pair, TokenType};
 
 /// A map from [`Pair`] to its occurrence count.
@@ -60,7 +60,7 @@ impl<T: TokenType, C: CountType> PairSpanIndex<T, C> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::training::token_span_buffer::TokenSpanBuf;
+    use crate::training::utility::token_span_buffer::TokenSpanBuf;
     use crate::vocab::byte_vocab::ByteMapVocab;
 
     #[test]

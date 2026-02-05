@@ -3,7 +3,7 @@ use crate::regex::RegexWrapperPattern;
 use crate::types::TokenType;
 use crate::vocab::special_vocab::SpecialVocab;
 
-/// Description of text spanner configuration.
+/// Description of text spanning configuration.
 ///
 /// ## Style Hints
 ///

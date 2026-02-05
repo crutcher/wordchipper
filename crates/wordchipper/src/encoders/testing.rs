@@ -8,7 +8,7 @@ use crate::compat::slices::inner_slice_view;
 use crate::compat::traits::static_is_send_sync_check;
 use crate::decoders::{TokenDecoder, TokenDictDecoder};
 use crate::encoders::TokenEncoder;
-use crate::spanner::TextSpanningConfig;
+use crate::spanning::TextSpanningConfig;
 use crate::types::TokenType;
 use crate::vocab::byte_vocab::build_test_shift_byte_vocab;
 use crate::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;

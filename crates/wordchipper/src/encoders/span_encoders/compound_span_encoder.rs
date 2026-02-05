@@ -1,9 +1,10 @@
-//! # Encoder for [`UnifiedTokenVocab`].
+//! # Abstract Base [`TokenEncoder`].
 
 use crate::alloc::vec::Vec;
-use crate::encoders::merge_heap_encoder::MergeHeapSpanPolicy;
+use crate::encoders::span_encoders::merge_heap_encoder::MergeHeapSpanPolicy;
+use crate::encoders::span_encoders::span_policy::SpanPolicy;
 use crate::encoders::token_encoder::TokenEncoder;
-use crate::spanner::{SpanRef, TextSpanner};
+use crate::spanning::{SpanRef, TextSpanner};
 use crate::types::TokenType;
 use crate::vocab::special_vocab::SpecialVocab;
 use crate::vocab::unified_vocab::UnifiedTokenVocab;
@@ -29,22 +30,6 @@ where
     pub spanner: TextSpanner,
 
     marker: core::marker::PhantomData<fn() -> S>,
-}
-
-/// The Span encoder trait for [`CompoundSpanVocabEncoder`].
-pub trait SpanPolicy<T: TokenType>: Default {
-    /// Encodes a single "word" span to (multiple?) tokens.
-    ///
-    /// ## Arguments
-    /// * `vocab` - The unified token vocabulary reference..
-    /// * `span` - The byte span to encode.
-    /// * `tokens` - The target token buffer to append to.
-    fn encode_compound_span(
-        &mut self,
-        vocab: &UnifiedTokenVocab<T>,
-        span: &[u8],
-        tokens: &mut Vec<T>,
-    );
 }
 
 impl<T, S> Clone for CompoundSpanVocabEncoder<T, S>
@@ -148,7 +133,7 @@ impl<T: TokenType, S: SpanPolicy<T>> TokenEncoder<T> for CompoundSpanVocabEncode
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::encoders::test_utils::{common_encoder_test_vocab, common_encoder_tests};
+    use crate::encoders::testing::{common_encoder_test_vocab, common_encoder_tests};
 
     fn test_encoder<T: TokenType>() {
         let vocab = common_encoder_test_vocab();

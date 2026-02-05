@@ -8,7 +8,7 @@ use parking_lot::lock_api::RwLock;
 use std::num::NonZeroUsize;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-/// Experimental LRU-based variant of [`super::PoolToy`].
+/// Experimental LRU-based variant of [`crate::concurrency::PoolToy`].
 ///
 /// This appears to provide no benefit in benchmarks.
 ///

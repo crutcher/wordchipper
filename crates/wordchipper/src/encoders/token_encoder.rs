@@ -1,7 +1,7 @@
 //! # Token Encoder Trait
 
 use crate::alloc::vec::Vec;
-use crate::spanner::TextSpanner;
+use crate::spanning::TextSpanner;
 use crate::types::TokenType;
 use crate::vocab::size_hints::EXPECTED_BYTES_PER_TOKEN;
 use crate::vocab::special_vocab::SpecialVocab;

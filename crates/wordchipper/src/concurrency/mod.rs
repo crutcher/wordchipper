@@ -1,12 +1,12 @@
 //! # Concurrency Utilities
 
 #[cfg(feature = "experimental")]
-pub mod lru_pool_toy;
-
-pub mod pool_toy;
+pub mod experimental;
 #[cfg(feature = "rayon")]
 pub mod rayon;
 #[cfg(feature = "std")]
 pub mod threads;
 
+mod pool_toy;
+#[doc(inline)]
 pub use pool_toy::PoolToy;

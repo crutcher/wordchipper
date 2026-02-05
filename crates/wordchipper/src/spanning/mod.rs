@@ -1,12 +1,12 @@
 //! # Text Segmentation
 //!
-//! This module exists to factor out text spanner scanning.
+//! This module exists to factor out text spanning scanning.
 //!
 //! [`TextSpanningConfig`] describes the declarative needs of a tokenizer:
 //! * `pattern` - the word/span split pattern.
 //! * `specials` - a map of `{ Vec<u8> -> T }` special tokens to handle out-of-band.
 //!
-//! [`TextSpanner`] implements the run-time management of spanner,
+//! [`TextSpanner`] implements the run-time management of spanning,
 //! as well as any per-thread regex pooling.
 
 mod spanning_config;

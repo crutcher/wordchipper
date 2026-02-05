@@ -26,16 +26,14 @@
 //! }
 //! ```
 
-#[cfg(test)]
-pub mod test_utils;
-
+mod token_encoder;
 #[doc(inline)]
 pub use token_encoder::TokenEncoder;
 
-pub mod merge_heap_encoder;
-pub mod merge_scan_encoder;
-pub mod span_encoder;
-pub mod token_encoder;
+pub mod span_encoders;
+
+#[cfg(any(test, feature = "testing"))]
+pub mod testing;
 
 /// The default `TokenEncoder` implementation.
 ///
@@ -43,4 +41,4 @@ pub mod token_encoder;
 ///
 /// When there is no local ambiguity with other encoders,
 /// prefer `decoder` for instance names.
-pub type DefaultTokenEncoder<T> = merge_heap_encoder::MergeHeapVocabEncoder<T>;
+pub type DefaultTokenEncoder<T> = span_encoders::CompoundSpanVocabEncoder<T>;

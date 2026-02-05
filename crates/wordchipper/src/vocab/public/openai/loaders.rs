@@ -2,7 +2,7 @@
 
 use crate::disk_cache::WordchipperDiskCache;
 use crate::regex::RegexWrapperPattern;
-use crate::spanner::TextSpanningConfig;
+use crate::spanning::TextSpanningConfig;
 use crate::types::TokenType;
 use crate::vocab::UnifiedTokenVocab;
 use crate::vocab::io::load_tiktoken_vocab_path;

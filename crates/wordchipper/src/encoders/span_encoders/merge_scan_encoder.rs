@@ -1,10 +1,11 @@
-//! # Merge Scan Word Encoder
+//! # Merge Scan based [`SpanPolicy`] and [`CompoundSpanVocabEncoder`].
 //!
 //! Incrementally re-scans for the best available merge,
 //! iterates until no more merges remain.
 
 use crate::alloc::vec::Vec;
-use crate::encoders::span_encoder::{CompoundSpanVocabEncoder, SpanPolicy};
+use crate::encoders::span_encoders::compound_span_encoder::CompoundSpanVocabEncoder;
+use crate::encoders::span_encoders::span_policy::SpanPolicy;
 use crate::types::TokenType;
 use crate::vocab::UnifiedTokenVocab;
 
@@ -31,7 +32,7 @@ pub type MergeScanVocabEncoder<T> = CompoundSpanVocabEncoder<T, MergeScanCompoun
 /// [`CompoundSpanVocabEncoder`] encoders specialized by
 /// this policy should should prefer the instance name `decoder`;
 /// and fall back to `merge_scan_encoder` when there is a conflict.
-#[derive(Default)]
+#[derive(Default, Debug, Clone)]
 pub struct MergeScanCompoundPolicy<T: TokenType> {
     marker: core::marker::PhantomData<T>,
 }
@@ -76,7 +77,7 @@ impl<T: TokenType> SpanPolicy<T> for MergeScanCompoundPolicy<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::encoders::test_utils::{common_encoder_test_vocab, common_encoder_tests};
+    use crate::encoders::testing::{common_encoder_test_vocab, common_encoder_tests};
     use crate::types::TokenType;
 
     fn test_encoder<T: TokenType>() {

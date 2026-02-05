@@ -1,7 +1,7 @@
 //! # Word Counter
 
 use crate::regex::RegexWrapper;
-use crate::training::token_span_buffer::TokenSpanBuf;
+use crate::training::utility::token_span_buffer::TokenSpanBuf;
 use crate::training::{CountType, StringChunkType};
 use crate::types::{CommonHashMap, TokenType};
 use crate::vocab::byte_vocab::ByteMapVocab;
@@ -120,7 +120,7 @@ mod tests {
     use crate::regex::RegexWrapperPattern;
     use crate::training::CountType;
     use crate::training::StringChunkType;
-    use crate::training::token_span_buffer::TokenSpanBuf;
+    use crate::training::utility::token_span_buffer::TokenSpanBuf;
 
     const PATTERN: &str = r"\w+";
 

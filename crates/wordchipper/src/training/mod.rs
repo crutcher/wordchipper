@@ -5,7 +5,7 @@
 //! Training requires:
 //! * [`crate::vocab::ByteMapVocab`] - a choice of ``{ u8 -> T }` byte mappings.
 //!   * The default is ``T::from(u8)``.
-//! * [`crate::spanner::TextSpanningConfig`] - a text splitting config.
+//! * [`crate::spanning::TextSpanningConfig`] - a text splitting config.
 //!   * This can be built from just a regex pattern.
 //!   * Special tokens can be overlaid on a pre-trained vocabulary.
 //!
@@ -36,7 +36,7 @@
 //! - training a `nanochat` equivalent tokenizer takes ~80 CPU minutes.
 //!
 //! ```rust,no_run
-//! use wordchipper::training::bpe_trainer::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions};
+//! use wordchipper::training::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions};
 //! use wordchipper::vocab::io::tiktoken_io::save_tiktoken_vocab_path;
 //! use wordchipper::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
 //! use wordchipper::vocab::{ByteMapVocab, UnifiedTokenVocab};
@@ -94,14 +94,10 @@
 //! }
 //! ```
 
-pub mod bpe_trainer;
-pub mod pair_span_index;
-pub mod text_span_counter;
-pub mod token_span_buffer;
-pub mod training_types;
+pub mod utility;
+#[doc(inline)]
+pub use utility::{CountType, StringChunkType};
 
+mod bpe_trainer;
 #[doc(inline)]
 pub use bpe_trainer::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions};
-
-#[doc(inline)]
-pub use training_types::{CountType, StringChunkType};
