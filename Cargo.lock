@@ -2768,6 +2768,7 @@ dependencies = [
  "parking_lot",
  "rayon",
  "regex",
+ "serial_test",
  "strum",
  "strum_macros",
  "tempdir",

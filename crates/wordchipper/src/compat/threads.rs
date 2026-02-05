@@ -24,7 +24,13 @@ pub fn unstable_current_thread_id_hash() -> usize {
     u64::from(val) as usize
 }
 
+/// The search list of environment variables that Rayon uses to control parallelism.
+#[cfg(feature = "rayon")]
+const RAYON_VARS: &[&str] = &["RAYON_NUM_THREADS", "RAYON_RS_NUM_CPUS"];
+
 /// Get the max parallelism available.
+///
+/// When `rayon` is enabled, will scan over `RAYON_VARS`.
 pub fn est_max_parallelism() -> usize {
     let default = || {
         thread::available_parallelism()
@@ -33,27 +39,12 @@ pub fn est_max_parallelism() -> usize {
     };
 
     #[cfg(feature = "rayon")]
-    {
-        match env::var("RAYON_NUM_THREADS")
-            .ok()
-            .and_then(|s| usize::from_str(&s).ok())
-        {
-            Some(x @ 1..) => return x,
-            Some(0) => return default(),
-            _ => {}
-        }
-
-        // Support for deprecated `RAYON_RS_NUM_CPUS`.
-        match env::var("RAYON_RS_NUM_CPUS")
-            .ok()
-            .and_then(|s| usize::from_str(&s).ok())
-        {
-            Some(x @ 1..) => x,
-            _ => default(),
+    for name in RAYON_VARS {
+        if let Some(x @ 1..) = env::var(name).ok().and_then(|s| usize::from_str(&s).ok()) {
+            return x;
         }
     }
 
-    #[cfg(not(feature = "rayon"))]
     default()
 }
 
@@ -66,4 +57,54 @@ pub fn resolve_max_pool(max_pool: Option<NonZeroUsize>) -> usize {
     let max_pool = max_pool.map(|x| x.get()).unwrap_or(sys_max);
 
     core::cmp::min(max_pool, sys_max)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::CommonHashMap;
+    use serial_test::serial;
+
+    #[test]
+    fn test_max_pool() {
+        assert_eq!(resolve_max_pool(None), est_max_parallelism());
+        assert_eq!(resolve_max_pool(Some(NonZeroUsize::new(1).unwrap())), 1);
+    }
+
+    #[test]
+    #[serial]
+    fn test_est_max_parallelism() {
+        let mut orig_env: CommonHashMap<String, Option<String>> = Default::default();
+
+        #[cfg(feature = "rayon")]
+        for name in RAYON_VARS {
+            orig_env.insert(name.to_string(), env::var(name).ok());
+            unsafe { env::remove_var(name) };
+        }
+
+        let base = est_max_parallelism();
+
+        #[cfg(feature = "rayon")]
+        for name in ["RAYON_NUM_THREADS", "RAYON_RS_NUM_CPUS"] {
+            let orig = env::var(name);
+
+            unsafe { env::set_var(name, format!("{}", base + 12)) };
+
+            assert_eq!(est_max_parallelism(), base + 12);
+
+            match orig {
+                Ok(s) => unsafe { env::set_var(name, s) },
+                Err(_) => unsafe { env::remove_var(name) },
+            }
+        }
+
+        assert_eq!(est_max_parallelism(), base);
+
+        for (name, val) in orig_env {
+            match val {
+                Some(s) => unsafe { env::set_var(name, s) },
+                None => unsafe { env::remove_var(name) },
+            }
+        }
+    }
 }
