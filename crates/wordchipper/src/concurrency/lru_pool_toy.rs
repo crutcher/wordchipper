@@ -47,9 +47,8 @@ where
         item: T,
         max_pool: Option<NonZeroUsize>,
     ) -> Self {
-        let max_pool = resolve_max_pool(max_pool);
-
-        Self::new(vec![item; max_pool])
+        let size = resolve_max_pool(max_pool);
+        Self::new(vec![item; size])
     }
 
     /// Get a reference to the item for the current thread.
