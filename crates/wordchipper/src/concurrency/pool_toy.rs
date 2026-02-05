@@ -98,7 +98,6 @@ where
 mod tests {
     use super::*;
     use crate::concurrency::threads::resolve_max_pool;
-    use core::slice::SliceIndex;
 
     #[test]
     fn test_pool_toy() {
