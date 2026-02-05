@@ -199,6 +199,11 @@ mod tests {
         let vocab = UnifiedTokenVocab::from_span_vocab(seg_config, span_vocab);
         let byte_vocab = vocab.byte_vocab();
 
+        assert_eq!(
+            vocab.span_pairs().collect::<Vec<_>>(),
+            vocab.span_vocab.span_pairs().collect::<Vec<_>>()
+        );
+
         assert_eq!(vocab.lookup_token("at".as_bytes()), Some(300));
         assert_eq!(vocab.lookup_token("ate".as_bytes()), Some(301));
         assert_eq!(

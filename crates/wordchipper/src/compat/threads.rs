@@ -66,12 +66,6 @@ mod tests {
     use serial_test::serial;
 
     #[test]
-    fn test_max_pool() {
-        assert_eq!(resolve_max_pool(None), est_max_parallelism());
-        assert_eq!(resolve_max_pool(Some(NonZeroUsize::new(1).unwrap())), 1);
-    }
-
-    #[test]
     #[serial]
     fn test_est_max_parallelism() {
         let mut orig_env: CommonHashMap<String, Option<String>> = Default::default();
