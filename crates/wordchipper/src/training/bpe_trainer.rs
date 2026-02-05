@@ -89,7 +89,7 @@ impl BinaryPairVocabTrainerOptions {
         K: StringChunkType,
         C: CountType,
     {
-        BinaryPairVocabTrainer::init(self)
+        BinaryPairVocabTrainer::new(self)
     }
 }
 
@@ -181,7 +181,7 @@ where
     ///
     /// ## Returns
     /// A new `BinaryPairVocabTrainer` instance.
-    pub fn init(options: BinaryPairVocabTrainerOptions) -> Self {
+    pub fn new(options: BinaryPairVocabTrainerOptions) -> Self {
         let span_counter = TextSpanCounter::<K, C>::new(
             options
                 .pattern
@@ -361,7 +361,7 @@ where
 
         pairs.shrink_to_fit();
 
-        let pair_vocab: PairMapVocab<T> = PairMapVocab::<T>::init(byte_vocab.clone(), pairs)?;
+        let pair_vocab: PairMapVocab<T> = PairMapVocab::<T>::new(byte_vocab.clone(), pairs)?;
 
         log::info!("Finished training: {} merges completed", merges_done);
         Ok(TrainResults {
@@ -451,7 +451,7 @@ mod tests {
 
         let vocab: UnifiedTokenVocab<T> = trainer.train(byte_vocab.clone()).unwrap();
 
-        let encoder = DefaultTokenEncoder::<T>::init(vocab.clone(), None);
+        let encoder = DefaultTokenEncoder::<T>::new(vocab.clone(), None);
         static_is_send_sync_check(&encoder);
 
         let decoder = TokenDictDecoder::from_unified_vocab(vocab);

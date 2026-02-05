@@ -62,13 +62,13 @@ pub struct WordchipperDiskCache {
 
 impl Default for WordchipperDiskCache {
     fn default() -> Self {
-        Self::init(WordchipperDiskCacheOptions::default()).unwrap()
+        Self::new(WordchipperDiskCacheOptions::default()).unwrap()
     }
 }
 
 impl WordchipperDiskCache {
     /// Construct a new [`WordchipperDiskCache`].
-    pub fn init(options: WordchipperDiskCacheOptions) -> anyhow::Result<Self> {
+    pub fn new(options: WordchipperDiskCacheOptions) -> anyhow::Result<Self> {
         let cache_dir = WORDCHIPPER_CACHE_CONFIG
             .resolve_cache_dir(options.cache_dir)
             .context("failed to resolve cache directory")?;
@@ -223,7 +223,7 @@ mod tests {
             env::remove_var(WORDCHIPPER_DATA_DIR);
         }
 
-        let cache = WordchipperDiskCache::init(
+        let cache = WordchipperDiskCache::new(
             WordchipperDiskCacheOptions::default()
                 .with_cache_dir(Some(user_cache_dir.clone()))
                 .with_data_dir(Some(user_data_dir.clone())),
@@ -232,7 +232,7 @@ mod tests {
         assert_eq!(&cache.cache_dir(), &user_cache_dir);
         assert_eq!(&cache.data_dir(), &user_data_dir);
 
-        let cache = WordchipperDiskCache::init(WordchipperDiskCacheOptions::default()).unwrap();
+        let cache = WordchipperDiskCache::new(WordchipperDiskCacheOptions::default()).unwrap();
         assert_eq!(&cache.cache_dir(), &pds.cache_dir().to_path_buf());
         assert_eq!(&cache.data_dir(), &pds.data_dir().to_path_buf());
 
@@ -242,7 +242,7 @@ mod tests {
             env::set_var(WORDCHIPPER_DATA_DIR, env_data_dir.to_str().unwrap());
         }
 
-        let cache = WordchipperDiskCache::init(
+        let cache = WordchipperDiskCache::new(
             WordchipperDiskCacheOptions::default()
                 .with_cache_dir(Some(user_cache_dir.clone()))
                 .with_data_dir(Some(user_data_dir.clone())),
@@ -251,7 +251,7 @@ mod tests {
         assert_eq!(&cache.cache_dir(), &user_cache_dir);
         assert_eq!(&cache.data_dir(), &user_data_dir);
 
-        let cache = WordchipperDiskCache::init(WordchipperDiskCacheOptions::default()).unwrap();
+        let cache = WordchipperDiskCache::new(WordchipperDiskCacheOptions::default()).unwrap();
         assert_eq!(&cache.cache_dir(), &env_cache_dir);
         assert_eq!(&cache.data_dir(), &env_data_dir);
 
@@ -268,14 +268,14 @@ mod tests {
 
     #[test]
     fn test_data_path() {
-        let cache = WordchipperDiskCache::init(WordchipperDiskCacheOptions::default()).unwrap();
+        let cache = WordchipperDiskCache::new(WordchipperDiskCacheOptions::default()).unwrap();
         let path = cache.data_path(&["prefix"], "file.txt");
         assert_eq!(path, cache.data_dir.join("prefix").join("file.txt"));
     }
 
     #[test]
     fn test_cache_path() {
-        let cache = WordchipperDiskCache::init(WordchipperDiskCacheOptions::default()).unwrap();
+        let cache = WordchipperDiskCache::new(WordchipperDiskCacheOptions::default()).unwrap();
         let path = cache.cache_path(&["prefix"], "file.txt");
         assert_eq!(path, cache.cache_dir.join("prefix").join("file.txt"));
     }

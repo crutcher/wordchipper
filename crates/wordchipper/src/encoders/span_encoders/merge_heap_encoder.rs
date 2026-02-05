@@ -113,7 +113,7 @@ mod tests {
 
     fn test_encoder<T: TokenType>() {
         let vocab = common_encoder_test_vocab();
-        let encoder = MergeHeapVocabEncoder::<T>::init(vocab.clone().into(), None);
+        let encoder = MergeHeapVocabEncoder::<T>::new(vocab.clone().into(), None);
         common_encoder_tests(vocab.into(), &encoder)
     }
 

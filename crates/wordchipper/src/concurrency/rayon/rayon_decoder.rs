@@ -93,7 +93,7 @@ mod tests {
             TextSpanningConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN),
         );
 
-        let decoder = PairExpansionDecoder::from_pair_vocab(&vocab.pair_vocab);
+        let decoder = PairExpansionDecoder::from_pair_vocab(&vocab.pair_vocab());
 
         let decoder = ParallelRayonDecoder::new(decoder);
 

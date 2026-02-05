@@ -40,7 +40,7 @@ where
     /// ## Arguments
     /// * `pool` - the pool of items.
     /// * `max_pool` - override the maximum pool size, see [`resolve_max_pool`].
-    pub fn init(
+    pub fn new(
         item: T,
         max_pool: Option<NonZeroUsize>,
     ) -> Self {
@@ -62,9 +62,13 @@ where
     }
 
     /// Get the length of the pool.
-    #[allow(clippy::len_without_is_empty)]
     pub fn len(&self) -> usize {
         self.pool.len()
+    }
+
+    /// Is this empty?
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 }
 
@@ -102,7 +106,7 @@ mod tests {
     #[test]
     fn test_pool_toy() {
         let max_pool = Some(NonZeroUsize::new(128).unwrap());
-        let pool = PoolToy::init(10, max_pool);
+        let pool = PoolToy::new(10, max_pool);
 
         // This will be different sizes on different systems.
         let size = resolve_max_pool(max_pool);

@@ -50,11 +50,11 @@ where
     /// * `pool` - the pool of items.
     /// * `probe` - whether to use aggressive probing to avoid collisions.
     /// * `max_pool` - override the maximum pool size, see [`resolve_max_pool`].
-    pub fn init(
+    pub fn new(
         item: T,
         max_pool: Option<NonZeroUsize>,
     ) -> Self {
-        Self::init_probe(item, false, max_pool)
+        Self::new_with_probe(item, false, max_pool)
     }
 
     /// Initialize a new thread-local pool with the given item and maximum pool size.
@@ -63,7 +63,7 @@ where
     /// * `pool` - the pool of items.
     /// * `probe` - whether to use aggressive probing to avoid collisions.
     /// * `max_pool` - override the maximum pool size, see [`resolve_max_pool`].
-    pub fn init_probe(
+    pub fn new_with_probe(
         item: T,
         probe: bool,
         max_pool: Option<NonZeroUsize>,
@@ -125,9 +125,13 @@ where
     }
 
     /// Get the length of the pool.
-    #[allow(clippy::len_without_is_empty)]
     pub fn len(&self) -> usize {
         self.pool.len()
+    }
+
+    /// Is this empty?
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 }
 
@@ -163,7 +167,7 @@ mod tests {
     #[test]
     fn test_pool_toy() {
         let max_pool = Some(NonZeroUsize::new(128).unwrap());
-        let pool = LruPoolToy::init(10, max_pool);
+        let pool = LruPoolToy::new(10, max_pool);
 
         // This will be different sizes on different systems.
         let size = resolve_max_pool(max_pool);

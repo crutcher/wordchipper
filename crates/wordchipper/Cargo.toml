@@ -68,7 +68,7 @@ no_std = [
 ## This swaps all HashMap/HashSet implementations for ``ahash``; which is a performance
 ## win on many/(most?) modern CPUs.
 ##
-## This is done by the ``types::hash_types::CommonHash{*}`` type alias machinery.
+## This is done by the ``types::CommonHash{*}`` type alias machinery.
 ## See also the ``hashbrown`` dep used by ``no_std``.
 ahash = [
     "dep:ahash",

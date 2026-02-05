@@ -11,9 +11,9 @@ use crate::vocab::special_vocab::SpecialVocab;
 /// ## Style Hints
 ///
 /// When there is no local ambiguity with other encoders,
-/// instance names for implementing types should prefer `decoder`;
+/// instance names for implementing types should prefer `encoder`;
 /// and use the preferred name for the implementing type
-/// when there is conflict.
+/// when there is a conflict.
 pub trait TokenEncoder<T: TokenType>: Clone + Send + Sync {
     /// Return the attached text segmentor.
     fn spanner(&self) -> &TextSpanner;

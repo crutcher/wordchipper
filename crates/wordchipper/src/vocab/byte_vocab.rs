@@ -123,9 +123,13 @@ impl<T: TokenType> ByteMapVocab<T> {
     ///
     /// ## Returns
     /// The number of entries in the table (always 256).
-    #[allow(clippy::len_without_is_empty)]
     pub fn len(&self) -> usize {
         self.byte_token_array.len()
+    }
+
+    /// Is this empty?
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     /// Get the byte-ord => token mapping table.
