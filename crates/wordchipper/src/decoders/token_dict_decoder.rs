@@ -19,7 +19,7 @@ pub struct TokenDictDecoder<T: TokenType> {
     /// Token to bytes mapping.
     ///
     /// Does not include byte-tokens.
-    pub token_spans: TokenSpanMap<T>,
+    token_spans: TokenSpanMap<T>,
 }
 
 impl<T: TokenType> TokenDictDecoder<T> {
@@ -27,22 +27,21 @@ impl<T: TokenType> TokenDictDecoder<T> {
     ///
     /// ## Arguments
     /// * `unified_vocab` - The unified token vocabulary to build the decoder from.
-    ///
-    /// ## Returns
-    /// A new `DictionaryDecoder` instance.
     pub fn from_unified_vocab(unified_vocab: UnifiedTokenVocab<T>) -> Self {
-        Self::init(unified_vocab.unified_dictionary())
+        Self::new(unified_vocab.unified_dictionary())
     }
 
     /// Creates a new Decoder.
     ///
     /// ## Arguments
     /// * `token_spans` - The token to word mapping.
-    ///
-    /// ## Returns
-    /// A new `DictionaryDecoder` instance.
-    pub fn init(token_spans: TokenSpanMap<T>) -> Self {
+    pub fn new(token_spans: TokenSpanMap<T>) -> Self {
         Self { token_spans }
+    }
+
+    /// Get the [`TokenSpanMap`].
+    pub fn token_spans(&self) -> &TokenSpanMap<T> {
+        &self.token_spans
     }
 }
 

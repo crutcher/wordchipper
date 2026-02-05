@@ -16,35 +16,6 @@
 //! ## Crate Features
 //!
 #![doc = document_features::document_features!()]
-//!
-//! ## Loading Pretrained Tokenizers
-//!
-//! A number of pretrained tokenizers are available through:
-//! * [`vocab::public`]
-//!
-//! ```rust,ignore
-//! use wordchipper::decoders::{DictionaryDecoder, TokenDecoder};
-//! use wordchipper::encoders::{DefaultTokenEncoder, TokenEncoder};
-//! use wordchipper::rayon::{ParallelRayonDecoder, ParallelRayonEncoder};
-//! use wordchipper::regex::{regex_pool_supplier, RegexWrapperPattern};
-//! use wordchipper::spanning::{SegmentationConfig, TextSegmentor};
-//! use wordchipper::vocab::public::openai::load_o200k_harmony_vocab;
-//! use wordchipper::vocab::UnifiedTokenVocab;
-//! use wordchipper::disk_cache::WordchipperDiskCache;
-//!
-//! type T = u32;
-//!
-//! let mut disk_cache = WordchipperDiskCache::default();
-//! let vocab: UnifiedTokenVocab<T> =
-//!     load_o200k_harmony_vocab(&mut disk_cache)?.into();
-//!
-//! let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::init(
-//!     vocab.clone(), None);
-//! let encoder = ParallelRayonEncoder::new(encoder);
-//!
-//! let decoder = DictionaryDecoder::from_unified_vocab(vocab.clone());
-//! let decoder = ParallelRayonDecoder::new(decoder);
-//!```
 #![warn(missing_docs, unused)]
 #![cfg_attr(not(feature = "std"), no_std)]
 

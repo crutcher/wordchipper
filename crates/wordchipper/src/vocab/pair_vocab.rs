@@ -74,7 +74,7 @@ impl<T: TokenType> PairMapVocab<T> {
     ///
     /// ## Returns
     /// A `Result` containing the new `PairMapVocab` instance or an error.
-    pub fn init(
+    pub fn new(
         byte_vocab: ByteMapVocab<T>,
         mut pairs: PairTokenMap<T>,
     ) -> anyhow::Result<Self> {
@@ -92,9 +92,13 @@ impl<T: TokenType> PairMapVocab<T> {
     }
 
     /// Get the number of tokens in the vocabulary.
-    #[allow(clippy::len_without_is_empty)]
     pub fn len(&self) -> usize {
         self.byte_vocab.len() + self.pair_map.len()
+    }
+
+    /// Is this empty?
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     /// Looks up a pair.

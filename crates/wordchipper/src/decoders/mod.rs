@@ -2,7 +2,7 @@
 //!
 //! Decoder clients should use:
 //!
-//! * `DictionaryDecoder` - the fastest `TokenDecoder`.
+//! * `TokenDictDecoder` - the fastest `TokenDecoder`.
 //! * `ParallelRayonDecoder` - a batch parallelism wrapper around any `TokenDecoder`.
 //!
 //! ## Example

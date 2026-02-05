@@ -70,7 +70,7 @@ pub trait TokenDecoder<T: TokenType>: Send + Sync {
     /// * `batch` - A batch of tokens.
     ///
     /// ## Returns
-    /// A `Result<Vec<(usize, String)>>` of `[(consumed takens, string)]`.
+    /// A `Result<BatchDecodeResult<String>>`.
     fn try_decode_batch_to_strings(
         &self,
         batch: &[&[T]],

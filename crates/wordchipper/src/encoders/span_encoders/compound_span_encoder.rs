@@ -54,11 +54,11 @@ impl<T: TokenType, S: SpanPolicy<T>> CompoundSpanVocabEncoder<T, S> {
     ///
     /// ## Returns
     /// A new `MergeHeapVocabEncoder` instance.
-    pub fn init(
+    pub fn new(
         vocab: UnifiedTokenVocab<T>,
         max_pool: Option<NonZeroUsize>,
     ) -> Self {
-        let spanner = TextSpanner::from_config(vocab.spanning.clone(), max_pool);
+        let spanner = TextSpanner::from_config(vocab.spanning().clone(), max_pool);
 
         Self {
             vocab,
@@ -108,7 +108,7 @@ impl<T: TokenType, S: SpanPolicy<T>> TokenEncoder<T> for CompoundSpanVocabEncode
     }
 
     fn special_vocab(&self) -> &SpecialVocab<T> {
-        self.vocab.spanning.special_vocab()
+        self.vocab.spanning().special_vocab()
     }
 
     #[cfg_attr(
@@ -137,7 +137,7 @@ mod tests {
 
     fn test_encoder<T: TokenType>() {
         let vocab = common_encoder_test_vocab();
-        let encoder = CompoundSpanVocabEncoder::<T>::init(vocab.clone().into(), None);
+        let encoder = CompoundSpanVocabEncoder::<T>::new(vocab.clone().into(), None);
 
         common_encoder_tests(vocab.into(), &encoder)
     }

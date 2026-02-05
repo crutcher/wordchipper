@@ -21,7 +21,7 @@ pub struct ByteDecoder<T: TokenType> {
 
 impl<T: TokenType> From<ByteMapVocab<T>> for ByteDecoder<T> {
     fn from(byte_vocab: ByteMapVocab<T>) -> Self {
-        Self::init(byte_vocab)
+        Self::new(byte_vocab)
     }
 }
 
@@ -33,7 +33,7 @@ impl<T: TokenType> ByteDecoder<T> {
     ///
     /// ## Returns
     /// A new `ByteDecoder` instance.
-    pub fn init(byte_vocab: ByteMapVocab<T>) -> Self {
+    pub fn new(byte_vocab: ByteMapVocab<T>) -> Self {
         Self { byte_vocab }
     }
 }

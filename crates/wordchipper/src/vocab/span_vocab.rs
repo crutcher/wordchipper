@@ -9,11 +9,11 @@ use crate::vocab::{ByteMapVocab, PairMapVocab, PairTokenMap, TokenVocab};
 #[derive(Debug, Clone, PartialEq)]
 pub struct SpanMapVocab<T: TokenType> {
     /// The byte/token mapping table.
-    pub byte_vocab: ByteMapVocab<T>,
+    byte_vocab: ByteMapVocab<T>,
 
     /// The regex pattern used for text spl
     /// Map of ``{ Vec<u8> -> T }``.
-    pub span_map: SpanTokenMap<T>,
+    span_map: SpanTokenMap<T>,
 }
 
 impl<T: TokenType> Default for SpanMapVocab<T> {
@@ -83,7 +83,7 @@ impl<T: TokenType> SpanMapVocab<T> {
     pub fn from_byte_vocab(byte_vocab: ByteMapVocab<T>) -> Self {
         let span_map: SpanTokenMap<T> = byte_vocab.span_pairs().collect();
 
-        Self::init(byte_vocab, span_map).unwrap()
+        Self::new(byte_vocab, span_map).unwrap()
     }
 
     /// Build a [`Self`] from a [`SpanTokenMap`].
@@ -113,7 +113,7 @@ impl<T: TokenType> SpanMapVocab<T> {
 
         let byte_vocab: ByteMapVocab<T> = ByteMapVocab::from_byte_to_token(&byte_to_token);
 
-        Self::init(byte_vocab, span_map).unwrap()
+        Self::new(byte_vocab, span_map).unwrap()
     }
 
     /// Initialize a [`SpanMapVocab`].
@@ -127,7 +127,7 @@ impl<T: TokenType> SpanMapVocab<T> {
     ///
     /// ## Returns
     /// A `Result` containing the new `SpanMapVocab` instance or an error.
-    pub fn init(
+    pub fn new(
         byte_vocab: ByteMapVocab<T>,
         mut span_map: SpanTokenMap<T>,
     ) -> anyhow::Result<Self> {
@@ -143,18 +143,39 @@ impl<T: TokenType> SpanMapVocab<T> {
         })
     }
 
+    /// Get the [`ByteMapVocab`].
+    pub fn byte_vocab(&self) -> &ByteMapVocab<T> {
+        &self.byte_vocab
+    }
+
+    /// Get the [`SpanTokenMap`].
+    pub fn span_map(&self) -> &SpanTokenMap<T> {
+        &self.span_map
+    }
+
+    /// Get the mutable [`SpanTokenMap`].
+    pub fn span_map_mut(&mut self) -> &mut SpanTokenMap<T> {
+        &mut self.span_map
+    }
+
     /// The number of words in the vocabulary.
-    #[allow(clippy::len_without_is_empty)]
     pub fn len(&self) -> usize {
         self.span_map.len()
+    }
+
+    /// Is this empty?
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     /// Iterate over the words in the vocabulary.
     ///
     /// ## Returns
     /// An iterator over references to spans and their corresponding tokens.
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (&'a Vec<u8>, &'a T)> + 'a {
-        self.span_map.iter()
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (&'a [u8], &'a T)> + 'a {
+        self.span_map
+            .iter()
+            .map(|(chunk, token)| (chunk.as_ref(), token))
     }
 
     /// Return the associated token for the word, if any.
@@ -210,7 +231,7 @@ impl<T: TokenType> SpanMapVocab<T> {
             }
         }
 
-        PairMapVocab::<T>::init(byte_vocab, pairs).unwrap()
+        PairMapVocab::<T>::new(byte_vocab, pairs).unwrap()
     }
 }
 

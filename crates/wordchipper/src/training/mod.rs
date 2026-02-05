@@ -25,15 +25,10 @@
 //! of supporting many different training data sources could be hidden in
 //! the isolated deps of such a tool.
 //!
-//! Here:
+//! Consider the following, to train a tokenizer and export it a "*.tiktoken" file.
 //!
 //! - The iterator stream for samples may be quite large.
 //! - Training a `nanochat` equivalent tokenizer takes ~80 CPU minutes.
-//!
-//! Consider the following, to train a tokenizer and export it a "*.tiktoken" file.
-//!
-//! - the iterator stream for samples may be quite large.
-//! - training a `nanochat` equivalent tokenizer takes ~80 CPU minutes.
 //!
 //! ```rust,no_run
 //! use wordchipper::training::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions};
@@ -81,12 +76,12 @@
 //!         .expect("training failed");
 //!
 //!     if let Some(path) = tiktoken_save_path {
-//!         save_tiktoken_vocab_path(&vocab.span_vocab.span_map, &path)
+//!         save_tiktoken_vocab_path(&vocab.span_vocab().span_map(), &path)
 //!             .expect("failed to save tiktoken vocab");
 //!         println!("- tiktoken vocab: {path:?}");
 //!     }
 //!
-//!     let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::init(vocab.clone(), None);
+//!     let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::new(vocab.clone(), None);
 //!     let encoder = ParallelRayonEncoder::new(encoder);
 //!
 //!     let decoder = TokenDictDecoder::from_unified_vocab(vocab.clone());
@@ -95,8 +90,10 @@
 //! ```
 
 pub mod utility;
+
+mod training_types;
 #[doc(inline)]
-pub use utility::{CountType, StringChunkType};
+pub use training_types::{CountType, StringChunkType};
 
 mod bpe_trainer;
 #[doc(inline)]

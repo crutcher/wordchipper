@@ -22,7 +22,7 @@ pub fn common_decoder_unit_test<T: TokenType, D: TokenDecoder<T>>(
         "it's not the heat, it's the salt",
     ];
 
-    let encoder = DefaultTokenEncoder::<T>::init(vocab.clone(), None);
+    let encoder = DefaultTokenEncoder::<T>::new(vocab.clone(), None);
 
     let token_batch = encoder.try_encode_batch(&samples).unwrap();
     let decoded_strings = decoder

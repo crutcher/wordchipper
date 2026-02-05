@@ -17,7 +17,7 @@
 //!     vocab: UnifiedTokenVocab<T>,
 //!     batch: &[&str],
 //! ) -> Vec<Vec<T>> {
-//!     let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::init(vocab, None);
+//!     let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::new(vocab, None);
 //!
 //!     #[cfg(feature = "rayon")]
 //!     let encoder = wordchipper::concurrency::rayon::ParallelRayonEncoder::new(encoder);
@@ -40,5 +40,5 @@ pub mod testing;
 /// ## Style Hints
 ///
 /// When there is no local ambiguity with other encoders,
-/// prefer `decoder` for instance names.
+/// prefer `encoder` for instance names.
 pub type DefaultTokenEncoder<T> = span_encoders::CompoundSpanVocabEncoder<T>;

@@ -41,20 +41,20 @@ cfg_if::cfg_if! {
         #[derive(Clone)]
         pub struct TextSpanner {
             /// Regex for splitting words.
-            pub word_re: PoolToy<RegexWrapper>,
+            word_re: PoolToy<RegexWrapper>,
 
             /// Regex for matching special words.
-            pub special_re: Option<PoolToy<RegexWrapper>>,
+            special_re: Option<PoolToy<RegexWrapper>>,
         }
     } else {
         /// Text Spanner with Regex-based word splitting and special word matching.
         #[derive(Clone)]
         pub struct TextSpanner {
             /// Regex for splitting words.
-            pub word_re: RegexWrapper,
+            word_re: RegexWrapper,
 
             /// Regex for matching special words.
-            pub special_re: Option<RegexWrapper>,
+            special_re: Option<RegexWrapper>,
         }
     }
 }
@@ -103,7 +103,7 @@ impl TextSpanner {
             Some(alternate_choice_regex_pattern(specials).into())
         };
 
-        Self::init(span_re, special_re, max_pool)
+        Self::new(span_re, special_re, max_pool)
     }
 
     /// Build a new [`TextSpanner`] from regex.
@@ -112,7 +112,7 @@ impl TextSpanner {
     /// * `word_regex` - The regex for word splitting.
     /// * `special_regex` - The optional regex for special word matching.
     /// * `max_pool` - The maximum size of the regex pool; if None, lib defaults are used.
-    pub fn init(
+    pub fn new(
         word_re: RegexWrapper,
         special_re: Option<RegexWrapper>,
         max_pool: Option<NonZeroUsize>,
@@ -121,9 +121,9 @@ impl TextSpanner {
             if #[cfg(feature = "std")] {
                 use crate::concurrency::PoolToy;
 
-                let word_re = PoolToy::init(word_re, max_pool);
+                let word_re = PoolToy::new(word_re, max_pool);
                 let special_re = special_re
-                    .map(|r| PoolToy::init(r, max_pool));
+                    .map(|r| PoolToy::new(r, max_pool));
             } else {
                 let _ = max_pool;
             }

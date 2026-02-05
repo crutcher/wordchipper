@@ -18,10 +18,10 @@ use crate::vocab::{ByteMapVocab, PairMapVocab};
 #[derive(Clone)]
 pub struct PairExpansionDecoder<T: TokenType> {
     /// Byte/token mapping table.
-    pub byte_vocab: ByteMapVocab<T>,
+    byte_vocab: ByteMapVocab<T>,
 
     /// Token to pair mapping.
-    pub token_pairs: TokenPairMap<T>,
+    token_pairs: TokenPairMap<T>,
 }
 
 impl<T: TokenType> PairExpansionDecoder<T> {
@@ -38,7 +38,7 @@ impl<T: TokenType> PairExpansionDecoder<T> {
             .iter()
             .map(|(&pair, &token)| (token, pair))
             .collect();
-        Self::init(pair_vocab.byte_vocab.clone(), token_pairs)
+        Self::new(pair_vocab.byte_vocab.clone(), token_pairs)
     }
 
     /// Creates a new Decoder.
@@ -49,7 +49,7 @@ impl<T: TokenType> PairExpansionDecoder<T> {
     ///
     /// ## Returns
     /// A new `PairExpansionDecoder` instance.
-    pub fn init(
+    pub fn new(
         byte_vocab: ByteMapVocab<T>,
         token_pairs: TokenPairMap<T>,
     ) -> Self {
@@ -57,6 +57,16 @@ impl<T: TokenType> PairExpansionDecoder<T> {
             byte_vocab,
             token_pairs,
         }
+    }
+
+    /// Get the [`ByteMapVocab`].
+    pub fn byte_vocab(&self) -> &ByteMapVocab<T> {
+        &self.byte_vocab
+    }
+
+    /// Get the [`TokenPairMap`].
+    pub fn token_pairs(&self) -> &TokenPairMap<T> {
+        &self.token_pairs
     }
 }
 
@@ -115,7 +125,7 @@ mod tests {
             TextSpanningConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN),
         );
 
-        let decoder = PairExpansionDecoder::from_pair_vocab(&vocab.pair_vocab);
+        let decoder = PairExpansionDecoder::from_pair_vocab(&vocab.pair_vocab());
 
         assert_eq!(&decoder.byte_vocab, vocab.byte_vocab());
 

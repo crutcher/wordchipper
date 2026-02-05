@@ -82,12 +82,12 @@ mod tests {
     fn test_encoder<T: TokenType>() {
         let vocab = common_encoder_test_vocab();
 
-        let encoder = DefaultTokenEncoder::<T>::init(vocab.clone().into(), None);
+        let encoder = DefaultTokenEncoder::<T>::new(vocab.clone().into(), None);
         let encoder = ParallelRayonEncoder::new(encoder);
 
         assert_eq!(
             encoder.spanner().word_regex().as_str(),
-            vocab.spanning.pattern.as_str()
+            vocab.spanning().pattern.as_str()
         );
         assert_eq!(encoder.special_vocab(), encoder.inner.special_vocab());
 

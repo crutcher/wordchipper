@@ -14,13 +14,13 @@ use crate::vocab::{ByteMapVocab, TokenSpanMap};
 #[derive(Clone)]
 pub struct UnifiedTokenVocab<T: TokenType> {
     /// Text Spanning Configuration
-    pub spanning: TextSpanningConfig<T>,
+    spanning: TextSpanningConfig<T>,
 
     /// ``{ Vec<u8> -> T }`` vocabulary.
-    pub span_vocab: SpanMapVocab<T>,
+    span_vocab: SpanMapVocab<T>,
 
     /// ``{ (T, T) -> T }`` vocabulary.
-    pub pair_vocab: PairMapVocab<T>,
+    pair_vocab: PairMapVocab<T>,
 }
 
 impl<T: TokenType> UnifiedTokenVocab<T> {
@@ -37,7 +37,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
         span_vocab: SpanMapVocab<T>,
     ) -> Self {
         let pair_vocab = span_vocab.to_pair_vocab();
-        Self::init(span_config, span_vocab, pair_vocab)
+        Self::new(span_config, span_vocab, pair_vocab)
     }
 
     /// Build a new [`UnifiedTokenVocab`] from a [`PairMapVocab`].
@@ -68,12 +68,12 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     ///
     /// ## Panics
     /// Panics if the vocabularies are inconsistent.
-    pub fn init(
+    pub fn new(
         span_config: TextSpanningConfig<T>,
         span_vocab: SpanMapVocab<T>,
         pair_vocab: PairMapVocab<T>,
     ) -> Self {
-        assert_eq!(&span_vocab.byte_vocab, &pair_vocab.byte_vocab);
+        assert_eq!(span_vocab.byte_vocab(), &pair_vocab.byte_vocab);
 
         let tokens = span_vocab.unordered_tokens().collect::<CommonHashSet<_>>();
         for ((a, b), c) in pair_vocab.pairs() {
@@ -98,9 +98,24 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
         }
     }
 
+    /// Get the [`TextSpanningConfig`].
+    pub fn spanning(&self) -> &TextSpanningConfig<T> {
+        &self.spanning
+    }
+
+    /// Get the [`PairMapVocab`].
+    pub fn pair_vocab(&self) -> &PairMapVocab<T> {
+        &self.pair_vocab
+    }
+
+    /// Get the [`SpanMapVocab`].
+    pub fn span_vocab(&self) -> &SpanMapVocab<T> {
+        &self.span_vocab
+    }
+
     /// Get the byte table for the word vocabulary.
     pub fn byte_vocab(&self) -> &ByteMapVocab<T> {
-        &self.span_vocab.byte_vocab
+        self.span_vocab.byte_vocab()
     }
 
     /// Get a reference to the [`SpecialVocab`]
@@ -121,7 +136,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
         let mut tmp = SpanTokenMap::default();
 
         self.span_vocab.iter().for_each(|(chunk, &token)| {
-            tmp.insert(chunk.clone(), token);
+            tmp.insert(chunk.to_vec(), token);
         });
 
         for (span, token) in self.pair_vocab.span_pairs() {
@@ -192,8 +207,12 @@ mod tests {
     fn test_init() {
         type T = u32;
         let mut span_vocab: SpanMapVocab<T> = Default::default();
-        span_vocab.span_map.insert("at".as_bytes().to_vec(), 300);
-        span_vocab.span_map.insert("ate".as_bytes().to_vec(), 301);
+        span_vocab
+            .span_map_mut()
+            .insert("at".as_bytes().to_vec(), 300);
+        span_vocab
+            .span_map_mut()
+            .insert("ate".as_bytes().to_vec(), 301);
 
         let seg_config = TextSpanningConfig::from_pattern(r"\w\+");
 

@@ -64,7 +64,7 @@ fn run(args: &Args) -> anyhow::Result<()> {
     let mut disk_cache = WordchipperDiskCache::default();
     let vocab: UnifiedTokenVocab<T> = OATokenizer::O200kHarmony.load(&mut disk_cache)?;
 
-    let encoder = DefaultTokenEncoder::init(vocab.clone(), args.pool_size);
+    let encoder = DefaultTokenEncoder::new(vocab.clone(), args.pool_size);
     #[cfg(feature = "parallel")]
     let encoder = wordchipper::concurrency::rayon::ParallelRayonEncoder::new(encoder);
 

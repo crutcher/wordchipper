@@ -39,7 +39,7 @@ where
         .map(|(k, v)| (k.as_bytes().to_vec(), T::from_usize(v).unwrap())),
     );
 
-    let span_vocab = SpanMapVocab::init(byte_vocab, span_map).unwrap();
+    let span_vocab = SpanMapVocab::new(byte_vocab, span_map).unwrap();
 
     UnifiedTokenVocab::from_span_vocab(segmentation.into(), span_vocab)
 }

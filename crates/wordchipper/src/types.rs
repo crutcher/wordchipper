@@ -43,6 +43,8 @@ cfg_if::cfg_if! {
         pub type CommonHashMap<K, V> = ahash::AHashMap<K, V>;
 
         /// Iterator over hash map entries.
+        ///
+        /// Note: `ahash::AHashMap` is a specialization of `std::collections::HashMap`.
         pub type CommonHashIter<'a, K, V> = std::collections::hash_map::Iter<'a, K, V>;
 
         /// Type Alias for hash sets in this crate.
@@ -66,6 +68,9 @@ cfg_if::cfg_if! {
         /// Type Alias for hash sets in this crate.
         pub type CommonHashSet<V> = hashbrown::HashSet<V>;
     } else {
+        /// This error exists to give users more direct feedback
+        /// on the feature configuration over the other compilation
+        /// errors they would encounter from lacking the types.
         compile_error!("not(\"std\") requires \"no_std\" feature");
     }
 }
