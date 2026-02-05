@@ -1,7 +1,7 @@
 //! # Unified Token Vocabulary
 
 use crate::alloc::vec::Vec;
-use crate::spanner::SpannerConfig;
+use crate::spanner::TextSpanConfig;
 use crate::types::{CommonHashSet, Pair, TokenType};
 use crate::vocab::pair_vocab::PairMapVocab;
 use crate::vocab::span_vocab::SpanMapVocab;
@@ -14,7 +14,7 @@ use crate::vocab::{ByteMapVocab, TokenSpanMap};
 #[derive(Clone)]
 pub struct UnifiedTokenVocab<T: TokenType> {
     /// Text Segmentation Configuration
-    pub segmentation: SpannerConfig<T>,
+    pub segmentation: TextSpanConfig<T>,
 
     /// ``{ Vec<u8> -> T }`` vocabulary.
     pub span_vocab: SpanMapVocab<T>,
@@ -33,7 +33,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     /// ## Returns
     /// A new `UnifiedTokenVocab` instance.
     pub fn from_span_vocab(
-        segmentation: SpannerConfig<T>,
+        segmentation: TextSpanConfig<T>,
         span_vocab: SpanMapVocab<T>,
     ) -> Self {
         let pair_vocab = span_vocab.to_pair_vocab();
@@ -49,7 +49,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     /// ## Returns
     /// A new `UnifiedTokenVocab` instance.
     pub fn from_pair_vocab(
-        segmentation: SpannerConfig<T>,
+        segmentation: TextSpanConfig<T>,
         pair_vocab: PairMapVocab<T>,
     ) -> Self {
         let word_vocab = pair_vocab.span_pairs().collect::<SpanTokenMap<T>>().into();
@@ -69,7 +69,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     /// ## Panics
     /// Panics if the vocabularies are inconsistent.
     pub fn init(
-        segmentation: SpannerConfig<T>,
+        segmentation: TextSpanConfig<T>,
         span_vocab: SpanMapVocab<T>,
         pair_vocab: PairMapVocab<T>,
     ) -> Self {
@@ -186,7 +186,7 @@ impl<T: TokenType> TokenVocab<T> for UnifiedTokenVocab<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::spanner::SpannerConfig;
+    use crate::spanner::TextSpanConfig;
 
     #[test]
     fn test_init() {
@@ -195,7 +195,7 @@ mod tests {
         span_vocab.span_map.insert("at".as_bytes().to_vec(), 300);
         span_vocab.span_map.insert("ate".as_bytes().to_vec(), 301);
 
-        let seg_config = SpannerConfig::from_pattern(r"\w\+");
+        let seg_config = TextSpanConfig::from_pattern(r"\w\+");
 
         let vocab = UnifiedTokenVocab::from_span_vocab(seg_config, span_vocab);
         let byte_vocab = vocab.byte_vocab();

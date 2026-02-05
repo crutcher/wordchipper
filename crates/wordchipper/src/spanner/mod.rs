@@ -2,7 +2,7 @@
 //!
 //! This module exists to factor out text spanner scanning.
 //!
-//! [`SpannerConfig`] describes the declarative needs of a tokenizer:
+//! [`TextSpanConfig`] describes the declarative needs of a tokenizer:
 //! * `pattern` - the word/span split pattern.
 //! * `specials` - a map of `{ Vec<u8> -> T }` special tokens to handle out-of-band.
 //!
@@ -13,6 +13,6 @@ mod spanner_config;
 mod text_spanner;
 
 #[doc(inline)]
-pub use spanner_config::SpannerConfig;
+pub use spanner_config::TextSpanConfig;
 #[doc(inline)]
 pub use text_spanner::{SpanRef, TextSpanner};

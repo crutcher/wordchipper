@@ -2,18 +2,31 @@
 
 use crate::concurrency::threads;
 use crate::concurrency::threads::resolve_max_pool;
+use crate::types::CommonHashSet;
 use core::fmt::Debug;
 use parking_lot::lock_api::RwLock;
 use std::num::NonZeroUsize;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-/// Lru Cached Thread -> T Pool.
+/// Experimental LRU-based variant of [`super::PoolToy`].
+///
+/// This appears to provide no benefit in benchmarks.
+///
+/// The idea is that in high-contention applications,
+/// even one instance of collision could be costly;
+/// so this variant would use an LRU cache of recently
+/// used thread IDs to pool items.
+///
+/// Alternatively, by enabling `probe`, we can also
+/// scan for recent hash allocations and attempt to
+/// select an unused pool index.
 pub struct LruPoolToy<T>
 where
     T: Clone + Send,
 {
     pool: Vec<T>,
 
+    probe: bool,
     next: AtomicUsize,
     lru: parking_lot::RwLock<hashlru::Cache<usize, usize>>,
 }
@@ -31,24 +44,51 @@ impl<T> LruPoolToy<T>
 where
     T: Clone + Send,
 {
-    /// Create a new thread-local pool with the given vector of items.
-    pub fn new(pool: Vec<T>) -> Self {
-        assert!(!pool.is_empty());
-        let len = pool.len();
-        Self {
-            pool,
-            next: AtomicUsize::new(0),
-            lru: RwLock::new(hashlru::Cache::new(len)),
-        }
-    }
-
     /// Initialize a new thread-local pool with the given item and maximum pool size.
+    ///
+    /// ## Arguments
+    /// * `pool` - the pool of items.
+    /// * `probe` - whether to use aggressive probing to avoid collisions.
+    /// * `max_pool` - override the maximum pool size, see [`resolve_max_pool`].
     pub fn init(
         item: T,
         max_pool: Option<NonZeroUsize>,
     ) -> Self {
+        Self::init_probe(item, false, max_pool)
+    }
+
+    /// Initialize a new thread-local pool with the given item and maximum pool size.
+    ///
+    /// ## Arguments
+    /// * `pool` - the pool of items.
+    /// * `probe` - whether to use aggressive probing to avoid collisions.
+    /// * `max_pool` - override the maximum pool size, see [`resolve_max_pool`].
+    pub fn init_probe(
+        item: T,
+        probe: bool,
+        max_pool: Option<NonZeroUsize>,
+    ) -> Self {
         let size = resolve_max_pool(max_pool);
-        Self::new(vec![item; size])
+        Self::from_pool(vec![item; size], probe)
+    }
+
+    /// Create a new thread-local pool with the given vector of items.
+    ///
+    /// ## Arguments
+    /// * `pool` - the pool of items.
+    /// * `probe` - whether to use aggressive probing to avoid collisions.
+    pub fn from_pool(
+        pool: Vec<T>,
+        probe: bool,
+    ) -> Self {
+        assert!(!pool.is_empty());
+        let len = pool.len();
+        Self {
+            pool,
+            probe,
+            next: AtomicUsize::new(0),
+            lru: RwLock::new(hashlru::Cache::new(len * 2)),
+        }
     }
 
     /// Get a reference to the item for the current thread.
@@ -59,12 +99,24 @@ where
         let idx: usize = match writer.get(&tid) {
             Some(idx) => *idx,
             None => {
-                let idx = self
+                let mut idx = self
                     .next
                     .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |x| {
                         Some((x + 1) % self.pool.len())
                     })
                     .unwrap_or(0);
+
+                // This also doesn't seem to help.
+                if self.probe {
+                    // Be even more aggressive about avoiding collisions.
+                    let active = writer.values().copied().collect::<CommonHashSet<_>>();
+                    for j in 0..self.pool.len() {
+                        if !active.contains(&j) {
+                            idx = j;
+                        }
+                    }
+                }
+
                 writer.insert(tid, idx);
                 idx
             }
@@ -84,7 +136,7 @@ where
     T: Clone + Send,
 {
     fn clone(&self) -> Self {
-        Self::new(self.pool.clone())
+        Self::from_pool(self.pool.clone(), self.probe)
     }
 }
 

@@ -10,7 +10,7 @@ use crate::vocab::special_vocab::SpecialVocab;
 /// Instance names should prefer `spanner_config`,
 /// or `config` when there is no ambiguity.
 #[derive(Debug, Clone)]
-pub struct SpannerConfig<T: TokenType> {
+pub struct TextSpanConfig<T: TokenType> {
     /// Regex pattern for word splitting.
     pub pattern: RegexWrapperPattern,
 
@@ -18,13 +18,13 @@ pub struct SpannerConfig<T: TokenType> {
     pub specials: SpecialVocab<T>,
 }
 
-impl<T: TokenType> From<RegexWrapperPattern> for SpannerConfig<T> {
+impl<T: TokenType> From<RegexWrapperPattern> for TextSpanConfig<T> {
     fn from(value: RegexWrapperPattern) -> Self {
-        SpannerConfig::<T>::from_pattern(value)
+        TextSpanConfig::<T>::from_pattern(value)
     }
 }
 
-impl<T: TokenType> SpannerConfig<T> {
+impl<T: TokenType> TextSpanConfig<T> {
     /// Build a new config from the given word split pattern.
     ///
     /// Will contain an empty list of specials.
@@ -120,7 +120,7 @@ mod tests {
 
         let pattern = RegexWrapperPattern::Adaptive("hello".to_string());
 
-        let mut config: SpannerConfig<T> = pattern.into();
+        let mut config: TextSpanConfig<T> = pattern.into();
         assert_eq!(config.pattern().as_str(), "hello");
         assert_eq!(config.special_vocab().len(), 0);
 

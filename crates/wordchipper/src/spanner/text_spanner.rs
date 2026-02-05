@@ -4,7 +4,7 @@ use crate::alloc::string::String;
 use crate::alloc::vec::Vec;
 use crate::compat::ranges::offset_range;
 use crate::regex::{RegexWrapper, RegexWrapperPattern, exact_match_union_regex_pattern};
-use crate::spanner::spanner_config::SpannerConfig;
+use crate::spanner::spanner_config::TextSpanConfig;
 use crate::types::TokenType;
 use crate::vocab::TokenVocab;
 use crate::vocab::size_hints::EXPECTED_BYTES_PER_TOKEN;
@@ -36,14 +36,15 @@ impl From<SpanRef> for Range<usize> {
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "std")] {
+        use crate::concurrency::PoolToy;
         /// Text Spanner with Regex-based word splitting and special word matching.
         #[derive(Clone)]
         pub struct TextSpanner {
             /// Regex for splitting words.
-            pub word_re: crate::concurrency::PoolToy<RegexWrapper>,
+            pub word_re: PoolToy<RegexWrapper>,
 
             /// Regex for matching special words.
-            pub special_re: Option<crate::concurrency::PoolToy<RegexWrapper>>,
+            pub special_re: Option<PoolToy<RegexWrapper>>,
         }
     } else {
         /// Text Spanner with Regex-based word splitting and special word matching.
@@ -59,12 +60,12 @@ cfg_if::cfg_if! {
 }
 
 impl TextSpanner {
-    /// Build a new [`TextSpanner`] from a [`SpannerConfig`].
+    /// Build a new [`TextSpanner`] from a [`TextSpanConfig`].
     ///
     /// ## Arguments
     /// * `config` - The spanner configuration.
     pub fn from_config<T>(
-        config: SpannerConfig<T>,
+        config: TextSpanConfig<T>,
         max_pool: Option<NonZeroUsize>,
     ) -> Self
     where
@@ -118,9 +119,11 @@ impl TextSpanner {
     ) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(feature = "std")] {
-                let word_re = crate::concurrency::PoolToy::init(word_re, max_pool);
+                use crate::concurrency::PoolToy;
+
+                let word_re = PoolToy::init(word_re, max_pool);
                 let special_re = special_re
-                    .map(|r| crate::concurrency::PoolToy::init(r, max_pool));
+                    .map(|r| PoolToy::init(r, max_pool));
             } else {
                 let _ = max_pool;
             }
@@ -329,7 +332,7 @@ mod tests {
         use SpanRef::*;
         type T = u32;
 
-        let config: SpannerConfig<T> = SpannerConfig::from_pattern(r"\w+")
+        let config: TextSpanConfig<T> = TextSpanConfig::from_pattern(r"\w+")
             .with_special_words([("<|FNORD|>", 4000), ("<|NORP|>", 4001)]);
 
         let segmentor = TextSpanner::from_config(config, Some(NonZeroUsize::new(1).unwrap()));
@@ -409,7 +412,7 @@ mod tests {
     fn test_split_words() {
         type T = u32;
 
-        let config: SpannerConfig<T> = SpannerConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN)
+        let config: TextSpanConfig<T> = TextSpanConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN)
             .with_special_words([("<|FNORD|>", 4000), ("<|NORP|>", 4001)]);
 
         let segmentor = TextSpanner::from_config(config, Some(NonZeroUsize::new(1).unwrap()));
@@ -433,7 +436,7 @@ mod tests {
     fn test_rewrite() {
         type T = u32;
 
-        let config: SpannerConfig<T> = SpannerConfig::from_pattern(r"\w+");
+        let config: TextSpanConfig<T> = TextSpanConfig::from_pattern(r"\w+");
 
         let segmentor = TextSpanner::from_config(config, Some(NonZeroUsize::new(1).unwrap()));
 
