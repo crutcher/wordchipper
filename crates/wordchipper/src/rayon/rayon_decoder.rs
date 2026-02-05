@@ -1,7 +1,7 @@
 //! # Parallel Decoder
 
 use crate::decoders::TokenDecoder;
-use crate::decoders::token_decoder::{BatchDecodeResult, DecodeResult};
+use crate::decoders::decode_results::{BatchDecodeResult, DecodeResult};
 use crate::types::TokenType;
 
 /// Batch-Level Parallel Decoder Wrapper.

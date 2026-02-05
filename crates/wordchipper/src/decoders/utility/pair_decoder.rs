@@ -2,7 +2,8 @@
 
 use crate::alloc::vec;
 use crate::alloc::vec::Vec;
-use crate::decoders::token_decoder::{DecodeResult, TokenDecoder};
+use crate::decoders::decode_results::DecodeResult;
+use crate::decoders::token_decoder::TokenDecoder;
 use crate::types::TokenType;
 use crate::vocab::size_hints::EXPECTED_BYTES_PER_TOKEN;
 use crate::vocab::vocab_types::TokenPairMap;

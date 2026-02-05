@@ -28,10 +28,13 @@
 //! }
 //! ```
 
+pub mod decode_results;
 pub mod dictionary_decoder;
 pub mod token_decoder;
 pub mod utility;
 
+#[doc(inline)]
+pub use decode_results::{BatchDecodeResult, DecodeResult};
 #[doc(inline)]
 pub use dictionary_decoder::DictionaryDecoder;
 #[doc(inline)]

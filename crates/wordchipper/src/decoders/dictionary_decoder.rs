@@ -1,7 +1,8 @@
 //! # Dictionary ``{ T -> Vec<u8> }`` Token Decoder
 
 use crate::alloc::vec::Vec;
-use crate::decoders::token_decoder::{DecodeResult, TokenDecoder};
+use crate::decoders::decode_results::DecodeResult;
+use crate::decoders::token_decoder::TokenDecoder;
 use crate::types::TokenType;
 use crate::vocab::UnifiedTokenVocab;
 use crate::vocab::size_hints::EXPECTED_BYTES_PER_TOKEN;
