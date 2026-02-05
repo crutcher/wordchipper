@@ -1,6 +1,6 @@
 //! # Heap Merge Word Encoder
 //!
-//! Maintains a heap of the best possible merges from the pair vocab,
+//! Maintains a heap of the best available merges from the pair vocab,
 //! iterates until no more merges remain.
 
 use crate::alloc::vec::Vec;
@@ -8,13 +8,16 @@ use crate::encoders::span_encoder::{SpanEncoder, SpanEncoderVocabEncoder};
 use crate::types::TokenType;
 use crate::vocab::UnifiedTokenVocab;
 
-/// A [`crate::encoders::TokenEncoder`] using a merge heap algorithm.
+/// A [`crate::encoders::TokenEncoder`] using [`MergeHeapSpanEncoder`].
 ///
-/// Uses a per-context pair rank buffer for the heap.
+/// This encoder builds and maintains a best-merge heap of potential merges,
+/// to avoid secondary lookups in the pair vocab.
 pub type MergeHeapVocabEncoder<T> = SpanEncoderVocabEncoder<T, MergeHeapSpanEncoder<T>>;
 
-/// Maintains a heap of the best possible merges from the pair vocab,
-/// iterates until no more merges remain.
+/// A [`SpanEncoder`] using a merge heap algorithm.
+///
+/// This encoder builds and maintains a best-merge heap of potential merges,
+/// to avoid secondary lookups in the pair vocab.
 #[derive(Default)]
 pub struct MergeHeapSpanEncoder<T: TokenType> {
     pair_ranks: Vec<T>,

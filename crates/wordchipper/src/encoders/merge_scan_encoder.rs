@@ -1,16 +1,22 @@
-//! # Encoder for [`UnifiedTokenVocab`].
+//! # Merge Scan Word Encoder
+//!
+//! Incrementally re-scans for the best available merge,
+//! iterates until no more merges remain.
 
 use crate::alloc::vec::Vec;
 use crate::encoders::span_encoder::{SpanEncoder, SpanEncoderVocabEncoder};
 use crate::types::TokenType;
 use crate::vocab::UnifiedTokenVocab;
 
-/// A [`crate::encoders::TokenEncoder`] using a merge scan algorithm.
+/// A [`crate::encoders::TokenEncoder`] using [`MergeScanSpanEncoder`].
 ///
-/// Builds a working set on the append buffer.
+/// This encoder incrementally re-scans for the best available merge,
+/// iterates until no more merges remain.
 pub type MergeScanVocabEncoder<T> = SpanEncoderVocabEncoder<T, MergeScanSpanEncoder<T>>;
 
-/// Maintains a heap of the best possible merges from the pair vocab,
+/// A [`SpanEncoder`] which incrementally scans for merges.
+///
+/// This encoder incrementally re-scans for the best available merge,
 /// iterates until no more merges remain.
 #[derive(Default)]
 pub struct MergeScanSpanEncoder<T: TokenType> {

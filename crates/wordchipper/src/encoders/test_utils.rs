@@ -1,6 +1,7 @@
 //! # Encoder Test Utilities
 
 use crate::alloc::string::String;
+use crate::alloc::sync::Arc;
 use crate::alloc::vec;
 use crate::alloc::vec::Vec;
 use crate::compat::slices::inner_slice_view;
@@ -33,7 +34,10 @@ pub fn common_encoder_tests<T: TokenType, E: TokenEncoder<T>>(
 ) {
     static_is_send_sync_check(encoder);
 
-    let encoder = encoder.clone();
+    // Verify:
+    // - clone
+    // - Arc/Box compat.
+    let encoder: Arc<E> = encoder.clone().into();
 
     let samples = vec![
         "hello world",

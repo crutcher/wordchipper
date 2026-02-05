@@ -146,6 +146,7 @@ mod tests {
     fn test_encoder<T: TokenType>() {
         let vocab = common_encoder_test_vocab();
         let encoder = SpanEncoderVocabEncoder::<T>::init(vocab.clone().into(), None);
+
         common_encoder_tests(vocab.into(), &encoder)
     }
 
