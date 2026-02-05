@@ -402,7 +402,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::compat::traits::static_is_send_sync_check;
-    use crate::decoders::{DictionaryDecoder, TokenDecoder};
+    use crate::decoders::{TokenDecoder, TokenDictDecoder};
     use crate::encoders::{DefaultTokenEncoder, TokenEncoder};
     use crate::training::BinaryPairVocabTrainerOptions;
     use crate::training::bpe_trainer::MergeJob;
@@ -454,7 +454,7 @@ mod tests {
         let encoder = DefaultTokenEncoder::<T>::init(vocab.clone(), None);
         static_is_send_sync_check(&encoder);
 
-        let decoder = DictionaryDecoder::from_unified_vocab(vocab);
+        let decoder = TokenDictDecoder::from_unified_vocab(vocab);
         static_is_send_sync_check(&decoder);
 
         for sample in samples {

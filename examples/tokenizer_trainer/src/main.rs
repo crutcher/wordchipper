@@ -4,9 +4,9 @@ use similar::{ChangeTag, TextDiff};
 use std::collections::HashSet;
 use std::time::Duration;
 use wordchipper::compat::slices::{inner_slice_view, inner_str_view};
-use wordchipper::decoders::{DictionaryDecoder, TokenDecoder};
+use wordchipper::concurrency::rayon::{ParallelRayonDecoder, ParallelRayonEncoder};
+use wordchipper::decoders::{TokenDecoder, TokenDictDecoder};
 use wordchipper::encoders::{DefaultTokenEncoder, TokenEncoder};
-use wordchipper::rayon::{ParallelRayonDecoder, ParallelRayonEncoder};
 use wordchipper::training::BinaryPairVocabTrainerOptions;
 use wordchipper::vocab::byte_vocab::ByteMapVocab;
 use wordchipper::vocab::io::tiktoken_io::save_tiktoken_vocab_path;
@@ -130,7 +130,7 @@ fn main() -> anyhow::Result<()> {
         let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::init(vocab.clone(), None);
         let encoder = ParallelRayonEncoder::new(encoder);
 
-        let decoder = DictionaryDecoder::from_unified_vocab(vocab);
+        let decoder = TokenDictDecoder::from_unified_vocab(vocab);
         let decoder = ParallelRayonDecoder::new(decoder);
 
         let mut samples = Vec::new();

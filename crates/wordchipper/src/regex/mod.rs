@@ -16,8 +16,12 @@
 //! The [`RegexWrapper`] type supports only one operation, ``find_iter()`` which requires
 //! some adaptation of the `Iterator` stream to function.
 
-pub mod exact_match_union;
-pub mod regex_wrapper;
+mod exact_match_union;
+mod regex_wrapper;
 
 #[doc(inline)]
-pub use regex_wrapper::{ErrorWrapper, RegexWrapper, RegexWrapperPattern};
+pub use exact_match_union::exact_match_union_regex_pattern;
+#[doc(inline)]
+pub use regex_wrapper::{
+    ConstRegexWrapperPattern, ErrorWrapper, RegexWrapper, RegexWrapperPattern,
+};

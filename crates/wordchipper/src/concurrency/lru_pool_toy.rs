@@ -1,7 +1,7 @@
 //! # Thread Pool Toy
 
-use crate::compat::threads;
-use crate::compat::threads::resolve_max_pool;
+use crate::concurrency::threads;
+use crate::concurrency::threads::resolve_max_pool;
 use core::fmt::Debug;
 use parking_lot::lock_api::RwLock;
 use std::num::NonZeroUsize;
@@ -106,7 +106,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::compat::threads::resolve_max_pool;
+    use crate::concurrency::threads::resolve_max_pool;
 
     #[test]
     fn test_pool_toy() {

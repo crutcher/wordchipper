@@ -9,14 +9,19 @@ use crate::vocab::size_hints::EXPECTED_BYTES_PER_TOKEN;
 use crate::vocab::vocab_types::TokenPairMap;
 use crate::vocab::{ByteMapVocab, PairMapVocab};
 
-/// A [`TokenDecoder`] based on a token expansion map ``{ T -> (T, T) }``.
+/// A stack-based pair map `{T -> (T, T) }` incremental stack [`TokenDecoder`].
+///
+/// ## Style Hints
+///
+/// When there is no local ambiguity, instance names should prefer `decoder`;
+/// and expand to `pair_decoder` when there is ambiguity.
 #[derive(Clone)]
 pub struct PairExpansionDecoder<T: TokenType> {
     /// Byte/token mapping table.
     pub byte_vocab: ByteMapVocab<T>,
 
     /// Token to pair mapping.
-    pub token_map: TokenPairMap<T>,
+    pub token_pairs: TokenPairMap<T>,
 }
 
 impl<T: TokenType> PairExpansionDecoder<T> {
@@ -28,29 +33,29 @@ impl<T: TokenType> PairExpansionDecoder<T> {
     /// ## Returns
     /// A new `PairExpansionDecoder` instance.
     pub fn from_pair_vocab(pair_vocab: &PairMapVocab<T>) -> Self {
-        let token_map = pair_vocab
+        let token_pairs = pair_vocab
             .pairs()
             .iter()
             .map(|(&pair, &token)| (token, pair))
             .collect();
-        Self::init(pair_vocab.byte_vocab.clone(), token_map)
+        Self::init(pair_vocab.byte_vocab.clone(), token_pairs)
     }
 
     /// Creates a new Decoder.
     ///
     /// ## Arguments
     /// * `byte_vocab` - The byte vocabulary mapping.
-    /// * `token_map` - The token to pair mapping.
+    /// * `token_pairs` - The token to pair mapping.
     ///
     /// ## Returns
     /// A new `PairExpansionDecoder` instance.
     pub fn init(
         byte_vocab: ByteMapVocab<T>,
-        token_map: TokenPairMap<T>,
+        token_pairs: TokenPairMap<T>,
     ) -> Self {
         Self {
             byte_vocab,
-            token_map,
+            token_pairs,
         }
     }
 }
@@ -72,7 +77,7 @@ impl<T: TokenType> TokenDecoder<T> for PairExpansionDecoder<T> {
             while let Some(t) = stack.pop() {
                 if let Some(b) = self.byte_vocab.get_byte(t) {
                     value.push(b);
-                } else if let Some((a, b)) = self.token_map.get(&t) {
+                } else if let Some((a, b)) = self.token_pairs.get(&t) {
                     stack.push(*b);
                     stack.push(*a);
                 } else {
@@ -95,7 +100,7 @@ impl<T: TokenType> TokenDecoder<T> for PairExpansionDecoder<T> {
 mod tests {
     use super::*;
     use crate::decoders::utility::test_utils::common_decoder_unit_test;
-    use crate::segmentation::SegmentationConfig;
+    use crate::spanner::SpannerConfig;
     use crate::vocab::UnifiedTokenVocab;
     use crate::vocab::byte_vocab::build_test_shift_byte_vocab;
     use crate::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
@@ -107,7 +112,7 @@ mod tests {
 
         let vocab: UnifiedTokenVocab<T> = build_test_vocab(
             build_test_shift_byte_vocab(10),
-            SegmentationConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN),
+            SpannerConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN),
         );
 
         let decoder = PairExpansionDecoder::from_pair_vocab(&vocab.pair_vocab);

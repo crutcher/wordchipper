@@ -1,11 +1,16 @@
-//! # Text Segmentation Configuration
+//! # Text Spanner Configuration
 use crate::regex::RegexWrapperPattern;
 use crate::types::TokenType;
 use crate::vocab::special_vocab::SpecialVocab;
 
-/// Word Split + Special Words Segmentor Configuration
+/// Description of text spanner configuration.
+///
+/// ## Style Hints
+///
+/// Instance names should prefer `spanner_config`,
+/// or `config` when there is no ambiguity.
 #[derive(Debug, Clone)]
-pub struct SegmentationConfig<T: TokenType> {
+pub struct SpannerConfig<T: TokenType> {
     /// Regex pattern for word splitting.
     pub pattern: RegexWrapperPattern,
 
@@ -13,22 +18,19 @@ pub struct SegmentationConfig<T: TokenType> {
     pub specials: SpecialVocab<T>,
 }
 
-impl<T: TokenType> From<RegexWrapperPattern> for SegmentationConfig<T> {
+impl<T: TokenType> From<RegexWrapperPattern> for SpannerConfig<T> {
     fn from(value: RegexWrapperPattern) -> Self {
-        SegmentationConfig::<T>::from_pattern(value)
+        SpannerConfig::<T>::from_pattern(value)
     }
 }
 
-impl<T: TokenType> SegmentationConfig<T> {
-    /// Create a new text segmentor configuration with the given word pattern.
+impl<T: TokenType> SpannerConfig<T> {
+    /// Build a new config from the given word split pattern.
     ///
     /// Will contain an empty list of specials.
     ///
     /// ## Arguments
     /// * `pattern` - The word split pattern.
-    ///
-    /// ## Returns
-    /// A new `SegmentationConfig` instance.
     pub fn from_pattern<P>(pattern: P) -> Self
     where
         P: Into<RegexWrapperPattern>,
@@ -39,13 +41,10 @@ impl<T: TokenType> SegmentationConfig<T> {
         }
     }
 
-    /// Set the split pattern for the text segmentor configuration.
+    /// Set the word split pattern.
     ///
     /// ## Arguments
     /// * `pattern` - The new word split pattern.
-    ///
-    /// ## Returns
-    /// The updated `SegmentationConfig` instance.
     pub fn with_pattern<P>(
         self,
         pattern: P,
@@ -59,13 +58,10 @@ impl<T: TokenType> SegmentationConfig<T> {
         }
     }
 
-    /// Replace special tokens vocabulary.
+    /// Set the special tokens vocabulary.
     ///
     /// ## Arguments
     /// * `specials` - The new special tokens vocabulary.
-    ///
-    /// ## Returns
-    /// The updated `SegmentationConfig` instance.
     pub fn with_specials<S>(
         self,
         specials: S,
@@ -77,13 +73,12 @@ impl<T: TokenType> SegmentationConfig<T> {
         Self { specials, ..self }
     }
 
-    /// Add all of the given special words to the specials.
+    /// Add the given special words.
+    ///
+    /// This does not replace existing special words.
     ///
     /// ## Arguments
     /// * `special_words` - An iterator of word strings and tokens.
-    ///
-    /// ## Returns
-    /// The updated `SegmentationConfig` instance.
     pub fn with_special_words<W, S>(
         self,
         special_words: W,
@@ -98,26 +93,17 @@ impl<T: TokenType> SegmentationConfig<T> {
         }
     }
 
-    /// Get the word pattern for the text segmentor configuration.
-    ///
-    /// ## Returns
-    /// The regex pattern as a `String`.
+    /// Get the word pattern.
     pub fn pattern(&self) -> &RegexWrapperPattern {
         &self.pattern
     }
 
-    /// Get the special tokens vocabulary for the text segmentor configuration.
-    ///
-    /// ## Returns
-    /// A reference to the internal `SpecialVocab`.
+    /// Get the special tokens vocabulary.
     pub fn special_vocab(&self) -> &SpecialVocab<T> {
         &self.specials
     }
 
     /// Get a mutable view of the [`SpecialVocab`]
-    ///
-    /// ## Returns
-    /// A mutable reference to the internal `SpecialVocab`.
     pub fn special_vocab_mut(&mut self) -> &mut SpecialVocab<T> {
         &mut self.specials
     }
@@ -134,7 +120,7 @@ mod tests {
 
         let pattern = RegexWrapperPattern::Adaptive("hello".to_string());
 
-        let mut config: SegmentationConfig<T> = pattern.into();
+        let mut config: SpannerConfig<T> = pattern.into();
         assert_eq!(config.pattern().as_str(), "hello");
         assert_eq!(config.special_vocab().len(), 0);
 

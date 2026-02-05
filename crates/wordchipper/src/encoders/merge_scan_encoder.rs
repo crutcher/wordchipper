@@ -4,36 +4,49 @@
 //! iterates until no more merges remain.
 
 use crate::alloc::vec::Vec;
-use crate::encoders::span_encoder::{SpanEncoder, SpanEncoderVocabEncoder};
+use crate::encoders::span_encoder::{CompoundSpanVocabEncoder, SpanPolicy};
 use crate::types::TokenType;
 use crate::vocab::UnifiedTokenVocab;
 
-/// A [`crate::encoders::TokenEncoder`] using [`MergeScanSpanEncoder`].
+/// A [`CompoundSpanVocabEncoder`] using [`MergeScanCompoundPolicy`].
 ///
 /// This encoder incrementally re-scans for the best available merge,
 /// iterates until no more merges remain.
-pub type MergeScanVocabEncoder<T> = SpanEncoderVocabEncoder<T, MergeScanSpanEncoder<T>>;
+///
+/// ## Style Hints
+///
+/// When there is no local ambiguity with other encoders,
+/// instance names for implementing types should prefer `decoder`;
+/// and prefer `merge_scan_encoder` when there is a conflict.
+pub type MergeScanVocabEncoder<T> = CompoundSpanVocabEncoder<T, MergeScanCompoundPolicy<T>>;
 
-/// A [`SpanEncoder`] which incrementally scans for merges.
+/// A [`SpanPolicy`] which incrementally scans for merges.
 ///
 /// This encoder incrementally re-scans for the best available merge,
 /// iterates until no more merges remain.
+///
+/// ## Style Hints
+///
+/// When there is no local ambiguity with other encoders,
+/// [`CompoundSpanVocabEncoder`] encoders specialized by
+/// this policy should should prefer the instance name `decoder`;
+/// and fall back to `merge_scan_encoder` when there is a conflict.
 #[derive(Default)]
-pub struct MergeScanSpanEncoder<T: TokenType> {
+pub struct MergeScanCompoundPolicy<T: TokenType> {
     marker: core::marker::PhantomData<T>,
 }
 
-impl<T: TokenType> SpanEncoder<T> for MergeScanSpanEncoder<T> {
-    fn encode_append_span(
+impl<T: TokenType> SpanPolicy<T> for MergeScanCompoundPolicy<T> {
+    fn encode_compound_span(
         &mut self,
-        data: &UnifiedTokenVocab<T>,
+        vocab: &UnifiedTokenVocab<T>,
         span: &[u8],
         tokens: &mut Vec<T>,
     ) {
         // Reuse the output buffer as our working memory.
         // Append the byte-tokens to the buffer.
         let start = tokens.len();
-        data.byte_vocab().append_tokens(span, tokens);
+        vocab.byte_vocab().append_tokens(span, tokens);
 
         // Incrementally shrink the working memory (the new buffer end)
         // Until we can no longer find pairs to merge.
@@ -43,7 +56,7 @@ impl<T: TokenType> SpanEncoder<T> for MergeScanSpanEncoder<T> {
             if let Some((token, idx)) = tokens[start..]
                 .windows(2)
                 .enumerate()
-                .filter_map(|(idx, w)| data.lookup_pair(&(w[0], w[1])).map(|token| (token, idx)))
+                .filter_map(|(idx, w)| vocab.lookup_pair(&(w[0], w[1])).map(|token| (token, idx)))
                 .min()
             {
                 // Adjust the window index.

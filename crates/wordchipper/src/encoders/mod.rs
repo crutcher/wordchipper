@@ -20,7 +20,7 @@
 //!     let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::init(vocab, None);
 //!
 //!     #[cfg(feature = "rayon")]
-//!     let encoder = wordchipper::rayon::ParallelRayonEncoder::new(encoder);
+//!     let encoder = wordchipper::concurrency::rayon::ParallelRayonEncoder::new(encoder);
 //!
 //!     encoder.try_encode_batch(batch).unwrap()
 //! }

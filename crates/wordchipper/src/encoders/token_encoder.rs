@@ -1,19 +1,22 @@
 //! # Token Encoder Trait
 
-use crate::alloc::sync::Arc;
 use crate::alloc::vec::Vec;
-use crate::segmentation::TextSegmentor;
+use crate::spanner::TextSpanner;
 use crate::types::TokenType;
 use crate::vocab::size_hints::EXPECTED_BYTES_PER_TOKEN;
 use crate::vocab::special_vocab::SpecialVocab;
 
-/// A handle to a token encoder.
-pub type TokenEncoderHandle<T> = Arc<dyn TokenEncoder<T>>;
-
-/// A trait for token encoders.
+/// The common trait for `String/&[u8] -> Vec<T>` encoders.
+///
+/// ## Style Hints
+///
+/// When there is no local ambiguity with other encoders,
+/// instance names for implementing types should prefer `decoder`;
+/// and use the preferred name for the implementing type
+/// when there is conflict.
 pub trait TokenEncoder<T: TokenType>: Clone + Send + Sync {
     /// Return the attached text segmentor.
-    fn segmentor(&self) -> &TextSegmentor;
+    fn segmentor(&self) -> &TextSpanner;
 
     /// Return the attached special vocab.
     ///

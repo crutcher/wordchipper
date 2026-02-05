@@ -5,7 +5,7 @@
 //! Training requires:
 //! * [`crate::vocab::ByteMapVocab`] - a choice of ``{ u8 -> T }` byte mappings.
 //!   * The default is ``T::from(u8)``.
-//! * [`crate::segmentation::SegmentationConfig`] - a text splitting config.
+//! * [`crate::spanner::SpannerConfig`] - a text splitting config.
 //!   * This can be built from just a regex pattern.
 //!   * Special tokens can be overlaid on a pre-trained vocabulary.
 //!
@@ -41,8 +41,8 @@
 //! use wordchipper::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
 //! use wordchipper::vocab::{ByteMapVocab, UnifiedTokenVocab};
 //! use wordchipper::encoders::DefaultTokenEncoder;
-//! use wordchipper::decoders::DictionaryDecoder;
-//! use wordchipper::rayon::{ParallelRayonEncoder, ParallelRayonDecoder};
+//! use wordchipper::decoders::TokenDictDecoder;
+//! use wordchipper::concurrency::rayon::{ParallelRayonEncoder, ParallelRayonDecoder};
 //!
 //! fn example<I, S>(
 //!     vocab_size: usize,
@@ -89,7 +89,7 @@
 //!     let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::init(vocab.clone(), None);
 //!     let encoder = ParallelRayonEncoder::new(encoder);
 //!
-//!     let decoder = DictionaryDecoder::from_unified_vocab(vocab.clone());
+//!     let decoder = TokenDictDecoder::from_unified_vocab(vocab.clone());
 //!     let decoder = ParallelRayonDecoder::new(decoder);
 //! }
 //! ```

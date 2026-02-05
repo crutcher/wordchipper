@@ -8,17 +8,22 @@ use crate::vocab::UnifiedTokenVocab;
 use crate::vocab::size_hints::EXPECTED_BYTES_PER_TOKEN;
 use crate::vocab::vocab_types::TokenSpanMap;
 
-/// A token dictionary [`TokenDecoder<T>`].
+/// A [`TokenDecoder<T>`] over a unified `{ T -> Vec<u8> }` dictionary.
+///
+/// ## Style Hints
+///
+/// When there is no local ambiguity, instance names should prefer `decoder`;
+/// and expand to `dict_decoder` when there is ambiguity.
 #[derive(Clone)]
-pub struct DictionaryDecoder<T: TokenType> {
+pub struct TokenDictDecoder<T: TokenType> {
     /// Token to bytes mapping.
     ///
     /// Does not include byte-tokens.
-    pub token_to_word: TokenSpanMap<T>,
+    pub token_spans: TokenSpanMap<T>,
 }
 
-impl<T: TokenType> DictionaryDecoder<T> {
-    /// Build a [`DictionaryDecoder`] from this [`UnifiedTokenVocab`].
+impl<T: TokenType> TokenDictDecoder<T> {
+    /// Build a [`TokenDictDecoder`] from this [`UnifiedTokenVocab`].
     ///
     /// ## Arguments
     /// * `unified_vocab` - The unified token vocabulary to build the decoder from.
@@ -32,16 +37,16 @@ impl<T: TokenType> DictionaryDecoder<T> {
     /// Creates a new Decoder.
     ///
     /// ## Arguments
-    /// * `token_to_word` - The token to word mapping.
+    /// * `token_spans` - The token to word mapping.
     ///
     /// ## Returns
     /// A new `DictionaryDecoder` instance.
-    pub fn init(token_to_word: TokenSpanMap<T>) -> Self {
-        Self { token_to_word }
+    pub fn init(token_spans: TokenSpanMap<T>) -> Self {
+        Self { token_spans }
     }
 }
 
-impl<T: TokenType> TokenDecoder<T> for DictionaryDecoder<T> {
+impl<T: TokenType> TokenDecoder<T> for TokenDictDecoder<T> {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, tokens)))]
     fn try_decode_to_bytes(
         &self,
@@ -51,7 +56,7 @@ impl<T: TokenType> TokenDecoder<T> for DictionaryDecoder<T> {
         let mut value = Vec::with_capacity(capacity);
         let mut consumed = 0;
         for t in tokens {
-            if let Some(w) = self.token_to_word.get(t) {
+            if let Some(w) = self.token_spans.get(t) {
                 value.extend(w);
                 consumed += 1;
             } else {
@@ -66,7 +71,7 @@ impl<T: TokenType> TokenDecoder<T> for DictionaryDecoder<T> {
 mod tests {
     use super::*;
     use crate::decoders::utility::test_utils::common_decoder_unit_test;
-    use crate::segmentation::SegmentationConfig;
+    use crate::spanner::SpannerConfig;
     use crate::vocab::byte_vocab::build_test_shift_byte_vocab;
     use crate::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
     use crate::vocab::utility::testing::build_test_vocab;
@@ -77,10 +82,10 @@ mod tests {
 
         let vocab: UnifiedTokenVocab<T> = build_test_vocab(
             build_test_shift_byte_vocab(10),
-            SegmentationConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN),
+            SpannerConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN),
         );
 
-        let decoder = DictionaryDecoder::from_unified_vocab(vocab.clone());
+        let decoder = TokenDictDecoder::from_unified_vocab(vocab.clone());
 
         common_decoder_unit_test(vocab, &decoder);
     }

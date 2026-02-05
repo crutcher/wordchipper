@@ -9,7 +9,7 @@
 //!
 //! ```rust,no_run
 //! use wordchipper::vocab::UnifiedTokenVocab;
-//! use wordchipper::decoders::DictionaryDecoder;
+//! use wordchipper::decoders::TokenDictDecoder;
 //! use wordchipper::decoders::TokenDecoder;
 //! use wordchipper::types::TokenType;
 //!
@@ -17,10 +17,10 @@
 //!     vocab: UnifiedTokenVocab<T>,
 //!     batch: &[Vec<T>],
 //! ) -> Vec<String> {
-//!     let decoder: DictionaryDecoder<T> = DictionaryDecoder::from_unified_vocab(vocab);
+//!     let decoder: TokenDictDecoder<T> = TokenDictDecoder::from_unified_vocab(vocab);
 //!
 //!     #[cfg(feature = "rayon")]
-//!     let decoder = wordchipper::rayon::ParallelRayonDecoder::new(decoder);
+//!     let decoder = wordchipper::concurrency::rayon::ParallelRayonDecoder::new(decoder);
 //!
 //!     let slices: Vec<&[T]> = batch.iter().map(|v| v.as_ref()).collect();
 //!
@@ -29,13 +29,13 @@
 //! ```
 
 pub mod decode_results;
-pub mod dictionary_decoder;
 pub mod token_decoder;
+pub mod token_dict_decoder;
 pub mod utility;
 
 #[doc(inline)]
 pub use decode_results::{BatchDecodeResult, DecodeResult};
 #[doc(inline)]
-pub use dictionary_decoder::DictionaryDecoder;
-#[doc(inline)]
 pub use token_decoder::TokenDecoder;
+#[doc(inline)]
+pub use token_dict_decoder::TokenDictDecoder;

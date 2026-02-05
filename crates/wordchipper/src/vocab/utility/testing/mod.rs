@@ -1,6 +1,6 @@
 //! # Vocab Testing Tools
 
-use crate::segmentation::SegmentationConfig;
+use crate::spanner::SpannerConfig;
 use crate::types::TokenType;
 use crate::vocab::vocab_types::SpanTokenMap;
 use crate::vocab::{ByteMapVocab, SpanMapVocab, UnifiedTokenVocab};
@@ -11,7 +11,7 @@ pub fn build_test_vocab<T: TokenType, C>(
     segmentation: C,
 ) -> UnifiedTokenVocab<T>
 where
-    C: Into<SegmentationConfig<T>>,
+    C: Into<SpannerConfig<T>>,
 {
     let mut span_map: SpanTokenMap<T> = Default::default();
     span_map.extend(

@@ -4,29 +4,42 @@
 //! iterates until no more merges remain.
 
 use crate::alloc::vec::Vec;
-use crate::encoders::span_encoder::{SpanEncoder, SpanEncoderVocabEncoder};
+use crate::encoders::span_encoder::{CompoundSpanVocabEncoder, SpanPolicy};
 use crate::types::TokenType;
 use crate::vocab::UnifiedTokenVocab;
 
-/// A [`crate::encoders::TokenEncoder`] using [`MergeHeapSpanEncoder`].
+/// A [`CompoundSpanVocabEncoder`] using [`MergeHeapSpanPolicy`].
 ///
 /// This encoder builds and maintains a best-merge heap of potential merges,
 /// to avoid secondary lookups in the pair vocab.
-pub type MergeHeapVocabEncoder<T> = SpanEncoderVocabEncoder<T, MergeHeapSpanEncoder<T>>;
+///
+/// ## Style Hints
+///
+/// When there is no local ambiguity with other encoders,
+/// instance names for implementing types should prefer `decoder`;
+/// and prefer `merge_heap_encoder` when there is a conflict.
+pub type MergeHeapVocabEncoder<T> = CompoundSpanVocabEncoder<T, MergeHeapSpanPolicy<T>>;
 
-/// A [`SpanEncoder`] using a merge heap algorithm.
+/// A [`SpanPolicy`] using a merge heap algorithm.
 ///
 /// This encoder builds and maintains a best-merge heap of potential merges,
 /// to avoid secondary lookups in the pair vocab.
+///
+/// ## Style Hints
+///
+/// When there is no local ambiguity with other encoders,
+/// [`CompoundSpanVocabEncoder`] encoders specialized by
+/// this policy should should prefer the instance name `decoder`;
+/// and fall back to `merge_heap_encoder` when there is a conflict.
 #[derive(Default)]
-pub struct MergeHeapSpanEncoder<T: TokenType> {
+pub struct MergeHeapSpanPolicy<T: TokenType> {
     pair_ranks: Vec<T>,
 }
 
-impl<T: TokenType> SpanEncoder<T> for MergeHeapSpanEncoder<T> {
-    fn encode_append_span(
+impl<T: TokenType> SpanPolicy<T> for MergeHeapSpanPolicy<T> {
+    fn encode_compound_span(
         &mut self,
-        data: &UnifiedTokenVocab<T>,
+        vocab: &UnifiedTokenVocab<T>,
         span: &[u8],
         tokens: &mut Vec<T>,
     ) {
@@ -36,11 +49,12 @@ impl<T: TokenType> SpanEncoder<T> for MergeHeapSpanEncoder<T> {
 
         // Define CURRENT as `tokens[start..]`.
         // - CURRENT[i] := tokens[start + i]
-        data.byte_vocab().append_tokens(span, tokens);
+        vocab.byte_vocab().append_tokens(span, tokens);
 
         let pr_for_tokens = {
             |tok: &[T], a: usize, b: usize| {
-                data.lookup_pair(&(tok[start + a], tok[start + b]))
+                vocab
+                    .lookup_pair(&(tok[start + a], tok[start + b]))
                     .unwrap_or(T::max_value())
             }
         };

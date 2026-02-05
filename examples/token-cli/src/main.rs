@@ -5,7 +5,7 @@ use std::num::NonZeroUsize;
 use std::time::Duration;
 use wordchipper::compat::slices::{inner_slice_view, inner_str_view};
 use wordchipper::compat::timers;
-use wordchipper::decoders::{DictionaryDecoder, TokenDecoder};
+use wordchipper::decoders::{TokenDecoder, TokenDictDecoder};
 use wordchipper::disk_cache::WordchipperDiskCache;
 use wordchipper::encoders::{DefaultTokenEncoder, TokenEncoder};
 use wordchipper::vocab::UnifiedTokenVocab;
@@ -66,11 +66,11 @@ fn run(args: &Args) -> anyhow::Result<()> {
 
     let encoder = DefaultTokenEncoder::init(vocab.clone(), args.pool_size);
     #[cfg(feature = "parallel")]
-    let encoder = wordchipper::rayon::ParallelRayonEncoder::new(encoder);
+    let encoder = wordchipper::concurrency::rayon::ParallelRayonEncoder::new(encoder);
 
-    let decoder = DictionaryDecoder::from_unified_vocab(vocab.clone());
+    let decoder = TokenDictDecoder::from_unified_vocab(vocab.clone());
     #[cfg(feature = "parallel")]
-    let decoder = wordchipper::rayon::ParallelRayonDecoder::new(decoder);
+    let decoder = wordchipper::concurrency::rayon::ParallelRayonDecoder::new(decoder);
 
     let batch_size = 512;
 

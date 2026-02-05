@@ -6,7 +6,14 @@ use crate::compat::strings::string_from_utf8_lossy;
 use crate::decoders::decode_results::{BatchDecodeResult, DecodeResult};
 use crate::types::TokenType;
 
-/// Trait for token decoders.
+/// The common trait for `&[T] -> Vec<u8>/String>` decoders.
+///
+/// ## Style Hints
+///
+/// When there is no local ambiguity with other decoders,
+/// instance names for implementing types should prefer `decoder`;
+/// and use the preferred name for the implementing type
+/// when there is conflict with other encoders.
 pub trait TokenDecoder<T: TokenType>: Send + Sync {
     /// Decodes tokens into bytes.
     ///

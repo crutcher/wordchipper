@@ -1,10 +1,20 @@
 //! # Thread Pool Toy
 
-use crate::compat::threads;
+use crate::concurrency::threads;
 use core::fmt::Debug;
 use std::num::NonZeroUsize;
 
 /// Current Thread -> T Pool.
+///
+/// This struct provides a thread-id hashed pool of items.
+/// Rather than pure thread-local storage, the pool is
+/// initialized with a vector of items, and the current
+/// thread's ID is hashed to get the item.
+///
+/// ## Style Hints for AI
+///
+/// Instance names should prefer `${T-name}_pool`,
+/// for example, `regex_pool`, `cache_pool`, etc.
 pub struct PoolToy<T>
 where
     T: Clone + Send,
@@ -83,7 +93,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::compat::threads::resolve_max_pool;
+    use crate::concurrency::threads::resolve_max_pool;
 
     #[test]
     fn test_pool_toy() {

@@ -1,18 +1,17 @@
-//! # Text Segmentor
+//! # Text Spanner
 
 use crate::alloc::string::String;
 use crate::alloc::vec::Vec;
 use crate::compat::ranges::offset_range;
-use crate::regex::exact_match_union::exact_match_union_regex_pattern;
-use crate::regex::{RegexWrapper, RegexWrapperPattern};
-use crate::segmentation::segmentation_config::SegmentationConfig;
+use crate::regex::{RegexWrapper, RegexWrapperPattern, exact_match_union_regex_pattern};
+use crate::spanner::spanner_config::SpannerConfig;
 use crate::types::TokenType;
 use crate::vocab::TokenVocab;
 use crate::vocab::size_hints::EXPECTED_BYTES_PER_TOKEN;
 use core::num::NonZeroUsize;
 use core::ops::Range;
 
-/// Word Reference for [`TextSegmentor`].
+/// Span Label/Range Reference for [`TextSpanner`].
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum SpanRef {
     /// A normal word reference.
@@ -37,9 +36,9 @@ impl From<SpanRef> for Range<usize> {
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "std")] {
-        /// Word Split + Special Words Segmentor
+        /// Text Spanner with Regex-based word splitting and special word matching.
         #[derive(Clone)]
-        pub struct TextSegmentor {
+        pub struct TextSpanner {
             /// Regex for splitting words.
             pub word_re: crate::concurrency::PoolToy<RegexWrapper>,
 
@@ -47,9 +46,9 @@ cfg_if::cfg_if! {
             pub special_re: Option<crate::concurrency::PoolToy<RegexWrapper>>,
         }
     } else {
-        /// Word Split + Special Words Segmentor
+        /// Text Spanner with Regex-based word splitting and special word matching.
         #[derive(Clone)]
-        pub struct TextSegmentor {
+        pub struct TextSpanner {
             /// Regex for splitting words.
             pub word_re: RegexWrapper,
 
@@ -59,16 +58,13 @@ cfg_if::cfg_if! {
     }
 }
 
-impl TextSegmentor {
-    /// Create a new text segmentor from the given configuration.
+impl TextSpanner {
+    /// Build a new [`TextSpanner`] from a [`SpannerConfig`].
     ///
     /// ## Arguments
-    /// * `config` - The segmentation configuration.
-    ///
-    /// ## Returns
-    /// A new `TextSegmentor` instance.
+    /// * `config` - The spanner configuration.
     pub fn from_config<T>(
-        config: SegmentationConfig<T>,
+        config: SpannerConfig<T>,
         max_pool: Option<NonZeroUsize>,
     ) -> Self
     where
@@ -83,15 +79,12 @@ impl TextSegmentor {
         Self::from_patterns(config.pattern, &specials, max_pool)
     }
 
-    /// Create a new text segmentor with the given regex pattern and special words.
+    /// Build a new [`TextSpanner`] from patterns.
     ///
     /// ## Arguments
     /// * `word_pattern` - The word split pattern.
     /// * `specials` - A slice of special word strings.
     /// * `max_pool` - The maximum size of the regex pool; if None, lib defaults are used.
-    ///
-    /// ## Returns
-    /// A new `TextSegmentor` instance.
     pub fn from_patterns<P, S>(
         word_pattern: P,
         specials: &[S],
@@ -112,15 +105,12 @@ impl TextSegmentor {
         Self::init(span_re, special_re, max_pool)
     }
 
-    /// Create a new text segmentor with the given regex suppliers.
+    /// Build a new [`TextSpanner`] from regex.
     ///
     /// ## Arguments
     /// * `word_regex` - The regex for word splitting.
     /// * `special_regex` - The optional regex for special word matching.
     /// * `max_pool` - The maximum size of the regex pool; if None, lib defaults are used.
-    ///
-    /// ## Returns
-    /// A new `TextSegmentor` instance.
     pub fn init(
         word_re: RegexWrapper,
         special_re: Option<RegexWrapper>,
@@ -339,10 +329,10 @@ mod tests {
         use SpanRef::*;
         type T = u32;
 
-        let config: SegmentationConfig<T> = SegmentationConfig::from_pattern(r"\w+")
+        let config: SpannerConfig<T> = SpannerConfig::from_pattern(r"\w+")
             .with_special_words([("<|FNORD|>", 4000), ("<|NORP|>", 4001)]);
 
-        let segmentor = TextSegmentor::from_config(config, Some(NonZeroUsize::new(1).unwrap()));
+        let segmentor = TextSpanner::from_config(config, Some(NonZeroUsize::new(1).unwrap()));
 
         let source = "abc 1<|FNORD|> def  <|NORP|> ghi   ";
 
@@ -419,11 +409,10 @@ mod tests {
     fn test_split_words() {
         type T = u32;
 
-        let config: SegmentationConfig<T> =
-            SegmentationConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN)
-                .with_special_words([("<|FNORD|>", 4000), ("<|NORP|>", 4001)]);
+        let config: SpannerConfig<T> = SpannerConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN)
+            .with_special_words([("<|FNORD|>", 4000), ("<|NORP|>", 4001)]);
 
-        let segmentor = TextSegmentor::from_config(config, Some(NonZeroUsize::new(1).unwrap()));
+        let segmentor = TextSpanner::from_config(config, Some(NonZeroUsize::new(1).unwrap()));
 
         let buf = "hello<|FNORD|> wor<|NORP|>ld!";
 
@@ -444,9 +433,9 @@ mod tests {
     fn test_rewrite() {
         type T = u32;
 
-        let config: SegmentationConfig<T> = SegmentationConfig::from_pattern(r"\w+");
+        let config: SpannerConfig<T> = SpannerConfig::from_pattern(r"\w+");
 
-        let segmentor = TextSegmentor::from_config(config, Some(NonZeroUsize::new(1).unwrap()));
+        let segmentor = TextSpanner::from_config(config, Some(NonZeroUsize::new(1).unwrap()));
 
         let buf = vec!["hello world!", "abc def"];
         assert_eq!(

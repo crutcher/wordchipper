@@ -27,7 +27,7 @@
 //! use wordchipper::encoders::{DefaultTokenEncoder, TokenEncoder};
 //! use wordchipper::rayon::{ParallelRayonDecoder, ParallelRayonEncoder};
 //! use wordchipper::regex::{regex_pool_supplier, RegexWrapperPattern};
-//! use wordchipper::segmentation::{SegmentationConfig, TextSegmentor};
+//! use wordchipper::spanner::{SegmentationConfig, TextSegmentor};
 //! use wordchipper::vocab::public::openai::load_o200k_harmony_vocab;
 //! use wordchipper::vocab::UnifiedTokenVocab;
 //! use wordchipper::disk_cache::WordchipperDiskCache;
@@ -50,9 +50,6 @@
 
 extern crate alloc;
 
-#[cfg(feature = "rayon")]
-pub mod rayon;
-
 #[cfg(feature = "training")]
 pub mod training;
 
@@ -67,6 +64,6 @@ pub mod compat;
 pub mod decoders;
 pub mod encoders;
 pub mod regex;
-pub mod segmentation;
+pub mod spanner;
 pub mod types;
 pub mod vocab;

@@ -1,7 +1,7 @@
 //! # Patterns
 
 use crate::join_patterns;
-use crate::regex::regex_wrapper::ConstRegexWrapperPattern;
+use crate::regex::ConstRegexWrapperPattern;
 
 /// The GPT-2 r50k word pattern.
 ///

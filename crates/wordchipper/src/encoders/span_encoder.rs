@@ -1,76 +1,83 @@
 //! # Encoder for [`UnifiedTokenVocab`].
 
 use crate::alloc::vec::Vec;
-use crate::encoders::merge_heap_encoder::MergeHeapSpanEncoder;
+use crate::encoders::merge_heap_encoder::MergeHeapSpanPolicy;
 use crate::encoders::token_encoder::TokenEncoder;
-use crate::segmentation::SpanRef;
-use crate::segmentation::text_segmentor::TextSegmentor;
+use crate::spanner::{SpanRef, TextSpanner};
 use crate::types::TokenType;
 use crate::vocab::special_vocab::SpecialVocab;
 use crate::vocab::unified_vocab::UnifiedTokenVocab;
 use core::num::NonZeroUsize;
 
-/// Span encoder trait for [`SpanEncoderVocabEncoder`]
-pub trait SpanEncoder<T: TokenType>: Default {
-    /// Encodes a single normal "word".
+/// A [`TokenEncoder`] with pluggable [`SpanPolicy`]s.
+///
+/// ## Style Hints
+///
+/// When there is no local ambiguity with other encoders,
+/// instance names for implementing types should prefer `decoder`;
+/// and use the preferred name for the specialized [`SpanPolicy`] type,
+/// `${policy name}_encoder` when there is a conflict.
+pub struct CompoundSpanVocabEncoder<T, S = MergeHeapSpanPolicy<T>>
+where
+    T: TokenType,
+    S: SpanPolicy<T>,
+{
+    /// The reference vocabulary.
+    pub vocab: UnifiedTokenVocab<T>,
+
+    /// Text Segmentor.
+    pub spanner: TextSpanner,
+
+    marker: core::marker::PhantomData<fn() -> S>,
+}
+
+/// The Span encoder trait for [`CompoundSpanVocabEncoder`].
+pub trait SpanPolicy<T: TokenType>: Default {
+    /// Encodes a single "word" span to (multiple?) tokens.
     ///
     /// ## Arguments
+    /// * `vocab` - The unified token vocabulary reference..
     /// * `span` - The byte span to encode.
     /// * `tokens` - The target token buffer to append to.
-    fn encode_append_span(
+    fn encode_compound_span(
         &mut self,
-        data: &UnifiedTokenVocab<T>,
+        vocab: &UnifiedTokenVocab<T>,
         span: &[u8],
         tokens: &mut Vec<T>,
     );
 }
 
-/// A [`TokenEncoder`] with pluggable [`SpanEncoder`]s.
-pub struct SpanEncoderVocabEncoder<T, S = MergeHeapSpanEncoder<T>>
+impl<T, S> Clone for CompoundSpanVocabEncoder<T, S>
 where
     T: TokenType,
-    S: SpanEncoder<T>,
-{
-    /// Data for the encoders.
-    pub data: UnifiedTokenVocab<T>,
-
-    /// Text Segmentor.
-    pub segmentor: TextSegmentor,
-
-    marker: core::marker::PhantomData<fn() -> S>,
-}
-
-impl<T, S> Clone for SpanEncoderVocabEncoder<T, S>
-where
-    T: TokenType,
-    S: SpanEncoder<T>,
+    S: SpanPolicy<T>,
 {
     fn clone(&self) -> Self {
         Self {
-            data: self.data.clone(),
-            segmentor: self.segmentor.clone(),
+            vocab: self.vocab.clone(),
+            spanner: self.spanner.clone(),
             marker: Default::default(),
         }
     }
 }
 
-impl<T: TokenType, S: SpanEncoder<T>> SpanEncoderVocabEncoder<T, S> {
+impl<T: TokenType, S: SpanPolicy<T>> CompoundSpanVocabEncoder<T, S> {
     /// Initialize an encoder.
     ///
     /// ## Arguments
-    /// * `data` - The unified token vocabulary to build the encoder from.
+    /// * `vocab` - The unified token vocabulary to build the encoder from.
     ///
     /// ## Returns
     /// A new `MergeHeapVocabEncoder` instance.
     pub fn init(
-        data: UnifiedTokenVocab<T>,
+        vocab: UnifiedTokenVocab<T>,
         max_pool: Option<NonZeroUsize>,
     ) -> Self {
-        let segmentor = TextSegmentor::from_config(data.segmentation.clone(), max_pool);
+        let spanner = TextSpanner::from_config(vocab.segmentation.clone(), max_pool);
 
         Self {
-            data,
-            segmentor,
+            vocab,
+            spanner,
             marker: Default::default(),
         }
     }
@@ -81,7 +88,7 @@ impl<T: TokenType, S: SpanEncoder<T>> SpanEncoderVocabEncoder<T, S> {
     /// * `text` - The source slice.
     /// * `span_ref` - The labeling and sub-slicing of a span in `text`.
     /// * `tokens` - The target token buffer to append to.
-    /// * `span_encoder` - The [`SpanEncoder`] context.
+    /// * `span_encoder` - The [`SpanPolicy`] context.
     fn encode_append_span_ref(
         &self,
         text: &str,
@@ -93,12 +100,12 @@ impl<T: TokenType, S: SpanEncoder<T>> SpanEncoderVocabEncoder<T, S> {
             SpanRef::Gap(_) => (),
             SpanRef::Word(range) => {
                 let span = &text[range].as_bytes();
-                if let Some(token) = self.data.lookup_token(span) {
+                if let Some(token) = self.vocab.lookup_token(span) {
                     // 1. Faster;
                     // 2. Correct-or: Some words may not exist in the pair mappings.
                     tokens.push(token);
                 } else {
-                    span_encoder.encode_append_span(&self.data, span, tokens);
+                    span_encoder.encode_compound_span(&self.vocab, span, tokens);
                 }
             }
             SpanRef::Special(range) => {
@@ -110,13 +117,13 @@ impl<T: TokenType, S: SpanEncoder<T>> SpanEncoderVocabEncoder<T, S> {
     }
 }
 
-impl<T: TokenType, S: SpanEncoder<T>> TokenEncoder<T> for SpanEncoderVocabEncoder<T, S> {
-    fn segmentor(&self) -> &TextSegmentor {
-        &self.segmentor
+impl<T: TokenType, S: SpanPolicy<T>> TokenEncoder<T> for CompoundSpanVocabEncoder<T, S> {
+    fn segmentor(&self) -> &TextSpanner {
+        &self.spanner
     }
 
     fn special_vocab(&self) -> &SpecialVocab<T> {
-        self.data.segmentation.special_vocab()
+        self.vocab.segmentation.special_vocab()
     }
 
     #[cfg_attr(
@@ -145,7 +152,7 @@ mod tests {
 
     fn test_encoder<T: TokenType>() {
         let vocab = common_encoder_test_vocab();
-        let encoder = SpanEncoderVocabEncoder::<T>::init(vocab.clone().into(), None);
+        let encoder = CompoundSpanVocabEncoder::<T>::init(vocab.clone().into(), None);
 
         common_encoder_tests(vocab.into(), &encoder)
     }
