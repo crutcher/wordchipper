@@ -129,7 +129,7 @@ impl<T: TokenType, S: SpanEncoder<T>> TokenEncoder<T> for SpanEncoderVocabEncode
         tokens: &mut Vec<T>,
     ) -> anyhow::Result<()> {
         let mut span_encoder: S = Default::default();
-        self.segmentor().for_each_split(text, &mut |span_ref| {
+        self.segmentor().for_each_split_span(text, &mut |span_ref| {
             self.encode_append_span_ref(text, span_ref, tokens, &mut span_encoder);
             true
         });
