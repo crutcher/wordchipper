@@ -1,6 +1,7 @@
 //! # `TokenDecoder` Result Types
 //!
 
+use crate::alloc::vec::Vec;
 use core::fmt::Debug;
 
 /// The result of decoding tokens into bytes.
@@ -153,6 +154,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::alloc::string::ToString;
+    use crate::alloc::vec;
 
     #[test]
     fn test_decode_result_new() {
@@ -204,7 +207,7 @@ mod tests {
 
     #[test]
     fn test_decode_result_convert() {
-        let result = DecodeResult::new(42, Some(5));
+        let result: DecodeResult<i32> = DecodeResult::new(42, Some(5));
         let converted = result.convert(|x| x.to_string());
 
         assert_eq!(converted.value, "42");
