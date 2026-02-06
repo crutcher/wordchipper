@@ -7,7 +7,6 @@ use crate::regex::{RegexWrapper, RegexWrapperPattern, alternate_choice_regex_pat
 use crate::spanning::spanning_config::TextSpanningConfig;
 use crate::types::TokenType;
 use crate::vocab::TokenVocab;
-use crate::vocab::size_hints::EXPECTED_BYTES_PER_TOKEN;
 use core::num::NonZeroUsize;
 use core::ops::Range;
 
@@ -200,73 +199,33 @@ impl TextSpanner {
     where
         F: FnMut(SpanRef) -> bool,
     {
-        let mut current = text;
-        let mut offset = 0;
-
-        while let Some(range) = self.next_special_span(current) {
-            let Range { start, end } = range;
-            let pre = &current[..start];
-
-            let (cont, used) = self.for_each_word(pre, offset, f);
-            if !cont {
-                return (false, offset + used);
+        fn span_end(span: &SpanRef) -> usize {
+            match span {
+                SpanRef::Word(r) | SpanRef::Special(r) | SpanRef::Gap(r) => r.end,
             }
-
-            // we've consumed `offset + start` bytes at this point.
-            if !f(SpanRef::Special(offset_range::<usize>(range, offset))) {
-                // Special Exit
-                return (false, offset + start);
-            }
-
-            // we've consumed `offset + end` bytes at this point.
-            current = &current[end..];
-            offset += end;
         }
 
-        self.for_each_word(current, offset, f)
+        let mut consumed = 0usize;
+
+        for span in self.split_span_iter(text) {
+            let end = span_end(&span);
+            if !f(span) {
+                return (false, consumed);
+            }
+            consumed = end;
+        }
+
+        (true, consumed)
     }
 
-    fn for_each_word<F>(
-        &self,
-        text: &str,
-        offset: usize,
-        f: &mut F,
-    ) -> (bool, usize)
-    where
-        F: FnMut(SpanRef) -> bool,
-    {
-        let mut last = 0;
-        for m in self.word_regex().find_iter(text) {
-            let range = m.range();
-            let Range { start, end } = range;
-
-            if last < start {
-                if !f(SpanRef::Gap(offset_range::<usize>(last..start, offset))) {
-                    // Leading Gap Exit
-                    return (false, last);
-                }
-                last = start;
-            }
-
-            if !f(SpanRef::Word(offset_range::<usize>(range, offset))) {
-                // Word Exit
-                return (false, last);
-            }
-            last = end;
-        }
-
-        if last < text.len() {
-            if !f(SpanRef::Gap(offset_range::<usize>(
-                last..text.len(),
-                offset,
-            ))) {
-                // Trailing Gap Exit
-                return (false, last);
-            }
-            last = text.len();
-        }
-
-        (true, last)
+    /// Iterator version of [`Self::for_each_split_span`].
+    ///
+    /// This does not allocate a `Vec<SpanRef>`; it yields spans incrementally.
+    pub fn split_span_iter<'a>(
+        &'a self,
+        text: &'a str,
+    ) -> SplitSpanIter<'a> {
+        SplitSpanIter::new(self, text)
     }
 
     /// Split text into spans.
@@ -280,15 +239,7 @@ impl TextSpanner {
         &self,
         text: &str,
     ) -> Vec<SpanRef> {
-        let capacity = text.len() as f64 / (EXPECTED_BYTES_PER_TOKEN * 0.8);
-        let mut words = Vec::with_capacity(capacity as usize);
-
-        self.for_each_split_span(text, &mut |span_ref| {
-            words.push(span_ref);
-            true
-        });
-
-        words
+        self.split_span_iter(text).collect()
     }
 
     /// Rewrite text by splitting and re-joining without `Gap` matches.
@@ -318,6 +269,169 @@ impl TextSpanner {
         texts: &[S],
     ) -> Vec<String> {
         texts.iter().map(|t| self.remove_gaps(t)).collect()
+    }
+}
+
+/// Incremental iterator over `Word`/`Gap` spans for a single segment (a slice with no specials).
+struct WordGapIter<'a> {
+    #[allow(dead_code)]
+    spanner: &'a TextSpanner,
+    segment: &'a str,
+    base: usize,
+    last: usize,
+    matches: Box<dyn Iterator<Item = Range<usize>> + 'a>,
+    pending_word: Option<Range<usize>>,
+    done: bool,
+}
+
+impl<'a> WordGapIter<'a> {
+    fn new(
+        spanner: &'a TextSpanner,
+        segment: &'a str,
+        base: usize,
+    ) -> Self {
+        let matches = Box::new(spanner.word_regex().find_iter(segment).map(|m| m.range()));
+
+        Self {
+            spanner,
+            segment,
+            base,
+            last: 0,
+            matches,
+            pending_word: None,
+            done: false,
+        }
+    }
+}
+
+impl<'a> Iterator for WordGapIter<'a> {
+    type Item = SpanRef;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.done {
+            return None;
+        }
+
+        if let Some(word) = self.pending_word.take() {
+            self.last = word.end;
+            return Some(SpanRef::Word(offset_range::<usize>(word, self.base)));
+        }
+
+        if let Some(word) = self.matches.next() {
+            if self.last < word.start {
+                self.pending_word = Some(word.clone());
+                let gap = self.last..word.start;
+                self.last = word.start;
+                return Some(SpanRef::Gap(offset_range::<usize>(gap, self.base)));
+            }
+
+            self.last = word.end;
+            return Some(SpanRef::Word(offset_range::<usize>(word, self.base)));
+        }
+
+        if self.last < self.segment.len() {
+            let gap = self.last..self.segment.len();
+            self.last = self.segment.len();
+            self.done = true;
+            return Some(SpanRef::Gap(offset_range::<usize>(gap, self.base)));
+        }
+
+        self.done = true;
+        None
+    }
+}
+
+/// Incremental iterator over all split spans (Words, Gaps, Specials).
+pub struct SplitSpanIter<'a> {
+    spanner: &'a TextSpanner,
+    text: &'a str,
+    pos: usize,
+    specials: Option<Box<dyn Iterator<Item = Range<usize>> + 'a>>,
+    pending_special: Option<Range<usize>>,
+    word_gap: Option<WordGapIter<'a>>,
+    done: bool,
+}
+
+impl<'a> SplitSpanIter<'a> {
+    fn new(
+        spanner: &'a TextSpanner,
+        text: &'a str,
+    ) -> Self {
+        let specials = spanner.special_regex().map(|re| {
+            Box::new(re.find_iter(text).map(|m| m.range()))
+                as Box<dyn Iterator<Item = Range<usize>> + 'a>
+        });
+
+        Self {
+            spanner,
+            text,
+            pos: 0,
+            specials,
+            pending_special: None,
+            word_gap: None,
+            done: false,
+        }
+    }
+}
+
+impl<'a> Iterator for SplitSpanIter<'a> {
+    type Item = SpanRef;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.done {
+            return None;
+        }
+
+        loop {
+            if let Some(wg) = self.word_gap.as_mut() {
+                if let Some(span) = wg.next() {
+                    return Some(span);
+                }
+                self.word_gap = None;
+                continue;
+            }
+
+            if let Some(spec) = self.pending_special.take() {
+                self.pos = spec.end;
+                return Some(SpanRef::Special(spec));
+            }
+
+            let next_spec = match self.specials.as_mut() {
+                None => None,
+                Some(it) => it.next(),
+            };
+
+            match next_spec {
+                Some(spec) => {
+                    if self.pos < spec.start {
+                        let segment = &self.text[self.pos..spec.start];
+                        self.word_gap = Some(WordGapIter::new(self.spanner, segment, self.pos));
+                        self.pending_special = Some(spec);
+                        continue;
+                    }
+
+                    if self.pos == spec.start {
+                        self.pending_special = Some(spec);
+                        continue;
+                    }
+
+                    // Shouldn't happen with well-behaved regex iterators, but be defensive:
+                    self.pos = self.pos.max(spec.end);
+                    continue;
+                }
+                None => {
+                    if self.pos < self.text.len() {
+                        let segment = &self.text[self.pos..];
+                        self.word_gap = Some(WordGapIter::new(self.spanner, segment, self.pos));
+                        self.pos = self.text.len();
+                        continue;
+                    }
+
+                    self.done = true;
+                    return None;
+                }
+            }
+        }
     }
 }
 
