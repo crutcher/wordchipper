@@ -2760,20 +2760,19 @@ dependencies = [
  "compact_str",
  "dary_heap",
  "document-features",
- "fancy-regex",
  "hashbrown 0.16.1",
  "hashlru",
  "log",
  "num-traits",
  "parking_lot",
  "rayon",
- "regex",
  "serial_test",
  "strum",
  "strum_macros",
  "tempdir",
  "tracing",
  "wordchipper-disk-cache",
+ "wordchipper-regex",
 ]
 
 [[package]]
@@ -2795,6 +2794,22 @@ dependencies = [
  "directories-next",
  "downloader",
  "serial_test",
+]
+
+[[package]]
+name = "wordchipper-pub"
+version = "0.4.0"
+dependencies = [
+ "document-features",
+ "wordchipper",
+]
+
+[[package]]
+name = "wordchipper-regex"
+version = "0.4.0"
+dependencies = [
+ "fancy-regex",
+ "regex",
 ]
 
 [[package]]

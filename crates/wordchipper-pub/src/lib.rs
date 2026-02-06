@@ -19,24 +19,4 @@
 #![warn(missing_docs, unused)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
-extern crate alloc;
-
-#[cfg(feature = "training")]
-pub mod training;
-
-#[cfg(feature = "download")]
-#[doc(inline)]
-pub use wordchipper_disk_cache as disk_cache;
-
-#[doc(inline)]
-pub use wordchipper_regex as regex;
-
-#[cfg(feature = "std")]
-pub mod concurrency;
-
-pub mod compat;
-pub mod decoders;
-pub mod encoders;
-pub mod spanning;
-pub mod types;
-pub mod vocab;
+pub use wordchipper::*;

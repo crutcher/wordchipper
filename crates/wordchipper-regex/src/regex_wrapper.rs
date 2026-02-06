@@ -283,7 +283,6 @@ impl<'r, 'h> Iterator for MatchesWrapper<'r, 'h> {
 mod tests {
     use super::*;
     use crate::alloc::format;
-    use crate::join_patterns;
 
     #[test]
     fn test_partial_eq() {
@@ -376,19 +375,22 @@ mod tests {
         assert!(!rw.is_fancy());
     }
 
-    const FANCY_PATTERN: &str = join_patterns!(
-        r"'(?:[sdmt]|ll|ve|re)",
-        r" ?\p{L}++",
-        r" ?\p{N}++",
-        r" ?[^\s\p{L}\p{N}]++",
-        r"\s++$",
-        r"\s+(?!\S)",
-        r"\s",
-    );
+    fn fancy_pattern() -> String {
+        [
+            r"'(?:[sdmt]|ll|ve|re)",
+            r" ?\p{L}++",
+            r" ?\p{N}++",
+            r" ?[^\s\p{L}\p{N}]++",
+            r"\s++$",
+            r"\s+(?!\S)",
+            r"\s",
+        ]
+        .join("")
+    }
 
     #[test]
     fn test_basic_pattern_failure() {
-        let pattern = RegexWrapperPattern::Basic(FANCY_PATTERN.to_string());
+        let pattern = RegexWrapperPattern::Basic(fancy_pattern());
         let err = pattern.compile().unwrap_err();
         assert!(matches!(err, ErrorWrapper::Basic(_)));
 
@@ -406,7 +408,7 @@ mod tests {
 
     #[test]
     fn test_adaptive_pattern_fallback() {
-        let pattern: RegexWrapperPattern = FANCY_PATTERN.into();
+        let pattern: RegexWrapperPattern = fancy_pattern().into();
         assert!(matches!(pattern, RegexWrapperPattern::Adaptive(_)));
 
         let rw = pattern.compile().unwrap();

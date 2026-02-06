@@ -1,8 +1,8 @@
 //! Exact Match Union Patterns
 
+use crate::RegexWrapperPattern;
 use crate::alloc::format;
 use crate::alloc::vec::Vec;
-use crate::regex::regex_wrapper::RegexWrapperPattern;
 
 /// Create a union pattern of exact matches.
 ///
@@ -24,8 +24,8 @@ pub fn alternate_choice_regex_pattern<S: AsRef<str>>(alts: &[S]) -> RegexWrapper
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::RegexWrapper;
     use crate::alloc::vec;
-    use crate::regex::RegexWrapper;
 
     #[test]
     fn test_fixed_alternative_list() {

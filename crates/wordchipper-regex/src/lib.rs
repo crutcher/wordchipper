@@ -1,4 +1,4 @@
-//! # Regex Utilities
+//! # wordchipper Regex Utilities
 //!
 //! A number of popular in-use LLM Tokenizer Regex Patterns require extended regex
 //! machinery provided by the [`fancy_regex`] crate; but naturally, this has performance
@@ -15,13 +15,14 @@
 //!
 //! The [`RegexWrapper`] type supports only one operation, ``find_iter()`` which requires
 //! some adaptation of the `Iterator` stream to function.
+#![warn(missing_docs, unused)]
 
-mod exact_match_union;
+extern crate alloc;
+
+mod alternate_choice;
 mod regex_wrapper;
 
 #[doc(inline)]
-pub use exact_match_union::alternate_choice_regex_pattern;
+pub use crate::alternate_choice::*;
 #[doc(inline)]
-pub use regex_wrapper::{
-    ConstRegexWrapperPattern, ErrorWrapper, RegexWrapper, RegexWrapperPattern,
-};
+pub use crate::regex_wrapper::*;

@@ -55,10 +55,9 @@ std = [
     "dep:base64",
     "dep:strum",
     "dep:strum_macros",
-    "fancy-regex/default",
     "log/std",
     "num-traits/std",
-    "regex/default",
+    "wordchipper-regex/std",
 ]
 ## See [std].
 no_std = [
@@ -68,7 +67,7 @@ no_std = [
 ## This swaps all HashMap/HashSet implementations for ``ahash``; which is a performance
 ## win on many/(most?) modern CPUs.
 ##
-## This is done by the ``types::CommonHash{*}`` type alias machinery.
+## This is done by the ``types::hash_types::CommonHash{*}`` type alias machinery.
 ## See also the ``hashbrown`` dep used by ``no_std``.
 ahash = [
     "dep:ahash",
@@ -102,15 +101,15 @@ experimental = [
 
 
 [dependencies]
+wordchipper-regex = { version = "0.4.0", path = "../wordchipper-regex" }
+
 # macro packages.
 cfg-if = { workspace = true }
 document-features = { workspace = true }
 
 anyhow = { workspace = true }
-fancy-regex = { workspace = true, features = ["unicode"] }
 log = { workspace = true }
 num-traits = { workspace = true }
-regex = { workspace = true, features = ["unicode"] }
 
 # "std" feature deps:
 base64 = { workspace = true, optional = true }
