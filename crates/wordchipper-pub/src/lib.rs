@@ -19,4 +19,9 @@
 #![warn(missing_docs, unused)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
+#[doc(inline)]
 pub use wordchipper::*;
+
+#[cfg(feature = "training")]
+#[doc(inline)]
+pub use wordchipper_training as training;

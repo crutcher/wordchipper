@@ -1,20 +1,20 @@
 //! # Vocab Trainer
 
-use crate::regex::RegexWrapperPattern;
-use crate::training::utility::{
+use crate::utility::{
     PairIndexMap, PairSpanIndex, TextSpanCounter, TextSpanCounterOptions, TokenSpanBuf,
 };
-use crate::training::{CountType, StringChunkType};
-use crate::types::{CommonHashMap, CommonHashSet, Pair, TokenType};
-use crate::vocab::byte_vocab::ByteMapVocab;
-use crate::vocab::pair_vocab::PairMapVocab;
-use crate::vocab::utility::validators;
-use crate::vocab::utility::validators::U8_SIZE;
-use crate::vocab::vocab_types::PairTokenMap;
-use crate::vocab::{TokenVocab, UnifiedTokenVocab};
+use crate::{CountType, StringChunkType};
 use compact_str::CompactString;
 use core::cmp::Ordering;
 use dary_heap::OctonaryHeap;
+use wordchipper::regex::RegexWrapperPattern;
+use wordchipper::types::{CommonHashMap, CommonHashSet, Pair, TokenType};
+use wordchipper::vocab::byte_vocab::ByteMapVocab;
+use wordchipper::vocab::pair_vocab::PairMapVocab;
+use wordchipper::vocab::utility::validators;
+use wordchipper::vocab::utility::validators::U8_SIZE;
+use wordchipper::vocab::vocab_types::PairTokenMap;
+use wordchipper::vocab::{TokenVocab, UnifiedTokenVocab};
 
 /// Options for [`BinaryPairVocabTrainer`].
 #[derive(Debug, Clone)]
@@ -401,15 +401,15 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::compat::traits::static_is_send_sync_check;
-    use crate::decoders::{TokenDecoder, TokenDictDecoder};
-    use crate::encoders::{DefaultTokenEncoder, TokenEncoder};
-    use crate::training::BinaryPairVocabTrainerOptions;
-    use crate::training::bpe_trainer::MergeJob;
-    use crate::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
-    use crate::vocab::{ByteMapVocab, UnifiedTokenVocab};
+    use crate::BinaryPairVocabTrainerOptions;
+    use crate::bpe_trainer::MergeJob;
     use compact_str::CompactString;
     use core::cmp::Ordering;
+    use wordchipper::compat::traits::static_is_send_sync_check;
+    use wordchipper::decoders::{TokenDecoder, TokenDictDecoder};
+    use wordchipper::encoders::{DefaultTokenEncoder, TokenEncoder};
+    use wordchipper::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
+    use wordchipper::vocab::{ByteMapVocab, UnifiedTokenVocab};
 
     #[test]
     fn test_tokenizer_options() {

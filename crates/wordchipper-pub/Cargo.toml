@@ -28,7 +28,7 @@ download = [
 
 ## The training feature enables the training code.
 training = [
-    "wordchipper/training"
+    "dep:wordchipper-training",
 ]
 
 
@@ -77,5 +77,8 @@ testing = [
 
 [dependencies]
 wordchipper = { version = "0.4.0", path = "../wordchipper" }
+wordchipper-training = { version = "0.4.0", path = "../wordchipper-training", optional = true }
 document-features = { workspace = true }
+compact_str = { workspace = true, optional = true }
+dary_heap = { workspace = true, optional = true }
 

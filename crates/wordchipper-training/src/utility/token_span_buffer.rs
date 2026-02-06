@@ -1,8 +1,8 @@
 //! # Token Span Buffer
 
-use crate::types::{Pair, TokenType};
-use crate::vocab::byte_vocab::ByteMapVocab;
 use core::hash::Hash;
+use wordchipper::types::{Pair, TokenType};
+use wordchipper::vocab::byte_vocab::ByteMapVocab;
 
 /// A mutable span of tokens (a chunk or "word").
 ///

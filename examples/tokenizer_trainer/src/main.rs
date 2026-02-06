@@ -3,16 +3,16 @@ use clap::Parser;
 use similar::{ChangeTag, TextDiff};
 use std::collections::HashSet;
 use std::time::Duration;
-use wordchipper::compat::slices::{inner_slice_view, inner_str_view};
-use wordchipper::concurrency::rayon::{ParallelRayonDecoder, ParallelRayonEncoder};
-use wordchipper::decoders::{TokenDecoder, TokenDictDecoder};
-use wordchipper::encoders::{DefaultTokenEncoder, TokenEncoder};
-use wordchipper::training::BinaryPairVocabTrainerOptions;
-use wordchipper::vocab::byte_vocab::ByteMapVocab;
-use wordchipper::vocab::io::tiktoken_io::save_tiktoken_vocab_path;
-use wordchipper::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
-use wordchipper::vocab::{TokenVocab, UnifiedTokenVocab};
 use wordchipper_data::dataset::DatasetCacheConfig;
+use wordchipper_pub::compat::slices::{inner_slice_view, inner_str_view};
+use wordchipper_pub::concurrency::rayon::{ParallelRayonDecoder, ParallelRayonEncoder};
+use wordchipper_pub::decoders::{TokenDecoder, TokenDictDecoder};
+use wordchipper_pub::encoders::{DefaultTokenEncoder, TokenEncoder};
+use wordchipper_pub::training::BinaryPairVocabTrainerOptions;
+use wordchipper_pub::vocab::byte_vocab::ByteMapVocab;
+use wordchipper_pub::vocab::io::tiktoken_io::save_tiktoken_vocab_path;
+use wordchipper_pub::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
+use wordchipper_pub::vocab::{TokenVocab, UnifiedTokenVocab};
 
 /// Example encoders trainer.
 #[derive(Parser, Debug)]

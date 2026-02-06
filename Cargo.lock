@@ -2328,8 +2328,8 @@ dependencies = [
  "arrow",
  "clap",
  "similar",
- "wordchipper",
  "wordchipper-data",
+ "wordchipper-pub",
 ]
 
 [[package]]
@@ -2800,8 +2800,11 @@ dependencies = [
 name = "wordchipper-pub"
 version = "0.4.0"
 dependencies = [
+ "compact_str",
+ "dary_heap",
  "document-features",
  "wordchipper",
+ "wordchipper-training",
 ]
 
 [[package]]
@@ -2810,6 +2813,21 @@ version = "0.4.0"
 dependencies = [
  "fancy-regex",
  "regex",
+]
+
+[[package]]
+name = "wordchipper-training"
+version = "0.4.0"
+dependencies = [
+ "anyhow",
+ "compact_str",
+ "dary_heap",
+ "log",
+ "num-traits",
+ "serial_test",
+ "tempdir",
+ "tracing",
+ "wordchipper",
 ]
 
 [[package]]

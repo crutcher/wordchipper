@@ -3,9 +3,9 @@
 //! Support for training token vocabularies.
 //!
 //! Training requires:
-//! * [`crate::vocab::ByteMapVocab`] - a choice of ``{ u8 -> T }` byte mappings.
+//! * [`wordchipper::vocab::ByteMapVocab`] - a choice of ``{ u8 -> T }` byte mappings.
 //!   * The default is ``T::from(u8)``.
-//! * [`crate::spanning::TextSpanningConfig`] - a text splitting config.
+//! * [`wordchipper::spanning::TextSpanningConfig`] - a text splitting config.
 //!   * This can be built from just a regex pattern.
 //!   * Special tokens can be overlaid on a pre-trained vocabulary.
 //!
@@ -31,7 +31,7 @@
 //! - Training a `nanochat` equivalent tokenizer takes ~80 CPU minutes.
 //!
 //! ```rust,no_run
-//! use wordchipper::training::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions};
+//! use wordchipper_training::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions};
 //! use wordchipper::vocab::io::tiktoken_io::save_tiktoken_vocab_path;
 //! use wordchipper::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
 //! use wordchipper::vocab::{ByteMapVocab, UnifiedTokenVocab};
@@ -88,6 +88,8 @@
 //!     let decoder = ParallelRayonDecoder::new(decoder);
 //! }
 //! ```
+
+extern crate alloc;
 
 pub mod utility;
 
