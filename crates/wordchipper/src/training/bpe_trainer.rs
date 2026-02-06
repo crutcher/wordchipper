@@ -458,7 +458,7 @@ mod tests {
         static_is_send_sync_check(&decoder);
 
         for sample in samples {
-            let tokens = encoder.try_encode(sample).unwrap();
+            let tokens = encoder.try_encode(sample, None).unwrap();
             assert_eq!(
                 decoder.try_decode_to_string(&tokens).unwrap().unwrap(),
                 sample

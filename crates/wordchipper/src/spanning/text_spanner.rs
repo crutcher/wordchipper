@@ -26,7 +26,14 @@ pub enum SpanRef {
 
 impl From<SpanRef> for Range<usize> {
     fn from(span: SpanRef) -> Self {
-        match span {
+        span.into_range()
+    }
+}
+
+impl SpanRef {
+    /// Convert `SpanRef` into a `Range<usize>`.
+    pub fn into_range(self) -> Range<usize> {
+        match self {
             SpanRef::Word(range) => range,
             SpanRef::Special(range) => range,
             SpanRef::Gap(range) => range,

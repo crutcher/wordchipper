@@ -48,7 +48,7 @@ pub fn common_encoder_tests<T: TokenType, E: TokenEncoder<T>>(
     let decoder = TokenDictDecoder::from_unified_vocab(vocab.clone());
     static_is_send_sync_check(&decoder);
 
-    let token_batch = encoder.try_encode_batch(&samples).unwrap();
+    let token_batch = encoder.try_encode_batch(&samples, None).unwrap();
     let decoded_strings = decoder
         .try_decode_batch_to_strings(&inner_slice_view(&token_batch))
         .unwrap()
@@ -75,7 +75,7 @@ pub fn common_encoder_tests<T: TokenType, E: TokenEncoder<T>>(
     let special_tokens = specials.iter().map(|(_, token)| *token).collect::<Vec<_>>();
 
     assert_eq!(
-        encoder.try_encode(special_string.as_str()).unwrap(),
+        encoder.try_encode(special_string.as_str(), None).unwrap(),
         special_tokens
     );
 }

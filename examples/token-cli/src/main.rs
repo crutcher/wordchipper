@@ -127,7 +127,7 @@ fn run(args: &Args) -> anyhow::Result<()> {
         let str_batch = inner_str_view(batch);
 
         let (durationn, wc_batch_tokens) =
-            timers::timeit(|| encoder.try_encode_batch(&str_batch).unwrap());
+            timers::timeit(|| encoder.try_encode_batch(&str_batch, None).unwrap());
         wc_batch_durations.push(durationn);
 
         wc_total_token_count += wc_batch_tokens

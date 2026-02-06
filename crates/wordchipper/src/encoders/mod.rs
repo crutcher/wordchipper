@@ -22,7 +22,7 @@
 //!     #[cfg(feature = "rayon")]
 //!     let encoder = wordchipper::concurrency::rayon::ParallelRayonEncoder::new(encoder);
 //!
-//!     encoder.try_encode_batch(batch).unwrap()
+//!     encoder.try_encode_batch(batch,None).unwrap()
 //! }
 //! ```
 

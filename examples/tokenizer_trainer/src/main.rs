@@ -175,8 +175,9 @@ fn main() -> anyhow::Result<()> {
         let mut total_token_count = 0;
         let batch_times_ns = sample_batches.iter().map(|batch| {
             let t0 = std::time::Instant::now();
-            let token_batch: Vec<Vec<T>> =
-                encoder.try_encode_batch(&inner_str_view(batch)).unwrap();
+            let token_batch: Vec<Vec<T>> = encoder
+                .try_encode_batch(&inner_str_view(batch), None)
+                .unwrap();
             let t1 = std::time::Instant::now();
 
             total_token_count += token_batch.iter().map(|tokens| tokens.len()).sum::<usize>();

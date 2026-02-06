@@ -2,7 +2,7 @@
 
 use crate::encoders::TokenEncoder;
 use crate::spanning::TextSpanner;
-use crate::types::TokenType;
+use crate::types::{CommonHashSet, TokenType};
 use crate::vocab::special_vocab::SpecialVocab;
 
 /// Batch-Level Parallel Encoder Wrapper.
@@ -53,19 +53,21 @@ where
         &self,
         text: &str,
         tokens: &mut Vec<T>,
-    ) -> anyhow::Result<()> {
-        self.inner.try_encode_append(text, tokens)
+        special_filter: Option<&CommonHashSet<T>>,
+    ) -> anyhow::Result<usize> {
+        self.inner.try_encode_append(text, tokens, special_filter)
     }
 
     fn try_encode_batch(
         &self,
         batch: &[&str],
+        special_filter: Option<&CommonHashSet<T>>,
     ) -> anyhow::Result<Vec<Vec<T>>> {
         use rayon::prelude::*;
 
         let results: Vec<anyhow::Result<Vec<T>>> = batch
             .par_iter()
-            .map(|text| self.inner.try_encode(text))
+            .map(|text| self.inner.try_encode(text, special_filter))
             .collect();
 
         results.into_iter().collect()
