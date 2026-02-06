@@ -199,23 +199,23 @@ impl TextSpanner {
     where
         F: FnMut(SpanRef) -> bool,
     {
-        fn span_end(span: &SpanRef) -> usize {
-            match span {
-                SpanRef::Word(r) | SpanRef::Special(r) | SpanRef::Gap(r) => r.end,
-            }
-        }
-
-        let mut consumed = 0usize;
-
+        let mut last = None;
         for span in self.split_span_iter(text) {
-            let end = span_end(&span);
-            if !f(span) {
+            if !f(span.clone()) {
+                let consumed = last
+                    .map(|r| {
+                        let range = Range::<usize>::from(r);
+                        range.end
+                    })
+                    .or(Some(0))
+                    .unwrap_or(0);
+
                 return (false, consumed);
             }
-            consumed = end;
+            last = Some(span);
         }
 
-        (true, consumed)
+        (true, text.len())
     }
 
     /// Iterator version of [`Self::for_each_split_span`].

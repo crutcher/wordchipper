@@ -121,10 +121,9 @@ impl<T: TokenType, S: SpanPolicy<T>> TokenEncoder<T> for CompoundSpanVocabEncode
         tokens: &mut Vec<T>,
     ) -> anyhow::Result<()> {
         let mut span_policy: S = Default::default();
-        self.spanner().for_each_split_span(text, &mut |span_ref| {
+        for span_ref in self.spanner().split_span_iter(text) {
             self.encode_append_span_ref(text, span_ref, tokens, &mut span_policy);
-            true
-        });
+        }
 
         Ok(())
     }
