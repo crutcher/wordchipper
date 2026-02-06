@@ -325,7 +325,7 @@ impl TextSpanner {
 mod tests {
     use super::*;
     use crate::alloc::vec;
-    use crate::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
+    use crate::pretrained::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
 
     #[test]
     fn test_for_each_split_span() {

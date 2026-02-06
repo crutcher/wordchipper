@@ -404,9 +404,9 @@ mod tests {
     use crate::compat::traits::static_is_send_sync_check;
     use crate::decoders::{TokenDecoder, TokenDictDecoder};
     use crate::encoders::{DefaultTokenEncoder, TokenEncoder};
+    use crate::pretrained::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
     use crate::training::BinaryPairVocabTrainerOptions;
     use crate::training::bpe_trainer::MergeJob;
-    use crate::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
     use crate::vocab::{ByteMapVocab, UnifiedTokenVocab};
     use compact_str::CompactString;
     use core::cmp::Ordering;

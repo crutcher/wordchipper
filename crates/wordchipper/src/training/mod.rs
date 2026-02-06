@@ -33,7 +33,7 @@
 //! ```rust,no_run
 //! use wordchipper::training::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions};
 //! use wordchipper::vocab::io::tiktoken_io::save_tiktoken_vocab_path;
-//! use wordchipper::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
+//! use wordchipper::pretrained::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
 //! use wordchipper::vocab::{ByteMapVocab, UnifiedTokenVocab};
 //! use wordchipper::encoders::DefaultTokenEncoder;
 //! use wordchipper::decoders::TokenDictDecoder;

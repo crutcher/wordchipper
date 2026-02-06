@@ -8,8 +8,8 @@ use wordchipper::compat::timers;
 use wordchipper::decoders::{TokenDecoder, TokenDictDecoder};
 use wordchipper::disk_cache::WordchipperDiskCache;
 use wordchipper::encoders::{DefaultTokenEncoder, TokenEncoder};
+use wordchipper::pretrained::openai::OATokenizer;
 use wordchipper::vocab::UnifiedTokenVocab;
-use wordchipper::vocab::public::openai::OATokenizer;
 use wordchipper_data::dataset::DatasetCacheConfig;
 
 #[cfg(feature = "parallel")]

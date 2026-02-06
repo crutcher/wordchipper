@@ -1,22 +1,20 @@
 //! # `OpenAI` Pretrained Vocabulary Loaders
 
 use crate::disk_cache::WordchipperDiskCache;
+use crate::pretrained::openai::patterns::{OA_GPT2_R50K_WORD_PATTERN, OA_GPT3_CL100K_WORD_PATTERN};
+use crate::pretrained::openai::resources::{
+    OA_GPT2_P50K_BASE_TIKTOKEN, OA_GPT2_R50K_BASE_TIKTOKEN, OA_GPT3_CL100K_BASE_TIKTOKEN,
+    OA_GPT5_O200K_BASE_TIKTOKEN,
+};
+use crate::pretrained::openai::specials::{
+    oa_gpt2_p50k_base_specials, oa_gpt2_p50k_edit_specials, oa_gpt2_r50k_specials,
+    oa_gpt3_cl100k_edit_specials, oa_gpt5_o200k_harmony_specials, oa_gt5_o200k_base_specials,
+};
 use crate::regex::RegexWrapperPattern;
 use crate::spanning::TextSpanningConfig;
 use crate::types::TokenType;
 use crate::vocab::UnifiedTokenVocab;
 use crate::vocab::io::load_tiktoken_vocab_path;
-use crate::vocab::public::openai::patterns::{
-    OA_GPT2_R50K_WORD_PATTERN, OA_GPT3_CL100K_WORD_PATTERN,
-};
-use crate::vocab::public::openai::resources::{
-    OA_GPT2_P50K_BASE_TIKTOKEN, OA_GPT2_R50K_BASE_TIKTOKEN, OA_GPT3_CL100K_BASE_TIKTOKEN,
-    OA_GPT5_O200K_BASE_TIKTOKEN,
-};
-use crate::vocab::public::openai::specials::{
-    oa_gpt2_p50k_base_specials, oa_gpt2_p50k_edit_specials, oa_gpt2_r50k_specials,
-    oa_gpt3_cl100k_edit_specials, oa_gpt5_o200k_harmony_specials, oa_gt5_o200k_base_specials,
-};
 use crate::vocab::utility::resource_tools::ConstUrlResource;
 use strum_macros::EnumString;
 

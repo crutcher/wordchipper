@@ -70,9 +70,9 @@ impl<T: TokenType> TokenDecoder<T> for TokenDictDecoder<T> {
 mod tests {
     use super::*;
     use crate::decoders::utility::testing::common_decoder_unit_test;
+    use crate::pretrained::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
     use crate::spanning::TextSpanningConfig;
     use crate::vocab::byte_vocab::build_test_shift_byte_vocab;
-    use crate::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
     use crate::vocab::utility::testing::build_test_vocab;
 
     #[test]

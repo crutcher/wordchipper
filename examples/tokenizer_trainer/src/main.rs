@@ -7,10 +7,10 @@ use wordchipper::compat::slices::{inner_slice_view, inner_str_view};
 use wordchipper::concurrency::rayon::{ParallelRayonDecoder, ParallelRayonEncoder};
 use wordchipper::decoders::{TokenDecoder, TokenDictDecoder};
 use wordchipper::encoders::{DefaultTokenEncoder, TokenEncoder};
+use wordchipper::pretrained::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
 use wordchipper::training::BinaryPairVocabTrainerOptions;
 use wordchipper::vocab::byte_vocab::ByteMapVocab;
 use wordchipper::vocab::io::tiktoken_io::save_tiktoken_vocab_path;
-use wordchipper::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
 use wordchipper::vocab::{TokenVocab, UnifiedTokenVocab};
 use wordchipper_data::dataset::DatasetCacheConfig;
 

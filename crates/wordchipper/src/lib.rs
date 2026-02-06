@@ -10,8 +10,8 @@
 //! * [`training`] to train a [`vocab::UnifiedTokenVocab`].
 //! * [`vocab`] to manage token vocabularies, vocab io, and pre-trained tokenizers.
 //!
-//! A number of pretrained public tokenizers are available through:
-//! * [`vocab::public`]
+//! A number of pretrained pretrained tokenizers are available through:
+//! * [`pretrained`]
 //!
 //! ## Crate Features
 //!
@@ -34,6 +34,7 @@ pub mod concurrency;
 pub mod compat;
 pub mod decoders;
 pub mod encoders;
+pub mod pretrained;
 pub mod regex;
 pub mod spanning;
 pub mod types;
