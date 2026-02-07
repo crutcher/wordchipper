@@ -15,6 +15,9 @@ use crate::types::TokenType;
 /// and use the preferred name for the implementing type
 /// when there is conflict with other encoders.
 pub trait TokenDecoder<T: TokenType>: Send + Sync {
+    /// The token type: T.
+    type Token: TokenType;
+
     /// Decodes tokens into bytes.
     ///
     /// ## Arguments

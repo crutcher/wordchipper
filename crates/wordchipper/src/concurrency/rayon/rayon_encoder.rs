@@ -41,6 +41,8 @@ where
     T: TokenType,
     D: TokenEncoder<T>,
 {
+    type Token = T;
+
     fn spanner(&self) -> &TextSpanner {
         self.inner.spanner()
     }

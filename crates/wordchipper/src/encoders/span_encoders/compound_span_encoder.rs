@@ -135,6 +135,8 @@ impl<T: TokenType, S: SpanPolicy<T>> CompoundSpanVocabEncoder<T, S> {
 }
 
 impl<T: TokenType, S: SpanPolicy<T>> TokenEncoder<T> for CompoundSpanVocabEncoder<T, S> {
+    type Token = T;
+
     fn spanner(&self) -> &TextSpanner {
         &self.spanner
     }

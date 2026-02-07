@@ -193,6 +193,8 @@ impl<T: TokenType> ByteMapVocab<T> {
 }
 
 impl<T: TokenType> TokenVocab<T> for ByteMapVocab<T> {
+    type Token = T;
+
     fn tokens(&self) -> Vec<T> {
         let mut tokens = self.byte_tokens.to_vec();
         tokens.sort_unstable();

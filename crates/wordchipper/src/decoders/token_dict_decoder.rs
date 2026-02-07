@@ -70,6 +70,8 @@ impl<T: TokenType> TokenDictDecoder<T> {
 }
 
 impl<T: TokenType> TokenDecoder<T> for TokenDictDecoder<T> {
+    type Token = T;
+
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, tokens)))]
     fn try_decode_to_bytes(
         &self,

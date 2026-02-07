@@ -5,6 +5,9 @@ use crate::types::TokenType;
 
 /// Common traits for token vocabularies.
 pub trait TokenVocab<T: TokenType>: Clone + Send + Sync {
+    /// The token type: T.
+    type Token: TokenType;
+
     /// Returns a vector of all tokens, sorted.
     fn tokens(&self) -> Vec<T>;
 
