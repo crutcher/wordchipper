@@ -4,8 +4,8 @@ use crate::alloc::vec::Vec;
 use crate::decoders::decode_results::DecodeResult;
 use crate::decoders::token_decoder::TokenDecoder;
 use crate::types::TokenType;
+use crate::vocab::DEFAULT_BYTE_PER_TOKEN_RATIO;
 use crate::vocab::UnifiedTokenVocab;
-use crate::vocab::size_hints::EXPECTED_BYTES_PER_TOKEN;
 use crate::vocab::vocab_types::TokenSpanMap;
 
 /// A [`TokenDecoder<T>`] over a unified `{ T -> Vec<u8> }` dictionary.
@@ -40,7 +40,7 @@ impl<T: TokenType> TokenDictDecoder<T> {
     pub fn new(token_spans: TokenSpanMap<T>) -> Self {
         Self {
             token_spans,
-            expected_bytes_per_token: EXPECTED_BYTES_PER_TOKEN,
+            expected_bytes_per_token: DEFAULT_BYTE_PER_TOKEN_RATIO,
         }
     }
 

@@ -3,7 +3,7 @@
 use crate::alloc::vec::Vec;
 use crate::spanning::TextSpanner;
 use crate::types::TokenType;
-use crate::vocab::size_hints::EXPECTED_BYTES_PER_TOKEN;
+use crate::vocab::DEFAULT_BYTE_PER_TOKEN_RATIO;
 use crate::vocab::special_vocab::SpecialVocab;
 
 /// The common trait for `String/&[u8] -> Vec<T>` encoders.
@@ -29,7 +29,7 @@ pub trait TokenEncoder<T: TokenType>: Clone + Send + Sync {
     /// This is used by [`TokenEncoder::predict_token_buffer_size`] to predict
     /// the size needed when pre-allocating token buffers.
     fn expected_bytes_per_token(&self) -> f32 {
-        EXPECTED_BYTES_PER_TOKEN
+        DEFAULT_BYTE_PER_TOKEN_RATIO
     }
 
     /// Predict the capacity needed when pre-allocating token buffers.

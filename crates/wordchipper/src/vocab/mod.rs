@@ -19,7 +19,6 @@ pub mod io;
 
 pub mod byte_vocab;
 pub mod pair_vocab;
-pub mod size_hints;
 pub mod span_vocab;
 pub mod special_vocab;
 pub mod token_vocab;
@@ -42,3 +41,12 @@ pub use vocab_types::{
     ByteTokenArray, ByteTokenMap, PairTokenMap, SpanTokenMap, TokenByteMap, TokenPairMap,
     TokenSpanMap,
 };
+
+/// Expected bytes/token ratio.
+///
+/// This is an observed bytes/token ratio, as a baseline
+/// for scaling encode/decode buffers. Different languages
+/// and encodings will see different ratios, and it
+/// may be worth adjusting the ratio used by encoders/decoders
+/// in production settings.
+pub const DEFAULT_BYTE_PER_TOKEN_RATIO: f32 = 4.8;

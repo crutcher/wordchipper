@@ -6,8 +6,8 @@ use crate::compat::ranges::offset_range;
 use crate::regex::{RegexWrapper, RegexWrapperPattern, alternate_choice_regex_pattern};
 use crate::spanning::spanning_config::TextSpanningConfig;
 use crate::types::TokenType;
+use crate::vocab::DEFAULT_BYTE_PER_TOKEN_RATIO;
 use crate::vocab::TokenVocab;
-use crate::vocab::size_hints::EXPECTED_BYTES_PER_TOKEN;
 use core::num::NonZeroUsize;
 use core::ops::Range;
 
@@ -280,7 +280,7 @@ impl TextSpanner {
         &self,
         text: &str,
     ) -> Vec<SpanRef> {
-        let capacity = text.len() as f32 / (EXPECTED_BYTES_PER_TOKEN * 0.8);
+        let capacity = text.len() as f32 / (DEFAULT_BYTE_PER_TOKEN_RATIO * 0.8);
         let mut words = Vec::with_capacity(capacity as usize);
 
         self.for_each_split_span(text, &mut |span_ref| {

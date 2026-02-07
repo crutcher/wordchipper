@@ -5,7 +5,7 @@ use crate::alloc::vec::Vec;
 use crate::decoders::decode_results::DecodeResult;
 use crate::decoders::token_decoder::TokenDecoder;
 use crate::types::TokenType;
-use crate::vocab::size_hints::EXPECTED_BYTES_PER_TOKEN;
+use crate::vocab::DEFAULT_BYTE_PER_TOKEN_RATIO;
 use crate::vocab::vocab_types::TokenPairMap;
 use crate::vocab::{ByteMapVocab, PairMapVocab};
 
@@ -75,7 +75,7 @@ impl<T: TokenType> TokenDecoder<T> for PairExpansionDecoder<T> {
         &self,
         tokens: &[T],
     ) -> anyhow::Result<DecodeResult<Vec<u8>>> {
-        let capacity = (tokens.len() as f32 * EXPECTED_BYTES_PER_TOKEN) as usize;
+        let capacity = (tokens.len() as f32 * DEFAULT_BYTE_PER_TOKEN_RATIO) as usize;
         let mut value = Vec::with_capacity(capacity);
 
         let mut stack = vec![];

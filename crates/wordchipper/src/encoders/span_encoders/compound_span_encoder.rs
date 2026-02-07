@@ -6,7 +6,7 @@ use crate::encoders::span_encoders::span_policy::SpanPolicy;
 use crate::encoders::token_encoder::TokenEncoder;
 use crate::spanning::{SpanRef, TextSpanner};
 use crate::types::TokenType;
-use crate::vocab::size_hints::EXPECTED_BYTES_PER_TOKEN;
+use crate::vocab::DEFAULT_BYTE_PER_TOKEN_RATIO;
 use crate::vocab::special_vocab::SpecialVocab;
 use crate::vocab::unified_vocab::UnifiedTokenVocab;
 use core::num::NonZeroUsize;
@@ -81,7 +81,7 @@ impl<T: TokenType, S: SpanPolicy<T>> CompoundSpanVocabEncoder<T, S> {
         Self {
             vocab,
             spanner,
-            expected_bytes_per_token: EXPECTED_BYTES_PER_TOKEN,
+            expected_bytes_per_token: DEFAULT_BYTE_PER_TOKEN_RATIO,
             marker: Default::default(),
         }
     }

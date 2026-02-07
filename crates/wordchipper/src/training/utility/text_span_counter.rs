@@ -5,7 +5,6 @@ use crate::training::utility::token_span_buffer::TokenSpanBuf;
 use crate::training::{CountType, StringChunkType};
 use crate::types::{CommonHashMap, TokenType};
 use crate::vocab::byte_vocab::ByteMapVocab;
-use crate::vocab::size_hints::EXPECTED_WORD_LENGTH;
 use core::fmt::Debug;
 
 /// Options for [`TextSpanCounter`].
@@ -192,3 +191,6 @@ mod tests {
         assert_eq!(counts, expected);
     }
 }
+
+/// Expected average word length in characters.
+pub const EXPECTED_WORD_LENGTH: usize = 5;
