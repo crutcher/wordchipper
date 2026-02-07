@@ -280,7 +280,7 @@ impl TextSpanner {
         &self,
         text: &str,
     ) -> Vec<SpanRef> {
-        let capacity = text.len() as f64 / (EXPECTED_BYTES_PER_TOKEN * 0.8);
+        let capacity = text.len() as f32 / (EXPECTED_BYTES_PER_TOKEN * 0.8);
         let mut words = Vec::with_capacity(capacity as usize);
 
         self.for_each_split_span(text, &mut |span_ref| {

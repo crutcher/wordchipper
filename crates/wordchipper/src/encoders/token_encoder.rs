@@ -35,6 +35,24 @@ pub trait TokenEncoder<T: TokenType>: Clone + Send + Sync {
         tokens: &mut Vec<T>,
     ) -> anyhow::Result<()>;
 
+    /// Return the expected bytes per token ratio.
+    ///
+    /// This is used by [`TokenEncoder::predict_token_buffer_size`] to predict
+    /// the size needed when pre-allocating token buffers.
+    fn expected_bytes_per_token(&self) -> f32 {
+        EXPECTED_BYTES_PER_TOKEN
+    }
+
+    /// Predict the capacity needed when pre-allocating token buffers.
+    ///
+    /// See: [`TokenEncoder::expected_bytes_per_token`].
+    fn predict_token_buffer_size(
+        &self,
+        text: &str,
+    ) -> usize {
+        ((text.len() as f32 * 1.1) / self.expected_bytes_per_token()) as usize
+    }
+
     /// Encode text into tokens, returning an error if the encoding fails.
     ///
     /// ## Arguments
@@ -46,8 +64,8 @@ pub trait TokenEncoder<T: TokenType>: Clone + Send + Sync {
         &self,
         text: &str,
     ) -> anyhow::Result<Vec<T>> {
-        let capacity = text.len() as f64 / (EXPECTED_BYTES_PER_TOKEN * 0.5);
-        let mut tokens = Vec::with_capacity(capacity as usize);
+        let capacity = self.predict_token_buffer_size(text);
+        let mut tokens = Vec::with_capacity(capacity);
 
         self.try_encode_append(text, &mut tokens)?;
         Ok(tokens)

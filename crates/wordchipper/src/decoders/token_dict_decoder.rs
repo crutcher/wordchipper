@@ -20,6 +20,8 @@ pub struct TokenDictDecoder<T: TokenType> {
     ///
     /// Does not include byte-tokens.
     token_spans: TokenSpanMap<T>,
+
+    expected_bytes_per_token: f32,
 }
 
 impl<T: TokenType> TokenDictDecoder<T> {
@@ -36,7 +38,29 @@ impl<T: TokenType> TokenDictDecoder<T> {
     /// ## Arguments
     /// * `token_spans` - The token to word mapping.
     pub fn new(token_spans: TokenSpanMap<T>) -> Self {
-        Self { token_spans }
+        Self {
+            token_spans,
+            expected_bytes_per_token: EXPECTED_BYTES_PER_TOKEN,
+        }
+    }
+
+    /// Sets the expected bytes per token.
+    ///
+    /// This is used to bias the capacity of the output buffer in `try_decode_to_bytes`.
+    pub fn with_expected_bytes_per_token(
+        mut self,
+        expected: f32,
+    ) -> Self {
+        self.expected_bytes_per_token = expected;
+        self
+    }
+
+    /// Predict the capacity needed when pre-allocating output buffers.
+    pub fn predicted_byte_buffer_size(
+        &self,
+        tokens: &[T],
+    ) -> usize {
+        (tokens.len() as f32 * 1.1 * self.expected_bytes_per_token) as usize
     }
 
     /// Get the [`TokenSpanMap`].
@@ -51,8 +75,9 @@ impl<T: TokenType> TokenDecoder<T> for TokenDictDecoder<T> {
         &self,
         tokens: &[T],
     ) -> anyhow::Result<DecodeResult<Vec<u8>>> {
-        let capacity = (tokens.len() as f64 * EXPECTED_BYTES_PER_TOKEN) as usize;
+        let capacity = self.predicted_byte_buffer_size(tokens);
         let mut value = Vec::with_capacity(capacity);
+
         let mut consumed = 0;
         for t in tokens {
             if let Some(w) = self.token_spans.get(t) {

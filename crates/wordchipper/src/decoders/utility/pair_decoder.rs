@@ -75,7 +75,7 @@ impl<T: TokenType> TokenDecoder<T> for PairExpansionDecoder<T> {
         &self,
         tokens: &[T],
     ) -> anyhow::Result<DecodeResult<Vec<u8>>> {
-        let capacity = (tokens.len() as f64 * EXPECTED_BYTES_PER_TOKEN) as usize;
+        let capacity = (tokens.len() as f32 * EXPECTED_BYTES_PER_TOKEN) as usize;
         let mut value = Vec::with_capacity(capacity);
 
         let mut stack = vec![];

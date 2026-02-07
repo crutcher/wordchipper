@@ -6,11 +6,14 @@ use crate::encoders::span_encoders::span_policy::SpanPolicy;
 use crate::encoders::token_encoder::TokenEncoder;
 use crate::spanning::{SpanRef, TextSpanner};
 use crate::types::TokenType;
+use crate::vocab::size_hints::EXPECTED_BYTES_PER_TOKEN;
 use crate::vocab::special_vocab::SpecialVocab;
 use crate::vocab::unified_vocab::UnifiedTokenVocab;
 use core::num::NonZeroUsize;
 
 /// A [`TokenEncoder`] with pluggable [`SpanPolicy`]s.
+///
+/// This [`TokenEncoder`].
 ///
 /// ## Style Hints
 ///
@@ -29,6 +32,8 @@ where
     /// Text Spanner.
     pub spanner: TextSpanner,
 
+    expected_bytes_per_token: f32,
+
     marker: core::marker::PhantomData<fn() -> S>,
 }
 
@@ -41,6 +46,7 @@ where
         Self {
             vocab: self.vocab.clone(),
             spanner: self.spanner.clone(),
+            expected_bytes_per_token: self.expected_bytes_per_token,
             marker: Default::default(),
         }
     }
@@ -63,8 +69,20 @@ impl<T: TokenType, S: SpanPolicy<T>> CompoundSpanVocabEncoder<T, S> {
         Self {
             vocab,
             spanner,
+            expected_bytes_per_token: EXPECTED_BYTES_PER_TOKEN,
             marker: Default::default(),
         }
+    }
+
+    /// Set the expected bytes per token.
+    ///
+    /// This biases the size of pre-allocated encoding buffers.
+    pub fn with_expected_bytes_per_token(
+        mut self,
+        expected: f32,
+    ) -> Self {
+        self.expected_bytes_per_token = expected;
+        self
     }
 
     /// Encodes a single [`SpanRef`]".
@@ -109,6 +127,10 @@ impl<T: TokenType, S: SpanPolicy<T>> TokenEncoder<T> for CompoundSpanVocabEncode
 
     fn special_vocab(&self) -> &SpecialVocab<T> {
         self.vocab.spanning().special_vocab()
+    }
+
+    fn expected_bytes_per_token(&self) -> f32 {
+        self.expected_bytes_per_token
     }
 
     #[cfg_attr(
