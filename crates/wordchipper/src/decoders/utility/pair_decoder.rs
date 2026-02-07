@@ -2,12 +2,9 @@
 
 use crate::alloc::vec;
 use crate::alloc::vec::Vec;
-use crate::decoders::decode_results::DecodeResult;
-use crate::decoders::token_decoder::TokenDecoder;
+use crate::decoders::{DecodeResult, TokenDecoder};
 use crate::types::TokenType;
-use crate::vocab::size_hints::EXPECTED_BYTES_PER_TOKEN;
-use crate::vocab::vocab_types::TokenPairMap;
-use crate::vocab::{ByteMapVocab, PairMapVocab};
+use crate::vocab::{ByteMapVocab, DEFAULT_BYTE_PER_TOKEN_RATIO, PairMapVocab, TokenPairMap};
 
 /// A stack-based pair map `{T -> (T, T) }` incremental stack [`TokenDecoder`].
 ///
@@ -34,7 +31,7 @@ impl<T: TokenType> PairExpansionDecoder<T> {
     /// A new `PairExpansionDecoder` instance.
     pub fn from_pair_vocab(pair_vocab: &PairMapVocab<T>) -> Self {
         let token_pairs = pair_vocab
-            .pairs()
+            .pair_map()
             .iter()
             .map(|(&pair, &token)| (token, pair))
             .collect();
@@ -75,7 +72,7 @@ impl<T: TokenType> TokenDecoder<T> for PairExpansionDecoder<T> {
         &self,
         tokens: &[T],
     ) -> anyhow::Result<DecodeResult<Vec<u8>>> {
-        let capacity = (tokens.len() as f64 * EXPECTED_BYTES_PER_TOKEN) as usize;
+        let capacity = (tokens.len() as f32 * DEFAULT_BYTE_PER_TOKEN_RATIO) as usize;
         let mut value = Vec::with_capacity(capacity);
 
         let mut stack = vec![];
@@ -113,7 +110,7 @@ mod tests {
     use crate::pretrained::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
     use crate::spanning::TextSpanningConfig;
     use crate::vocab::UnifiedTokenVocab;
-    use crate::vocab::byte_vocab::build_test_shift_byte_vocab;
+    use crate::vocab::utility::testing::build_test_shift_byte_vocab;
     use crate::vocab::utility::testing::build_test_vocab;
 
     #[test]

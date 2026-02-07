@@ -4,11 +4,12 @@ use crate::alloc::vec::Vec;
 use crate::decoders::decode_results::DecodeResult;
 use crate::decoders::token_decoder::TokenDecoder;
 use crate::types::TokenType;
-use crate::vocab::UnifiedTokenVocab;
-use crate::vocab::size_hints::EXPECTED_BYTES_PER_TOKEN;
-use crate::vocab::vocab_types::TokenSpanMap;
+use crate::vocab::{DEFAULT_BYTE_PER_TOKEN_RATIO, TokenSpanMap, UnifiedTokenVocab};
 
 /// A [`TokenDecoder<T>`] over a unified `{ T -> Vec<u8> }` dictionary.
+///
+/// It is expected that all tokens (single-byte and multibyte words,
+/// and special tokens) are stored in the dictionary.
 ///
 /// ## Style Hints
 ///
@@ -20,6 +21,8 @@ pub struct TokenDictDecoder<T: TokenType> {
     ///
     /// Does not include byte-tokens.
     token_spans: TokenSpanMap<T>,
+
+    expected_bytes_per_token: f32,
 }
 
 impl<T: TokenType> TokenDictDecoder<T> {
@@ -36,7 +39,29 @@ impl<T: TokenType> TokenDictDecoder<T> {
     /// ## Arguments
     /// * `token_spans` - The token to word mapping.
     pub fn new(token_spans: TokenSpanMap<T>) -> Self {
-        Self { token_spans }
+        Self {
+            token_spans,
+            expected_bytes_per_token: DEFAULT_BYTE_PER_TOKEN_RATIO,
+        }
+    }
+
+    /// Sets the expected bytes per token.
+    ///
+    /// This is used to bias the capacity of the output buffer in `try_decode_to_bytes`.
+    pub fn with_expected_bytes_per_token(
+        mut self,
+        expected: f32,
+    ) -> Self {
+        self.expected_bytes_per_token = expected;
+        self
+    }
+
+    /// Predict the capacity needed when pre-allocating output buffers.
+    pub fn predicted_byte_buffer_size(
+        &self,
+        tokens: &[T],
+    ) -> usize {
+        (tokens.len() as f32 * 1.1 * self.expected_bytes_per_token) as usize
     }
 
     /// Get the [`TokenSpanMap`].
@@ -51,8 +76,9 @@ impl<T: TokenType> TokenDecoder<T> for TokenDictDecoder<T> {
         &self,
         tokens: &[T],
     ) -> anyhow::Result<DecodeResult<Vec<u8>>> {
-        let capacity = (tokens.len() as f64 * EXPECTED_BYTES_PER_TOKEN) as usize;
+        let capacity = self.predicted_byte_buffer_size(tokens);
         let mut value = Vec::with_capacity(capacity);
+
         let mut consumed = 0;
         for t in tokens {
             if let Some(w) = self.token_spans.get(t) {
@@ -72,7 +98,8 @@ mod tests {
     use crate::decoders::utility::testing::common_decoder_unit_test;
     use crate::pretrained::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
     use crate::spanning::TextSpanningConfig;
-    use crate::vocab::byte_vocab::build_test_shift_byte_vocab;
+    use crate::vocab::UnifiedTokenVocab;
+    use crate::vocab::utility::testing::build_test_shift_byte_vocab;
     use crate::vocab::utility::testing::build_test_vocab;
 
     #[test]

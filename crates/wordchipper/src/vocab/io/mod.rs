@@ -1,7 +1,7 @@
 //! # Vocabulary IO
 
-pub mod base64_vocab;
-pub mod tiktoken_io;
+mod base64_vocab;
+mod tiktoken_io;
 
 #[doc(inline)]
 pub use base64_vocab::{

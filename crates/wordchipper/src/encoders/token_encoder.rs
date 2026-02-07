@@ -3,8 +3,7 @@
 use crate::alloc::vec::Vec;
 use crate::spanning::TextSpanner;
 use crate::types::TokenType;
-use crate::vocab::size_hints::EXPECTED_BYTES_PER_TOKEN;
-use crate::vocab::special_vocab::SpecialVocab;
+use crate::vocab::{DEFAULT_BYTE_PER_TOKEN_RATIO, SpecialVocab};
 
 /// The common trait for `String/&[u8] -> Vec<T>` encoders.
 ///
@@ -24,7 +23,28 @@ pub trait TokenEncoder<T: TokenType>: Clone + Send + Sync {
     /// A reference to the internal `SpecialVocab`.
     fn special_vocab(&self) -> &SpecialVocab<T>;
 
+    /// Return the expected bytes per token ratio.
+    ///
+    /// This is used by [`TokenEncoder::predict_token_buffer_size`] to predict
+    /// the size needed when pre-allocating token buffers.
+    fn expected_bytes_per_token(&self) -> f32 {
+        DEFAULT_BYTE_PER_TOKEN_RATIO
+    }
+
+    /// Predict the capacity needed when pre-allocating token buffers.
+    ///
+    /// See: [`TokenEncoder::expected_bytes_per_token`].
+    fn predict_token_buffer_size(
+        &self,
+        text: &str,
+    ) -> usize {
+        ((text.len() as f32 * 1.1) / self.expected_bytes_per_token()) as usize
+    }
+
     /// Encode bytes into tokens.
+    ///
+    /// There are significant performance gains to pre-allocating the target buffer
+    /// to an appropriate size.
     ///
     /// ## Arguments
     /// * `text` - The string slice to encode.
@@ -46,8 +66,8 @@ pub trait TokenEncoder<T: TokenType>: Clone + Send + Sync {
         &self,
         text: &str,
     ) -> anyhow::Result<Vec<T>> {
-        let capacity = text.len() as f64 / (EXPECTED_BYTES_PER_TOKEN * 0.5);
-        let mut tokens = Vec::with_capacity(capacity as usize);
+        let capacity = self.predict_token_buffer_size(text);
+        let mut tokens = Vec::with_capacity(capacity);
 
         self.try_encode_append(text, &mut tokens)?;
         Ok(tokens)

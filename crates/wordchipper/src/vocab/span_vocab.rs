@@ -1,7 +1,8 @@
 //! # Word Map ``{ Vec<u8> -> T }`` Token Vocabulary
 
 use crate::alloc::vec::Vec;
-use crate::types::{CommonHashMap, TokenType};
+use crate::types::{CommonHashMap, CommonHashSet, TokenType};
+use crate::vocab::utility::validators::try_vocab_size;
 use crate::vocab::vocab_types::{ByteTokenMap, SpanTokenMap};
 use crate::vocab::{ByteMapVocab, PairMapVocab, PairTokenMap, TokenVocab};
 
@@ -143,6 +144,19 @@ impl<T: TokenType> SpanMapVocab<T> {
         })
     }
 
+    /// Convert to a different token type.
+    pub fn to_token_type<G: TokenType>(&self) -> anyhow::Result<SpanMapVocab<G>> {
+        try_vocab_size::<G>(self.max_token().unwrap().to_usize().unwrap())?;
+
+        SpanMapVocab::<G>::new(
+            self.byte_vocab.to_token_type::<G>()?,
+            self.span_map
+                .iter()
+                .map(|(chunk, token)| (chunk.clone(), G::from(*token).unwrap()))
+                .collect(),
+        )
+    }
+
     /// Get the [`ByteMapVocab`].
     pub fn byte_vocab(&self) -> &ByteMapVocab<T> {
         &self.byte_vocab
@@ -214,7 +228,7 @@ impl<T: TokenType> SpanMapVocab<T> {
             .map(|(chunk, &token)| (token, chunk.as_ref()))
             .collect();
 
-        for token in self.unordered_tokens() {
+        for token in self.tokens() {
             let span = token_to_span[&token];
             if span.len() <= 1 {
                 continue;
@@ -236,8 +250,24 @@ impl<T: TokenType> SpanMapVocab<T> {
 }
 
 impl<T: TokenType> TokenVocab<T> for SpanMapVocab<T> {
-    fn unordered_tokens(&self) -> impl Iterator<Item = T> {
-        self.span_map.values().copied()
+    fn tokens(&self) -> Vec<T> {
+        let mut tokens = self
+            .byte_vocab
+            .byte_tokens
+            .iter()
+            .copied()
+            .chain(self.span_map.values().copied())
+            .collect::<CommonHashSet<T>>()
+            .into_iter()
+            .collect::<Vec<T>>();
+        tokens.sort_unstable();
+        tokens
+    }
+
+    fn max_token(&self) -> Option<T> {
+        let max_t = self.byte_vocab.max_token();
+        let max_p = self.span_map.values().max().copied();
+        [max_t, max_p].into_iter().flatten().max()
     }
 
     fn span_pairs(&self) -> impl Iterator<Item = (Vec<u8>, T)> {
@@ -261,7 +291,7 @@ mod tests {
         let vocab = SpanMapVocab::<T>::default();
 
         assert_eq!(vocab.max_token(), byte_vocab.max_token());
-        assert_eq!(&vocab.sorted_tokens(), &byte_vocab.sorted_tokens());
+        assert_eq!(&vocab.tokens(), &byte_vocab.tokens());
 
         let mut span_map = vocab.span_map.clone();
 
@@ -271,13 +301,13 @@ mod tests {
 
         let vocab = SpanMapVocab::from(span_map);
 
-        assert_eq!(vocab.max_token(), 302);
+        assert_eq!(vocab.max_token().unwrap(), 302);
         assert_eq!(vocab.len(), 256 + 3);
 
         assert_eq!(
-            &vocab.sorted_tokens(),
+            &vocab.tokens(),
             &byte_vocab
-                .sorted_tokens()
+                .tokens()
                 .into_iter()
                 .chain([300_u32, 301, 302].into_iter())
                 .collect::<Vec<T>>()
@@ -312,7 +342,7 @@ mod tests {
 
         let pair_vocab = vocab.to_pair_vocab();
         assert_eq!(
-            pair_vocab.pairs(),
+            pair_vocab.pair_map(),
             &[
                 (('a' as u32, 't' as u32), 300),
                 ((300, 'e' as u32), 301),

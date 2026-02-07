@@ -3,11 +3,9 @@
 //! Mainly used for utility.
 
 use crate::alloc::vec::Vec;
-use crate::decoders::decode_results::DecodeResult;
-use crate::decoders::token_decoder::TokenDecoder;
+use crate::decoders::{DecodeResult, TokenDecoder};
 use crate::types::TokenType;
-use crate::vocab::byte_vocab::ByteMapVocab;
-use crate::vocab::size_hints::EXPECTED_BYTES_PER_TOKEN;
+use crate::vocab::{ByteMapVocab, DEFAULT_BYTE_PER_TOKEN_RATIO};
 
 /// A [`ByteMapVocab`] based [`TokenDecoder`].
 ///
@@ -43,7 +41,7 @@ impl<T: TokenType> TokenDecoder<T> for ByteDecoder<T> {
         &self,
         tokens: &[T],
     ) -> anyhow::Result<DecodeResult<Vec<u8>>> {
-        let capacity = (tokens.len() as f64 * EXPECTED_BYTES_PER_TOKEN) as usize;
+        let capacity = (tokens.len() as f32 * DEFAULT_BYTE_PER_TOKEN_RATIO) as usize;
         let mut value = Vec::with_capacity(capacity);
         let mut consumed = 0;
         for &t in tokens {
@@ -62,6 +60,7 @@ impl<T: TokenType> TokenDecoder<T> for ByteDecoder<T> {
 mod tests {
     use super::*;
     use crate::alloc::vec;
+    use crate::vocab::ByteMapVocab;
 
     #[test]
     fn test_decode_context() {

@@ -1,7 +1,7 @@
 //! # Token Span Buffer
 
 use crate::types::{Pair, TokenType};
-use crate::vocab::byte_vocab::ByteMapVocab;
+use crate::vocab::ByteMapVocab;
 use core::hash::Hash;
 
 /// A mutable span of tokens (a chunk or "word").
@@ -172,6 +172,7 @@ impl<T: TokenType> TokenSpanBuf<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::vocab::ByteMapVocab;
 
     #[test]
     fn test_from_tokens() {
@@ -203,7 +204,7 @@ mod tests {
         assert_eq!(span.tokens(), &[104, 101, 108, 108, 111]);
 
         let shifted_tokens = byte_vocab
-            .byte_token_array()
+            .byte_tokens()
             .iter()
             .map(|&token| token + 10)
             .collect::<Vec<_>>();

@@ -53,7 +53,7 @@ pub fn common_decoder_unit_test<T: TokenType, D: TokenDecoder<T>>(
 
     assert_eq!(decoded_strings, samples);
 
-    let novel_token = vocab.max_token() + T::one();
+    let novel_token = vocab.max_token().unwrap() + T::one();
     let mut broken_tail = vec![novel_token];
     encoder.try_encode_append("abc", &mut broken_tail).unwrap();
 

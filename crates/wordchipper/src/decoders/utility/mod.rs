@@ -1,5 +1,8 @@
 //! # Decoder Implementation Utilities
 
+#[cfg(test)]
+pub mod testing;
+
 mod byte_decoder;
 mod pair_decoder;
 
@@ -7,6 +10,3 @@ mod pair_decoder;
 pub use byte_decoder::ByteDecoder;
 #[doc(inline)]
 pub use pair_decoder::PairExpansionDecoder;
-
-#[cfg(test)]
-pub mod testing;

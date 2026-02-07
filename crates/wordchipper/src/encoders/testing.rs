@@ -11,7 +11,7 @@ use crate::encoders::TokenEncoder;
 use crate::pretrained::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
 use crate::spanning::TextSpanningConfig;
 use crate::types::TokenType;
-use crate::vocab::byte_vocab::build_test_shift_byte_vocab;
+use crate::vocab::utility::testing::build_test_shift_byte_vocab;
 use crate::vocab::utility::testing::build_test_vocab;
 use crate::vocab::{TokenVocab, UnifiedTokenVocab};
 
@@ -21,7 +21,7 @@ pub fn common_encoder_test_vocab<T: TokenType>() -> UnifiedTokenVocab<T> {
         build_test_shift_byte_vocab(10),
         TextSpanningConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN),
     );
-    let hi_token = vocab.max_token() + T::one();
+    let hi_token = vocab.max_token().unwrap() + T::one();
     vocab.special_vocab_mut().add_str_word("<|HI|>", hi_token);
 
     vocab

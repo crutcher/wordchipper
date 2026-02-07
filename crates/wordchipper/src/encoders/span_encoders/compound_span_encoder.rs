@@ -1,16 +1,28 @@
 //! # Abstract Base [`TokenEncoder`].
 
 use crate::alloc::vec::Vec;
-use crate::encoders::span_encoders::merge_heap_encoder::MergeHeapSpanPolicy;
-use crate::encoders::span_encoders::span_policy::SpanPolicy;
-use crate::encoders::token_encoder::TokenEncoder;
+use crate::encoders::TokenEncoder;
+use crate::encoders::span_encoders::{MergeHeapSpanPolicy, SpanPolicy};
 use crate::spanning::{SpanRef, TextSpanner};
 use crate::types::TokenType;
-use crate::vocab::special_vocab::SpecialVocab;
-use crate::vocab::unified_vocab::UnifiedTokenVocab;
+use crate::vocab::{DEFAULT_BYTE_PER_TOKEN_RATIO, SpecialVocab, UnifiedTokenVocab};
 use core::num::NonZeroUsize;
 
 /// A [`TokenEncoder`] with pluggable [`SpanPolicy`]s.
+///
+/// This encoder pre-allocates output buffers based upon the capacity
+/// predicted by [`CompoundSpanVocabEncoder::predict_token_buffer_size`].
+/// The behavior can be tuned by adjusting the `expected_bytes_per_token` parameter.
+///
+/// This [`TokenEncoder`] leverages [`TextSpanner`] to split text:
+/// * [`SpanRef::Gap`] spans are ignored.
+/// * [`SpanRef::Special`] spans are encoded using the [`SpecialVocab`].
+/// * [`SpanRef::Word`] spans are:
+///   - first checked for exact matches in the [`UnifiedTokenVocab`];
+///   - falls back to the [`SpanPolicy`] context to encode the span.
+///
+/// The [`SpanPolicy`] provides a pluggable mechanism to swap different
+/// encoder polices over compound word spans (those made up of more than one token).
 ///
 /// ## Style Hints
 ///
@@ -29,6 +41,8 @@ where
     /// Text Spanner.
     pub spanner: TextSpanner,
 
+    expected_bytes_per_token: f32,
+
     marker: core::marker::PhantomData<fn() -> S>,
 }
 
@@ -41,6 +55,7 @@ where
         Self {
             vocab: self.vocab.clone(),
             spanner: self.spanner.clone(),
+            expected_bytes_per_token: self.expected_bytes_per_token,
             marker: Default::default(),
         }
     }
@@ -63,26 +78,42 @@ impl<T: TokenType, S: SpanPolicy<T>> CompoundSpanVocabEncoder<T, S> {
         Self {
             vocab,
             spanner,
+            expected_bytes_per_token: DEFAULT_BYTE_PER_TOKEN_RATIO,
             marker: Default::default(),
         }
+    }
+
+    /// Get the expected bytes per token.
+    pub fn expected_bytes_per_token(&self) -> f32 {
+        self.expected_bytes_per_token
+    }
+
+    /// Set the expected bytes per token.
+    ///
+    /// This biases the size of pre-allocated encoding buffers.
+    pub fn with_expected_bytes_per_token(
+        mut self,
+        expected: f32,
+    ) -> Self {
+        self.expected_bytes_per_token = expected;
+        self
     }
 
     /// Encodes a single [`SpanRef`]".
     ///
     /// ## Arguments
     /// * `text` - The source slice.
+    /// * `policy` - The [`SpanPolicy`] context.
     /// * `span_ref` - The labeling and sub-slicing of a span in `text`.
     /// * `tokens` - The target token buffer to append to.
-    /// * `span_policy` - The [`SpanPolicy`] context.
     fn encode_append_span_ref(
         &self,
         text: &str,
+        policy: &mut S,
         span_ref: SpanRef,
         tokens: &mut Vec<T>,
-        span_policy: &mut S,
     ) {
         match span_ref {
-            SpanRef::Gap(_) => (),
             SpanRef::Word(range) => {
                 let span = &text[range].as_bytes();
                 if let Some(token) = self.vocab.lookup_token(span) {
@@ -90,7 +121,7 @@ impl<T: TokenType, S: SpanPolicy<T>> CompoundSpanVocabEncoder<T, S> {
                     // 2. Correct-or: Some words may not exist in the pair mappings.
                     tokens.push(token);
                 } else {
-                    span_policy.encode_compound_span(&self.vocab, span, tokens);
+                    policy.encode_compound_span(&self.vocab, span, tokens);
                 }
             }
             SpanRef::Special(range) => {
@@ -98,6 +129,7 @@ impl<T: TokenType, S: SpanPolicy<T>> CompoundSpanVocabEncoder<T, S> {
                 let special_token = self.special_vocab().lookup_token(span).unwrap();
                 tokens.push(special_token);
             }
+            _ => (),
         }
     }
 }
@@ -111,6 +143,10 @@ impl<T: TokenType, S: SpanPolicy<T>> TokenEncoder<T> for CompoundSpanVocabEncode
         self.vocab.spanning().special_vocab()
     }
 
+    fn expected_bytes_per_token(&self) -> f32 {
+        self.expected_bytes_per_token
+    }
+
     #[cfg_attr(
         feature = "tracing",
         tracing::instrument(level = "trace", skip(self, text, tokens))
@@ -122,7 +158,7 @@ impl<T: TokenType, S: SpanPolicy<T>> TokenEncoder<T> for CompoundSpanVocabEncode
     ) -> anyhow::Result<()> {
         let mut span_policy: S = Default::default();
         self.spanner().for_each_split_span(text, &mut |span_ref| {
-            self.encode_append_span_ref(text, span_ref, tokens, &mut span_policy);
+            self.encode_append_span_ref(text, &mut span_policy, span_ref, tokens);
             true
         });
 
