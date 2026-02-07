@@ -8,6 +8,9 @@ use crate::vocab::{DEFAULT_BYTE_PER_TOKEN_RATIO, TokenSpanMap, UnifiedTokenVocab
 
 /// A [`TokenDecoder<T>`] over a unified `{ T -> Vec<u8> }` dictionary.
 ///
+/// It is expected that all tokens (single-byte and multibyte words,
+/// and special tokens) are stored in the dictionary.
+///
 /// ## Style Hints
 ///
 /// When there is no local ambiguity, instance names should prefer `decoder`;
