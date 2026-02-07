@@ -3,7 +3,7 @@
 use crate::alloc::string::String;
 use crate::alloc::vec::Vec;
 use crate::compat::strings::string_from_utf8_lossy;
-use crate::decoders::decode_results::{BatchDecodeResult, DecodeResult};
+use crate::decoders::{BatchDecodeResult, DecodeResult};
 use crate::types::TokenType;
 
 /// The common trait for `&[T] -> Vec<u8>/String>` decoders.

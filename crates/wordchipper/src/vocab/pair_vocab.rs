@@ -4,10 +4,8 @@ use crate::alloc::vec::Vec;
 use crate::decoders::TokenDecoder;
 use crate::decoders::utility::PairExpansionDecoder;
 use crate::types::{CommonHashSet, Pair, TokenType};
-use crate::vocab::byte_vocab::ByteMapVocab;
-use crate::vocab::token_vocab::TokenVocab;
 use crate::vocab::utility::validators::try_vocab_size;
-use crate::vocab::vocab_types::PairTokenMap;
+use crate::vocab::{ByteMapVocab, PairTokenMap, TokenVocab};
 
 /// Validate that a [`ByteMapVocab`] and [`PairTokenMap`] are compatible.
 ///
@@ -170,6 +168,7 @@ impl<T: TokenType> TokenVocab<T> for PairMapVocab<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::vocab::{ByteMapVocab, PairTokenMap};
 
     #[test]
     fn test_tokens_sorted() {

@@ -1,7 +1,6 @@
 //! # Thread Pool Toy
 
-use crate::concurrency::threads;
-use crate::concurrency::threads::resolve_max_pool;
+use crate::concurrency::threads::{resolve_max_pool, unstable_current_thread_id_hash};
 use crate::types::CommonHashSet;
 use core::fmt::Debug;
 use parking_lot::lock_api::RwLock;
@@ -93,7 +92,7 @@ where
 
     /// Get a reference to the item for the current thread.
     pub fn get(&self) -> &T {
-        let tid = threads::unstable_current_thread_id_hash();
+        let tid = unstable_current_thread_id_hash();
 
         let mut writer = self.lru.write();
         let idx: usize = match writer.get(&tid) {

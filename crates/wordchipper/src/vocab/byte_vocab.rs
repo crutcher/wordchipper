@@ -3,9 +3,8 @@
 use crate::alloc::vec;
 use crate::alloc::vec::Vec;
 use crate::types::TokenType;
-use crate::vocab::TokenVocab;
 use crate::vocab::utility::validators::try_vocab_size;
-use crate::vocab::vocab_types::{ByteTokenArray, ByteTokenMap, TokenByteMap};
+use crate::vocab::{ByteTokenArray, ByteTokenMap, TokenByteMap, TokenVocab};
 use core::fmt::Debug;
 
 /// ``0..=255`` Rank Byte/Token Bijection Table

@@ -2,9 +2,8 @@
 
 use crate::alloc::vec::Vec;
 use crate::types::TokenType;
-use crate::vocab::TokenVocab;
 use crate::vocab::utility::validators::try_vocab_size;
-use crate::vocab::vocab_types::SpanTokenMap;
+use crate::vocab::{SpanTokenMap, TokenVocab};
 
 /// Token vocabulary as a dictionary map of ``{ Vec<u8> -> T }``.
 ///

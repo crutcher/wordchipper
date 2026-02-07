@@ -3,12 +3,9 @@
 use crate::alloc::vec::Vec;
 use crate::spanning::TextSpanningConfig;
 use crate::types::{CommonHashSet, Pair, TokenType};
-use crate::vocab::pair_vocab::PairMapVocab;
-use crate::vocab::span_vocab::SpanMapVocab;
-use crate::vocab::special_vocab::SpecialVocab;
-use crate::vocab::token_vocab::TokenVocab;
-use crate::vocab::vocab_types::SpanTokenMap;
-use crate::vocab::{ByteMapVocab, TokenSpanMap};
+use crate::vocab::{
+    ByteMapVocab, PairMapVocab, SpanMapVocab, SpanTokenMap, SpecialVocab, TokenSpanMap, TokenVocab,
+};
 
 /// Unified token vocabulary.
 #[derive(Clone)]
@@ -218,6 +215,7 @@ impl<T: TokenType> TokenVocab<T> for UnifiedTokenVocab<T> {
 mod tests {
     use super::*;
     use crate::spanning::TextSpanningConfig;
+    use crate::vocab::SpanMapVocab;
 
     #[test]
     fn test_init() {

@@ -6,8 +6,7 @@ use crate::training::utility::{
 };
 use crate::training::{CountType, StringChunkType};
 use crate::types::{CommonHashMap, CommonHashSet, Pair, TokenType};
-use crate::vocab::utility::validators;
-use crate::vocab::utility::validators::U8_SIZE;
+use crate::vocab::utility::validators::{U8_SIZE, expect_vocab_size};
 use crate::vocab::{ByteMapVocab, PairMapVocab, PairTokenMap, TokenVocab, UnifiedTokenVocab};
 use compact_str::CompactString;
 use core::cmp::Ordering;
@@ -229,7 +228,7 @@ where
         T: TokenType,
         C: CountType,
     {
-        validators::expect_vocab_size::<T>(self.options.vocab_size);
+        expect_vocab_size::<T>(self.options.vocab_size);
 
         let num_merges = self.options.vocab_size - U8_SIZE;
         log::info!("Starting BPE training: {} merges to compute", num_merges);

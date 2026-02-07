@@ -4,8 +4,7 @@
 //! iterates until no more merges remain.
 
 use crate::alloc::vec::Vec;
-use crate::encoders::span_encoders::compound_span_encoder::CompoundSpanVocabEncoder;
-use crate::encoders::span_encoders::span_policy::SpanPolicy;
+use crate::encoders::span_encoders::{CompoundSpanVocabEncoder, SpanPolicy};
 use crate::types::TokenType;
 use crate::vocab::UnifiedTokenVocab;
 

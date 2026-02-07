@@ -3,8 +3,9 @@
 use crate::alloc::vec::Vec;
 use crate::types::{CommonHashMap, CommonHashSet, TokenType};
 use crate::vocab::utility::validators::try_vocab_size;
-use crate::vocab::vocab_types::{ByteTokenMap, SpanTokenMap};
-use crate::vocab::{ByteMapVocab, PairMapVocab, PairTokenMap, TokenVocab};
+use crate::vocab::{
+    ByteMapVocab, ByteTokenMap, PairMapVocab, PairTokenMap, SpanTokenMap, TokenVocab,
+};
 
 /// Token vocabulary as a dictionary map of ``{ Vec<u8> -> T }``.
 #[derive(Debug, Clone, PartialEq)]
@@ -280,7 +281,7 @@ impl<T: TokenType> TokenVocab<T> for SpanMapVocab<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::vocab::{ByteMapVocab, TokenVocab};
+    use crate::vocab::{ByteMapVocab, SpanTokenMap, TokenVocab};
 
     #[test]
     fn test_tokens_iter() {

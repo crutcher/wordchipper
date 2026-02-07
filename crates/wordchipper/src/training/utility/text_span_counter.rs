@@ -1,7 +1,7 @@
 //! # Word Counter
 
 use crate::regex::RegexWrapper;
-use crate::training::utility::token_span_buffer::TokenSpanBuf;
+use crate::training::utility::TokenSpanBuf;
 use crate::training::{CountType, StringChunkType};
 use crate::types::{CommonHashMap, TokenType};
 use crate::vocab::ByteMapVocab;

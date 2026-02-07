@@ -11,8 +11,7 @@ use crate::encoders::TokenEncoder;
 use crate::pretrained::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
 use crate::spanning::TextSpanningConfig;
 use crate::types::TokenType;
-use crate::vocab::utility::testing::build_test_shift_byte_vocab;
-use crate::vocab::utility::testing::build_test_vocab;
+use crate::vocab::utility::testing::{build_test_shift_byte_vocab, build_test_vocab};
 use crate::vocab::{TokenVocab, UnifiedTokenVocab};
 
 /// Build common test vocabulary for [`TokenEncoder`] tests.

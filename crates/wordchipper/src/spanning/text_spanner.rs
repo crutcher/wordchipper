@@ -6,8 +6,7 @@ use crate::compat::ranges::offset_range;
 use crate::regex::{RegexWrapper, RegexWrapperPattern, alternate_choice_regex_pattern};
 use crate::spanning::spanning_config::TextSpanningConfig;
 use crate::types::TokenType;
-use crate::vocab::DEFAULT_BYTE_PER_TOKEN_RATIO;
-use crate::vocab::TokenVocab;
+use crate::vocab::{DEFAULT_BYTE_PER_TOKEN_RATIO, TokenVocab};
 use core::num::NonZeroUsize;
 use core::ops::Range;
 

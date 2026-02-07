@@ -1,8 +1,8 @@
 //! # Tiktoken Vocabulary IO
 
 use crate::types::TokenType;
-use crate::vocab::io::base64_vocab::{read_base64_span_map, write_base64_span_map};
-use crate::vocab::vocab_types::SpanTokenMap;
+use crate::vocab::SpanTokenMap;
+use crate::vocab::io::{read_base64_span_map, write_base64_span_map};
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::Path;
@@ -65,6 +65,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::vocab::SpanTokenMap;
 
     #[test]
     fn test_save_load_tiktoken() {
