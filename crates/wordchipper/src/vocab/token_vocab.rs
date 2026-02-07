@@ -5,31 +5,25 @@ use crate::types::TokenType;
 
 /// Common traits for token vocabularies.
 pub trait TokenVocab<T: TokenType>: Clone + Send + Sync {
-    /// Returns an iterator over all tokens.
-    ///
-    /// ## Returns
-    /// An iterator over the tokens.
-    fn unordered_tokens(&self) -> impl Iterator<Item = T>;
+    /// Returns a vector of all tokens, sorted.
+    fn tokens(&self) -> Vec<T>;
 
-    /// Returns a sorted vector of all tokens.
-    ///
-    /// ## Returns
-    /// A sorted vector of tokens.
-    fn sorted_tokens(&self) -> Vec<T> {
-        let mut tokens: Vec<T> = self.unordered_tokens().collect();
-        tokens.sort();
-        tokens
+    /// Returns the number of tokens in the vocabulary.
+    fn len(&self) -> usize {
+        self.tokens().len()
+    }
+
+    /// Returns true if the vocabulary is empty.
+    fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     /// Gets the highest ranked token.
     ///
     /// ## Returns
-    /// The maximum token value.
-    ///
-    /// ## Panics
-    /// Panics if the vocabulary is empty.
-    fn max_token(&self) -> T {
-        self.unordered_tokens().max().unwrap()
+    /// The maximum token value, or None.
+    fn max_token(&self) -> Option<T> {
+        self.tokens().last().copied()
     }
 
     /// Generate all ``(Vec<u8>, T)`` pairs in the vocabulary.

@@ -36,7 +36,7 @@ impl<T: TokenType> SpecialVocab<T> {
 
     /// Convert to a different token type.
     pub fn to_token_type<G: TokenType>(&self) -> anyhow::Result<SpecialVocab<G>> {
-        try_vocab_size::<G>(self.max_token().to_usize().unwrap())?;
+        try_vocab_size::<G>(self.max_token().unwrap().to_usize().unwrap())?;
 
         Ok(SpecialVocab::<G>::from_map(
             self.span_map
@@ -113,8 +113,14 @@ impl<T: TokenType> SpecialVocab<T> {
 }
 
 impl<T: TokenType> TokenVocab<T> for SpecialVocab<T> {
-    fn unordered_tokens(&self) -> impl Iterator<Item = T> {
-        self.span_map.values().copied()
+    fn tokens(&self) -> Vec<T> {
+        let mut tokens: Vec<T> = self.span_map.values().copied().collect();
+        tokens.sort_unstable();
+        tokens
+    }
+
+    fn max_token(&self) -> Option<T> {
+        self.span_map.values().max().copied()
     }
 
     fn span_pairs(&self) -> impl Iterator<Item = (Vec<u8>, T)> {

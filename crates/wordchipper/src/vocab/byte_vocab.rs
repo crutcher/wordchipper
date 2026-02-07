@@ -122,7 +122,7 @@ impl<T: TokenType> ByteMapVocab<T> {
 
     /// Convert to a different token type.
     pub fn to_token_type<G: TokenType>(&self) -> anyhow::Result<ByteMapVocab<G>> {
-        try_vocab_size::<G>(self.max_token().to_usize().unwrap())?;
+        try_vocab_size::<G>(self.max_token().unwrap().to_usize().unwrap())?;
 
         Ok(ByteMapVocab::<G>::from_byte_to_token(
             &self
@@ -208,8 +208,10 @@ impl<T: TokenType> ByteMapVocab<T> {
 }
 
 impl<T: TokenType> TokenVocab<T> for ByteMapVocab<T> {
-    fn unordered_tokens(&self) -> impl Iterator<Item = T> {
-        self.byte_tokens.iter().copied()
+    fn tokens(&self) -> Vec<T> {
+        let mut tokens = self.byte_tokens.to_vec();
+        tokens.sort_unstable();
+        tokens
     }
 
     fn span_pairs(&self) -> impl Iterator<Item = (Vec<u8>, T)> {
@@ -235,7 +237,7 @@ mod tests {
         assert_eq!(
             format!("{:?}", table),
             format!(
-                "ByteTable {{ max_token: 255, tokens: {:?} }}",
+                "ByteTable {{ max_token: Some(255), tokens: {:?} }}",
                 table.token_bytes
             )
         );

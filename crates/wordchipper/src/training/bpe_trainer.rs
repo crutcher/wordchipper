@@ -275,7 +275,7 @@ where
         let mut last_log_percent = 0;
 
         // The first token we'll allocate is after all the byte tokens.
-        let mut next_token = byte_vocab.max_token() + T::one();
+        let mut next_token = byte_vocab.max_token().unwrap() + T::one();
 
         while merges_done < num_merges {
             let Some(mut job) = heap.pop() else {

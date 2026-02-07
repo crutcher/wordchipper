@@ -21,7 +21,7 @@ pub fn common_encoder_test_vocab<T: TokenType>() -> UnifiedTokenVocab<T> {
         build_test_shift_byte_vocab(10),
         TextSpanningConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN),
     );
-    let hi_token = vocab.max_token() + T::one();
+    let hi_token = vocab.max_token().unwrap() + T::one();
     vocab.special_vocab_mut().add_str_word("<|HI|>", hi_token);
 
     vocab
