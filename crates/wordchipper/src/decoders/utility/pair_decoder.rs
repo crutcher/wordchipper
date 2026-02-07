@@ -34,7 +34,7 @@ impl<T: TokenType> PairExpansionDecoder<T> {
     /// A new `PairExpansionDecoder` instance.
     pub fn from_pair_vocab(pair_vocab: &PairMapVocab<T>) -> Self {
         let token_pairs = pair_vocab
-            .pairs()
+            .pair_map()
             .iter()
             .map(|(&pair, &token)| (token, pair))
             .collect();

@@ -40,3 +40,11 @@ pub use decode_results::{BatchDecodeResult, DecodeResult};
 pub use token_decoder::TokenDecoder;
 #[doc(inline)]
 pub use token_dict_decoder::TokenDictDecoder;
+
+/// The default `TokenDecoder` implementation.
+///
+/// ## Style Hints
+///
+/// When there is no local ambiguity with other encoders,
+/// prefer `encoder` for instance names.
+pub type DefaultTokenDecoder<T> = TokenDictDecoder<T>;

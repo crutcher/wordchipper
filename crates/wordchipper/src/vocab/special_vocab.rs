@@ -3,6 +3,7 @@
 use crate::alloc::vec::Vec;
 use crate::types::TokenType;
 use crate::vocab::TokenVocab;
+use crate::vocab::utility::validators::try_vocab_size;
 use crate::vocab::vocab_types::SpanTokenMap;
 
 /// Token vocabulary as a dictionary map of ``{ Vec<u8> -> T }``.
@@ -31,6 +32,18 @@ impl<T: TokenType> SpecialVocab<T> {
     /// A new `SpecialVocab` instance.
     pub fn from_map(span_map: SpanTokenMap<T>) -> Self {
         Self { span_map }
+    }
+
+    /// Convert to a different token type.
+    pub fn to_token_type<G: TokenType>(&self) -> anyhow::Result<SpecialVocab<G>> {
+        try_vocab_size::<G>(self.max_token().to_usize().unwrap())?;
+
+        Ok(SpecialVocab::<G>::from_map(
+            self.span_map
+                .iter()
+                .map(|(chunk, &token)| (chunk.clone(), G::from(token).unwrap()))
+                .collect(),
+        ))
     }
 
     /// Get the length of the special words vocab.

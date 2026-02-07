@@ -2,6 +2,7 @@
 
 use crate::alloc::vec::Vec;
 use crate::types::{CommonHashMap, TokenType};
+use crate::vocab::utility::validators::try_vocab_size;
 use crate::vocab::vocab_types::{ByteTokenMap, SpanTokenMap};
 use crate::vocab::{ByteMapVocab, PairMapVocab, PairTokenMap, TokenVocab};
 
@@ -141,6 +142,19 @@ impl<T: TokenType> SpanMapVocab<T> {
             byte_vocab,
             span_map,
         })
+    }
+
+    /// Convert to a different token type.
+    pub fn to_token_type<G: TokenType>(&self) -> anyhow::Result<SpanMapVocab<G>> {
+        try_vocab_size::<G>(self.max_token().to_usize().unwrap())?;
+
+        SpanMapVocab::<G>::new(
+            self.byte_vocab.to_token_type::<G>()?,
+            self.span_map
+                .iter()
+                .map(|(chunk, token)| (chunk.clone(), G::from(*token).unwrap()))
+                .collect(),
+        )
     }
 
     /// Get the [`ByteMapVocab`].
@@ -312,7 +326,7 @@ mod tests {
 
         let pair_vocab = vocab.to_pair_vocab();
         assert_eq!(
-            pair_vocab.pairs(),
+            pair_vocab.pair_map(),
             &[
                 (('a' as u32, 't' as u32), 300),
                 ((300, 'e' as u32), 301),

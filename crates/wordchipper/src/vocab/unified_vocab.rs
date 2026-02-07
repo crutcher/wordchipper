@@ -76,7 +76,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
         assert_eq!(span_vocab.byte_vocab(), &pair_vocab.byte_vocab);
 
         let tokens = span_vocab.unordered_tokens().collect::<CommonHashSet<_>>();
-        for ((a, b), c) in pair_vocab.pairs() {
+        for ((a, b), c) in pair_vocab.pair_map() {
             for t in [a, b, c].iter() {
                 assert!(
                     tokens.contains(*t),
@@ -96,6 +96,15 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
             span_vocab,
             pair_vocab,
         }
+    }
+
+    /// Convert to a different token type.
+    pub fn to_token_type<G: TokenType>(&self) -> anyhow::Result<UnifiedTokenVocab<G>> {
+        Ok(UnifiedTokenVocab::<G> {
+            spanning: self.spanning.to_token_type::<G>()?,
+            span_vocab: self.span_vocab.to_token_type::<G>()?,
+            pair_vocab: self.pair_vocab.to_token_type::<G>()?,
+        })
     }
 
     /// Get the [`TextSpanningConfig`].

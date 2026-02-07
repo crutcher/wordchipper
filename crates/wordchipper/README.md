@@ -75,28 +75,16 @@ This is only useful for timing tracing of the library itself.
 
 ## Client Usage
 
-### UnifiedTokenVocab
+### Pretrained Vocabularies
 
-The `UnifiedTokenVocab` is a unified representation of the vocabularies
-used by the `TokenEncoder` and `TokenDecoder` clients. It contains:
+* [OpenAI OATokenizer](https://docs.rs/wordchipper/latest/wordchipper/vocab/public/openai/enum.OATokenizer.html)
 
-* `SegmentationConfig` - describing the span/word regex and the special token map.
-* `ByteMapVocab` - describing the `{ u8 -> T }` mapping.
-* `SpanMapVocab` - describing the `{ Vec<u8> -> T }` mapping.
-* `PairMapVocab` - describing known `{ (T, T) -> T }` merge pairs.
+### Encoders and Decoders
 
-#### Loading Pretrained Vocabularies
+* [Token Encoders](https://docs.rs/wordchipper/latest/wordchipper/encoders/index.html)
+* [Token Decoders](https://docs.rs/wordchipper/latest/wordchipper/decoders/index.html)
 
-This is only partially implemented; it still requires a fair amount of manual work.
-
-A collection of metadata about known pretrained vocabularies is available:
-
-* `wordchipper::vocab::public`
-
-What is incomplete is a local URL cache plus workflow for assembling a vocab
-from the known metadata.
-
-A loading example exists in the `examples/token-cli` crate.
+## Example Usage
 
 ```rust,no_run
 use wordchipper::decoders::{TokenDictDecoder, TokenDecoder};
@@ -111,7 +99,7 @@ use wordchipper::disk_cache::WordchipperDiskCache;
 type T = u32;
 
 let mut disk_cache = WordchipperDiskCache::default();
-let vocab: Arc<UnifiedTokenVocab<T>> = load_o200k_harmony_vocab(&mut disk_cache)?.into();
+let vocab: Arc<UnifiedTokenVocab<T>> = OATokenizer::0200kHarmony::load(&mut disk_cache)?.into();
 
 let encoder: DefaultTokenEncoder<T> =
     DefaultTokenEncoder::init(vocab.clone(), None);

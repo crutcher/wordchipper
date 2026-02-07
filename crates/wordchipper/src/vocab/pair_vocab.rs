@@ -6,6 +6,7 @@ use crate::decoders::utility::PairExpansionDecoder;
 use crate::types::{CommonHashSet, Pair, TokenType};
 use crate::vocab::byte_vocab::ByteMapVocab;
 use crate::vocab::token_vocab::TokenVocab;
+use crate::vocab::utility::validators::try_vocab_size;
 use crate::vocab::vocab_types::PairTokenMap;
 
 /// Validate that a [`ByteMapVocab`] and [`PairTokenMap`] are compatible.
@@ -86,8 +87,26 @@ impl<T: TokenType> PairMapVocab<T> {
         })
     }
 
+    /// Convert to a different token type.
+    pub fn to_token_type<G: TokenType>(&self) -> anyhow::Result<PairMapVocab<G>> {
+        try_vocab_size::<G>(self.max_token().to_usize().unwrap())?;
+
+        PairMapVocab::<G>::new(
+            self.byte_vocab.to_token_type::<G>()?,
+            self.pair_map
+                .iter()
+                .map(|(&(a, b), &token)| {
+                    (
+                        (G::from(a).unwrap(), G::from(b).unwrap()),
+                        G::from(token).unwrap(),
+                    )
+                })
+                .collect(),
+        )
+    }
+
     /// Get the map of pairs.
-    pub fn pairs(&self) -> &PairTokenMap<T> {
+    pub fn pair_map(&self) -> &PairTokenMap<T> {
         &self.pair_map
     }
 

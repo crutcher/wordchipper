@@ -5,9 +5,7 @@ use crate::types::TokenType;
 
 /// Common traits for token vocabularies.
 pub trait TokenVocab<T: TokenType>: Clone + Send + Sync {
-    /// Returns an iterator over all non-byte tokens.
-    ///
-    /// All returned tokens will have rank >= 256.
+    /// Returns an iterator over all tokens.
     ///
     /// ## Returns
     /// An iterator over the tokens.

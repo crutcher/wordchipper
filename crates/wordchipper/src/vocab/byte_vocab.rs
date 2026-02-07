@@ -4,6 +4,7 @@ use crate::alloc::vec;
 use crate::alloc::vec::Vec;
 use crate::types::TokenType;
 use crate::vocab::TokenVocab;
+use crate::vocab::utility::validators::try_vocab_size;
 use crate::vocab::vocab_types::{ByteTokenArray, ByteTokenMap, TokenByteMap};
 use core::fmt::Debug;
 
@@ -14,7 +15,7 @@ pub fn build_test_shift_byte_vocab<T: TokenType>(shift: usize) -> ByteMapVocab<T
     // This is a purposely stupid byte map.
     ByteMapVocab::<T>::from_byte_to_token(
         &ByteMapVocab::<T>::default()
-            .byte_token_array()
+            .byte_tokens()
             .iter()
             .map(|&t| t + T::from_usize(shift).unwrap())
             .collect::<Vec<T>>(),
@@ -29,10 +30,10 @@ pub fn build_test_shift_byte_vocab<T: TokenType>(shift: usize) -> ByteMapVocab<T
 #[derive(Clone, PartialEq)]
 pub struct ByteMapVocab<T: TokenType> {
     /// Hash map from token to byte ordinal value.
-    pub token_byte_map: TokenByteMap<T>,
+    pub token_bytes: TokenByteMap<T>,
 
     /// Table mapping from byte ordinal (position) to token.
-    pub byte_token_array: [T; 256],
+    pub byte_tokens: [T; 256],
 }
 
 impl<T: TokenType> Debug for ByteMapVocab<T> {
@@ -42,7 +43,7 @@ impl<T: TokenType> Debug for ByteMapVocab<T> {
     ) -> core::fmt::Result {
         f.debug_struct("ByteTable")
             .field("max_token", &self.max_token())
-            .field("tokens", &self.token_byte_map)
+            .field("tokens", &self.token_bytes)
             .finish()
     }
 }
@@ -82,8 +83,8 @@ impl<T: TokenType> ByteMapVocab<T> {
         assert_eq!(token_to_byte.len(), 256);
 
         Self {
-            token_byte_map: token_to_byte,
-            byte_token_array: byte_to_token,
+            token_bytes: token_to_byte,
+            byte_tokens: byte_to_token,
         }
     }
 
@@ -98,15 +99,15 @@ impl<T: TokenType> ByteMapVocab<T> {
     /// ## Panics
     /// If the map is not a 1:1 bijection.
     pub fn from_token_byte_map(token_byte_map: &TokenByteMap<T>) -> Self {
-        let token_byte_map = token_byte_map.clone();
+        let token_bytes = token_byte_map.clone();
 
-        let ord_map: ByteTokenMap<T> = token_byte_map.iter().map(|(&t, &b)| (b, t)).collect();
+        let ord_map: ByteTokenMap<T> = token_bytes.iter().map(|(&t, &b)| (b, t)).collect();
         assert_eq!(ord_map.len(), 256);
 
         let mut ord_items = ord_map.into_iter().collect::<Vec<_>>();
         ord_items.sort_by_key(|(b, _)| *b);
 
-        let byte_token_array: [T; 256] = ord_items
+        let byte_tokens: [T; 256] = ord_items
             .into_iter()
             .map(|(_, t)| t)
             .collect::<Vec<_>>()
@@ -114,9 +115,22 @@ impl<T: TokenType> ByteMapVocab<T> {
             .unwrap();
 
         Self {
-            byte_token_array,
-            token_byte_map,
+            byte_tokens,
+            token_bytes,
         }
+    }
+
+    /// Convert to a different token type.
+    pub fn to_token_type<G: TokenType>(&self) -> anyhow::Result<ByteMapVocab<G>> {
+        try_vocab_size::<G>(self.max_token().to_usize().unwrap())?;
+
+        Ok(ByteMapVocab::<G>::from_byte_to_token(
+            &self
+                .byte_tokens
+                .into_iter()
+                .map(|t| G::from_usize(t.to_usize().unwrap()).unwrap())
+                .collect::<Vec<_>>(),
+        ))
     }
 
     /// Get the length of the table.
@@ -124,7 +138,7 @@ impl<T: TokenType> ByteMapVocab<T> {
     /// ## Returns
     /// The number of entries in the table (always 256).
     pub fn len(&self) -> usize {
-        self.byte_token_array.len()
+        self.byte_tokens.len()
     }
 
     /// Is this empty?
@@ -136,16 +150,16 @@ impl<T: TokenType> ByteMapVocab<T> {
     ///
     /// ## Returns
     /// A reference to the fixed-size array mapping bytes to tokens.
-    pub fn byte_token_array(&self) -> &ByteTokenArray<T> {
-        &self.byte_token_array
+    pub fn byte_tokens(&self) -> &ByteTokenArray<T> {
+        &self.byte_tokens
     }
 
     /// Get the token->byte hash map.
     ///
     /// ## Returns
     /// A reference to the internal hash map mapping tokens to bytes.
-    pub fn token_byte_map(&self) -> &TokenByteMap<T> {
-        &self.token_byte_map
+    pub fn token_bytes(&self) -> &TokenByteMap<T> {
+        &self.token_bytes
     }
 
     /// Get the token corresponding to a given byte.
@@ -160,7 +174,7 @@ impl<T: TokenType> ByteMapVocab<T> {
         &self,
         byte: u8,
     ) -> T {
-        self.byte_token_array[byte as usize]
+        self.byte_tokens[byte as usize]
     }
 
     /// Append the translated byte tokens to a target buffer.
@@ -189,17 +203,17 @@ impl<T: TokenType> ByteMapVocab<T> {
         &self,
         token: T,
     ) -> Option<u8> {
-        self.token_byte_map.get(&token).copied()
+        self.token_bytes.get(&token).copied()
     }
 }
 
 impl<T: TokenType> TokenVocab<T> for ByteMapVocab<T> {
     fn unordered_tokens(&self) -> impl Iterator<Item = T> {
-        self.byte_token_array.iter().copied()
+        self.byte_tokens.iter().copied()
     }
 
     fn span_pairs(&self) -> impl Iterator<Item = (Vec<u8>, T)> {
-        self.byte_token_array
+        self.byte_tokens
             .iter()
             .enumerate()
             .map(|(idx, &token)| (vec![idx as u8], token))
@@ -222,7 +236,7 @@ mod tests {
             format!("{:?}", table),
             format!(
                 "ByteTable {{ max_token: 255, tokens: {:?} }}",
-                table.token_byte_map
+                table.token_bytes
             )
         );
 
@@ -231,12 +245,12 @@ mod tests {
             let token = idx as u32;
 
             assert_eq!(table.get_token(byte), token);
-            assert_eq!(table.byte_token_array()[idx], token);
+            assert_eq!(table.byte_tokens()[idx], token);
             assert_eq!(table.get_byte(token), Some(byte));
-            assert_eq!(table.token_byte_map()[&token], byte);
+            assert_eq!(table.token_bytes()[&token], byte);
         }
 
-        let rebuild = ByteMapVocab::from_token_byte_map(&table.token_byte_map());
+        let rebuild = ByteMapVocab::from_token_byte_map(&table.token_bytes());
         assert_eq!(rebuild, table);
     }
 
