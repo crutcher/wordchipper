@@ -6,12 +6,9 @@ use crate::training::utility::{
 };
 use crate::training::{CountType, StringChunkType};
 use crate::types::{CommonHashMap, CommonHashSet, Pair, TokenType};
-use crate::vocab::byte_vocab::ByteMapVocab;
-use crate::vocab::pair_vocab::PairMapVocab;
 use crate::vocab::utility::validators;
 use crate::vocab::utility::validators::U8_SIZE;
-use crate::vocab::vocab_types::PairTokenMap;
-use crate::vocab::{TokenVocab, UnifiedTokenVocab};
+use crate::vocab::{ByteMapVocab, PairMapVocab, PairTokenMap, TokenVocab, UnifiedTokenVocab};
 use compact_str::CompactString;
 use core::cmp::Ordering;
 use dary_heap::OctonaryHeap;

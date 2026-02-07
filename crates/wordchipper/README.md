@@ -92,17 +92,16 @@ use wordchipper::encoders::{DefaultTokenEncoder, TokenEncoder};
 use wordchipper::concurrency::rayon::{ParallelRayonDecoder, ParallelRayonEncoder};
 use wordchipper::regex::{regex_pool_supplier, RegexWrapperPattern};
 use wordchipper::spanning::{TextSpanningConfig, TextSpanner};
-use wordchipper::vocab::public::openai::load_o200k_harmony_vocab;
+use wordchipper::pretrained::openai::OATokenizer;
 use wordchipper::vocab::UnifiedTokenVocab;
 use wordchipper::disk_cache::WordchipperDiskCache;
 
 type T = u32;
 
 let mut disk_cache = WordchipperDiskCache::default();
-let vocab: Arc<UnifiedTokenVocab<T>> = OATokenizer::0200kHarmony::load(&mut disk_cache)?.into();
+let vocab: UnifiedTokenVocab<T> = OATokenizer::0200kHarmony::load(&mut disk_cache).unwrap();
 
-let encoder: DefaultTokenEncoder<T> =
-    DefaultTokenEncoder::init(vocab.clone(), None);
+let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::init(vocab.clone(), None);
 let encoder = ParallelRayonEncoder::new(encoder);
 
 let decoder = TokenDictDecoder::from_unified_vocab(vocab.clone());
@@ -121,13 +120,12 @@ use wordchipper::vocab::UnifiedTokenVocab;
 use wordchipper::encoders::DefaultTokenEncoder;
 use wordchipper::encoders::TokenEncoder;
 use wordchipper::types::TokenType;
-use std::sync::Arc;
 
 fn example<T: TokenType>(
-    vocab: Arc<UnifiedTokenVocab<T>>,
+    vocab: &UnifiedTokenVocab<T>,
     batch: &[&str],
 ) -> Vec<Vec<T>> {
-    let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::init(vocab, None);
+    let encoder = DefaultTokenEncoder::<T>::init(vocab.clone(), None);
 
     #[cfg(feature = "rayon")]
     let encoder = wordchipper::concurrency::rayon::ParallelRayonEncoder::new(encoder);
@@ -145,16 +143,15 @@ Decoder clients should use:
 
 ```rust,no_run
 use wordchipper::vocab::UnifiedTokenVocab;
-use wordchipper::decoders::TokenDictDecoder;
+use wordchipper::decoders::DefaultTokenDecoder;
 use wordchipper::decoders::TokenDecoder;
 use wordchipper::types::TokenType;
-use std::sync::Arc;
 
 fn example<T: TokenType>(
-    vocab: Arc<UnifiedTokenVocab<T>>,
+    vocab: &UnifiedTokenVocab<T>,
     batch: &[Vec<T>],
 ) -> Vec<String> {
-    let decoder: TokenDictDecoder<T> = TokenDictDecoder::from_unified_vocab(vocab);
+    let decoder = DefaultTokenDecoder::<T>::from_unified_vocab(vocab);
 
     #[cfg(feature = "rayon")]
     let decoder = wordchipper::concurrency::rayon::ParallelRayonDecoder::new(decoder);
@@ -226,10 +223,10 @@ Here:
 ```rust,no_run
 use wordchipper::training::bpe_trainer::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions};
 use wordchipper::vocab::io::tiktoken_io::save_span_map_to_tiktoken_path;
-use wordchipper::vocab::public::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
+use wordchipper::pretrained::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
 use wordchipper::vocab::{ByteMapVocab, UnifiedTokenVocab};
 use wordchipper::encoders::DefaultTokenEncoder;
-use wordchipper::decoders::TokenDictDecoder;
+use wordchipper::decoders::DefaultTokenDecoder;
 use wordchipper::concurrency::rayon::{ParallelRayonEncoder, ParallelRayonDecoder};
 use std::sync::Arc;
 
@@ -276,7 +273,7 @@ fn example<I, S>(
     let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::init(vocab.clone(), None);
     let encoder = ParallelRayonEncoder::new(encoder);
 
-    let decoder = TokenDictDecoder::from_unified_vocab(vocab.clone());
+    let decoder = DefaultTokenDecoder::from_unified_vocab(vocab.clone());
     let decoder = ParallelRayonDecoder::new(decoder);
 }
 ```

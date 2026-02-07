@@ -26,14 +26,13 @@
 //! }
 //! ```
 
-mod token_encoder;
-#[doc(inline)]
-pub use token_encoder::TokenEncoder;
-
 pub mod span_encoders;
-
 #[cfg(any(test, feature = "testing"))]
 pub mod testing;
+mod token_encoder;
+
+#[doc(inline)]
+pub use token_encoder::TokenEncoder;
 
 /// The default `TokenEncoder` implementation.
 ///

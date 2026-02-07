@@ -4,9 +4,7 @@ use crate::alloc::vec::Vec;
 use crate::decoders::decode_results::DecodeResult;
 use crate::decoders::token_decoder::TokenDecoder;
 use crate::types::TokenType;
-use crate::vocab::DEFAULT_BYTE_PER_TOKEN_RATIO;
-use crate::vocab::UnifiedTokenVocab;
-use crate::vocab::vocab_types::TokenSpanMap;
+use crate::vocab::{DEFAULT_BYTE_PER_TOKEN_RATIO, TokenSpanMap, UnifiedTokenVocab};
 
 /// A [`TokenDecoder<T>`] over a unified `{ T -> Vec<u8> }` dictionary.
 ///
@@ -97,7 +95,8 @@ mod tests {
     use crate::decoders::utility::testing::common_decoder_unit_test;
     use crate::pretrained::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
     use crate::spanning::TextSpanningConfig;
-    use crate::vocab::byte_vocab::build_test_shift_byte_vocab;
+    use crate::vocab::UnifiedTokenVocab;
+    use crate::vocab::utility::testing::build_test_shift_byte_vocab;
     use crate::vocab::utility::testing::build_test_vocab;
 
     #[test]

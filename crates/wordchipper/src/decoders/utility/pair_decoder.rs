@@ -2,12 +2,9 @@
 
 use crate::alloc::vec;
 use crate::alloc::vec::Vec;
-use crate::decoders::decode_results::DecodeResult;
-use crate::decoders::token_decoder::TokenDecoder;
+use crate::decoders::{DecodeResult, TokenDecoder};
 use crate::types::TokenType;
-use crate::vocab::DEFAULT_BYTE_PER_TOKEN_RATIO;
-use crate::vocab::vocab_types::TokenPairMap;
-use crate::vocab::{ByteMapVocab, PairMapVocab};
+use crate::vocab::{ByteMapVocab, DEFAULT_BYTE_PER_TOKEN_RATIO, PairMapVocab, TokenPairMap};
 
 /// A stack-based pair map `{T -> (T, T) }` incremental stack [`TokenDecoder`].
 ///
@@ -113,7 +110,7 @@ mod tests {
     use crate::pretrained::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
     use crate::spanning::TextSpanningConfig;
     use crate::vocab::UnifiedTokenVocab;
-    use crate::vocab::byte_vocab::build_test_shift_byte_vocab;
+    use crate::vocab::utility::testing::build_test_shift_byte_vocab;
     use crate::vocab::utility::testing::build_test_vocab;
 
     #[test]

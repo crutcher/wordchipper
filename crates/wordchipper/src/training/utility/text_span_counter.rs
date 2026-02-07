@@ -4,7 +4,7 @@ use crate::regex::RegexWrapper;
 use crate::training::utility::token_span_buffer::TokenSpanBuf;
 use crate::training::{CountType, StringChunkType};
 use crate::types::{CommonHashMap, TokenType};
-use crate::vocab::byte_vocab::ByteMapVocab;
+use crate::vocab::ByteMapVocab;
 use core::fmt::Debug;
 
 /// Options for [`TextSpanCounter`].
@@ -120,6 +120,7 @@ mod tests {
     use crate::training::CountType;
     use crate::training::StringChunkType;
     use crate::training::utility::token_span_buffer::TokenSpanBuf;
+    use crate::vocab::ByteMapVocab;
 
     const PATTERN: &str = r"\w+";
 

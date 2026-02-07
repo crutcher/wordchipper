@@ -3,8 +3,7 @@
 use crate::alloc::vec::Vec;
 use crate::spanning::TextSpanner;
 use crate::types::TokenType;
-use crate::vocab::DEFAULT_BYTE_PER_TOKEN_RATIO;
-use crate::vocab::special_vocab::SpecialVocab;
+use crate::vocab::{DEFAULT_BYTE_PER_TOKEN_RATIO, SpecialVocab};
 
 /// The common trait for `String/&[u8] -> Vec<T>` encoders.
 ///

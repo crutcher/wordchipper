@@ -8,5 +8,6 @@ pub mod rayon;
 pub mod threads;
 
 mod pool_toy;
+
 #[doc(inline)]
 pub use pool_toy::PoolToy;

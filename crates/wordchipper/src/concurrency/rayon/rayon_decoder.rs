@@ -81,7 +81,7 @@ mod tests {
     use crate::pretrained::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
     use crate::spanning::TextSpanningConfig;
     use crate::vocab::UnifiedTokenVocab;
-    use crate::vocab::byte_vocab::build_test_shift_byte_vocab;
+    use crate::vocab::utility::testing::build_test_shift_byte_vocab;
     use crate::vocab::utility::testing::build_test_vocab;
 
     #[test]

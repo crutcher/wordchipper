@@ -3,7 +3,7 @@
 use crate::encoders::TokenEncoder;
 use crate::spanning::TextSpanner;
 use crate::types::TokenType;
-use crate::vocab::special_vocab::SpecialVocab;
+use crate::vocab::SpecialVocab;
 
 /// Batch-Level Parallel Encoder Wrapper.
 ///

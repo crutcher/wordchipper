@@ -8,20 +8,6 @@ use crate::vocab::utility::validators::try_vocab_size;
 use crate::vocab::vocab_types::{ByteTokenArray, ByteTokenMap, TokenByteMap};
 use core::fmt::Debug;
 
-/// Build a [`ByteMapVocab`] with all tokens shifted by `shift`.
-///
-/// This is a purposely stupid byte map; useful for testing.
-pub fn build_test_shift_byte_vocab<T: TokenType>(shift: usize) -> ByteMapVocab<T> {
-    // This is a purposely stupid byte map.
-    ByteMapVocab::<T>::from_byte_to_token(
-        &ByteMapVocab::<T>::default()
-            .byte_tokens()
-            .iter()
-            .map(|&t| t + T::from_usize(shift).unwrap())
-            .collect::<Vec<T>>(),
-    )
-}
-
 /// ``0..=255`` Rank Byte/Token Bijection Table
 ///
 /// This will always have 255 entries, one for each byte value.
@@ -226,6 +212,7 @@ impl<T: TokenType> TokenVocab<T> for ByteMapVocab<T> {
 mod tests {
     use super::*;
     use crate::alloc::format;
+    use crate::vocab::utility::testing::build_test_shift_byte_vocab;
 
     #[test]
     fn test_byte_vocab_default() {

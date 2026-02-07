@@ -32,7 +32,7 @@
 //!
 //! ```rust,no_run
 //! use wordchipper::training::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions};
-//! use wordchipper::vocab::io::tiktoken_io::save_tiktoken_vocab_path;
+//! use wordchipper::vocab::io::save_tiktoken_vocab_path;
 //! use wordchipper::pretrained::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
 //! use wordchipper::vocab::{ByteMapVocab, UnifiedTokenVocab};
 //! use wordchipper::encoders::DefaultTokenEncoder;
@@ -91,10 +91,11 @@
 
 pub mod utility;
 
+mod bpe_trainer;
 mod training_types;
+
 #[doc(inline)]
 pub use training_types::{CountType, StringChunkType};
 
-mod bpe_trainer;
 #[doc(inline)]
 pub use bpe_trainer::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions};

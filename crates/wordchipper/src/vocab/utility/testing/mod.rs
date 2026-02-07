@@ -2,8 +2,7 @@
 
 use crate::spanning::TextSpanningConfig;
 use crate::types::TokenType;
-use crate::vocab::vocab_types::SpanTokenMap;
-use crate::vocab::{ByteMapVocab, SpanMapVocab, UnifiedTokenVocab};
+use crate::vocab::{ByteMapVocab, SpanMapVocab, SpanTokenMap, UnifiedTokenVocab};
 
 /// Create a test [`UnifiedTokenVocab`].
 pub fn build_test_vocab<T: TokenType, C>(
@@ -42,4 +41,18 @@ where
     let span_vocab = SpanMapVocab::new(byte_vocab, span_map).unwrap();
 
     UnifiedTokenVocab::from_span_vocab(segmentation.into(), span_vocab)
+}
+
+/// Build a [`ByteMapVocab`] with all tokens shifted by `shift`.
+///
+/// This is a purposely stupid byte map; useful for testing.
+pub fn build_test_shift_byte_vocab<T: TokenType>(shift: usize) -> ByteMapVocab<T> {
+    // This is a purposely stupid byte map.
+    ByteMapVocab::<T>::from_byte_to_token(
+        &ByteMapVocab::<T>::default()
+            .byte_tokens()
+            .iter()
+            .map(|&t| t + T::from_usize(shift).unwrap())
+            .collect::<Vec<T>>(),
+    )
 }
