@@ -24,17 +24,6 @@ pub trait TokenEncoder<T: TokenType>: Clone + Send + Sync {
     /// A reference to the internal `SpecialVocab`.
     fn special_vocab(&self) -> &SpecialVocab<T>;
 
-    /// Encode bytes into tokens.
-    ///
-    /// ## Arguments
-    /// * `text` - The string slice to encode.
-    /// * `tokens` - The target token buffer to append to.
-    fn try_encode_append(
-        &self,
-        text: &str,
-        tokens: &mut Vec<T>,
-    ) -> anyhow::Result<()>;
-
     /// Return the expected bytes per token ratio.
     ///
     /// This is used by [`TokenEncoder::predict_token_buffer_size`] to predict
@@ -52,6 +41,20 @@ pub trait TokenEncoder<T: TokenType>: Clone + Send + Sync {
     ) -> usize {
         ((text.len() as f32 * 1.1) / self.expected_bytes_per_token()) as usize
     }
+
+    /// Encode bytes into tokens.
+    ///
+    /// There are significant performance gains to pre-allocating the target buffer
+    /// to an appropriate size.
+    ///
+    /// ## Arguments
+    /// * `text` - The string slice to encode.
+    /// * `tokens` - The target token buffer to append to.
+    fn try_encode_append(
+        &self,
+        text: &str,
+        tokens: &mut Vec<T>,
+    ) -> anyhow::Result<()>;
 
     /// Encode text into tokens, returning an error if the encoding fails.
     ///
