@@ -112,6 +112,8 @@ impl<T: TokenType> SpecialVocab<T> {
 }
 
 impl<T: TokenType> TokenVocab<T> for SpecialVocab<T> {
+    type Token = T;
+
     fn tokens(&self) -> Vec<T> {
         let mut tokens: Vec<T> = self.span_map.values().copied().collect();
         tokens.sort_unstable();

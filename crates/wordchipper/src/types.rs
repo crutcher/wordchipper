@@ -4,6 +4,9 @@ use core::hash::Hash;
 use num_traits::{FromPrimitive, PrimInt, ToPrimitive, Unsigned};
 
 /// A type that can be used as a token in a BPE-based encoders.
+///
+/// These are constrained to be unsigned primitive integers;
+/// such that the max token in a vocabulary is less than `T::max()`.
 pub trait TokenType:
     'static
     + PrimInt

@@ -39,6 +39,7 @@ where
     T: TokenType,
     D: TokenDecoder<T>,
 {
+    type Token = T;
     fn try_decode_to_bytes(
         &self,
         tokens: &[T],

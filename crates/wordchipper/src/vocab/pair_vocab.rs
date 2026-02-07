@@ -134,6 +134,8 @@ impl<T: TokenType> PairMapVocab<T> {
 }
 
 impl<T: TokenType> TokenVocab<T> for PairMapVocab<T> {
+    type Token = T;
+
     fn tokens(&self) -> Vec<T> {
         let mut tokens = self
             .byte_vocab

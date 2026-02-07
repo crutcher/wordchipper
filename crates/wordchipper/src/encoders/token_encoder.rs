@@ -14,6 +14,9 @@ use crate::vocab::{DEFAULT_BYTE_PER_TOKEN_RATIO, SpecialVocab};
 /// and use the preferred name for the implementing type
 /// when there is a conflict.
 pub trait TokenEncoder<T: TokenType>: Clone + Send + Sync {
+    /// The token type: T.
+    type Token: TokenType;
+
     /// Return the attached text segmentor.
     fn spanner(&self) -> &TextSpanner;
 

@@ -251,6 +251,8 @@ impl<T: TokenType> SpanMapVocab<T> {
 }
 
 impl<T: TokenType> TokenVocab<T> for SpanMapVocab<T> {
+    type Token = T;
+
     fn tokens(&self) -> Vec<T> {
         let mut tokens = self
             .byte_vocab

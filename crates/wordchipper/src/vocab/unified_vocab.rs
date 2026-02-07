@@ -193,6 +193,8 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
 }
 
 impl<T: TokenType> TokenVocab<T> for UnifiedTokenVocab<T> {
+    type Token = T;
+
     fn tokens(&self) -> Vec<T> {
         let mut tokens = self
             .span_vocab
