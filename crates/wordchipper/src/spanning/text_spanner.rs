@@ -346,9 +346,9 @@ pub struct SplitSpanIter<'a> {
     spanner: &'a TextSpanner,
     text: &'a str,
     pos: usize,
-    specials: Option<Box<dyn Iterator<Item = Range<usize>> + 'a>>,
+    special_it: Option<Box<dyn Iterator<Item = Range<usize>> + 'a>>,
     pending_special: Option<Range<usize>>,
-    word_gap: Option<WordGapIter<'a>>,
+    word_gap_it: Option<WordGapIter<'a>>,
     done: bool,
 }
 
@@ -366,9 +366,9 @@ impl<'a> SplitSpanIter<'a> {
             spanner,
             text,
             pos: 0,
-            specials,
+            special_it: specials,
             pending_special: None,
-            word_gap: None,
+            word_gap_it: None,
             done: false,
         }
     }
@@ -383,46 +383,51 @@ impl<'a> Iterator for SplitSpanIter<'a> {
         }
 
         loop {
-            if let Some(wg) = self.word_gap.as_mut() {
+            // If there is a pending [(Word|Gap)] iterator,
+            if let Some(wg) = self.word_gap_it.as_mut() {
+                // Unwrap the iterator and pull the next element:
                 if let Some(span) = wg.next() {
+                    // When there is a next element, return it.
                     return Some(span);
+                } else {
+                    // When there is no next element,
+                    // and discard the pending iterator.
+                    self.word_gap_it = None;
+
+                    // fall-through is fine here, as the iterator is gone.
+                    // continue;
                 }
-                self.word_gap = None;
-                continue;
             }
 
+            // If we have previously saved a special token for after the word/gap run;
+            // pop and return that value.
+
+            // If there is a pending special iterator, take it and return the state.
             if let Some(spec) = self.pending_special.take() {
-                self.pos = spec.end;
                 return Some(SpanRef::Special(spec));
             }
 
-            let next_spec = match self.specials.as_mut() {
-                None => None,
+            // Advance the special iterator.
+            let next_spec = match self.special_it.as_mut() {
                 Some(it) => it.next(),
+                None => None,
             };
 
             match next_spec {
                 Some(spec) => {
                     if self.pos < spec.start {
                         let segment = &self.text[self.pos..spec.start];
-                        self.word_gap = Some(WordGapIter::new(self.spanner, segment, self.pos));
-                        self.pending_special = Some(spec);
-                        continue;
+                        self.word_gap_it = Some(WordGapIter::new(self.spanner, segment, self.pos));
                     }
 
-                    if self.pos == spec.start {
-                        self.pending_special = Some(spec);
-                        continue;
-                    }
-
-                    // Shouldn't happen with well-behaved regex iterators, but be defensive:
-                    self.pos = self.pos.max(spec.end);
+                    self.pos = spec.end;
+                    self.pending_special = Some(spec);
                     continue;
                 }
                 None => {
                     if self.pos < self.text.len() {
                         let segment = &self.text[self.pos..];
-                        self.word_gap = Some(WordGapIter::new(self.spanner, segment, self.pos));
+                        self.word_gap_it = Some(WordGapIter::new(self.spanner, segment, self.pos));
                         self.pos = self.text.len();
                         continue;
                     }
