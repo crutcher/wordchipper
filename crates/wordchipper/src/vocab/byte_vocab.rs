@@ -2,7 +2,7 @@
 
 use crate::alloc::vec;
 use crate::alloc::vec::Vec;
-use crate::types::TokenType;
+use crate::types::{CommonHashSet, TokenType};
 use crate::vocab::utility::validators::try_vocab_size;
 use crate::vocab::{ByteTokenArray, ByteTokenMap, TokenByteMap, TokenVocab};
 use core::fmt::Debug;
@@ -195,10 +195,8 @@ impl<T: TokenType> ByteMapVocab<T> {
 impl<T: TokenType> TokenVocab<T> for ByteMapVocab<T> {
     type Token = T;
 
-    fn tokens(&self) -> Vec<T> {
-        let mut tokens = self.byte_tokens.to_vec();
-        tokens.sort_unstable();
-        tokens
+    fn tokens(&self) -> CommonHashSet<T> {
+        self.byte_tokens.iter().copied().collect()
     }
 
     fn span_pairs(&self) -> impl Iterator<Item = (Vec<u8>, T)> {

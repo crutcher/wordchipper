@@ -1,15 +1,15 @@
 //! # Token Vocabulary Index
 
 use crate::alloc::vec::Vec;
-use crate::types::TokenType;
+use crate::types::{CommonHashSet, TokenType};
 
 /// Common traits for token vocabularies.
 pub trait TokenVocab<T: TokenType>: Clone + Send + Sync {
     /// The token type: T.
     type Token: TokenType;
 
-    /// Returns a vector of all tokens, sorted.
-    fn tokens(&self) -> Vec<T>;
+    /// Returns a set of all tokens.
+    fn tokens(&self) -> CommonHashSet<T>;
 
     /// Returns the number of tokens in the vocabulary.
     fn len(&self) -> usize {
@@ -26,7 +26,7 @@ pub trait TokenVocab<T: TokenType>: Clone + Send + Sync {
     /// ## Returns
     /// The maximum token value, or None.
     fn max_token(&self) -> Option<T> {
-        self.tokens().last().copied()
+        self.tokens().iter().max().copied()
     }
 
     /// Generate all ``(Vec<u8>, T)`` pairs in the vocabulary.

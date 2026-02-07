@@ -151,6 +151,8 @@ fn run(args: &Args) -> anyhow::Result<()> {
                 .iter()
                 .map(|tokens| tokens.len())
                 .sum::<usize>();
+
+            assert_eq!(&tt_batch_tokens, &wc_batch_tokens);
         }
 
         wc_token_batches.push(wc_batch_tokens);

@@ -12,6 +12,7 @@
       <sourceFolder url="file://$MODULE_DIR$/examples/pull_shards/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/examples/token-cli/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/examples/tokenizer_trainer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/examples/side-by-side/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/crates/nanochat/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/crates/wordchipper/target" />

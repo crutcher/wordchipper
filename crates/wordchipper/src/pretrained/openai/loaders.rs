@@ -1,7 +1,9 @@
 //! # `OpenAI` Pretrained Vocabulary Loaders
 
 use crate::disk_cache::WordchipperDiskCache;
-use crate::pretrained::openai::patterns::{OA_GPT2_R50K_WORD_PATTERN, OA_GPT3_CL100K_WORD_PATTERN};
+use crate::pretrained::openai::patterns::{
+    OA_GPT2_R50K_WORD_PATTERN, OA_GPT3_CL100K_WORD_PATTERN, OA_GPT5_O220K_WORD_PATTERN,
+};
 use crate::pretrained::openai::resources::{
     OA_GPT2_P50K_BASE_TIKTOKEN, OA_GPT2_R50K_BASE_TIKTOKEN, OA_GPT3_CL100K_BASE_TIKTOKEN,
     OA_GPT5_O200K_BASE_TIKTOKEN,
@@ -74,19 +76,16 @@ fn load_common_vocab<T: TokenType>(
     pattern: RegexWrapperPattern,
     special_tokens: &[(String, usize)],
 ) -> anyhow::Result<UnifiedTokenVocab<T>> {
-    let span_map = load_tiktoken_vocab_path(disk_cache.load_cached_path(
-        context,
-        vocab_resource.urls,
-        true,
-    )?)?;
+    let data_path = disk_cache.load_cached_path(context, vocab_resource.urls, true);
+    let span_map = load_tiktoken_vocab_path(data_path?)?;
 
-    let segmentation = TextSpanningConfig::<T>::from_pattern(pattern.clone()).with_special_words(
+    let spanning = TextSpanningConfig::<T>::from_pattern(pattern.clone()).with_special_words(
         special_tokens
             .iter()
             .map(|(s, t)| (s, T::from_usize(*t).unwrap())),
     );
 
-    let vocab = UnifiedTokenVocab::from_span_vocab(segmentation, span_map.into());
+    let vocab = UnifiedTokenVocab::from_span_vocab(spanning, span_map.into());
     Ok(vocab)
 }
 
@@ -150,7 +149,7 @@ pub fn load_o200k_base_vocab<T: TokenType>(
         disk_cache,
         &[OA_KEY, "o200k"],
         &OA_GPT5_O200K_BASE_TIKTOKEN,
-        OA_GPT2_R50K_WORD_PATTERN.into(),
+        OA_GPT5_O220K_WORD_PATTERN.into(),
         &oa_gt5_o200k_base_specials().to_vec(),
     )
 }
@@ -163,7 +162,7 @@ pub fn load_o200k_harmony_vocab<T: TokenType>(
         disk_cache,
         &[OA_KEY, "o200k"],
         &OA_GPT5_O200K_BASE_TIKTOKEN,
-        OA_GPT2_R50K_WORD_PATTERN.into(),
+        OA_GPT5_O220K_WORD_PATTERN.into(),
         &oa_gpt5_o200k_harmony_specials().to_vec(),
     )
 }

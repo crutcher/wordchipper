@@ -1,7 +1,7 @@
 //! # Special Words Vocabulary
 
 use crate::alloc::vec::Vec;
-use crate::types::TokenType;
+use crate::types::{CommonHashSet, TokenType};
 use crate::vocab::utility::validators::try_vocab_size;
 use crate::vocab::{SpanTokenMap, TokenVocab};
 
@@ -114,10 +114,8 @@ impl<T: TokenType> SpecialVocab<T> {
 impl<T: TokenType> TokenVocab<T> for SpecialVocab<T> {
     type Token = T;
 
-    fn tokens(&self) -> Vec<T> {
-        let mut tokens: Vec<T> = self.span_map.values().copied().collect();
-        tokens.sort_unstable();
-        tokens
+    fn tokens(&self) -> CommonHashSet<T> {
+        self.span_map.values().copied().collect()
     }
 
     fn max_token(&self) -> Option<T> {

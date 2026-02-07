@@ -73,14 +73,8 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
         assert_eq!(span_vocab.byte_vocab(), &pair_vocab.byte_vocab);
 
         let tokens = span_vocab.tokens();
-        for ((a, b), c) in pair_vocab.pair_map() {
-            for t in [a, b, c].iter() {
-                assert!(
-                    tokens.contains(*t),
-                    "pair token {t:?} not found in word vocab"
-                );
-            }
-        }
+        assert_eq!(&tokens, &pair_vocab.tokens());
+
         for t in span_config.specials.tokens() {
             assert!(
                 !tokens.contains(&t),
@@ -195,17 +189,12 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
 impl<T: TokenType> TokenVocab<T> for UnifiedTokenVocab<T> {
     type Token = T;
 
-    fn tokens(&self) -> Vec<T> {
-        let mut tokens = self
-            .span_vocab
+    fn tokens(&self) -> CommonHashSet<T> {
+        self.span_vocab
             .tokens()
             .into_iter()
             .chain(self.pair_vocab.tokens())
             .collect::<CommonHashSet<T>>()
-            .into_iter()
-            .collect::<Vec<T>>();
-        tokens.sort_unstable();
-        tokens
     }
 
     fn span_pairs(&self) -> impl Iterator<Item = (Vec<u8>, T)> {

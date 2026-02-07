@@ -253,18 +253,13 @@ impl<T: TokenType> SpanMapVocab<T> {
 impl<T: TokenType> TokenVocab<T> for SpanMapVocab<T> {
     type Token = T;
 
-    fn tokens(&self) -> Vec<T> {
-        let mut tokens = self
-            .byte_vocab
+    fn tokens(&self) -> CommonHashSet<T> {
+        self.byte_vocab
             .byte_tokens
             .iter()
             .copied()
             .chain(self.span_map.values().copied())
             .collect::<CommonHashSet<T>>()
-            .into_iter()
-            .collect::<Vec<T>>();
-        tokens.sort_unstable();
-        tokens
     }
 
     fn max_token(&self) -> Option<T> {
@@ -313,7 +308,7 @@ mod tests {
                 .tokens()
                 .into_iter()
                 .chain([300_u32, 301, 302].into_iter())
-                .collect::<Vec<T>>()
+                .collect()
         );
     }
 
