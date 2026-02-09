@@ -5,6 +5,8 @@ use clap::builder::{PossibleValuesParser, TypedValueParser};
 use indicatif::ProgressBar;
 use once_cell::sync::Lazy;
 use rayon::prelude::*;
+use std::io;
+use std::io::IsTerminal;
 use std::iter::Iterator;
 use std::time::Duration;
 use strum::IntoEnumIterator;
@@ -153,7 +155,13 @@ fn main() -> anyhow::Result<()> {
         DefaultTokenDecoder::from_unified_vocab(vocab.clone()),
     );
 
-    let progress_bar = ProgressBar::new_spinner();
+    let display_progress = io::stdout().is_terminal();
+
+    let mut progress_bar = if display_progress {
+        ProgressBar::new_spinner()
+    } else {
+        ProgressBar::hidden()
+    };
     progress_bar.set_message("Timing...");
 
     let mut stats = Vec::new();
