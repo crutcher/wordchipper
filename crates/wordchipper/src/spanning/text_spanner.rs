@@ -23,13 +23,20 @@ pub enum SpanRef {
     Gap(Range<usize>),
 }
 
-impl From<SpanRef> for Range<usize> {
-    fn from(span: SpanRef) -> Self {
-        match span {
+impl SpanRef {
+    /// Get the span range.
+    pub fn range(&self) -> &Range<usize> {
+        match self {
             SpanRef::Word(range) => range,
             SpanRef::Special(range) => range,
             SpanRef::Gap(range) => range,
         }
+    }
+}
+
+impl From<SpanRef> for Range<usize> {
+    fn from(span: SpanRef) -> Self {
+        span.range().clone()
     }
 }
 
@@ -325,6 +332,21 @@ mod tests {
     use super::*;
     use crate::alloc::vec;
     use crate::pretrained::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
+
+    #[test]
+    fn test_spanref() {
+        let span = SpanRef::Word(0..3);
+        assert_eq!(span.range(), &(0..3));
+        assert_eq!(Range::<usize>::from(span), 0..3);
+
+        let span = SpanRef::Gap(0..3);
+        assert_eq!(span.range(), &(0..3));
+        assert_eq!(Range::<usize>::from(span), 0..3);
+
+        let span = SpanRef::Special(0..3);
+        assert_eq!(span.range(), &(0..3));
+        assert_eq!(Range::<usize>::from(span), 0..3);
+    }
 
     #[test]
     fn test_for_each_split_span() {

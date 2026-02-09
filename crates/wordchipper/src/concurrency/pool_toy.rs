@@ -108,6 +108,9 @@ mod tests {
         let max_pool = Some(NonZeroUsize::new(128).unwrap());
         let pool = PoolToy::new(10, max_pool);
 
+        // The pool should not be empty.
+        assert!(!pool.is_empty());
+
         // This will be different sizes on different systems.
         let size = resolve_max_pool(max_pool);
 
