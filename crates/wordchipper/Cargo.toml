@@ -130,7 +130,7 @@ hashbrown = { workspace = true, optional = true }
 ahash = { workspace = true, optional = true }
 
 # "download" feature deps:
-wordchipper-disk-cache = { version = "0.5.4", path = "../wordchipper-disk-cache", optional = true }
+wordchipper-disk-cache = { version = "0.5.5", path = "../wordchipper-disk-cache", optional = true }
 
 # "rayon" feature deps:
 rayon = { workspace = true, optional = true }
