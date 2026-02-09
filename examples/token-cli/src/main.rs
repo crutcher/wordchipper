@@ -249,39 +249,56 @@ fn main() -> anyhow::Result<()> {
 
     println!();
     println!("Encoder Times:");
-    let avg_wc_enc_time =
-        stats.iter().map(|s| s.wc_enc_time).sum::<Duration>() / num_batches as u32;
-    println!(
-        "- wordchipper:\t{:>10.1?}, {:>15}",
-        avg_wc_enc_time,
-        format_bps(avg_batch_bytes, avg_wc_enc_time),
+    print_timing(
+        "wordchipper",
+        stats.iter().map(|s| s.wc_enc_time).sum::<Duration>() / num_batches as u32,
+        avg_batch_bytes,
+        args.batch_size,
     );
-    let avg_tt_enc_time =
-        stats.iter().map(|s| s.tt_enc_time).sum::<Duration>() / num_batches as u32;
-    println!(
-        "- tiktoken:\t{:>10.1?}, {:>15}",
-        avg_tt_enc_time,
-        format_bps(avg_batch_bytes, avg_tt_enc_time),
+    print_timing(
+        "tiktoken",
+        stats.iter().map(|s| s.tt_enc_time).sum::<Duration>() / num_batches as u32,
+        avg_batch_bytes,
+        args.batch_size,
     );
 
     println!();
     println!("Decoder Times:");
-    let avg_wc_dec_time =
-        stats.iter().map(|s| s.wc_dec_time).sum::<Duration>() / num_batches as u32;
-    println!(
-        "- wordchipper:\t{:>10.1?}, {:>15}",
-        avg_wc_dec_time,
-        format_bps(avg_batch_bytes, avg_wc_dec_time),
+    print_timing(
+        "wordchipper",
+        stats.iter().map(|s| s.wc_dec_time).sum::<Duration>() / num_batches as u32,
+        avg_batch_bytes,
+        args.batch_size,
     );
-    let avg_tt_dec_time =
-        stats.iter().map(|s| s.tt_dec_time).sum::<Duration>() / num_batches as u32;
-    println!(
-        "- tiktoken:\t{:>10.1?}, {:>15}",
-        avg_tt_dec_time,
-        format_bps(avg_batch_bytes, avg_tt_dec_time),
+    print_timing(
+        "tiktoken",
+        stats.iter().map(|s| s.tt_dec_time).sum::<Duration>() / num_batches as u32,
+        avg_batch_bytes,
+        args.batch_size,
     );
 
     Ok(())
+}
+
+pub fn print_timing(
+    name: &str,
+    batch_time: Duration,
+    batch_bytes: usize,
+    batch_size: usize,
+) {
+    /*
+    println!(
+        "- {name}:\t{:>15}, {:>15}, {:>15}",
+        format!("{:.1?} batch", batch_time),
+        format!("{:.1?} sample", batch_time / batch_size as u32),
+        format_bps(batch_bytes, batch_time),
+    );
+    */
+
+    println!("- {name}");
+    println!("  - batch:  {:>10.1?}", batch_time);
+    println!("  - sample: {:>10.1?}", batch_time / batch_size as u32);
+    println!("  - bps:    {:>10}", format_bps(batch_bytes, batch_time));
 }
 
 pub fn verify_encode(
