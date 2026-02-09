@@ -97,7 +97,7 @@ fn example() -> anyhow::Result<(Arc<dyn TokenEncoder<u32>>, Arc<dyn TokenDecoder
 
     let decoder: DefaultTokenDecoder<u32> = DefaultTokenDecoder::from_unified_vocab(vocab);
     #[cfg(feature = "rayon"]
-    let decoder = wordchipper::rayon::ParallelRayonDecoder::new(encoder);
+    let decoder = wordchipper::rayon::ParallelRayonDecoder::new(decoder);
 
     Ok((Arc::new(encoder), Arc::new(decoder)))
 }
