@@ -12,9 +12,7 @@ pub trait TokenVocab<T: TokenType>: Clone + Send + Sync {
     fn tokens(&self) -> CommonHashSet<T>;
 
     /// Returns the number of tokens in the vocabulary.
-    fn len(&self) -> usize {
-        self.tokens().len()
-    }
+    fn len(&self) -> usize;
 
     /// Returns true if the vocabulary is empty.
     fn is_empty(&self) -> bool {

@@ -121,7 +121,7 @@ impl<T: TokenType> TextSpanningConfig<T> {
 mod tests {
     use super::*;
     use crate::alloc::string::ToString;
-    use crate::vocab::SpecialVocab;
+    use crate::vocab::{SpecialVocab, TokenVocab};
 
     #[test]
     fn test_from_pattern() {
