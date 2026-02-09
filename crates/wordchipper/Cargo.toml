@@ -1,6 +1,8 @@
 [package]
 name = "wordchipper"
 description = "HPC Rust LLM Tokenizer Library"
+keywords = ["ai", "gpt", "bpe", "tokenizer"]
+authors.workspace = true
 repository.workspace = true
 version.workspace = true
 license.workspace = true
@@ -128,7 +130,7 @@ hashbrown = { workspace = true, optional = true }
 ahash = { workspace = true, optional = true }
 
 # "download" feature deps:
-wordchipper-disk-cache = { version = "0.5.1", path = "../wordchipper-disk-cache", optional = true }
+wordchipper-disk-cache = { version = "0.5.2", path = "../wordchipper-disk-cache", optional = true }
 
 # "rayon" feature deps:
 rayon = { workspace = true, optional = true }
