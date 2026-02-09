@@ -7,7 +7,7 @@ use wordchipper::compat::slices::{inner_slice_view, inner_str_view};
 use wordchipper::concurrency::rayon::{ParallelRayonDecoder, ParallelRayonEncoder};
 use wordchipper::decoders::{TokenDecoder, TokenDictDecoder};
 use wordchipper::encoders::{DefaultTokenEncoder, TokenEncoder};
-use wordchipper::pretrained::openai::patterns::{OA_GPT5_O220K_WORD_PATTERN};
+use wordchipper::pretrained::openai::patterns::OA_GPT5_O220K_WORD_PATTERN;
 use wordchipper::training::BinaryPairVocabTrainerOptions;
 use wordchipper::vocab::io::save_tiktoken_vocab_path;
 use wordchipper::vocab::{ByteMapVocab, TokenVocab, UnifiedTokenVocab};
