@@ -9,7 +9,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.5.2"
+version = "0.5.3"
 repository = "https://github.com/crutcher/wordchipper"
 rust-version = "1.93.0"
 edition = "2024"

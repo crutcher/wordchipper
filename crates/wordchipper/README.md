@@ -65,6 +65,38 @@ Decoder Times:
 * [Token Encoders](https://docs.rs/wordchipper/latest/wordchipper/encoders/index.html)
 * [Token Decoders](https://docs.rs/wordchipper/latest/wordchipper/decoders/index.html)
 
+## Loading Pretrained Models
+
+Loading a pre-trained model requires reading the vocabulary,
+as well as configuring the spanning (regex and special words)
+configuration.
+
+For a number of pretrained models, simplified constructors are
+available to download, cache, and load the vocabulary.
+
+See: [wordchipper::pretrained::openai::OATokenizer](https://docs.rs/wordchipper/latest/wordchipper/pretrained/openai/enum.OATokenizer.html)
+
+```rust,no_run
+use wordchipper::{
+    decoders::DefaultTokenDecoder,
+    disk_cache::WordchipperDiskCache,
+    encoders::DefaultTokenEncoder,
+    pretrained::openai::OATokenizer,
+    vocab::UnifiedTokenVocab,
+};
+
+fn example() -> anyhow::Result<(DefaultTokenEncoder<u32>, DefaultTokenDecoder<u32>)> {
+    let model = OATokenizer::O200kHarmony;
+    let mut disk_cache = WordchipperDiskCache::default();
+    let vocab: UnifiedTokenVocab<u32> = model.load(&mut disk_cache)?;
+
+    let encoder: DefaultTokenEncoder<u32> = DefaultTokenEncoder::new(vocab.clone(), None);
+    let decoder: DefaultTokenDecoder<u32> = DefaultTokenDecoder::from_unified_vocab(vocab);
+
+    Ok((encoder, decoder))
+}
+```
+
 ## Training Overview
 
 * [Training Example](https://docs.rs/wordchipper/latest/wordchipper/training/index.html)
