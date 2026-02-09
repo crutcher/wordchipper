@@ -1,7 +1,8 @@
 //! # `TokenDecoder` Result Types
 
-use crate::alloc::vec::Vec;
 use core::fmt::Debug;
+
+use crate::alloc::vec::Vec;
 
 /// The result of decoding tokens into bytes.
 #[derive(Debug)]

@@ -1,12 +1,13 @@
 //! # Word Counter
 
+use core::fmt::Debug;
+
 use crate::{
     regex::RegexWrapper,
     training::{CountType, StringChunkType, utility::TokenSpanBuf},
     types::{CommonHashMap, TokenType},
     vocab::ByteMapVocab,
 };
-use core::fmt::Debug;
 
 /// Options for [`TextSpanCounter`].
 #[derive(Debug, Clone)]

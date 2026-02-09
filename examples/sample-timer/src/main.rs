@@ -1,3 +1,5 @@
+use std::{io, io::IsTerminal, iter::Iterator, time::Duration};
+
 use anyhow::bail;
 use arrow::array::{Array, StringArray};
 use clap::{
@@ -7,7 +9,6 @@ use clap::{
 use indicatif::ProgressBar;
 use once_cell::sync::Lazy;
 use rayon::prelude::*;
-use std::{io, io::IsTerminal, iter::Iterator, time::Duration};
 use strum::IntoEnumIterator;
 use tiktoken_rs::{CoreBPE, Rank};
 use wordchipper::{

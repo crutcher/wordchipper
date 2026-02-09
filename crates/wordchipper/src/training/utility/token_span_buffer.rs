@@ -1,10 +1,11 @@
 //! # Token Span Buffer
 
+use core::hash::Hash;
+
 use crate::{
     types::{Pair, TokenType},
     vocab::ByteMapVocab,
 };
-use core::hash::Hash;
 
 /// A mutable span of tokens (a chunk or "word").
 ///

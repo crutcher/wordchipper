@@ -59,9 +59,10 @@ pub fn resolve_max_pool(max_pool: Option<NonZeroUsize>) -> usize {
 
 #[cfg(test)]
 mod tests {
+    use serial_test::serial;
+
     use super::*;
     use crate::types::CommonHashMap;
-    use serial_test::serial;
 
     #[test]
     #[serial]

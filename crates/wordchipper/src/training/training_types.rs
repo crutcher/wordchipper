@@ -4,6 +4,7 @@ use core::{
     hash::Hash,
     ops::{AddAssign, SubAssign},
 };
+
 use num_traits::{FromPrimitive, PrimInt, ToPrimitive};
 
 /// A type that can be used as a string key.
@@ -52,10 +53,12 @@ impl<T> CountType for T where
 
 #[cfg(test)]
 mod tests {
+    use core::marker::PhantomData;
+
+    use compact_str::CompactString;
+
     use super::*;
     use crate::alloc::string::String;
-    use compact_str::CompactString;
-    use core::marker::PhantomData;
 
     #[test]
     fn test_common_count_types() {

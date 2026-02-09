@@ -89,12 +89,13 @@ pub trait TokenDecoder<T: TokenType>: Send + Sync {
 
 #[cfg(test)]
 mod tests {
+    use num_traits::FromPrimitive;
+
     use super::*;
     use crate::{
         alloc::{string::ToString, vec},
         decoders::utility::ByteDecoder,
     };
-    use num_traits::FromPrimitive;
 
     #[test]
     fn test_decode_context() {

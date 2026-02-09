@@ -216,12 +216,13 @@ impl<T: TokenType> TokenVocab<T> for UnifiedTokenVocab<T> {
 
 #[cfg(test)]
 mod tests {
+    use num_traits::FromPrimitive;
+
     use super::*;
     use crate::{
         spanning::TextSpanningConfig,
         vocab::{PairTokenMap, SpanMapVocab},
     };
-    use num_traits::FromPrimitive;
 
     #[test]
     fn test_init() {

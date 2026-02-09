@@ -1,8 +1,9 @@
 //! # Nanochat Dataset Loader
 
+use std::{fs, fs::File, path::PathBuf};
+
 use downloader::{Download, Downloader};
 use parquet::arrow::arrow_reader::{ParquetRecordBatchReader, ParquetRecordBatchReaderBuilder};
-use std::{fs, fs::File, path::PathBuf};
 
 /// The upstream dataset URL.
 pub const NANOCHAT_TRAIN_BASE_URL: &str =
@@ -305,9 +306,11 @@ impl DatasetCache {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::fs::File;
+
     use tempdir::TempDir;
+
+    use super::*;
 
     #[test]
     fn test_dataset_source_config() {

@@ -1,5 +1,7 @@
 //! # Abstract Base [`TokenEncoder`].
 
+use core::num::NonZeroUsize;
+
 use crate::{
     alloc::vec::Vec,
     encoders::{
@@ -10,7 +12,6 @@ use crate::{
     types::TokenType,
     vocab::{DEFAULT_BYTE_PER_TOKEN_RATIO, SpecialVocab, UnifiedTokenVocab},
 };
-use core::num::NonZeroUsize;
 
 /// A [`TokenEncoder`] with pluggable [`SpanPolicy`]s.
 ///

@@ -186,8 +186,9 @@ pub fn load_o200k_harmony_vocab<T: TokenType>(
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use core::str::FromStr;
+
+    use super::*;
 
     #[test]
     fn test_oa_tokenizer() {

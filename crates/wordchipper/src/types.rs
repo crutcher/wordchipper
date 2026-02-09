@@ -3,6 +3,7 @@ use core::{
     fmt::{Debug, Display},
     hash::Hash,
 };
+
 use num_traits::{FromPrimitive, PrimInt, ToPrimitive, Unsigned};
 
 /// A type that can be used as a token in a BPE-based encoders.
@@ -82,8 +83,9 @@ cfg_if::cfg_if! {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use core::marker::PhantomData;
+
+    use super::*;
 
     #[test]
     fn test_common_token_types() {

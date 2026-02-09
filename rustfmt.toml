@@ -10,6 +10,7 @@ imports_layout = "HorizontalVertical"
 fn_args_layout = "Vertical"
 imports_granularity = "Crate"
 reorder_impl_items = true
+group_imports = "StdExternalCrate"
 
 # unstable/nightly
 # format_code_in_doc_comments = true

@@ -1,6 +1,7 @@
 //! # Range Utilities
 
 use core::ops::Range;
+
 use num_traits::PrimInt;
 
 /// Add an offset to the start and end of a [`Range<Idx>`].

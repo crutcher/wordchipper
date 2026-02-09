@@ -1,11 +1,12 @@
 //! # Regex Wrapper
 //! This modules provides mechanisms to mix `regex` and `fancy_regex` types.
 
+use core::fmt::Debug;
+
 use crate::alloc::{
     boxed::Box,
     string::{String, ToString},
 };
-use core::fmt::Debug;
 
 /// Error wrapper for regex patterns.
 #[non_exhaustive]

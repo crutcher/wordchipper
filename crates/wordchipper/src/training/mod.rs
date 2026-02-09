@@ -92,7 +92,6 @@ mod bpe_trainer;
 mod training_types;
 
 #[doc(inline)]
-pub use training_types::{CountType, StringChunkType};
-
-#[doc(inline)]
 pub use bpe_trainer::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions};
+#[doc(inline)]
+pub use training_types::{CountType, StringChunkType};

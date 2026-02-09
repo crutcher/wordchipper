@@ -1,5 +1,10 @@
 //! # Vocab Trainer
 
+use core::cmp::Ordering;
+
+use compact_str::CompactString;
+use dary_heap::OctonaryHeap;
+
 use crate::{
     regex::RegexWrapperPattern,
     training::{
@@ -23,9 +28,6 @@ use crate::{
         utility::validators::{U8_SIZE, expect_vocab_size},
     },
 };
-use compact_str::CompactString;
-use core::cmp::Ordering;
-use dary_heap::OctonaryHeap;
 
 /// Options for [`BinaryPairVocabTrainer`].
 #[derive(Debug, Clone)]
@@ -412,6 +414,10 @@ where
 
 #[cfg(test)]
 mod tests {
+    use core::cmp::Ordering;
+
+    use compact_str::CompactString;
+
     use crate::{
         compat::traits::static_is_send_sync_check,
         decoders::{TokenDecoder, TokenDictDecoder},
@@ -420,8 +426,6 @@ mod tests {
         training::{BinaryPairVocabTrainerOptions, bpe_trainer::MergeJob},
         vocab::{ByteMapVocab, UnifiedTokenVocab},
     };
-    use compact_str::CompactString;
-    use core::cmp::Ordering;
 
     #[test]
     fn test_tokenizer_options() {

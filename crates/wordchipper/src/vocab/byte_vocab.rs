@@ -1,11 +1,12 @@
 //! # Byte/Token Mapping Table
 
+use core::fmt::Debug;
+
 use crate::{
     alloc::{vec, vec::Vec},
     types::{CommonHashSet, TokenType},
     vocab::{ByteTokenArray, ByteTokenMap, TokenByteMap, TokenVocab},
 };
-use core::fmt::Debug;
 
 /// ``0..=255`` Rank Byte/Token Bijection Table
 ///

@@ -1,5 +1,7 @@
 //! # Text Spanner
 
+use core::{num::NonZeroUsize, ops::Range};
+
 use crate::{
     alloc::{string::String, vec::Vec},
     compat::ranges::offset_range,
@@ -8,7 +10,6 @@ use crate::{
     types::TokenType,
     vocab::{DEFAULT_BYTE_PER_TOKEN_RATIO, TokenVocab},
 };
-use core::{num::NonZeroUsize, ops::Range};
 
 /// Span Label/Range Reference for [`TextSpanner`].
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]

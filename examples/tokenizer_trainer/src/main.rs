@@ -1,7 +1,8 @@
+use std::{collections::HashSet, time::Duration};
+
 use arrow::array::{Array, StringArray};
 use clap::Parser;
 use similar::{ChangeTag, TextDiff};
-use std::{collections::HashSet, time::Duration};
 use wordchipper::{
     compat::slices::{inner_slice_view, inner_str_view},
     concurrency::rayon::{ParallelRayonDecoder, ParallelRayonEncoder},
