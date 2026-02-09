@@ -7,7 +7,7 @@ use wordchipper::compat::slices::{inner_slice_view, inner_str_view};
 use wordchipper::concurrency::rayon::{ParallelRayonDecoder, ParallelRayonEncoder};
 use wordchipper::decoders::{TokenDecoder, TokenDictDecoder};
 use wordchipper::encoders::{DefaultTokenEncoder, TokenEncoder};
-use wordchipper::pretrained::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN;
+use wordchipper::pretrained::openai::patterns::OA_GPT5_O220K_WORD_PATTERN;
 use wordchipper::training::BinaryPairVocabTrainerOptions;
 use wordchipper::vocab::io::save_tiktoken_vocab_path;
 use wordchipper::vocab::{ByteMapVocab, TokenVocab, UnifiedTokenVocab};
@@ -26,7 +26,7 @@ pub struct Args {
     pub shards: Vec<usize>,
 
     /// Vocab size.
-    #[arg(long, default_value = "65536")]
+    #[arg(long, default_value = "199997")]
     pub vocab_size: usize,
 
     /// Time the avg encode/decode.
@@ -89,7 +89,7 @@ fn main() -> anyhow::Result<()> {
     let t0 = std::time::Instant::now();
 
     let vocab_size = args.vocab_size;
-    let options = BinaryPairVocabTrainerOptions::new(OA_GPT3_CL100K_WORD_PATTERN, vocab_size);
+    let options = BinaryPairVocabTrainerOptions::new(OA_GPT5_O220K_WORD_PATTERN, vocab_size);
 
     let mut trainer = options.init::<K, C>();
 
