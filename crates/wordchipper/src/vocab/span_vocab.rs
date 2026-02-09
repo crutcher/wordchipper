@@ -251,7 +251,7 @@ impl<T: TokenType> TokenVocab<T> for SpanMapVocab<T> {
 
     fn tokens(&self) -> CommonHashSet<T> {
         self.byte_vocab
-            .byte_tokens
+            .byte_tokens()
             .iter()
             .copied()
             .chain(self.span_map.values().copied())

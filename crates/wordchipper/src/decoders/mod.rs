@@ -45,6 +45,6 @@ pub use token_dict_decoder::TokenDictDecoder;
 ///
 /// ## Style Hints
 ///
-/// When there is no local ambiguity with other encoders,
-/// prefer `encoder` for instance names.
+/// When there is no local ambiguity with other decoders,
+/// prefer `decoder` for instance names.
 pub type DefaultTokenDecoder<T> = TokenDictDecoder<T>;

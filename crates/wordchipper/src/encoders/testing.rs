@@ -59,7 +59,7 @@ pub fn common_encoder_tests<T: TokenType, E: TokenEncoder<T>>(
 
     let specials: Vec<(&[u8], T)> = vocab
         .special_vocab()
-        .span_map
+        .span_map()
         .iter()
         .map(|(span, token)| (span.as_slice(), *token))
         .collect::<Vec<_>>();

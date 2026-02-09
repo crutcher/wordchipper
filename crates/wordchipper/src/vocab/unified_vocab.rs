@@ -70,7 +70,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
         span_vocab: SpanMapVocab<T>,
         pair_vocab: PairMapVocab<T>,
     ) -> Self {
-        assert_eq!(span_vocab.byte_vocab(), &pair_vocab.byte_vocab);
+        assert_eq!(span_vocab.byte_vocab(), pair_vocab.byte_vocab());
 
         let tokens = span_vocab.tokens();
         assert_eq!(&tokens, &pair_vocab.tokens());

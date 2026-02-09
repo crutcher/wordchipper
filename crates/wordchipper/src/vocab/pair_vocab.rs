@@ -58,10 +58,10 @@ pub fn try_validate_pair_map<T: TokenType>(
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct PairMapVocab<T: TokenType> {
     /// Byte/token mapping table.
-    pub byte_vocab: ByteMapVocab<T>,
+    byte_vocab: ByteMapVocab<T>,
 
     /// Map of ``{ (T, T) -> T }``.
-    pub pair_map: PairTokenMap<T>,
+    pair_map: PairTokenMap<T>,
 }
 
 impl<T: TokenType> PairMapVocab<T> {
@@ -101,6 +101,11 @@ impl<T: TokenType> PairMapVocab<T> {
                 })
                 .collect(),
         )
+    }
+
+    /// Get the byte vocabulary.
+    pub fn byte_vocab(&self) -> &ByteMapVocab<T> {
+        &self.byte_vocab
     }
 
     /// Get the map of pairs.

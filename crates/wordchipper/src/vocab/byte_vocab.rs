@@ -14,10 +14,10 @@ use core::fmt::Debug;
 #[derive(Clone, PartialEq)]
 pub struct ByteMapVocab<T: TokenType> {
     /// Hash map from token to byte ordinal value.
-    pub token_bytes: TokenByteMap<T>,
+    token_bytes: TokenByteMap<T>,
 
     /// Table mapping from byte ordinal (position) to token.
-    pub byte_tokens: [T; 256],
+    byte_tokens: [T; 256],
 }
 
 impl<T: TokenType> Debug for ByteMapVocab<T> {

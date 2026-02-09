@@ -35,7 +35,7 @@ impl<T: TokenType> PairExpansionDecoder<T> {
             .iter()
             .map(|(&pair, &token)| (token, pair))
             .collect();
-        Self::new(pair_vocab.byte_vocab.clone(), token_pairs)
+        Self::new(pair_vocab.byte_vocab().clone(), token_pairs)
     }
 
     /// Creates a new Decoder.

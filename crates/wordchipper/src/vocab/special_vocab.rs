@@ -10,9 +10,8 @@ use crate::vocab::{SpanTokenMap, TokenVocab};
 /// This contains no byte:token mappings, or pair mergers.
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct SpecialVocab<T: TokenType> {
-    /// The regex pattern used for text spl
-    /// Map of ``{ Vec<u8> -> T }``.
-    pub span_map: SpanTokenMap<T>,
+    /// The map of special words to tokens.
+    span_map: SpanTokenMap<T>,
 }
 
 impl<T: TokenType> From<SpanTokenMap<T>> for SpecialVocab<T> {
@@ -31,6 +30,11 @@ impl<T: TokenType> SpecialVocab<T> {
     /// A new `SpecialVocab` instance.
     pub fn from_map(span_map: SpanTokenMap<T>) -> Self {
         Self { span_map }
+    }
+
+    /// Get the span map.
+    pub fn span_map(&self) -> &SpanTokenMap<T> {
+        &self.span_map
     }
 
     /// Convert to a different token type.
