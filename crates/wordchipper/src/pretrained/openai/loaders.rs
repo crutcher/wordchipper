@@ -18,13 +18,20 @@ use crate::types::TokenType;
 use crate::vocab::UnifiedTokenVocab;
 use crate::vocab::io::load_tiktoken_vocab_path;
 use crate::vocab::utility::resource_tools::ConstUrlResource;
-use strum_macros::EnumString;
 
 /// Shared download context key.
 const OA_KEY: &str = "openai";
 
 /// `OpenAI` Pretrained Tokenizer types.
-#[derive(Clone, Debug, PartialEq, EnumString, strum_macros::Display)]
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    PartialEq,
+    strum_macros::EnumString,
+    strum_macros::EnumIter,
+    strum_macros::Display,
+)]
 #[non_exhaustive]
 pub enum OATokenizer {
     /// GPT-2 "`r50k_base`" tokenizer.

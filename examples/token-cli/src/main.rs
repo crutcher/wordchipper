@@ -1,20 +1,23 @@
 use arrow::array::StringArray;
 use clap::Parser;
+use clap::builder::PossibleValuesParser;
+use once_cell::sync::Lazy;
+use rayon::prelude::*;
 use similar::{ChangeTag, TextDiff};
-use std::num::NonZeroUsize;
+use std::iter::Iterator;
 use std::time::Duration;
+use strum::IntoEnumIterator;
+use tiktoken_rs::CoreBPE;
 use wordchipper::compat::slices::{inner_slice_view, inner_str_view};
 use wordchipper::compat::timers;
-use wordchipper::decoders::{TokenDecoder, TokenDictDecoder};
+use wordchipper::decoders::{DefaultTokenDecoder, TokenDecoder};
 use wordchipper::disk_cache::WordchipperDiskCache;
 use wordchipper::encoders::{DefaultTokenEncoder, TokenEncoder};
 use wordchipper::pretrained::openai::OATokenizer;
 use wordchipper::vocab::UnifiedTokenVocab;
 use wordchipper_data::dataset::DatasetCacheConfig;
 
-#[cfg(feature = "parallel")]
-use rayon::prelude::*;
-
+/// Format a bytes/sec string.
 pub fn format_bps(
     bytes: usize,
     duration: Duration,
@@ -23,28 +26,62 @@ pub fn format_bps(
     format!(r"{}/s", humansize::format_size_i(bps, humansize::BINARY))
 }
 
+/// Load a tiktoken model from the given `OATokenizer` enum variant.
+fn load_tiktoken(model: OATokenizer) -> anyhow::Result<CoreBPE> {
+    use OATokenizer::*;
+    match model {
+        R50kBase => tiktoken_rs::r50k_base(),
+        P50kBase => tiktoken_rs::p50k_base(),
+        P50kEdit => tiktoken_rs::p50k_edit(),
+        Cl100kBase => tiktoken_rs::cl100k_base(),
+        O200kBase => tiktoken_rs::o200k_base(),
+        O200kHarmony => tiktoken_rs::o200k_harmony(),
+        _ => panic!("unsupported model: {:?}", model),
+    }
+}
+
+/// Build a clap parser for the `OATokenizer` enum variants.
+///
+/// The hack here is to get the strum enum variants to list in the clap help.
+fn build_oatokenizer_parser() -> PossibleValuesParser {
+    static OATOKENIZER_VARIANTS: Lazy<Vec<String>> =
+        Lazy::new(|| OATokenizer::iter().map(|v| v.to_string()).collect());
+
+    PossibleValuesParser::new(
+        &*OATOKENIZER_VARIANTS
+            .iter()
+            .map(|s| s.as_str())
+            .collect::<Vec<_>>(),
+    )
+}
+
 /// Example encoders trainer.
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 pub struct Args {
-    /// Path to dataset directory.
+    /// Path to sample shard dataset directory.
     #[arg(long)]
     pub dataset_dir: String,
 
-    /// Enable verbose output.
-    #[arg(long, default_value = "false")]
-    pub verbose: bool,
+    /// The pretrained model to compare.
+    #[arg(
+        long,
+        value_parser = build_oatokenizer_parser(),
+        default_value_t = OATokenizer::O200kHarmony
+    )]
+    pub model: OATokenizer,
 
-    /// Pool Size
-    #[arg(long)]
-    pub pool_size: Option<NonZeroUsize>,
+    /// The shards to use for timing.
+    #[arg(long, default_values_t = vec![0, 1])]
+    pub shards: Vec<usize>,
+
+    /// The batch size to use for timing.
+    #[arg(long, default_value_t = 512)]
+    pub batch_size: usize,
 }
 
 fn main() -> anyhow::Result<()> {
     let args = Args::parse();
-    if args.verbose {
-        println!("{:#?}", args);
-    }
 
     run(&args)?;
 
@@ -55,31 +92,31 @@ fn main() -> anyhow::Result<()> {
 fn run(args: &Args) -> anyhow::Result<()> {
     type T = u32;
 
-    let mut dataset_cache = DatasetCacheConfig::default()
+    let mut shard_data_cache = DatasetCacheConfig::default()
         .with_cache_dir(args.dataset_dir.clone())
         .init()?;
 
-    let tt_bpe = tiktoken_rs::o200k_harmony()?;
+    println!("Model: {}", args.model);
 
-    let mut disk_cache = WordchipperDiskCache::default();
-    let vocab: UnifiedTokenVocab<T> = OATokenizer::O200kHarmony.load(&mut disk_cache)?;
+    let tt_bpe = load_tiktoken(args.model)?;
 
-    let encoder = DefaultTokenEncoder::new(vocab.clone(), args.pool_size);
-    #[cfg(feature = "parallel")]
-    let encoder = wordchipper::concurrency::rayon::ParallelRayonEncoder::new(encoder);
+    let vocab: UnifiedTokenVocab<T> = {
+        let mut disk_cache = WordchipperDiskCache::default();
+        args.model.load(&mut disk_cache)?
+    };
 
-    let decoder = TokenDictDecoder::from_unified_vocab(vocab.clone());
-    #[cfg(feature = "parallel")]
-    let decoder = wordchipper::concurrency::rayon::ParallelRayonDecoder::new(decoder);
+    let encoder = wordchipper::concurrency::rayon::ParallelRayonEncoder::new(
+        DefaultTokenEncoder::new(vocab.clone(), None),
+    );
 
-    let batch_size = 512;
-
-    let shards = vec![0, 1];
+    let decoder = wordchipper::concurrency::rayon::ParallelRayonDecoder::new(
+        DefaultTokenDecoder::from_unified_vocab(vocab.clone()),
+    );
 
     let mut samples = Vec::new();
     {
-        for shard in shards {
-            for batch in dataset_cache.read_batches(shard, true)? {
+        for &shard in &args.shards {
+            for batch in shard_data_cache.read_batches(shard, true)? {
                 let batch = batch?;
                 let column = batch
                     .column_by_name("text")
@@ -105,7 +142,7 @@ fn run(args: &Args) -> anyhow::Result<()> {
     let avg_sample_size = total_sample_bytes / sample_count;
     println!("- avg size: {avg_sample_size}");
 
-    let sample_batches: Vec<&[String]> = samples.chunks(batch_size).collect::<Vec<_>>();
+    let sample_batches: Vec<&[String]> = samples.chunks(args.batch_size).collect::<Vec<_>>();
     let num_batches = sample_batches.len();
 
     let avg_batch_size_bytes = total_sample_bytes / num_batches;
@@ -113,7 +150,7 @@ fn run(args: &Args) -> anyhow::Result<()> {
 
     println!();
     println!("Timing Config:");
-    println!("- batch size: {}", batch_size);
+    println!("- batch size: {}", args.batch_size);
     println!("- num batches: {}", num_batches);
 
     println!();
@@ -137,12 +174,9 @@ fn run(args: &Args) -> anyhow::Result<()> {
 
         {
             let (duration, tt_batch_tokens) = timers::timeit(|| {
-                #[cfg(feature = "parallel")]
-                let it = str_batch.par_iter();
-                #[cfg(not(feature = "parallel"))]
-                let it = str_batch.iter();
-
-                it.map(|s| tt_bpe.encode_with_special_tokens(s))
+                str_batch
+                    .par_iter()
+                    .map(|s| tt_bpe.encode_with_special_tokens(s))
                     .collect::<Vec<_>>()
             });
             tt_batch_durations.push(duration);
@@ -189,12 +223,10 @@ fn run(args: &Args) -> anyhow::Result<()> {
     for (idx, sample) in sample_batches.iter().enumerate() {
         let batch = &wc_token_batches[idx];
 
-        #[cfg(feature = "parallel")]
-        let it = sample.par_iter();
-        #[cfg(not(feature = "parallel"))]
-        let it = sample.iter();
-
-        let expected: Vec<String> = it.map(|t| encoder.spanner().remove_gaps(t)).collect();
+        let expected: Vec<String> = sample
+            .par_iter()
+            .map(|t| encoder.spanner().remove_gaps(t))
+            .collect();
 
         let slices = inner_slice_view(batch);
 
@@ -212,12 +244,9 @@ fn run(args: &Args) -> anyhow::Result<()> {
 
         {
             let (duration, tt_decoded) = timers::timeit(|| {
-                #[cfg(feature = "parallel")]
-                let it = batch.par_iter();
-                #[cfg(not(feature = "parallel"))]
-                let it = batch.iter();
-
-                it.map(|tokens| tt_bpe.decode(tokens.clone()).unwrap())
+                batch
+                    .par_iter()
+                    .map(|tokens| tt_bpe.decode(tokens.clone()).unwrap())
                     .collect::<Vec<_>>()
             });
 
@@ -248,12 +277,14 @@ pub fn verify_decode(
     let sstrs: Vec<&str> = inner_str_view(expected);
     let dstrs: Vec<&str> = inner_str_view(actual);
 
-    #[cfg(feature = "parallel")]
-    let it = sstrs.par_iter().zip(dstrs.par_iter());
-    #[cfg(not(feature = "parallel"))]
-    let it = sstrs.iter().zip(dstrs.iter());
-
-    let mismatch: Vec<(&str, &str)> = it.filter(|(s, d)| s != d).map(|(&s, &d)| (s, d)).collect();
+    let mismatch: Vec<(&str, &str)> = sstrs
+        .iter()
+        .zip(dstrs.iter())
+        .collect::<Vec<_>>()
+        .par_iter()
+        .filter(|(s, d)| s != d)
+        .map(|&(&s, &d)| (s, d))
+        .collect();
 
     if let Some((s, d)) = mismatch.into_iter().next() {
         let diff = TextDiff::from_lines(s, d);

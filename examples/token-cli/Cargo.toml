@@ -9,18 +9,16 @@ publish = false
 [lints]
 workspace = true
 
-[features]
-default = ["parallel"]
-parallel = []
-
 [dependencies]
 wordchipper-data = { path = "../../crates/wordchipper-data" }
 wordchipper = { path = "../../crates/wordchipper" }
 
 anyhow = { workspace = true }
+strum = { workspace = true }
 arrow = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 humansize = { workspace = true }
 rayon = { workspace = true }
 similar = { workspace = true }
 tiktoken-rs = { workspace = true }
+once_cell = "1.21.3"
