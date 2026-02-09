@@ -12,10 +12,10 @@ use crate::vocab::SpecialVocab;
 #[derive(Debug, Clone)]
 pub struct TextSpanningConfig<T: TokenType> {
     /// Regex pattern for word splitting.
-    pub pattern: RegexWrapperPattern,
+    pattern: RegexWrapperPattern,
 
     /// Special tokens vocabulary.
-    pub specials: SpecialVocab<T>,
+    specials: SpecialVocab<T>,
 }
 
 impl<T: TokenType> From<RegexWrapperPattern> for TextSpanningConfig<T> {
@@ -107,12 +107,12 @@ impl<T: TokenType> TextSpanningConfig<T> {
     }
 
     /// Get the special tokens vocabulary.
-    pub fn special_vocab(&self) -> &SpecialVocab<T> {
+    pub fn specials(&self) -> &SpecialVocab<T> {
         &self.specials
     }
 
     /// Get a mutable view of the [`SpecialVocab`]
-    pub fn special_vocab_mut(&mut self) -> &mut SpecialVocab<T> {
+    pub fn specials_mut(&mut self) -> &mut SpecialVocab<T> {
         &mut self.specials
     }
 }
@@ -131,10 +131,10 @@ mod tests {
 
         let mut config: TextSpanningConfig<T> = pattern.into();
         assert_eq!(config.pattern().as_str(), "hello");
-        assert_eq!(config.special_vocab().len(), 0);
+        assert_eq!(config.specials().len(), 0);
 
-        config.special_vocab_mut().add_str_word("hello", 1);
-        assert_eq!(config.special_vocab().len(), 1);
+        config.specials_mut().add_str_word("hello", 1);
+        assert_eq!(config.specials().len(), 1);
 
         let config = config.with_pattern("hi");
         assert_eq!(
@@ -147,6 +147,6 @@ mod tests {
         specials.add_str_word("pear", 1);
 
         let config = config.with_specials(specials.clone());
-        assert_eq!(config.special_vocab(), &specials);
+        assert_eq!(config.specials(), &specials);
     }
 }

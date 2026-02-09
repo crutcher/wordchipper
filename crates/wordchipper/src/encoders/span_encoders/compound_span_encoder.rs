@@ -142,7 +142,7 @@ impl<T: TokenType, S: SpanPolicy<T>> TokenEncoder<T> for CompoundSpanVocabEncode
     }
 
     fn special_vocab(&self) -> &SpecialVocab<T> {
-        self.vocab.spanning().special_vocab()
+        self.vocab.spanning().specials()
     }
 
     fn expected_bytes_per_token(&self) -> f32 {

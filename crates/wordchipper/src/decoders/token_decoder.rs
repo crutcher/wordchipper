@@ -104,7 +104,7 @@ mod tests {
             "hello world"
                 .as_bytes()
                 .iter()
-                .map(|&b| decoder.byte_vocab.get_token(b)),
+                .map(|&b| decoder.byte_vocab().get_token(b)),
         );
         tokens.extend_from_slice(&[256, 3000]);
 

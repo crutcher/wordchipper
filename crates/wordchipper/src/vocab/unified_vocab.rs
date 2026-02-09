@@ -75,7 +75,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
         let tokens = span_vocab.tokens();
         assert_eq!(&tokens, &pair_vocab.tokens());
 
-        for t in span_config.specials.tokens() {
+        for t in span_config.specials().tokens() {
             assert!(
                 !tokens.contains(&t),
                 "special token {t:?} found in word vocab"
@@ -120,12 +120,12 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
 
     /// Get a reference to the [`SpecialVocab`]
     pub fn special_vocab(&self) -> &SpecialVocab<T> {
-        self.spanning.special_vocab()
+        self.spanning.specials()
     }
 
     /// Get a mutable view of the [`SpecialVocab`]
     pub fn special_vocab_mut(&mut self) -> &mut SpecialVocab<T> {
-        self.spanning.special_vocab_mut()
+        self.spanning.specials_mut()
     }
 
     /// Compiled expansion dictionary.
@@ -146,7 +146,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
             tmp.insert(span, token);
         }
 
-        for (span, t) in self.spanning.special_vocab().span_pairs() {
+        for (span, t) in self.spanning.specials().span_pairs() {
             tmp.insert(span, t);
         }
 
