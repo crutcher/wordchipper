@@ -170,11 +170,6 @@ impl<T: TokenType> SpanMapVocab<T> {
         &self.span_map
     }
 
-    /// Get the mutable [`SpanTokenMap`].
-    pub fn span_map_mut(&mut self) -> &mut SpanTokenMap<T> {
-        &mut self.span_map
-    }
-
     /// Iterate over the words in the vocabulary.
     ///
     /// ## Returns
@@ -275,6 +270,26 @@ impl<T: TokenType> TokenVocab<T> for SpanMapVocab<T> {
 mod tests {
     use super::*;
     use crate::vocab::{ByteMapVocab, SpanTokenMap, TokenVocab};
+
+    #[test]
+    fn test_access() {
+        type T = u32;
+        let mut span_map: SpanTokenMap<T> = Default::default();
+        span_map.insert("apple".as_bytes().to_vec(), 300);
+        span_map.insert("a".as_bytes().to_vec(), 301);
+
+        let vocab = SpanMapVocab::from_span_map(span_map.clone());
+
+        assert_eq!(vocab.lookup_token(b"apple"), Some(300));
+
+        assert_eq!(vocab.byte_vocab(), &vocab.byte_vocab);
+        assert_eq!(vocab.span_map(), &vocab.span_map);
+
+        let mut expected: SpanTokenMap<T> = vocab.byte_vocab().span_pairs().collect();
+        expected.extend(span_map.clone());
+
+        assert_eq!(vocab.span_map(), &expected);
+    }
 
     #[test]
     fn test_tokens_iter() {

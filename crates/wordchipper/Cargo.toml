@@ -24,7 +24,7 @@ default = [
 ]
 
 ## The default client is focused on loading vocabularies and running
-## high performance encoders / decoders.
+## high-performance encoders / decoders.
 client = [
     "ahash",
     "download",
@@ -92,10 +92,10 @@ tracing = [
     "tracing/attributes",
 ]
 
-## Enable test-utitilies for downstream users.
+## Enable test utilities for downstream users.
 testing = []
 
-## This enables some experimental features that may be useful.
+## This enables some experimental features.
 experimental = [
     "std",
     "dep:parking_lot",

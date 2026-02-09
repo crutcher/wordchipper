@@ -216,13 +216,11 @@ mod tests {
     #[test]
     fn test_init() {
         type T = u32;
-        let mut span_vocab: SpanMapVocab<T> = Default::default();
-        span_vocab
-            .span_map_mut()
-            .insert("at".as_bytes().to_vec(), 300);
-        span_vocab
-            .span_map_mut()
-            .insert("ate".as_bytes().to_vec(), 301);
+        let mut span_vocab: SpanTokenMap<T> = Default::default();
+        span_vocab.insert("at".as_bytes().to_vec(), 300);
+        span_vocab.insert("ate".as_bytes().to_vec(), 301);
+
+        let span_vocab: SpanMapVocab<T> = span_vocab.into();
 
         let seg_config = TextSpanningConfig::from_pattern(r"\w\+");
 
@@ -276,13 +274,10 @@ mod tests {
     #[test]
     fn test_convert() {
         type A = u32;
-        let mut span_vocab: SpanMapVocab<A> = Default::default();
-        span_vocab
-            .span_map_mut()
-            .insert("at".as_bytes().to_vec(), 300);
-        span_vocab
-            .span_map_mut()
-            .insert("ate".as_bytes().to_vec(), 301);
+        let mut span_vocab: SpanTokenMap<A> = Default::default();
+        span_vocab.insert("at".as_bytes().to_vec(), 300);
+        span_vocab.insert("ate".as_bytes().to_vec(), 301);
+        let span_vocab: SpanMapVocab<A> = span_vocab.into();
 
         let seg_config = TextSpanningConfig::from_pattern(r"\w\+");
 
