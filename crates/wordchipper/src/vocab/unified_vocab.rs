@@ -1,7 +1,10 @@
 //! # Unified Token Vocabulary
 
+use anyhow::bail;
+
 use crate::{
     alloc::vec::Vec,
+    compat::strings::string_from_utf8_lossy,
     spanning::TextSpanningConfig,
     types::{CommonHashSet, Pair, TokenType},
     vocab::{
@@ -36,11 +39,11 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     /// * `span_vocab` - The span map vocabulary.
     ///
     /// ## Returns
-    /// A new `UnifiedTokenVocab` instance.
+    /// A `Result<UnifiedTokenVocab>`, with errors on vocab conflict.
     pub fn from_span_vocab(
         span_config: TextSpanningConfig<T>,
         span_vocab: SpanMapVocab<T>,
-    ) -> Self {
+    ) -> anyhow::Result<Self> {
         let pair_vocab = span_vocab.to_pair_vocab();
         Self::new(span_config, span_vocab, pair_vocab)
     }
@@ -52,11 +55,11 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     /// * `pair_vocab` - The pair map vocabulary.
     ///
     /// ## Returns
-    /// A new `UnifiedTokenVocab` instance.
+    /// A `Result<UnifiedTokenVocab>`, with errors on vocab conflict.
     pub fn from_pair_vocab(
         span_config: TextSpanningConfig<T>,
         pair_vocab: PairMapVocab<T>,
-    ) -> Self {
+    ) -> anyhow::Result<Self> {
         let word_vocab = pair_vocab.span_pairs().collect::<SpanTokenMap<T>>().into();
         Self::from_span_vocab(span_config, word_vocab)
     }
@@ -69,32 +72,34 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     /// * `pair_vocab` - The pair map vocabulary.
     ///
     /// ## Returns
-    /// A new `UnifiedTokenVocab` instance.
-    ///
-    /// ## Panics
-    /// Panics if the vocabularies are inconsistent.
+    /// A `Result<UnifiedTokenVocab>`, with errors on vocab conflict.
     pub fn new(
         span_config: TextSpanningConfig<T>,
         span_vocab: SpanMapVocab<T>,
         pair_vocab: PairMapVocab<T>,
-    ) -> Self {
-        assert_eq!(span_vocab.byte_vocab(), pair_vocab.byte_vocab());
-
-        let tokens = span_vocab.tokens();
-        assert_eq!(&tokens, &pair_vocab.tokens());
-
-        for t in span_config.specials().tokens() {
-            assert!(
-                !tokens.contains(&t),
-                "special token {t:?} found in word vocab"
-            );
+    ) -> anyhow::Result<Self> {
+        if span_vocab.byte_vocab() != pair_vocab.byte_vocab() {
+            bail!("span vocab and pair vocab have different byte vocabularies");
         }
 
-        Self {
+        let tokens = span_vocab.tokens();
+        if tokens != pair_vocab.tokens() {
+            bail!("span vocab and pair vocab have different token sets");
+        }
+
+        for t in span_config.specials().tokens() {
+            if tokens.contains(&t) {
+                let span = span_config.specials().lookup_span(&t).unwrap();
+                let special = string_from_utf8_lossy(span.to_vec());
+                bail!("special token \"{special:?}\" -> ({t:?}) found in word vocab");
+            }
+        }
+
+        Ok(Self {
             spanning: span_config,
             span_vocab,
             pair_vocab,
-        }
+        })
     }
 
     /// Convert to a different token type.
@@ -235,7 +240,7 @@ mod tests {
 
         let seg_config = TextSpanningConfig::from_pattern(r"\w\+");
 
-        let vocab = UnifiedTokenVocab::from_span_vocab(seg_config, span_vocab.clone());
+        let vocab = UnifiedTokenVocab::from_span_vocab(seg_config, span_vocab.clone()).unwrap();
         assert_eq!(vocab.len(), 256 + 2);
 
         let byte_vocab = vocab.byte_vocab();
@@ -292,7 +297,7 @@ mod tests {
 
         let seg_config = TextSpanningConfig::from_pattern(r"\w\+");
 
-        let vocab32 = UnifiedTokenVocab::from_span_vocab(seg_config, span_vocab.clone());
+        let vocab32 = UnifiedTokenVocab::from_span_vocab(seg_config, span_vocab.clone()).unwrap();
 
         type B = u64;
 

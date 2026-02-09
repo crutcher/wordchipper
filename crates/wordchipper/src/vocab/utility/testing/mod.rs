@@ -43,7 +43,7 @@ where
 
     let span_vocab = SpanMapVocab::new(byte_vocab, span_map).unwrap();
 
-    UnifiedTokenVocab::from_span_vocab(segmentation.into(), span_vocab)
+    UnifiedTokenVocab::from_span_vocab(segmentation.into(), span_vocab).unwrap()
 }
 
 /// Build a [`ByteMapVocab`] with all tokens shifted by `shift`.
