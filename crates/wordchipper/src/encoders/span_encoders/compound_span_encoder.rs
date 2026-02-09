@@ -140,8 +140,6 @@ impl<T: TokenType, S: SpanPolicy<T>> CompoundSpanVocabEncoder<T, S> {
 }
 
 impl<T: TokenType, S: SpanPolicy<T>> TokenEncoder<T> for CompoundSpanVocabEncoder<T, S> {
-    type Token = T;
-
     fn spanner(&self) -> &TextSpanner {
         &self.spanner
     }
@@ -185,7 +183,7 @@ mod tests {
 
         assert_eq!(encoder.expected_bytes_per_token(), 7.5);
 
-        common_encoder_tests(vocab.into(), &encoder)
+        common_encoder_tests(vocab.into(), encoder)
     }
 
     #[test]

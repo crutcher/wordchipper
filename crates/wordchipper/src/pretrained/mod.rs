@@ -14,23 +14,30 @@
 //! See: [`openai::OATokenizer`] for example options.
 //!
 //! ```rust,no_run
+//! use std::sync::Arc;
+//!
 //! use wordchipper::{
-//!     decoders::DefaultTokenDecoder,
+//!     decoders::{DefaultTokenDecoder, TokenDecoder},
 //!     disk_cache::WordchipperDiskCache,
-//!     encoders::DefaultTokenEncoder,
+//!     encoders::{DefaultTokenEncoder, TokenEncoder},
 //!     pretrained::openai::OATokenizer,
 //!     vocab::UnifiedTokenVocab,
 //! };
 //!
-//! fn example() -> anyhow::Result<(DefaultTokenEncoder<u32>, DefaultTokenDecoder<u32>)> {
+//! fn example() -> anyhow::Result<(Arc<dyn TokenEncoder<u32>>, Arc<dyn TokenDecoder<u32>>)> {
 //!     let model = OATokenizer::O200kHarmony;
 //!     let mut disk_cache = WordchipperDiskCache::default();
 //!     let vocab: UnifiedTokenVocab<u32> = model.load(&mut disk_cache)?;
 //!
 //!     let encoder: DefaultTokenEncoder<u32> = DefaultTokenEncoder::new(vocab.clone(), None);
-//!     let decoder: DefaultTokenDecoder<u32> = DefaultTokenDecoder::from_unified_vocab(vocab);
+//!     // #[cfg(feature = "rayon"]
+//!     // let encoder = wordchipper::rayon::ParallelRayonEncoder::new(encoder);
 //!
-//!     Ok((encoder, decoder))
+//!     let decoder: DefaultTokenDecoder<u32> = DefaultTokenDecoder::from_unified_vocab(vocab);
+//!     // #[cfg(feature = "rayon"]
+//!     // let decoder = wordchipper::rayon::ParallelRayonDecoder::new(encoder);
+//!
+//!     Ok((Arc::new(encoder), Arc::new(decoder)))
 //! }
 //! ```
 
