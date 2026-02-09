@@ -89,7 +89,7 @@ mod tests {
 
         assert_eq!(
             encoder.spanner().word_regex().as_str(),
-            vocab.spanning().pattern.as_str()
+            vocab.spanning().pattern().as_str()
         );
         assert_eq!(encoder.special_vocab(), encoder.inner.special_vocab());
 

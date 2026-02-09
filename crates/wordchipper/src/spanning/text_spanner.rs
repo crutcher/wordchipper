@@ -78,12 +78,12 @@ impl TextSpanner {
         T: TokenType,
     {
         let specials = config
-            .special_vocab()
+            .specials()
             .span_pairs()
             .map(|(span, _)| String::from_utf8(span.clone()).unwrap())
             .collect::<Vec<_>>();
 
-        Self::from_patterns(config.pattern, &specials, max_pool)
+        Self::from_patterns(config.pattern().clone(), &specials, max_pool)
     }
 
     /// Build a new [`TextSpanner`] from patterns.

@@ -58,7 +58,7 @@ Decoder Times:
 
 ### Pretrained Vocabularies
 
-* [OpenAI OATokenizer](https://docs.rs/wordchipper/latest/wordchipper/vocab/public/openai/enum.OATokenizer.html)
+* [OpenAI OATokenizer](https://docs.rs/wordchipper/latest/wordchipper/pretrained/openai/enum.OATokenizer.html)
 
 ### Encoders and Decoders
 

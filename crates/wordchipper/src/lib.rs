@@ -10,7 +10,7 @@
 //! * [`training`] to train a [`vocab::UnifiedTokenVocab`].
 //! * [`vocab`] to manage token vocabularies, vocab io, and pre-trained tokenizers.
 //!
-//! A number of pretrained pretrained tokenizers are available through:
+//! A number of pre-trained tokenizers are available through:
 //! * [`pretrained`]
 //!
 //! ## Crate Features

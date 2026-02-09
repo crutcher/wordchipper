@@ -5,7 +5,7 @@ use crate::types::{CommonHashSet, TokenType};
 use crate::vocab::utility::validators::try_vocab_size;
 use crate::vocab::{SpanTokenMap, TokenVocab};
 
-/// Token vocabulary as a dictionary map of ``{ Vec<u8> -> T }``.
+/// Token vocabulary for special words.
 ///
 /// This contains no byte:token mappings, or pair mergers.
 #[derive(Default, Debug, Clone, PartialEq)]

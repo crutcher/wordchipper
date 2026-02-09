@@ -13,7 +13,6 @@ pub struct SpanMapVocab<T: TokenType> {
     /// The byte/token mapping table.
     byte_vocab: ByteMapVocab<T>,
 
-    /// The regex pattern used for text spl
     /// Map of ``{ Vec<u8> -> T }``.
     span_map: SpanTokenMap<T>,
 }

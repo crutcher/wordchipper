@@ -14,7 +14,7 @@ use crate::vocab::{ByteMapVocab, DEFAULT_BYTE_PER_TOKEN_RATIO};
 #[derive(Clone, Default)]
 pub struct ByteDecoder<T: TokenType> {
     /// The byte vocabulary mapping.
-    pub byte_vocab: ByteMapVocab<T>,
+    byte_vocab: ByteMapVocab<T>,
 }
 
 impl<T: TokenType> From<ByteMapVocab<T>> for ByteDecoder<T> {
@@ -33,6 +33,11 @@ impl<T: TokenType> ByteDecoder<T> {
     /// A new `ByteDecoder` instance.
     pub fn new(byte_vocab: ByteMapVocab<T>) -> Self {
         Self { byte_vocab }
+    }
+
+    /// Get the embedded [`ByteMapVocab`].
+    pub fn byte_vocab(&self) -> &ByteMapVocab<T> {
+        &self.byte_vocab
     }
 }
 
