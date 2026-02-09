@@ -100,6 +100,20 @@ impl<T: TokenType> SpecialVocab<T> {
     ) -> Option<T> {
         self.span_map.get(chunk).copied()
     }
+
+    /// Get the associated span for a token, if any.
+    pub fn lookup_span(
+        &self,
+        token: &T,
+    ) -> Option<&[u8]> {
+        self.span_map.iter().find_map(|(chunk, &t)| {
+            if t == *token {
+                Some(chunk.as_ref())
+            } else {
+                None
+            }
+        })
+    }
 }
 
 impl<T: TokenType> TokenVocab<T> for SpecialVocab<T> {

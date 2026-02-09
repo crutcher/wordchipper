@@ -16,7 +16,8 @@
 //!     let vocab: UnifiedTokenVocab<T> = UnifiedTokenVocab::from_span_vocab(
 //!         TextSpanningConfig::from_pattern(OA_GPT5_O220K_WORD_PATTERN),
 //!         load_base64_span_vocab_path("vocab.tiktoken")?,
-//!     );
+//!     )
+//!     .expect("failed to load vocab");
 //!
 //!     let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::new(vocab.clone(), None);
 //!     let decoder: DefaultTokenDecoder<T> = DefaultTokenDecoder::from_unified_vocab(vocab);

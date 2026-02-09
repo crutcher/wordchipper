@@ -405,10 +405,7 @@ where
         C: CountType,
     {
         let results = self.train_basic_pairs(byte_vocab)?;
-        Ok(UnifiedTokenVocab::from_pair_vocab(
-            results.pattern.into(),
-            results.pair_vocab,
-        ))
+        UnifiedTokenVocab::from_pair_vocab(results.pattern.into(), results.pair_vocab)
     }
 }
 

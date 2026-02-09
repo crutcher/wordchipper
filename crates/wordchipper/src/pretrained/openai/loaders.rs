@@ -102,8 +102,7 @@ fn load_common_vocab<T: TokenType>(
             .map(|(s, t)| (s, T::from_usize(*t).unwrap())),
     );
 
-    let vocab = UnifiedTokenVocab::from_span_vocab(spanning, span_map.into());
-    Ok(vocab)
+    UnifiedTokenVocab::from_span_vocab(spanning, span_map.into())
 }
 
 /// Load GPT-2 "`r50k`" pretrained vocabulary.
