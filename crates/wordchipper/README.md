@@ -11,67 +11,48 @@ This is a high-performance rust BPE tokenizer trainer/encoder/decoder.
 
 The current status is productionization towards an alpha release.
 
-## Crate Features
+## wordchipper vs tiktoken
 
-#### feature: ``default``
+Details:
 
-* ``client``
-* ``download``
+- MacBook Pro 2023 Apple M2 Pro
+- Each shard is ~90MB parquet file.
+- Each encode/decode is compared for equality.
 
-The default feature does not enable ``training``.
+```terminaloutput
+ % cargo run --release -p sample-timer -- --dataset-dir ~/datasets        
+   Compiling sample-timer v0.0.0 (/Users/crutcher/git/wordchipper/examples/sample-timer)
+    Finished `release` profile [optimized] target(s) in 1.16s
+     Running `target/release/sample-timer --dataset-dir /Users/crutcher/datasets`
+Model: "oa:o200k_harmony"
+- shards: [0, 1, 2, 3]
+- batch_size: 512
 
-#### feature: ``client``
+Samples Summary:
+- num batches: 208
+- avg bytes/sample: 4777
+- avg bytes/token: 4.8
 
-* ``ahash``
-* ``rayon``
-* ``std``
+Encoder Times:
+- wordchipper
+  - batch:      31.0ms
+  - sample:     60.5µs
+  - bps:    75.31 MiB/s
+- tiktoken
+  - batch:      30.5ms
+  - sample:     59.6µs
+  - bps:    76.39 MiB/s
 
-The default client is focused on loading vocabularies and running
-high performance encoders / decoders.
-
-#### feature: ``download``
-
-* ``wordchipper-disk-cache``
-* ``std``
-
-The download feature enables downloading vocabularies from the internet.
-
-#### feature: ``training``
-
-* ``compact_str``
-* ``dary_heap``
-* ``std``
-
-The training feature enables the training code.
-
-#### feature: ``std`` / ``no_std``
-
-The ``std`` feature enables the use of the ``std`` library;
-and the ``no_std`` feature enables deps needed when ``std`` is not enabled.
-(Negative feature deps are not stable yet.)
-
-Note: I am unsure if this is complete. It is tested CI, but I'm unsure
-if I've fully covered it; and I haven't worked out a ``no_std`` deploy test yet.
-
-#### feature: ``ahash``
-
-This swaps all HashMap/HashSet implementations for ``ahash`; which is a performance
-win on many/(most?) modern CPUs.
-
-This is done by the ``types::hash_types::CommonHash{*}`` type alias machinery.
-See also the ``hashbrown`` dep used by ``no_std``.
-
-#### feature: ``rayon``
-
-This enables some parallelism wrappers using the ``rayon`` crate.
-
-TODO: I intend on providing a ``tokio`` based ``async`` parallelism mechanism
-as well, to structure more direct ``regex`>`encode`` pipeline parallelism.
-
-#### feature: ``tracing``
-
-This enables a number of ``tracing`` instrumentation points.
-This is only useful for timing tracing of the library itself.
+Decoder Times:
+- wordchipper
+  - batch:       2.0ms
+  - sample:      3.9µs
+  - bps:    1.14 GiB/s
+- tiktoken
+  - batch:       1.8ms
+  - sample:      3.5µs
+  - bps:    1.29 GiB/s
+```
 
 ## Client Usage
 
@@ -158,45 +139,6 @@ fn example<T: TokenType>(
 
     decoder.try_decode_batch_to_strings(batch).unwrap().unwrap()
 }
-```
-
-## Side-by-side Comparison to `tiktoken-rs`
-
-Each shard is ~90MB parquet file.
-
-- 128/64 Core Thread Ripper
-- _NOTE: there are still some tokenization differences to resolve here._
-
-```terminaloutput
-$ RAYON_NUM_THREADS=16 cargo run --release -p token-cli -- --dataset-dir /media/Data/nanochat/dataset 
-   Compiling wordchipper v0.1.2 (/home/crutcher/git/wordchipper/crates/wordchipper)
-   Compiling token-cli v0.0.0 (/home/crutcher/git/wordchipper/examples/token-cli)
-    Finished `release` profile [optimized] target(s) in 1.87s
-     Running `target/release/token-cli --dataset-dir /media/Data/nanochat/dataset`
-
-Samples Summary:
-- count: 53248
-- total size: 254737840
-- avg size: 4783
-- avg batch size bytes: 2449402
-
-Timing Config:
-- batch size: 512
-- num batches: 104
-
-Timing Encode:
-- wordchipper:      14.6ms,    160.32 MiB/s
-- tiktoken-rs:      32.7ms,     71.33 MiB/s
-
-Observed Bytes/Token Stats:
-- wordchipper token count: 54749669
-- wordchipper byte/token: 4.65
-- tiktoken-rs token count: 53251930
-- tiktoken-rs byte/token: 4.78
-
-Timing Decode:
-- wordchipper:       2.8ms,    840.54 MiB/s
-- tiktoken-rs:       2.1ms,      1.08 GiB/s
 ```
 
 ## Training Overview
@@ -333,7 +275,9 @@ Timing Decode:
 
 ## Acknowledgements
 
-* Thank you to [@karpathy](https://github.com/karpathy) and [nanochat](https://github.com/karpathy/nanochat)
+* Thank you to [@karpathy](https://github.com/karpathy)
+  and [nanochat](https://github.com/karpathy/nanochat)
   for the work on `rustbpe`.
-* Thank you to [tiktoken](https://github.com/openai/tiktoken) for their initial work in the rust tokenizer space.
+* Thank you to [tiktoken](https://github.com/openai/tiktoken) for their initial work in the rust
+  tokenizer space.
 

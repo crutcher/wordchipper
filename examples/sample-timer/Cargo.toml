@@ -1,5 +1,5 @@
 [package]
-name = "token-cli"
+name = "sample-timer"
 repository.workspace = true
 rust-version.workspace = true
 edition.workspace = true

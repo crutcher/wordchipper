@@ -1962,6 +1962,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a50f4cf475b65d88e057964e0e9bb1f0aa9bbb2036dc65c64596b42932536984"
 
 [[package]]
+name = "sample-timer"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "arrow",
+ "clap",
+ "humansize",
+ "indicatif",
+ "once_cell",
+ "rayon",
+ "strum",
+ "tiktoken-rs",
+ "wordchipper",
+ "wordchipper-data",
+]
+
+[[package]]
 name = "scc"
 version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2341,23 +2358,6 @@ checksum = "42d3e9c45c09de15d06dd8acf5f4e0e399e85927b7f00711024eb7ae10fa4869"
 dependencies = [
  "displaydoc",
  "zerovec",
-]
-
-[[package]]
-name = "token-cli"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "arrow",
- "clap",
- "humansize",
- "indicatif",
- "once_cell",
- "rayon",
- "strum",
- "tiktoken-rs",
- "wordchipper",
- "wordchipper-data",
 ]
 
 [[package]]
