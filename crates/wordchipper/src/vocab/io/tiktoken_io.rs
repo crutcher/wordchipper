@@ -9,10 +9,23 @@ use std::{
 use crate::{
     types::TokenType,
     vocab::{
+        SpanMapVocab,
         SpanTokenMap,
         io::{read_base64_span_map, write_base64_span_map},
     },
 };
+
+/// Load a [`SpanMapVocab`] from a tiktoken vocab file.
+///
+/// # Arguments
+/// * `path` - the path to the vocabulary file.
+pub fn load_tiktoken_span_vocab_path<T, P>(path: P) -> anyhow::Result<SpanMapVocab<T>>
+where
+    T: TokenType,
+    P: AsRef<Path>,
+{
+    Ok(load_tiktoken_vocab_path(path)?.into())
+}
 
 /// Load a [`SpanTokenMap`] from a tiktoken vocab file.
 ///

@@ -9,7 +9,27 @@ use std::{
 use anyhow::Context;
 use base64::{Engine, prelude::BASE64_STANDARD};
 
-use crate::{types::TokenType, vocab::vocab_types::SpanTokenMap};
+use crate::{
+    types::TokenType,
+    vocab::{SpanMapVocab, vocab_types::SpanTokenMap},
+};
+
+/// Load a [`SpanMapVocab`] from a base64 vocab file.
+///
+/// Lines are:
+/// ```terminaloutput
+/// {BASE64 SPAN} {TOKEN}
+/// ```
+///
+/// # Arguments
+/// * `path` - the path to the vocabulary file.
+pub fn load_base64_span_vocab_path<T, P>(path: P) -> anyhow::Result<SpanMapVocab<T>>
+where
+    T: TokenType,
+    P: AsRef<Path>,
+{
+    Ok(load_base64_span_map_path(path)?.into())
+}
 
 /// Load a [`SpanTokenMap`] from a base64 vocab file.
 ///
