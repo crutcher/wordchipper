@@ -3,7 +3,6 @@
 use crate::alloc::vec;
 use crate::alloc::vec::Vec;
 use crate::types::{CommonHashSet, TokenType};
-use crate::vocab::utility::validators::try_vocab_size;
 use crate::vocab::{ByteTokenArray, ByteTokenMap, TokenByteMap, TokenVocab};
 use core::fmt::Debug;
 
@@ -107,8 +106,6 @@ impl<T: TokenType> ByteMapVocab<T> {
 
     /// Convert to a different token type.
     pub fn to_token_type<G: TokenType>(&self) -> anyhow::Result<ByteMapVocab<G>> {
-        try_vocab_size::<G>(self.max_token().unwrap().to_usize().unwrap())?;
-
         Ok(ByteMapVocab::<G>::from_byte_to_token(
             &self
                 .byte_tokens
@@ -116,19 +113,6 @@ impl<T: TokenType> ByteMapVocab<T> {
                 .map(|t| G::from_usize(t.to_usize().unwrap()).unwrap())
                 .collect::<Vec<_>>(),
         ))
-    }
-
-    /// Get the length of the table.
-    ///
-    /// ## Returns
-    /// The number of entries in the table (always 256).
-    pub fn len(&self) -> usize {
-        self.byte_tokens.len()
-    }
-
-    /// Is this empty?
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
     }
 
     /// Get the byte-ord => token mapping table.
@@ -194,6 +178,10 @@ impl<T: TokenType> ByteMapVocab<T> {
 
 impl<T: TokenType> TokenVocab<T> for ByteMapVocab<T> {
     type Token = T;
+
+    fn len(&self) -> usize {
+        256
+    }
 
     fn tokens(&self) -> CommonHashSet<T> {
         self.byte_tokens.iter().copied().collect()

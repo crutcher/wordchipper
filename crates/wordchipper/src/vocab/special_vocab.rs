@@ -35,7 +35,9 @@ impl<T: TokenType> SpecialVocab<T> {
 
     /// Convert to a different token type.
     pub fn to_token_type<G: TokenType>(&self) -> anyhow::Result<SpecialVocab<G>> {
-        try_vocab_size::<G>(self.max_token().unwrap().to_usize().unwrap())?;
+        if let Some(max) = self.max_token() {
+            try_vocab_size::<G>(max.to_usize().unwrap())?;
+        }
 
         Ok(SpecialVocab::<G>::from_map(
             self.span_map
@@ -43,22 +45,6 @@ impl<T: TokenType> SpecialVocab<T> {
                 .map(|(chunk, &token)| (chunk.clone(), G::from(token).unwrap()))
                 .collect(),
         ))
-    }
-
-    /// Get the length of the special words vocab.
-    ///
-    /// ## Returns
-    /// The number of entries in the special vocabulary.
-    pub fn len(&self) -> usize {
-        self.span_map.len()
-    }
-
-    /// Returns `true` if the special words vocab contains no words.
-    ///
-    /// ## Returns
-    /// `true` if the special vocabulary is empty, `false` otherwise.
-    pub fn is_empty(&self) -> bool {
-        self.span_map.is_empty()
     }
 
     /// Add a word to the vocab.
@@ -113,6 +99,9 @@ impl<T: TokenType> SpecialVocab<T> {
 
 impl<T: TokenType> TokenVocab<T> for SpecialVocab<T> {
     type Token = T;
+    fn len(&self) -> usize {
+        self.span_map.len()
+    }
 
     fn tokens(&self) -> CommonHashSet<T> {
         self.span_map.values().copied().collect()

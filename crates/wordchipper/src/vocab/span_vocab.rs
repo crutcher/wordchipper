@@ -147,7 +147,9 @@ impl<T: TokenType> SpanMapVocab<T> {
 
     /// Convert to a different token type.
     pub fn to_token_type<G: TokenType>(&self) -> anyhow::Result<SpanMapVocab<G>> {
-        try_vocab_size::<G>(self.max_token().unwrap().to_usize().unwrap())?;
+        if let Some(max) = self.max_token() {
+            try_vocab_size::<G>(max.to_usize().unwrap())?;
+        }
 
         SpanMapVocab::<G>::new(
             self.byte_vocab.to_token_type::<G>()?,
@@ -171,16 +173,6 @@ impl<T: TokenType> SpanMapVocab<T> {
     /// Get the mutable [`SpanTokenMap`].
     pub fn span_map_mut(&mut self) -> &mut SpanTokenMap<T> {
         &mut self.span_map
-    }
-
-    /// The number of words in the vocabulary.
-    pub fn len(&self) -> usize {
-        self.span_map.len()
-    }
-
-    /// Is this empty?
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
     }
 
     /// Iterate over the words in the vocabulary.
@@ -252,6 +244,10 @@ impl<T: TokenType> SpanMapVocab<T> {
 
 impl<T: TokenType> TokenVocab<T> for SpanMapVocab<T> {
     type Token = T;
+
+    fn len(&self) -> usize {
+        self.span_map.len()
+    }
 
     fn tokens(&self) -> CommonHashSet<T> {
         self.byte_vocab

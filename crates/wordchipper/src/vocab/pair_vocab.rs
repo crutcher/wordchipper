@@ -55,7 +55,7 @@ pub fn try_validate_pair_map<T: TokenType>(
 ///
 /// - Grounded in a `ByteTable<T>` for byte-to-token mapping.
 /// - Collection of ``(T, T) -> T`` pairs.
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, PartialEq)]
 pub struct PairMapVocab<T: TokenType> {
     /// Byte/token mapping table.
     pub byte_vocab: ByteMapVocab<T>,
@@ -108,16 +108,6 @@ impl<T: TokenType> PairMapVocab<T> {
         &self.pair_map
     }
 
-    /// Get the number of tokens in the vocabulary.
-    pub fn len(&self) -> usize {
-        self.byte_vocab.len() + self.pair_map.len()
-    }
-
-    /// Is this empty?
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
-
     /// Looks up a pair.
     ///
     /// ## Arguments
@@ -135,6 +125,10 @@ impl<T: TokenType> PairMapVocab<T> {
 
 impl<T: TokenType> TokenVocab<T> for PairMapVocab<T> {
     type Token = T;
+
+    fn len(&self) -> usize {
+        self.byte_vocab.len() + self.pair_map.len()
+    }
 
     fn tokens(&self) -> CommonHashSet<T> {
         self.byte_vocab

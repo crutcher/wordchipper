@@ -189,6 +189,10 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
 impl<T: TokenType> TokenVocab<T> for UnifiedTokenVocab<T> {
     type Token = T;
 
+    fn len(&self) -> usize {
+        self.tokens().len()
+    }
+
     fn tokens(&self) -> CommonHashSet<T> {
         self.span_vocab
             .tokens()
@@ -206,7 +210,8 @@ impl<T: TokenType> TokenVocab<T> for UnifiedTokenVocab<T> {
 mod tests {
     use super::*;
     use crate::spanning::TextSpanningConfig;
-    use crate::vocab::SpanMapVocab;
+    use crate::vocab::{PairTokenMap, SpanMapVocab};
+    use num_traits::FromPrimitive;
 
     #[test]
     fn test_init() {
@@ -221,8 +226,34 @@ mod tests {
 
         let seg_config = TextSpanningConfig::from_pattern(r"\w\+");
 
-        let vocab = UnifiedTokenVocab::from_span_vocab(seg_config, span_vocab);
+        let vocab = UnifiedTokenVocab::from_span_vocab(seg_config, span_vocab.clone());
+        assert_eq!(vocab.len(), 256 + 2);
+
         let byte_vocab = vocab.byte_vocab();
+
+        {
+            let mut expected: PairTokenMap<T> = Default::default();
+            expected.insert(
+                (
+                    T::from_u8('a' as u8).unwrap(),
+                    T::from_u8('t' as u8).unwrap(),
+                ),
+                300,
+            );
+            expected.insert((300, T::from_u8('e' as u8).unwrap()), 301);
+            let expected: PairMapVocab<T> =
+                PairMapVocab::new(byte_vocab.clone(), expected).unwrap();
+
+            assert_eq!(vocab.pair_vocab(), &expected);
+        }
+
+        {
+            let mut expected: SpanTokenMap<T> = byte_vocab.span_pairs().collect();
+            expected.extend(span_vocab.span_pairs());
+            let expected: SpanMapVocab<T> = expected.into();
+
+            assert_eq!(vocab.span_vocab(), &expected);
+        }
 
         assert_eq!(
             vocab.span_pairs().collect::<Vec<_>>(),
@@ -240,5 +271,28 @@ mod tests {
             vocab.lookup_pair(&(byte_vocab.get_token(b'a'), byte_vocab.get_token(b't'))),
             Some(300)
         );
+    }
+
+    #[test]
+    fn test_convert() {
+        type A = u32;
+        let mut span_vocab: SpanMapVocab<A> = Default::default();
+        span_vocab
+            .span_map_mut()
+            .insert("at".as_bytes().to_vec(), 300);
+        span_vocab
+            .span_map_mut()
+            .insert("ate".as_bytes().to_vec(), 301);
+
+        let seg_config = TextSpanningConfig::from_pattern(r"\w\+");
+
+        let vocab32 = UnifiedTokenVocab::from_span_vocab(seg_config, span_vocab.clone());
+
+        type B = u64;
+
+        let vocab64: UnifiedTokenVocab<B> = vocab32.to_token_type::<B>().unwrap();
+
+        assert_eq!(vocab64.lookup_token("at".as_bytes()), Some(300 as u64));
+        assert_eq!(vocab64.lookup_token("ate".as_bytes()), Some(301 as u64));
     }
 }
