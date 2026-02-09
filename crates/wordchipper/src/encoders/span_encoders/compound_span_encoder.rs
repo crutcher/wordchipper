@@ -175,7 +175,10 @@ mod tests {
 
     fn test_encoder<T: TokenType>() {
         let vocab = common_encoder_test_vocab();
-        let encoder = CompoundSpanVocabEncoder::<T>::new(vocab.clone().into(), None);
+        let encoder = CompoundSpanVocabEncoder::<T>::new(vocab.clone().into(), None)
+            .with_expected_bytes_per_token(7.5);
+
+        assert_eq!(encoder.expected_bytes_per_token(), 7.5);
 
         common_encoder_tests(vocab.into(), &encoder)
     }

@@ -44,6 +44,11 @@ impl<T: TokenType> TokenDictDecoder<T> {
         }
     }
 
+    /// Get the expected bytes per token.
+    pub fn expected_bytes_per_token(&self) -> f32 {
+        self.expected_bytes_per_token
+    }
+
     /// Sets the expected bytes per token.
     ///
     /// This is used to bias the capacity of the output buffer in `try_decode_to_bytes`.
@@ -112,7 +117,12 @@ mod tests {
             TextSpanningConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN),
         );
 
-        let decoder = TokenDictDecoder::from_unified_vocab(vocab.clone());
+        let decoder =
+            TokenDictDecoder::from_unified_vocab(vocab.clone()).with_expected_bytes_per_token(7.5);
+
+        assert_eq!(decoder.expected_bytes_per_token(), 7.5);
+
+        assert_eq!(decoder.token_spans(), &decoder.token_spans);
 
         common_decoder_unit_test(vocab, &decoder);
     }

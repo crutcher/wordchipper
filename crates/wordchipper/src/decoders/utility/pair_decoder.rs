@@ -126,6 +126,8 @@ mod tests {
 
         let decoder = PairExpansionDecoder::from_pair_vocab(&vocab.pair_vocab());
 
+        assert_eq!(decoder.byte_vocab(), &decoder.byte_vocab);
+        assert_eq!(decoder.token_pairs(), &decoder.token_pairs);
         assert_eq!(&decoder.byte_vocab, vocab.byte_vocab());
 
         common_decoder_unit_test(vocab, &decoder);
