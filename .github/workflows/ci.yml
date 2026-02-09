@@ -30,6 +30,7 @@ jobs:
         run: |
           rustup toolchain install stable --profile minimal
           rustup toolchain install nightly --profile minimal
+          rustup component add rustfmt --toolchain nightly
 
       - name: Checkout repository
         uses: actions/checkout@v4
