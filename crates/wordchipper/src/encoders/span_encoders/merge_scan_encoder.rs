@@ -86,7 +86,7 @@ mod tests {
     fn test_encoder<T: TokenType>() {
         let vocab = common_encoder_test_vocab();
         let encoder = MergeScanVocabEncoder::<T>::new(vocab.clone(), None);
-        common_encoder_tests(vocab, &encoder)
+        common_encoder_tests(vocab, encoder)
     }
 
     #[test]

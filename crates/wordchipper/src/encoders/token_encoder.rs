@@ -15,10 +15,7 @@ use crate::{
 /// instance names for implementing types should prefer `encoder`;
 /// and use the preferred name for the implementing type
 /// when there is a conflict.
-pub trait TokenEncoder<T: TokenType>: Clone + Send + Sync {
-    /// The token type: T.
-    type Token: TokenType;
-
+pub trait TokenEncoder<T: TokenType>: Send + Sync {
     /// Return the attached text segmentor.
     fn spanner(&self) -> &TextSpanner;
 

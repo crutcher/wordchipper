@@ -30,14 +30,13 @@ pub fn common_encoder_test_vocab<T: TokenType>() -> UnifiedTokenVocab<T> {
 /// Common [`TokenEncoder`] tests.
 pub fn common_encoder_tests<T: TokenType, E: TokenEncoder<T>>(
     vocab: UnifiedTokenVocab<T>,
-    encoder: &E,
+    encoder: E,
 ) {
-    static_is_send_sync_check(encoder);
+    static_is_send_sync_check(&encoder);
 
     // Verify:
-    // - clone
     // - Arc/Box compat.
-    let encoder: Arc<E> = encoder.clone().into();
+    let encoder: Arc<dyn TokenEncoder<T>> = Arc::new(encoder);
 
     let samples = vec![
         "hello world",

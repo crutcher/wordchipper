@@ -69,8 +69,6 @@ impl<T: TokenType> PairExpansionDecoder<T> {
 }
 
 impl<T: TokenType> TokenDecoder<T> for PairExpansionDecoder<T> {
-    type Token = T;
-
     fn try_decode_to_bytes(
         &self,
         tokens: &[T],
