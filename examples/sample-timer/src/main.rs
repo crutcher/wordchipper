@@ -55,6 +55,7 @@ pub struct Args {
 }
 
 #[allow(unused)]
+#[allow(clippy::vec_init_then_push)]
 fn main() -> anyhow::Result<()> {
     let args = Args::parse();
     let display_progress = io::stdout().is_terminal();
@@ -75,7 +76,6 @@ fn main() -> anyhow::Result<()> {
 
     // TODO: complete batch-observer inversion of control for additional tokenizer wrappers.
 
-    #[allow(clippy::vec_init_then_push)]
     let mut candidates: Vec<Arc<dyn TokenizerWrapper<Rank>>> = Vec::new();
 
     candidates.push(Arc::new(TiktokenWrapper::new(load_tiktoken(args.model)?)));
