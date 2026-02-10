@@ -31,6 +31,8 @@
 //! - Training a `nanochat` equivalent tokenizer takes ~80 CPU minutes.
 //!
 //! ```rust,no_run
+//! use std::sync::Arc;
+//!
 //! use wordchipper::{
 //!     concurrency::rayon::{ParallelRayonDecoder, ParallelRayonEncoder},
 //!     decoders::TokenDictDecoder,
@@ -79,10 +81,10 @@
 //!     }
 //!
 //!     let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::new(vocab.clone(), None);
-//!     let encoder = ParallelRayonEncoder::new(encoder);
+//!     let encoder = ParallelRayonEncoder::new(Arc::new(encoder));
 //!
 //!     let decoder = TokenDictDecoder::from_unified_vocab(vocab.clone());
-//!     let decoder = ParallelRayonDecoder::new(decoder);
+//!     let decoder = ParallelRayonDecoder::new(Arc::new(decoder));
 //! }
 //! ```
 

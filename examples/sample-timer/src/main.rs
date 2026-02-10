@@ -121,15 +121,11 @@ fn main() -> anyhow::Result<()> {
             let batch_tokens = reference.unwrap().1;
             let batch_view: Vec<&[Rank]> = inner_slice_view(&batch_tokens);
 
-            // We don't expect the samples to be faithfully decoded,
-            // we expect the gap-less spanner stream to match.
-            let expected = spanner.batch_remove_gaps(str_batch);
-
             for w in candidates.iter() {
                 let name = w.name();
                 let (w_dur, w_batch) = timeit(|| w.expect_decode_batch(&batch_view));
 
-                verify_decode(&batch_view, &expected, name, &w_batch);
+                verify_decode(&batch_view, str_batch, name, &w_batch);
 
                 timings.get_mut(name).unwrap().decode = w_dur;
             }
@@ -280,14 +276,14 @@ pub fn verify_encode(
 
 pub fn verify_decode(
     batch_tokens: &[&[Rank]],
-    expected_batch: &[String],
+    expected_batch: &[&str],
     actual_name: &str,
     actual_batch: &[String],
 ) -> anyhow::Result<()> {
     assert_eq!(batch_tokens.len(), expected_batch.len());
     assert_eq!(batch_tokens.len(), actual_batch.len());
 
-    for (i, expected_str) in expected_batch.iter().enumerate() {
+    for (i, &expected_str) in expected_batch.iter().enumerate() {
         let actual_str = &actual_batch[i];
 
         if actual_str == expected_str {

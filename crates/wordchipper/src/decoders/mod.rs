@@ -8,6 +8,8 @@
 //! ## Example
 //!
 //! ```rust,no_run
+//! use std::sync::Arc;
+//!
 //! use wordchipper::{
 //!     decoders::{TokenDecoder, TokenDictDecoder},
 //!     types::TokenType,
@@ -21,7 +23,7 @@
 //!     let decoder: TokenDictDecoder<T> = TokenDictDecoder::from_unified_vocab(vocab);
 //!
 //!     #[cfg(feature = "rayon")]
-//!     let decoder = wordchipper::concurrency::rayon::ParallelRayonDecoder::new(decoder);
+//!     let decoder = wordchipper::concurrency::rayon::ParallelRayonDecoder::new(Arc::new(decoder));
 //!
 //!     let slices: Vec<&[T]> = batch.iter().map(|v| v.as_ref()).collect();
 //!
