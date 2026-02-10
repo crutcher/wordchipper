@@ -31,11 +31,11 @@
 //!
 //!     let encoder: DefaultTokenEncoder<u32> = DefaultTokenEncoder::new(vocab.clone(), None);
 //!     #[cfg(feature = "rayon")]
-//!     let encoder = wordchipper::concurrency::rayon::ParallelRayonEncoder::new(encoder);
+//!     let encoder = wordchipper::concurrency::rayon::ParallelRayonEncoder::new(Arc::new(encoder));
 //!
 //!     let decoder: DefaultTokenDecoder<u32> = DefaultTokenDecoder::from_unified_vocab(vocab);
 //!     #[cfg(feature = "rayon")]
-//!     let decoder = wordchipper::concurrency::rayon::ParallelRayonDecoder::new(decoder);
+//!     let decoder = wordchipper::concurrency::rayon::ParallelRayonDecoder::new(Arc::new(decoder));
 //!
 //!     Ok((Arc::new(encoder), Arc::new(decoder)))
 //! }

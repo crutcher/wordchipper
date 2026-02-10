@@ -1,4 +1,6 @@
-use std::{io, io::IsTerminal, iter::Iterator, time::Duration};
+extern crate core;
+
+use std::{collections::HashMap, io, io::IsTerminal, iter::Iterator, sync::Arc, time::Duration};
 
 use anyhow::bail;
 use arrow::array::{Array, StringArray};
@@ -21,6 +23,8 @@ use wordchipper::{
     disk_cache::WordchipperDiskCache,
     encoders::{DefaultTokenEncoder, TokenEncoder},
     pretrained::openai::OATokenizer,
+    spanning::TextSpanner,
+    types::TokenType,
     vocab::UnifiedTokenVocab,
 };
 use wordchipper_data::dataset::{DatasetCache, DatasetCacheConfig};
@@ -51,6 +55,7 @@ pub struct Args {
 }
 
 #[allow(unused)]
+#[allow(clippy::vec_init_then_push)]
 fn main() -> anyhow::Result<()> {
     let args = Args::parse();
     let display_progress = io::stdout().is_terminal();
@@ -63,15 +68,27 @@ fn main() -> anyhow::Result<()> {
     println!("- shards: {:?}", args.shards);
     println!("- batch_size: {}", args.batch_size);
 
-    let tt_enc_dec = load_tiktoken(args.model)?;
-
     let vocab: UnifiedTokenVocab<Rank> = {
         let mut disk_cache = WordchipperDiskCache::default();
         args.model.load(&mut disk_cache)?
     };
-    let wc_encoder = ParallelRayonEncoder::new(DefaultTokenEncoder::new(vocab.clone(), None));
-    let wc_decoder =
-        ParallelRayonDecoder::new(DefaultTokenDecoder::from_unified_vocab(vocab.clone()));
+    let spanner = TextSpanner::from_config(vocab.spanning().clone(), None);
+
+    // TODO: complete batch-observer inversion of control for additional tokenizer wrappers.
+
+    let mut candidates: Vec<Arc<dyn TokenizerWrapper<Rank>>> = Vec::new();
+
+    candidates.push(Arc::new(TiktokenWrapper::new(load_tiktoken(args.model)?)));
+
+    candidates.push(Arc::new(WordchipperWrapper::<Rank>::new(
+        "wordchipper".to_string(),
+        Arc::new(ParallelRayonEncoder::new(Arc::new(
+            DefaultTokenEncoder::new(vocab.clone(), None),
+        ))),
+        Arc::new(ParallelRayonDecoder::new(Arc::new(
+            DefaultTokenDecoder::from_unified_vocab(vocab.clone()),
+        ))),
+    )));
 
     let mut stats = Vec::new();
 
@@ -81,47 +98,48 @@ fn main() -> anyhow::Result<()> {
         args.batch_size,
         &mut shard_data_cache,
         &mut |str_batch: &[&str]| -> anyhow::Result<()> {
-            let (wc_enc_duration, wc_batch_tokens) =
-                timeit(|| wc_encoder.try_encode_batch(str_batch).unwrap());
+            let mut timings: HashMap<String, BatchTimings> = Default::default();
 
-            let (tt_enc_duration, tt_batch_tokens) = timeit(|| {
-                str_batch
-                    .par_iter()
-                    .map(|s| tt_enc_dec.encode_with_special_tokens(s))
-                    .collect::<Vec<_>>()
-            });
+            for w in candidates.iter() {
+                timings.insert(w.name().to_string(), Default::default());
+            }
 
-            verify_encode(str_batch, &wc_batch_tokens, &tt_batch_tokens)?;
+            let mut reference = None;
+            for w in candidates.iter() {
+                let name = w.name();
+                let (w_dur, w_tokens) = timeit(|| w.expect_encode_batch(str_batch));
 
-            let batch_tokens: Vec<&[Rank]> = inner_slice_view(&wc_batch_tokens);
+                match &reference {
+                    None => {
+                        reference = Some((name, w_tokens));
+                    }
+                    Some((expected_name, expected_tokens)) => {
+                        verify_encode(str_batch, name, &w_tokens, expected_name, expected_tokens)?;
+                    }
+                }
 
-            let (wc_dec_duration, wc_batch_decode) = timeit(|| {
-                wc_decoder
-                    .try_decode_batch_to_strings(&batch_tokens)
-                    .unwrap()
-                    .unwrap()
-            });
+                timings.get_mut(name).unwrap().encode = w_dur;
+            }
 
-            let (tt_dec_duration, tt_batch_decode) = timeit(|| {
-                batch_tokens
-                    .par_iter()
-                    .map(|tokens| tt_enc_dec.decode(tokens.to_vec()).unwrap())
-                    .collect::<Vec<_>>()
-            });
+            let batch_tokens = reference.unwrap().1;
+            let batch_view: Vec<&[Rank]> = inner_slice_view(&batch_tokens);
 
-            // We don't expect the samples to be faithfully decoded,
-            // we expect the gap-less spanner stream to match.
-            let expected = wc_encoder.spanner().batch_remove_gaps(str_batch);
+            for w in candidates.iter() {
+                let name = w.name();
+                let (w_dur, w_batch) = timeit(|| w.expect_decode_batch(&batch_view));
 
-            verify_decode(&batch_tokens, &expected, &wc_batch_decode, &tt_batch_decode)?;
+                verify_decode(&batch_view, str_batch, name, &w_batch);
+
+                timings.get_mut(name).unwrap().decode = w_dur;
+            }
+
+            let sample_bytes = str_batch.iter().map(|s| s.len()).collect();
+            let token_counts = batch_view.iter().map(|t| t.len()).collect();
 
             stats.push(BatchStats {
-                sample_bytes: str_batch.iter().map(|s| s.len()).collect(),
-                tokens: wc_batch_tokens.iter().map(|t| t.len()).collect(),
-                wc_enc_time: wc_enc_duration,
-                tt_enc_time: tt_enc_duration,
-                wc_dec_time: wc_dec_duration,
-                tt_dec_time: tt_dec_duration,
+                sample_bytes,
+                token_counts,
+                timings,
             });
 
             Ok(())
@@ -156,33 +174,27 @@ fn main() -> anyhow::Result<()> {
 
     println!();
     println!("Encoder Times:");
-    print_timing(
-        "wordchipper",
-        stats.iter().map(|s| s.wc_enc_time).sum::<Duration>() / num_batches as u32,
-        avg_batch_bytes,
-        args.batch_size,
-    );
-    print_timing(
-        "tiktoken",
-        stats.iter().map(|s| s.tt_enc_time).sum::<Duration>() / num_batches as u32,
-        avg_batch_bytes,
-        args.batch_size,
-    );
+    for w in candidates.iter() {
+        let name = w.name();
+        let total_duration = stats
+            .iter()
+            .map(|s| s.timings[name].encode)
+            .sum::<Duration>();
+        let mean_duration = total_duration / num_batches as u32;
+        print_timing(name, mean_duration, avg_batch_bytes, args.batch_size);
+    }
 
     println!();
     println!("Decoder Times:");
-    print_timing(
-        "wordchipper",
-        stats.iter().map(|s| s.wc_dec_time).sum::<Duration>() / num_batches as u32,
-        avg_batch_bytes,
-        args.batch_size,
-    );
-    print_timing(
-        "tiktoken",
-        stats.iter().map(|s| s.tt_dec_time).sum::<Duration>() / num_batches as u32,
-        avg_batch_bytes,
-        args.batch_size,
-    );
+    for w in candidates.iter() {
+        let name = w.name();
+        let total_duration = stats
+            .iter()
+            .map(|s| s.timings[name].decode)
+            .sum::<Duration>();
+        let mean_duration = total_duration / num_batches as u32;
+        print_timing(name, mean_duration, avg_batch_bytes, args.batch_size);
+    }
 
     Ok(())
 }
@@ -240,24 +252,26 @@ fn for_each_batch(
 
 pub fn verify_encode(
     source_batch: &[&str],
-    wc_batch: &[Vec<Rank>],
-    tt_batch: &[Vec<Rank>],
+    actual_name: &str,
+    actual_batch: &[Vec<Rank>],
+    expected_name: &str,
+    expected_batch: &[Vec<Rank>],
 ) -> anyhow::Result<()> {
-    assert_eq!(source_batch.len(), wc_batch.len());
-    assert_eq!(source_batch.len(), tt_batch.len());
+    assert_eq!(source_batch.len(), actual_batch.len());
+    assert_eq!(source_batch.len(), expected_batch.len());
     for (i, s) in source_batch.iter().enumerate() {
-        let wc_tokens = &wc_batch[i];
-        let tt_tokens = &tt_batch[i];
+        let actual_tokens = &actual_batch[i];
+        let expected_tokens = &expected_batch[i];
 
-        if wc_tokens == tt_tokens {
+        if actual_tokens == expected_tokens {
             continue;
         }
 
         bail!(
-            "ENCODER MISMATCH:\n- source: {}\n- wc: {:?}\n- tt: {:?}",
+            "ENCODER MISMATCH:\n- source: {}\n- {actual_name}: {:?}\n- {expected_name}: {:?}",
             s,
-            wc_tokens,
-            tt_tokens,
+            actual_tokens,
+            expected_tokens,
         )
     }
     Ok(())
@@ -265,30 +279,25 @@ pub fn verify_encode(
 
 pub fn verify_decode(
     batch_tokens: &[&[Rank]],
-    batch_expected: &[String],
-    wc_batch_decode: &[String],
-    tt_batch_decode: &[String],
+    expected_batch: &[&str],
+    actual_name: &str,
+    actual_batch: &[String],
 ) -> anyhow::Result<()> {
-    assert_eq!(batch_tokens.len(), batch_expected.len());
-    assert_eq!(batch_tokens.len(), wc_batch_decode.len());
-    assert_eq!(batch_tokens.len(), tt_batch_decode.len());
+    assert_eq!(batch_tokens.len(), expected_batch.len());
+    assert_eq!(batch_tokens.len(), actual_batch.len());
 
-    for (i, expected) in batch_expected.iter().enumerate() {
-        let wc_decoded = &wc_batch_decode[i];
-        let tt_decoded = &tt_batch_decode[i];
+    for (i, &expected_str) in expected_batch.iter().enumerate() {
+        let actual_str = &actual_batch[i];
 
-        let wc_match = wc_decoded == expected;
-        let tt_match = tt_decoded == expected;
-
-        if !(wc_match || tt_match) {
+        if actual_str == expected_str {
             let tokens = batch_tokens[i];
 
             bail!(
-                "DECODER MISMATCH:\n- tokens: {:?}\n- expected: {}\n- wc: {}\n- tt: {}",
+                "DECODER MISMATCH:\n- tokens: {:?}\n- expected: {}\n- {}: {}",
                 tokens,
-                expected,
-                wc_decoded,
-                tt_decoded,
+                expected_str,
+                actual_name,
+                actual_str,
             )
         }
     }
@@ -335,14 +344,123 @@ fn build_tokenizer_parser() -> impl TypedValueParser {
     .map(|s| s[3..].parse::<OATokenizer>().unwrap())
 }
 
+pub trait TokenizerWrapper<T: TokenType> {
+    fn name(&self) -> &str;
+
+    fn encode_batch(
+        &self,
+        batch: &[&str],
+    ) -> anyhow::Result<Vec<Vec<T>>>;
+
+    fn expect_encode_batch(
+        &self,
+        batch: &[&str],
+    ) -> Vec<Vec<T>> {
+        self.encode_batch(batch)
+            .unwrap_or_else(|_| panic!("failed to encode batch with \"{}\"", self.name()))
+    }
+
+    fn decode_batch(
+        &self,
+        batch: &[&[T]],
+    ) -> anyhow::Result<Vec<String>>;
+
+    fn expect_decode_batch(
+        &self,
+        batch: &[&[T]],
+    ) -> Vec<String> {
+        self.decode_batch(batch)
+            .unwrap_or_else(|_| panic!("failed to decode batch with \"{}\"", self.name()))
+    }
+}
+
+pub struct TiktokenWrapper {
+    inner: CoreBPE,
+}
+
+impl TiktokenWrapper {
+    pub fn new(inner: CoreBPE) -> Self {
+        Self { inner }
+    }
+}
+
+impl TokenizerWrapper<Rank> for TiktokenWrapper {
+    fn name(&self) -> &str {
+        "tiktoken"
+    }
+
+    fn encode_batch(
+        &self,
+        batch: &[&str],
+    ) -> anyhow::Result<Vec<Vec<Rank>>> {
+        Ok(batch
+            .par_iter()
+            .map(|s| self.inner.encode_with_special_tokens(s))
+            .collect::<Vec<_>>())
+    }
+
+    fn decode_batch(
+        &self,
+        batch: &[&[Rank]],
+    ) -> anyhow::Result<Vec<String>> {
+        Ok(batch
+            .par_iter()
+            .map(|tokens| self.inner.decode(tokens.to_vec()).unwrap())
+            .collect::<Vec<_>>())
+    }
+}
+
+pub struct WordchipperWrapper<T: TokenType> {
+    name: String,
+    encoder: Arc<dyn TokenEncoder<T>>,
+    decoder: Arc<dyn TokenDecoder<T>>,
+}
+
+impl<T: TokenType> WordchipperWrapper<T> {
+    pub fn new(
+        name: String,
+        encoder: Arc<dyn TokenEncoder<T>>,
+        decoder: Arc<dyn TokenDecoder<T>>,
+    ) -> Self {
+        Self {
+            name,
+            encoder,
+            decoder,
+        }
+    }
+}
+
+impl<T: TokenType> TokenizerWrapper<T> for WordchipperWrapper<T> {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn encode_batch(
+        &self,
+        batch: &[&str],
+    ) -> anyhow::Result<Vec<Vec<T>>> {
+        self.encoder.try_encode_batch(batch)
+    }
+
+    fn decode_batch(
+        &self,
+        batch: &[&[T]],
+    ) -> anyhow::Result<Vec<String>> {
+        Ok(self.decoder.try_decode_batch_to_strings(batch)?.unwrap())
+    }
+}
+
+#[derive(Debug, Default, Clone, Copy)]
+struct BatchTimings {
+    pub encode: Duration,
+    pub decode: Duration,
+}
+
 struct BatchStats {
     pub sample_bytes: Vec<usize>,
-    pub tokens: Vec<usize>,
+    pub token_counts: Vec<usize>,
 
-    pub wc_enc_time: Duration,
-    pub tt_enc_time: Duration,
-    pub wc_dec_time: Duration,
-    pub tt_dec_time: Duration,
+    pub timings: HashMap<String, BatchTimings>,
 }
 
 impl BatchStats {
@@ -351,7 +469,7 @@ impl BatchStats {
     }
 
     pub fn total_tokens(&self) -> usize {
-        self.tokens.iter().sum::<usize>()
+        self.token_counts.iter().sum::<usize>()
     }
 
     pub fn batch_bytes(&self) -> usize {

@@ -1,6 +1,7 @@
 //! # Parallel Decoder
 
 use crate::{
+    alloc::sync::Arc,
     decoders::{BatchDecodeResult, DecodeResult, TokenDecoder},
     types::TokenType,
 };
@@ -8,18 +9,16 @@ use crate::{
 /// Batch-Level Parallel Decoder Wrapper.
 ///
 /// Enables ``rayon`` decoding of batches when available.
-#[derive(Clone)]
-pub struct ParallelRayonDecoder<T: TokenType, D: TokenDecoder<T>> {
+pub struct ParallelRayonDecoder<T: TokenType> {
     /// Wrapped decoder.
-    pub inner: D,
+    pub inner: Arc<dyn TokenDecoder<T>>,
 
     _marker: std::marker::PhantomData<T>,
 }
 
-impl<T, D> ParallelRayonDecoder<T, D>
+impl<T> ParallelRayonDecoder<T>
 where
     T: TokenType,
-    D: TokenDecoder<T>,
 {
     /// Create a new parallel token decoders.
     ///
@@ -28,7 +27,7 @@ where
     ///
     /// ## Returns
     /// A new `ParallelRayonDecoder` instance.
-    pub fn new(inner: D) -> Self {
+    pub fn new(inner: Arc<dyn TokenDecoder<T>>) -> Self {
         Self {
             inner,
             _marker: std::marker::PhantomData,
@@ -36,10 +35,9 @@ where
     }
 }
 
-impl<T, D> TokenDecoder<T> for ParallelRayonDecoder<T, D>
+impl<T> TokenDecoder<T> for ParallelRayonDecoder<T>
 where
     T: TokenType,
-    D: TokenDecoder<T>,
 {
     fn try_decode_to_bytes(
         &self,
@@ -99,7 +97,7 @@ mod tests {
 
         let decoder = PairExpansionDecoder::from_pair_vocab(&vocab.pair_vocab());
 
-        let decoder = ParallelRayonDecoder::new(decoder);
+        let decoder = ParallelRayonDecoder::new(Arc::new(decoder));
 
         common_decoder_unit_test(vocab, &decoder);
     }

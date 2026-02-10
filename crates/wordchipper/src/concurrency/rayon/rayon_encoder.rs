@@ -1,22 +1,26 @@
 //! # Parallel Encoder
 
-use crate::{encoders::TokenEncoder, spanning::TextSpanner, types::TokenType, vocab::SpecialVocab};
+use crate::{
+    alloc::sync::Arc,
+    encoders::TokenEncoder,
+    spanning::TextSpanner,
+    types::TokenType,
+    vocab::SpecialVocab,
+};
 
 /// Batch-Level Parallel Encoder Wrapper.
 ///
 /// Enables ``rayon`` encoding of batches when available.
-#[derive(Clone)]
-pub struct ParallelRayonEncoder<T: TokenType, D: TokenEncoder<T>> {
+pub struct ParallelRayonEncoder<T: TokenType> {
     /// Inner encoder.
-    pub inner: D,
+    pub inner: Arc<dyn TokenEncoder<T>>,
 
     _marker: std::marker::PhantomData<T>,
 }
 
-impl<T, D> ParallelRayonEncoder<T, D>
+impl<T> ParallelRayonEncoder<T>
 where
     T: TokenType,
-    D: TokenEncoder<T>,
 {
     /// Create a new parallel encoder.
     ///
@@ -25,7 +29,7 @@ where
     ///
     /// ## Returns
     /// A new `ParallelRayonEncoder` instance.
-    pub fn new(inner: D) -> Self {
+    pub fn new(inner: Arc<dyn TokenEncoder<T>>) -> Self {
         Self {
             inner,
             _marker: std::marker::PhantomData,
@@ -33,10 +37,9 @@ where
     }
 }
 
-impl<T, D> TokenEncoder<T> for ParallelRayonEncoder<T, D>
+impl<T> TokenEncoder<T> for ParallelRayonEncoder<T>
 where
     T: TokenType,
-    D: TokenEncoder<T>,
 {
     fn spanner(&self) -> &TextSpanner {
         self.inner.spanner()
@@ -71,6 +74,8 @@ where
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+
     use crate::{
         concurrency::rayon::rayon_encoder::ParallelRayonEncoder,
         encoders::{
@@ -85,7 +90,7 @@ mod tests {
         let vocab = common_encoder_test_vocab();
 
         let encoder = DefaultTokenEncoder::<T>::new(vocab.clone().into(), None);
-        let encoder = ParallelRayonEncoder::new(encoder);
+        let encoder = ParallelRayonEncoder::new(Arc::new(encoder));
 
         assert_eq!(
             encoder.spanner().word_regex().as_str(),

@@ -1,4 +1,4 @@
-use std::{collections::HashSet, time::Duration};
+use std::{collections::HashSet, sync::Arc, time::Duration};
 
 use arrow::array::{Array, StringArray};
 use clap::Parser;
@@ -128,10 +128,10 @@ fn main() -> anyhow::Result<()> {
 
     if args.time_encode_decode {
         let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::new(vocab.clone(), None);
-        let encoder = ParallelRayonEncoder::new(encoder);
+        let encoder = ParallelRayonEncoder::new(Arc::new(encoder));
 
         let decoder = TokenDictDecoder::from_unified_vocab(vocab);
-        let decoder = ParallelRayonDecoder::new(decoder);
+        let decoder = ParallelRayonDecoder::new(Arc::new(decoder));
 
         let mut samples = Vec::new();
         {

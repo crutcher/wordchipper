@@ -8,6 +8,8 @@
 //! ## Example
 //!
 //! ```rust,no_run
+//! use std::sync::Arc;
+//!
 //! use wordchipper::{
 //!     encoders::{DefaultTokenEncoder, TokenEncoder},
 //!     types::TokenType,
@@ -21,7 +23,7 @@
 //!     let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::new(vocab, None);
 //!
 //!     #[cfg(feature = "rayon")]
-//!     let encoder = wordchipper::concurrency::rayon::ParallelRayonEncoder::new(encoder);
+//!     let encoder = wordchipper::concurrency::rayon::ParallelRayonEncoder::new(Arc::new(encoder));
 //!
 //!     encoder.try_encode_batch(batch).unwrap()
 //! }
