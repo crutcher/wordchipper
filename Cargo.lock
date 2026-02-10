@@ -2823,6 +2823,7 @@ dependencies = [
  "dary_heap",
  "document-features",
  "fancy-regex",
+ "foldhash",
  "hashbrown 0.16.1",
  "hashlru",
  "log",

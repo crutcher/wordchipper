@@ -26,7 +26,6 @@ default = [
 ## The default client is focused on loading vocabularies and running
 ## high-performance encoders / decoders.
 client = [
-    "ahash",
     "download",
     "rayon",
     "std",
@@ -74,6 +73,11 @@ no_std = [
 ## See also the ``hashbrown`` dep used by ``no_std``.
 ahash = [
     "dep:ahash",
+    "std",
+]
+
+foldhash = [
+    "dep:foldhash",
     "std",
 ]
 
@@ -128,6 +132,8 @@ hashbrown = { workspace = true, optional = true }
 
 # "ahash" feature deps:
 ahash = { workspace = true, optional = true }
+
+foldhash = { workspace = true, optional = true }
 
 # "download" feature deps:
 wordchipper-disk-cache = { version = "0.5.6", path = "../wordchipper-disk-cache", optional = true }
