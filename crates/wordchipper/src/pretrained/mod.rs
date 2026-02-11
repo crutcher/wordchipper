@@ -38,10 +38,10 @@
 //!     use wordchipper::concurrency::rayon::*;
 //!
 //!     #[cfg(feature = "rayon")]
-//!     let encoder = ParallelRayonEncoder::new(encoder).into();
+//!     let encoder = Arc::new(ParallelRayonEncoder::new(encoder));
 //!
 //!     #[cfg(feature = "rayon")]
-//!     let decoder = ParallelRayonDecoder::new(decoder).into();
+//!     let decoder = Arc::new(ParallelRayonDecoder::new(decoder));
 //!
 //!     Ok((encoder, decoder))
 //! }
