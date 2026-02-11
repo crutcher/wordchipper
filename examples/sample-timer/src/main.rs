@@ -58,52 +58,37 @@ pub struct Args {
     pub model: ModelSelector,
 
     /// Ignore missing models?
-    /* hack: 3-state boolean: default, "--{flag}" := true, "--{flag} $val" */
-    #[arg(long,
-    num_args = 0..=1,
-    default_value_t = true,
-      default_missing_value = "true")]
+    /* hack: 3-state boolean */
+    #[arg(long, num_args = 0..=1, default_value_t = true, default_missing_value = "true")]
     pub ignore_missing: bool,
 
     /// Test against tiktoken-rs?
-    /* hack: 3-state boolean: default, "--{flag}" := true, "--{flag} $val" */
-    #[arg(long,
-    num_args = 0..=1,
-    default_value_t = true,
-      default_missing_value = "true")]
+    /* hack: 3-state boolean */
+    #[arg(long, num_args = 0..=1, default_value_t = true, default_missing_value = "true")]
     pub tiktoken: bool,
 
     #[cfg(feature = "tokenizers")]
     /// Test against HF tokenizers?
-    /* hack: 3-state boolean: default, "--{flag}" := true, "--{flag} $val" */
-    #[arg(long,
-    num_args = 0..=1,
-    default_value_t = true,
-      default_missing_value = "true")]
+    /* hack: 3-state boolean */
+    #[arg(long, num_args = 0..=1, default_value_t = true, default_missing_value = "true")]
     pub tokenizers: bool,
 
     /// Time decoding as well.
-    /* hack: 3-state boolean: default, "--{flag}" := true, "--{flag} $val" */
-    #[arg(long,
-    num_args = 0..=1,
-    default_value_t = true,
-      default_missing_value = "false")]
+    /* hack: 3-state boolean */
+    #[arg(long, num_args = 0..=1, default_value_t = false, default_missing_value = "false")]
     pub decode: bool,
 
     /// Validate encoders against each other, decoders against input.
-    /* hack: 3-state boolean: default, "--{flag}" := true, "--{flag} $val" */
-    #[arg(long,
-    num_args = 0..=1,
-    default_value_t = true,
-      default_missing_value = "true")]
+    /* hack: 3-state boolean */
+    #[arg(long, num_args = 0..=1, default_value_t = true, default_missing_value = "true")]
     pub validate: bool,
 
     /// Re-span text when verifying?
     /// Slower, but works around span configs which leave gaps in the text.
-    /* hack: 3-state boolean: default, "--{flag}" := true, "--{flag} $val" */
+    /* hack: 3-state boolean */
     #[arg(long,
     num_args = 0..=1,
-    default_value_t = true,
+    default_value_t = false,
       default_missing_value = "false")]
     pub respan_input_for_decode_check: bool,
 }
