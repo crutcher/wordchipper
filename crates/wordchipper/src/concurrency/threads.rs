@@ -71,6 +71,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_est_max_parallelism() {
+        #[allow(unused_mut)]
         let mut orig_env: CommonHashMap<String, Option<String>> = Default::default();
 
         #[cfg(feature = "rayon")]
