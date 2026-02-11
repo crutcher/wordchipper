@@ -4,7 +4,10 @@ use std::sync::Arc;
 
 use tiktoken_rs::{CoreBPE, Rank};
 use wordchipper::{
-    decoders::TokenDecoder, encoders::TokenEncoder, spanning::TextSpanner, types::TokenType,
+    decoders::TokenDecoder,
+    encoders::TokenEncoder,
+    spanning::TextSpanner,
+    types::TokenType,
 };
 
 pub trait EncDecEngine<T: TokenType> {
