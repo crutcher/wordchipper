@@ -8,7 +8,7 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-wordchipper = { version = "0.5.6", path = "../wordchipper", features = ["std"] }
+wordchipper = { version = "0.6.0", path = "../wordchipper", features = ["std"] }
 parking_lot = { workspace = true }
 hashlru = { workspace = true }
 
