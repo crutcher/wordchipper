@@ -193,9 +193,8 @@ fn main() -> anyhow::Result<()> {
         .with_cache_dir(args.dataset_dir.clone())
         .init()?;
 
+    println!("{:#?}", args);
     println!("Model: \"{}\"", args.model);
-    println!("- shards: {:?}", args.shards);
-    println!("- batch_size: {}", args.batch_size);
 
     let mut disk_cache = WordchipperDiskCache::default();
     let vocab: UnifiedTokenVocab<Rank> = args.model.load_vocab(&mut disk_cache)?;
@@ -326,11 +325,13 @@ fn main() -> anyhow::Result<()> {
                     verify_decode(name, &token_slices, &decode_batch, expected_decode)?;
                 }
 
-                if token_reference.is_none() {
+                if batch_stats.token_counts.is_empty() {
                     batch_stats
                         .token_counts
                         .extend(tokens.iter().map(|t| t.len()));
+                }
 
+                if args.validate && token_reference.is_none() {
                     token_reference = Some((name.to_string(), tokens));
                 }
 
