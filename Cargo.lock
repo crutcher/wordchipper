@@ -3386,7 +3386,7 @@ dependencies = [
 
 [[package]]
 name = "wordchipper-experimental"
-version = "0.6.0"
+version = "0.0.0"
 dependencies = [
  "hashlru",
  "parking_lot",

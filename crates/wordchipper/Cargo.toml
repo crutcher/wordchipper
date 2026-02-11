@@ -3,12 +3,14 @@ name = "wordchipper"
 description = "HPC Rust LLM Tokenizer Library"
 keywords = ["ai", "gpt", "bpe", "tokenizer"]
 authors.workspace = true
-repository.workspace = true
-version.workspace = true
 license.workspace = true
+repository.workspace = true
+
+version.workspace = true
 
 edition.workspace = true
 rust-version.workspace = true
+
 
 [package.metadata.docs.rs]
 all-features = true

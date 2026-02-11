@@ -1,12 +1,14 @@
 [package]
 name = "wordchipper-disk-cache"
 description = "A disk cache for Wordchipper downloads"
-version.workspace = true
-repository.workspace = true
-rust-version.workspace = true
-edition.workspace = true
+authors.workspace = true
 license.workspace = true
+repository.workspace = true
 
+version.workspace = true
+
+edition.workspace = true
+rust-version.workspace = true
 
 [lints]
 workspace = true
