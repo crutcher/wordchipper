@@ -4,8 +4,9 @@ pub mod patterns;
 pub mod resources;
 pub mod specials;
 
-#[cfg(feature = "download")]
+#[cfg(feature = "std")]
 mod loaders;
-#[cfg(feature = "download")]
+
+#[cfg(feature = "std")]
 #[doc(inline)]
 pub use loaders::*;
