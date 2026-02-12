@@ -1,7 +1,6 @@
 extern crate core;
 
 use std::{
-    collections::HashMap,
     fmt::{Display, Formatter},
     io,
     io::IsTerminal,
@@ -12,12 +11,14 @@ use std::{
 
 use anyhow::bail;
 use arrow::array::{Array, StringArray};
+use batch_stats::{BatchStats, EngineBatchTimes};
 use clap::{Parser, ValueEnum};
-use engines::{EncDecEngine, TiktokenRsEngine, WordchipperEngine};
+use engines::EncDecEngine;
 use indicatif::ProgressBar;
 use rand::prelude::SliceRandom;
 use similar::TextDiff;
 use tiktoken_rs::{CoreBPE, Rank};
+use tiktoken_support::TiktokenRsEngine;
 use wordchipper::{
     compat::{
         slices::{inner_slice_view, inner_str_view},
@@ -32,8 +33,17 @@ use wordchipper::{
     vocab::UnifiedTokenVocab,
 };
 use wordchipper_data::dataset::{DatasetCache, DatasetCacheConfig};
+use wordchipper_support::WordchipperEngine;
+
+use crate::tokenizers_support::{TokenizersEngine, load_tokenizers_tok};
 
 mod engines;
+
+mod batch_stats;
+mod tiktoken_support;
+#[cfg(feature = "tokenizers")]
+mod tokenizers_support;
+mod wordchipper_support;
 
 /// Wordchipper Encode/Decode Side-by-Side Benchmarks.
 #[derive(Parser, Debug)]
@@ -75,7 +85,7 @@ pub struct Args {
 
     /// Time decoding as well.
     /* hack: 3-state boolean */
-    #[arg(long, num_args = 0..=1, default_value_t = false, default_missing_value = "false")]
+    #[arg(long, num_args = 0..=1, default_value_t = false, default_missing_value = "true")]
     pub decode: bool,
 
     /// Validate encoders against each other, decoders against input.
@@ -132,13 +142,14 @@ impl Display for ModelSelector {
 impl ModelSelector {
     pub fn model(&self) -> OATokenizer {
         use ModelSelector::*;
+        use OATokenizer::*;
         match self {
-            OpenaiR50kBase => OATokenizer::R50kBase,
-            OpenaiP50kBase => OATokenizer::P50kBase,
-            OpenaiP50kEdit => OATokenizer::P50kEdit,
-            OpenaiCl100kBase => OATokenizer::Cl100kBase,
-            OpenaiO200kBase => OATokenizer::O200kBase,
-            OpenaiO200kHarmony => OATokenizer::O200kHarmony,
+            OpenaiR50kBase => R50kBase,
+            OpenaiP50kBase => P50kBase,
+            OpenaiP50kEdit => P50kEdit,
+            OpenaiCl100kBase => Cl100kBase,
+            OpenaiO200kBase => O200kBase,
+            OpenaiO200kHarmony => O200kHarmony,
         }
     }
 
@@ -149,22 +160,15 @@ impl ModelSelector {
         self.model().load(disk_cache)
     }
 
-    pub fn load_tiktoken_bpe(&self) -> anyhow::Result<Arc<CoreBPE>> {
-        Ok(Arc::new(load_tiktoken_bpe(self.model())?))
+    pub fn load_tiktoken_bpe(&self) -> anyhow::Result<(String, Arc<CoreBPE>)> {
+        tiktoken_support::load_tiktoken_bpe(self.model())
     }
 
     #[cfg(feature = "tokenizers")]
     pub fn load_tokenizers_tokenizer(
         &self
-    ) -> anyhow::Result<Arc<tokenizers::tokenizer::Tokenizer>> {
-        match oa_hf_model(self.model()) {
-            Some(hf_model) => Ok(Arc::new(
-                tokenizers::tokenizer::Tokenizer::from_pretrained(hf_model, None).unwrap(),
-            )),
-            None => {
-                bail!("failed to convert ModelSelector to OATokenizer")
-            }
-        }
+    ) -> anyhow::Result<(String, Arc<tokenizers::tokenizer::Tokenizer>)> {
+        load_tokenizers_tok(self.model())
     }
 }
 
@@ -179,7 +183,6 @@ fn main() -> anyhow::Result<()> {
         .init()?;
 
     println!("{:#?}", args);
-    println!("Model: \"{}\"", args.model);
 
     let mut disk_cache = WordchipperDiskCache::default();
     let vocab: UnifiedTokenVocab<Rank> = args.model.load_vocab(&mut disk_cache)?;
@@ -212,7 +215,7 @@ fn main() -> anyhow::Result<()> {
             decoder
         };
         let wc_engine = Arc::new(WordchipperEngine::<Rank>::new(
-            "wordchipper".to_string(),
+            args.model.to_string(),
             encoder,
             decoder,
         ));
@@ -222,7 +225,7 @@ fn main() -> anyhow::Result<()> {
 
     if args.tiktoken {
         match args.model.load_tiktoken_bpe() {
-            Ok(tok) => candidate_engines.push(Arc::new(TiktokenRsEngine::new(tok))),
+            Ok((name, bpe)) => candidate_engines.push(Arc::new(TiktokenRsEngine::new(name, bpe))),
             Err(e) => {
                 if args.ignore_missing {
                     println!("Unable to load tiktoken model");
@@ -236,7 +239,7 @@ fn main() -> anyhow::Result<()> {
     #[cfg(feature = "tokenizers")]
     if args.tokenizers {
         match args.model.load_tokenizers_tokenizer() {
-            Ok(tok) => candidate_engines.push(Arc::new(engines::TokenizersEngine::new(tok))),
+            Ok((name, tok)) => candidate_engines.push(Arc::new(TokenizersEngine::new(name, tok))),
             Err(e) => {
                 if args.ignore_missing {
                     println!("Unable to load HuggingFace tokenizer");
@@ -245,6 +248,11 @@ fn main() -> anyhow::Result<()> {
                 }
             }
         }
+    }
+
+    println!("Loaded:");
+    for eng in candidate_engines.iter() {
+        println!("- \"{}\"", eng.name());
     }
 
     let mut stats = Vec::new();
@@ -496,61 +504,4 @@ pub fn format_bps(
 ) -> String {
     let bps = bytes as f64 / duration.as_secs_f64();
     format!(r"{}/s", humansize::format_size_i(bps, humansize::BINARY))
-}
-
-/// Load a tiktoken model from the given `OATokenizer` enum variant.
-fn load_tiktoken_bpe(model: OATokenizer) -> anyhow::Result<CoreBPE> {
-    use OATokenizer::*;
-    match model {
-        R50kBase => tiktoken_rs::r50k_base(),
-        P50kBase => tiktoken_rs::p50k_base(),
-        P50kEdit => tiktoken_rs::p50k_edit(),
-        Cl100kBase => tiktoken_rs::cl100k_base(),
-        O200kBase => tiktoken_rs::o200k_base(),
-        O200kHarmony => tiktoken_rs::o200k_harmony(),
-        _ => panic!("unsupported model: {:?}", model),
-    }
-}
-
-fn oa_hf_model(model: OATokenizer) -> Option<String> {
-    use OATokenizer::*;
-    match model {
-        R50kBase => "Xenova/gpt-3".to_string().into(),
-        P50kBase | P50kEdit => "Xenova/text-davinci-002".to_string().into(),
-        Cl100kBase => "Xenova/text-embedding-ada-002".to_string().into(),
-        O200kBase | O200kHarmony => "Xenova/gpt-4o".to_string().into(),
-        _ => None,
-    }
-}
-
-#[derive(Debug, Default, Clone, Copy)]
-struct EngineBatchTimes {
-    pub encode: Duration,
-    pub decode: Duration,
-}
-
-#[derive(Debug, Default)]
-struct BatchStats {
-    pub sample_bytes: Vec<usize>,
-    pub token_counts: Vec<usize>,
-
-    pub timings: HashMap<String, EngineBatchTimes>,
-}
-
-impl BatchStats {
-    pub fn len(&self) -> usize {
-        self.sample_bytes.len()
-    }
-
-    pub fn total_tokens(&self) -> usize {
-        self.token_counts.iter().sum::<usize>()
-    }
-
-    pub fn batch_bytes(&self) -> usize {
-        self.sample_bytes.iter().sum::<usize>()
-    }
-
-    pub fn avg_sample_bytes(&self) -> usize {
-        self.batch_bytes() / self.len()
-    }
 }

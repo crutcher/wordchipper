@@ -9,7 +9,7 @@ use crate::{
         patterns::{
             OA_GPT2_R50K_WORD_PATTERN,
             OA_GPT3_CL100K_WORD_PATTERN,
-            OA_GPT5_O220K_WORD_PATTERN,
+            OA_GPT5_O2O0K_WORD_PATTERN,
         },
         resources::{
             OA_GPT2_P50K_BASE_TIKTOKEN,
@@ -187,11 +187,7 @@ pub fn load_p50k_base_vocab<T: TokenType>(
 pub fn load_p50k_edit_vocab<T: TokenType>(
     disk_cache: &mut WordchipperDiskCache
 ) -> anyhow::Result<UnifiedTokenVocab<T>> {
-    load_p50k_edit_vocab_path(disk_cache.load_cached_path(
-        &[OA_KEY, "p50k"],
-        OA_GPT2_P50K_BASE_TIKTOKEN.urls,
-        true,
-    )?)
+    load_p50k_edit_vocab_path(fetch_p50k_base_data(disk_cache)?)
 }
 
 /// Load GPT-2 "`p50k_edit`" pretrained vocabulary from disk.
@@ -205,6 +201,14 @@ pub fn load_p50k_edit_vocab_path<T: TokenType>(
     )
 }
 
+/// Fetch GPT-3 "`cl100k`" pretrained vocabulary base data.
+///
+/// Downloads and caches resources using the `disk_cache`.
+#[cfg(feature = "download")]
+pub fn fetch_cl100k_base_data(disk_cache: &mut WordchipperDiskCache) -> anyhow::Result<PathBuf> {
+    disk_cache.load_cached_path(&[OA_KEY, "cl100k"], OA_GPT3_CL100K_BASE_TIKTOKEN.urls, true)
+}
+
 /// Load GPT-3 "`cl100k`" pretrained vocabulary.
 ///
 /// Downloads and caches resources using the `disk_cache`.
@@ -212,11 +216,7 @@ pub fn load_p50k_edit_vocab_path<T: TokenType>(
 pub fn load_cl100k_base_vocab<T: TokenType>(
     disk_cache: &mut WordchipperDiskCache
 ) -> anyhow::Result<UnifiedTokenVocab<T>> {
-    load_cl100k_base_vocab_path(disk_cache.load_cached_path(
-        &[OA_KEY, "cl100k"],
-        OA_GPT3_CL100K_BASE_TIKTOKEN.urls,
-        true,
-    )?)
+    load_cl100k_base_vocab_path(fetch_cl100k_base_data(disk_cache)?)
 }
 
 /// Load GPT-3 "`cl100k`" pretrained vocabulary from disk.
@@ -230,6 +230,14 @@ pub fn load_cl100k_base_vocab_path<T: TokenType>(
     )
 }
 
+/// Fetch GPT-5 "`o200k_base`" pretrained vocabulary base data.
+///
+/// Downloads and caches resources using the `disk_cache`.
+#[cfg(feature = "download")]
+pub fn fetch_o200k_base_data(disk_cache: &mut WordchipperDiskCache) -> anyhow::Result<PathBuf> {
+    disk_cache.load_cached_path(&[OA_KEY, "o200k"], OA_GPT5_O200K_BASE_TIKTOKEN.urls, true)
+}
+
 /// Load GPT-5 "`o200k_base`" pretrained vocabulary.
 ///
 /// Downloads and caches resources using the `disk_cache`.
@@ -237,11 +245,7 @@ pub fn load_cl100k_base_vocab_path<T: TokenType>(
 pub fn load_o200k_base_vocab<T: TokenType>(
     disk_cache: &mut WordchipperDiskCache
 ) -> anyhow::Result<UnifiedTokenVocab<T>> {
-    load_o200k_base_vocab_path(disk_cache.load_cached_path(
-        &[OA_KEY, "o200k"],
-        OA_GPT5_O200K_BASE_TIKTOKEN.urls,
-        true,
-    )?)
+    load_o200k_base_vocab_path(fetch_o200k_base_data(disk_cache)?)
 }
 
 /// Load GPT-5 "`o200k_base`" pretrained vocabulary.
@@ -250,7 +254,7 @@ pub fn load_o200k_base_vocab_path<T: TokenType>(
 ) -> anyhow::Result<UnifiedTokenVocab<T>> {
     load_common_vocab_path(
         path,
-        OA_GPT5_O220K_WORD_PATTERN.into(),
+        OA_GPT5_O2O0K_WORD_PATTERN.into(),
         &oa_gt5_o200k_base_specials().to_vec(),
     )
 }
@@ -262,11 +266,7 @@ pub fn load_o200k_base_vocab_path<T: TokenType>(
 pub fn load_o200k_harmony_vocab<T: TokenType>(
     disk_cache: &mut WordchipperDiskCache
 ) -> anyhow::Result<UnifiedTokenVocab<T>> {
-    load_o200k_base_vocab_path(disk_cache.load_cached_path(
-        &[OA_KEY, "o200k"],
-        OA_GPT5_O200K_BASE_TIKTOKEN.urls,
-        true,
-    )?)
+    load_o200k_harmony_vocab_path(fetch_o200k_base_data(disk_cache)?)
 }
 
 /// Load GPT-5 "`o200k_harmony`" pretrained vocabulary from disk.
@@ -275,7 +275,7 @@ pub fn load_o200k_harmony_vocab_path<T: TokenType>(
 ) -> anyhow::Result<UnifiedTokenVocab<T>> {
     load_common_vocab_path(
         path,
-        OA_GPT5_O220K_WORD_PATTERN.into(),
+        OA_GPT5_O2O0K_WORD_PATTERN.into(),
         &oa_gpt5_o200k_harmony_specials().to_vec(),
     )
 }

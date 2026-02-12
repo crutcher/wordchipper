@@ -20,8 +20,8 @@ The primary documentation is for the [wordchipper crate](crates/wordchipper).
 ## Encode/Decode Side-by-Side Benchmarks
 
 ```terminaloutput
-% RAYON_NUM_THREADS=48 cargo run --release -p sample-timer  -- \
-    --dataset-dir $DATASET_CACHE_DIR --decode
+$ RAYON_NUM_THREADS=48 cargo run --release -p sample-timer -- \
+    --dataset-dir $DATASET_DIR --decode
 Args {
     dataset_dir: "/media/Data/nanochat/dataset",
     shards: [
@@ -33,11 +33,14 @@ Args {
     ignore_missing: true,
     tiktoken: true,
     tokenizers: true,
-    decode: false,
+    decode: true,
     validate: true,
-    respan_input_for_decode_check: true,
+    respan_input_for_decode_check: false,
 }
-Model: "openai/o200k_harmony"
+Loaded:
+- "wordchipper::openai/o200k_harmony"
+- "tiktoken-rs::o200k_harmony"
+- "tokenizers::Xenova/gpt-4o"
 
 Samples Summary:
 - num batches: 104
@@ -45,18 +48,32 @@ Samples Summary:
 - avg bytes/token: 4.8
 
 Encoder Batch Timing:
-- "wordchipper"
-  - batch:      36.2ms
-  - sample:     35.3µs
-  - bps:    128.96 MiB/s
-- "tiktoken-rs"
-  - batch:      36.5ms
-  - sample:     35.6µs
-  - bps:    127.86 MiB/s
-- "tokenizers"
-  - batch:     214.7ms
-  - sample:    209.6µs
-  - bps:    21.73 MiB/s
+- "wordchipper::openai/o200k_harmony"
+  - batch:      37.1ms
+  - sample:     36.2µs
+  - bps:    125.85 MiB/s
+- "tiktoken-rs::o200k_harmony"
+  - batch:      37.4ms
+  - sample:     36.5µs
+  - bps:    124.68 MiB/s
+- "tokenizers::Xenova/gpt-4o"
+  - batch:     201.1ms
+  - sample:    196.4µs
+  - bps:    23.20 MiB/s
+  
+Decoder Batch Timing:
+- "wordchipper::openai/o200k_harmony"
+  - batch:       2.9ms
+  - sample:      2.9µs
+  - bps:    1.55 GiB/s
+- "tiktoken-rs::o200k_harmony"
+  - batch:       2.2ms
+  - sample:      2.1µs
+  - bps:    2.12 GiB/s
+- "tokenizers::Xenova/gpt-4o"
+  - batch:       9.0ms
+  - sample:      8.8µs
+  - bps:    518.15 MiB/s
 ```
 
 ## Components

@@ -6,7 +6,7 @@
 //! use wordchipper::{
 //!     decoders::DefaultTokenDecoder,
 //!     encoders::DefaultTokenEncoder,
-//!     pretrained::openai::patterns::OA_GPT5_O220K_WORD_PATTERN,
+//!     pretrained::openai::patterns::OA_GPT5_O2O0K_WORD_PATTERN,
 //!     spanning::TextSpanningConfig,
 //!     vocab::{SpanMapVocab, SpanTokenMap, UnifiedTokenVocab, io::load_base64_span_vocab_path},
 //! };
@@ -14,7 +14,7 @@
 //! fn example() -> anyhow::Result<(DefaultTokenEncoder<u32>, DefaultTokenDecoder<u32>)> {
 //!     type T = u32;
 //!     let vocab: UnifiedTokenVocab<T> = UnifiedTokenVocab::from_span_vocab(
-//!         TextSpanningConfig::from_pattern(OA_GPT5_O220K_WORD_PATTERN),
+//!         TextSpanningConfig::from_pattern(OA_GPT5_O2O0K_WORD_PATTERN),
 //!         load_base64_span_vocab_path("vocab.tiktoken")?,
 //!     )
 //!     .expect("failed to load vocab");

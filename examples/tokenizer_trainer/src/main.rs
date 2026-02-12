@@ -8,7 +8,7 @@ use wordchipper::{
     concurrency::rayon::{ParallelRayonDecoder, ParallelRayonEncoder},
     decoders::{TokenDecoder, TokenDictDecoder},
     encoders::{DefaultTokenEncoder, TokenEncoder},
-    pretrained::openai::patterns::OA_GPT5_O220K_WORD_PATTERN,
+    pretrained::openai::patterns::OA_GPT5_O2O0K_WORD_PATTERN,
     training::BinaryPairVocabTrainerOptions,
     vocab::{ByteMapVocab, TokenVocab, UnifiedTokenVocab, io::save_tiktoken_vocab_path},
 };
@@ -90,7 +90,7 @@ fn main() -> anyhow::Result<()> {
     let t0 = std::time::Instant::now();
 
     let vocab_size = args.vocab_size;
-    let options = BinaryPairVocabTrainerOptions::new(OA_GPT5_O220K_WORD_PATTERN, vocab_size);
+    let options = BinaryPairVocabTrainerOptions::new(OA_GPT5_O2O0K_WORD_PATTERN, vocab_size);
 
     let mut trainer = options.init::<K, C>();
 

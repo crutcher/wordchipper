@@ -47,7 +47,7 @@ pub const OA_GPT3_CL100K_WORD_PATTERN: ConstRegexWrapperPattern =
     ));
 
 /// The GPT-5 o220k word pattern.
-pub const OA_GPT5_O220K_WORD_PATTERN: ConstRegexWrapperPattern = ConstRegexWrapperPattern::Fancy(
+pub const OA_GPT5_O2O0K_WORD_PATTERN: ConstRegexWrapperPattern = ConstRegexWrapperPattern::Fancy(
     join_patterns!(
         r"[^\r\n\p{L}\p{N}]?[\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]*[\p{Ll}\p{Lm}\p{Lo}\p{M}]+(?i:'s|'t|'re|'ve|'m|'ll|'d)?",
         r"[^\r\n\p{L}\p{N}]?[\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]+[\p{Ll}\p{Lm}\p{Lo}\p{M}]*(?i:'s|'t|'re|'ve|'m|'ll|'d)?",
@@ -71,6 +71,6 @@ mod tests {
         assert!(OA_GPT3_CL100K_WORD_PATTERN.compile().is_ok());
 
         assert!(OA_GPT3_CL100K_WORD_PATTERN.compile().is_ok());
-        assert!(OA_GPT5_O220K_WORD_PATTERN.compile().is_ok());
+        assert!(OA_GPT5_O2O0K_WORD_PATTERN.compile().is_ok());
     }
 }
