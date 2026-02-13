@@ -1,23 +1,11 @@
-//! # Patterns
+//! # `OpenAI` Patterns
 
 use crate::{join_patterns, regex::ConstRegexWrapperPattern};
 
-/// The GPT-2 r50k word pattern.
+/// The original "`r50k_base`" pretrained vocabulary word pattern.
 ///
-/// Faster than [`OA_GPT2_R50K_WORD_PATTERN_SLOW`], optimized for performance.
-pub const OA_GPT2_R50K_WORD_PATTERN: ConstRegexWrapperPattern =
-    ConstRegexWrapperPattern::Fancy(join_patterns!(
-        r"'(?:[sdmt]|ll|ve|re)",
-        r" ?\p{L}++",
-        r" ?\p{N}++",
-        r" ?[^\s\p{L}\p{N}]++",
-        r"\s++$",
-        r"\s+(?!\S)",
-        r"\s",
-    ));
-
-/// The original GPT-2 word pattern.
-pub const OA_GPT2_R50K_WORD_PATTERN_SLOW: ConstRegexWrapperPattern =
+/// Slower, use [`OA_R50K_BASE_PATTERN`].
+pub const OA_R50K_BASE_PATTERN_SLOW: ConstRegexWrapperPattern =
     ConstRegexWrapperPattern::Fancy(join_patterns!(
         r"'s",
         r"'t",
@@ -33,8 +21,24 @@ pub const OA_GPT2_R50K_WORD_PATTERN_SLOW: ConstRegexWrapperPattern =
         r"\s+",
     ));
 
-/// The GPT-3 cl100K word pattern.
-pub const OA_GPT3_CL100K_WORD_PATTERN: ConstRegexWrapperPattern =
+/// The optimized "`r50k_base`" pretrained vocabulary word pattern.
+///
+/// Faster than [`OA_R50K_BASE_PATTERN_SLOW`], optimized for performance.
+pub const OA_R50K_BASE_PATTERN: ConstRegexWrapperPattern =
+    ConstRegexWrapperPattern::Fancy(join_patterns!(
+        r"'(?:[sdmt]|ll|ve|re)",
+        r" ?\p{L}++",
+        r" ?\p{N}++",
+        r" ?[^\s\p{L}\p{N}]++",
+        r"\s++$",
+        r"\s+(?!\S)",
+        r"\s",
+    ));
+
+/// The "`p50k_base`" pretrained vocabulary word pattern.
+pub const OA_P50K_BASE_PATTERN: ConstRegexWrapperPattern = OA_R50K_BASE_PATTERN;
+/// The "`cl100k_base`" pretrained vocabulary word pattern.
+pub const OA_CL100K_BASE_PATTERN: ConstRegexWrapperPattern =
     ConstRegexWrapperPattern::Fancy(join_patterns!(
         r"'(?i:[sdmt]|ll|ve|re)",
         r"[^\r\n\p{L}\p{N}]?+\p{L}++",
@@ -46,8 +50,8 @@ pub const OA_GPT3_CL100K_WORD_PATTERN: ConstRegexWrapperPattern =
         r"\s",
     ));
 
-/// The GPT-5 o220k word pattern.
-pub const OA_GPT5_O2O0K_WORD_PATTERN: ConstRegexWrapperPattern = ConstRegexWrapperPattern::Fancy(
+/// The "`o200k_base`" pretrained vocabulary word pattern.
+pub const OA_O200K_BASE_PATTERN: ConstRegexWrapperPattern = ConstRegexWrapperPattern::Fancy(
     join_patterns!(
         r"[^\r\n\p{L}\p{N}]?[\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]*[\p{Ll}\p{Lm}\p{Lo}\p{M}]+(?i:'s|'t|'re|'ve|'m|'ll|'d)?",
         r"[^\r\n\p{L}\p{N}]?[\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]+[\p{Ll}\p{Lm}\p{Lo}\p{M}]*(?i:'s|'t|'re|'ve|'m|'ll|'d)?",
@@ -60,17 +64,17 @@ pub const OA_GPT5_O2O0K_WORD_PATTERN: ConstRegexWrapperPattern = ConstRegexWrapp
 );
 
 #[cfg(test)]
-mod tests {
+mod test {
     use super::*;
 
     #[test]
     fn test_patterns_compile() {
-        assert!(OA_GPT2_R50K_WORD_PATTERN.compile().is_ok());
-        assert!(OA_GPT2_R50K_WORD_PATTERN_SLOW.compile().is_ok());
+        assert!(OA_R50K_BASE_PATTERN.compile().is_ok());
+        assert!(OA_R50K_BASE_PATTERN_SLOW.compile().is_ok());
 
-        assert!(OA_GPT3_CL100K_WORD_PATTERN.compile().is_ok());
+        assert!(OA_CL100K_BASE_PATTERN.compile().is_ok());
 
-        assert!(OA_GPT3_CL100K_WORD_PATTERN.compile().is_ok());
-        assert!(OA_GPT5_O2O0K_WORD_PATTERN.compile().is_ok());
+        assert!(OA_CL100K_BASE_PATTERN.compile().is_ok());
+        assert!(OA_O200K_BASE_PATTERN.compile().is_ok());
     }
 }

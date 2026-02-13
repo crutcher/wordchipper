@@ -331,7 +331,7 @@ impl TextSpanner {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{alloc::vec, pretrained::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN};
+    use crate::{alloc::vec, pretrained::openai::OA_CL100K_BASE_PATTERN};
 
     #[test]
     fn test_spanref() {
@@ -434,7 +434,7 @@ mod tests {
         type T = u32;
 
         let config: TextSpanningConfig<T> =
-            TextSpanningConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN)
+            TextSpanningConfig::from_pattern(OA_CL100K_BASE_PATTERN)
                 .with_special_words([("<|FNORD|>", 4000), ("<|NORP|>", 4001)]);
 
         let segmentor = TextSpanner::from_config(config, Some(NonZeroUsize::new(1).unwrap()));

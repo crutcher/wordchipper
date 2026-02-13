@@ -8,9 +8,9 @@ use wordchipper::{
     concurrency::rayon::{ParallelRayonDecoder, ParallelRayonEncoder},
     decoders::{TokenDecoder, TokenDictDecoder},
     encoders::{DefaultTokenEncoder, TokenEncoder},
-    pretrained::openai::patterns::OA_GPT5_O2O0K_WORD_PATTERN,
+    pretrained::openai::OA_O200K_BASE_PATTERN,
     training::BinaryPairVocabTrainerOptions,
-    vocab::{ByteMapVocab, TokenVocab, UnifiedTokenVocab, io::save_tiktoken_vocab_path},
+    vocab::{ByteMapVocab, TokenVocab, UnifiedTokenVocab, io::save_tiktoken_span_map_path},
 };
 use wordchipper_data::dataset::DatasetCacheConfig;
 
@@ -90,7 +90,7 @@ fn main() -> anyhow::Result<()> {
     let t0 = std::time::Instant::now();
 
     let vocab_size = args.vocab_size;
-    let options = BinaryPairVocabTrainerOptions::new(OA_GPT5_O2O0K_WORD_PATTERN, vocab_size);
+    let options = BinaryPairVocabTrainerOptions::new(OA_O200K_BASE_PATTERN, vocab_size);
 
     let mut trainer = options.init::<K, C>();
 
@@ -122,7 +122,7 @@ fn main() -> anyhow::Result<()> {
     println!("- vocab_size: {:?}", vocab.max_token());
 
     if let Some(path) = args.tiktoken_save_path {
-        save_tiktoken_vocab_path(vocab.span_vocab().span_map(), &path)?;
+        save_tiktoken_span_map_path(vocab.span_vocab().span_map(), &path)?;
         println!("- tiktoken vocab: {path:?}");
     }
 

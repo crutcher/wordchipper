@@ -37,9 +37,9 @@
 //!     concurrency::rayon::{ParallelRayonDecoder, ParallelRayonEncoder},
 //!     decoders::TokenDictDecoder,
 //!     encoders::DefaultTokenEncoder,
-//!     pretrained::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN,
+//!     pretrained::openai::OA_CL100K_BASE_PATTERN,
 //!     training::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions},
-//!     vocab::{ByteMapVocab, UnifiedTokenVocab, io::save_tiktoken_vocab_path},
+//!     vocab::{ByteMapVocab, UnifiedTokenVocab, io::save_tiktoken_span_map_path},
 //! };
 //!
 //! fn example<I, S>(
@@ -57,7 +57,7 @@
 //!     type K = String;
 //!     type C = u64;
 //!
-//!     let options = BinaryPairVocabTrainerOptions::new(OA_GPT3_CL100K_WORD_PATTERN, vocab_size);
+//!     let options = BinaryPairVocabTrainerOptions::new(OA_CL100K_BASE_PATTERN, vocab_size);
 //!
 //!     let mut trainer: BinaryPairVocabTrainer<K, C> = options.init();
 //!
@@ -75,7 +75,7 @@
 //!         trainer.train(byte_vocab.clone()).expect("training failed");
 //!
 //!     if let Some(path) = tiktoken_save_path {
-//!         save_tiktoken_vocab_path(&vocab.span_vocab().span_map(), &path)
+//!         save_tiktoken_span_map_path(&vocab.span_vocab().span_map(), &path)
 //!             .expect("failed to save tiktoken vocab");
 //!         println!("- tiktoken vocab: {path:?}");
 //!     }

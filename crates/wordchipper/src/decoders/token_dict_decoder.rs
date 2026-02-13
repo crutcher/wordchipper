@@ -103,7 +103,7 @@ mod tests {
     use super::*;
     use crate::{
         decoders::utility::testing::common_decoder_unit_test,
-        pretrained::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN,
+        pretrained::openai::OA_CL100K_BASE_PATTERN,
         spanning::TextSpanningConfig,
         vocab::{
             UnifiedTokenVocab,
@@ -117,7 +117,7 @@ mod tests {
 
         let vocab: UnifiedTokenVocab<T> = build_test_vocab(
             build_test_shift_byte_vocab(10),
-            TextSpanningConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN),
+            TextSpanningConfig::from_pattern(OA_CL100K_BASE_PATTERN),
         );
 
         let decoder =

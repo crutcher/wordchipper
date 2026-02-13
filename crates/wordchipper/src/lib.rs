@@ -29,7 +29,7 @@
 //!
 //! See: [`pretrained::openai::OATokenizer`]
 #![cfg_attr(feature = "std", doc = "```rust,no_run")]
-#![cfg_attr(not(feature = "std"), doc = "```ignore")]
+#![cfg_attr(not(feature = "std"), doc = "```rust,ignore")]
 //! use std::sync::Arc;
 //!
 //! use wordchipper::{
@@ -43,7 +43,7 @@
 //! fn example() -> anyhow::Result<(Arc<dyn TokenEncoder<u32>>, Arc<dyn TokenDecoder<u32>>)> {
 //!     let model = OATokenizer::O200kHarmony;
 //!     let mut disk_cache = WordchipperDiskCache::default();
-//!     let vocab: UnifiedTokenVocab<u32> = model.load(&mut disk_cache)?;
+//!     let vocab: UnifiedTokenVocab<u32> = model.load_vocab(&mut disk_cache)?;
 //!
 //!     let encoder: Arc<DefaultTokenEncoder<u32>> =
 //!         DefaultTokenEncoder::new(vocab.clone(), None).into();

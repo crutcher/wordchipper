@@ -10,9 +10,37 @@ use anyhow::Context;
 use base64::{Engine, prelude::BASE64_STANDARD};
 
 use crate::{
+    spanning::TextSpanningConfig,
     types::TokenType,
-    vocab::{SpanMapVocab, vocab_types::SpanTokenMap},
+    vocab::{SpanMapVocab, UnifiedTokenVocab, vocab_types::SpanTokenMap},
 };
+
+/// Build a [`UnifiedTokenVocab`] from a pretrained bas64 vocab file.
+///
+/// ## Arguments
+/// * `data_path` - path to the file.
+/// * `pattern` - the word split pattern.
+/// * `special_tokens` - the special tokens.
+pub fn load_base64_unified_vocab_path<T: TokenType>(
+    path: impl AsRef<Path>,
+    spanning: TextSpanningConfig<T>,
+) -> anyhow::Result<UnifiedTokenVocab<T>> {
+    let reader = BufReader::new(File::open(path)?);
+    read_base64_unified_vocab(reader, spanning)
+}
+
+/// Build a [`UnifiedTokenVocab`] from a pretrained bas64 vocab file.
+///
+/// ## Arguments
+/// * `data_path` - path to the file.
+/// * `pattern` - the word split pattern.
+/// * `special_tokens` - the special tokens.
+pub fn read_base64_unified_vocab<T: TokenType, R: BufRead>(
+    reader: R,
+    spanning: TextSpanningConfig<T>,
+) -> anyhow::Result<UnifiedTokenVocab<T>> {
+    UnifiedTokenVocab::from_span_vocab(spanning, read_base64_span_map(reader)?.into())
+}
 
 /// Load a [`SpanMapVocab`] from a base64 vocab file.
 ///
@@ -45,9 +73,7 @@ where
     T: TokenType,
     P: AsRef<Path>,
 {
-    let file = File::open(path)?;
-    let reader = BufReader::new(file);
-
+    let reader = BufReader::new(File::open(path)?);
     read_base64_span_map(reader)
 }
 
@@ -100,9 +126,7 @@ pub fn save_base64_span_map_path<T: TokenType, P: AsRef<Path>>(
     span_map: &SpanTokenMap<T>,
     path: P,
 ) -> anyhow::Result<()> {
-    let file = File::create(path)?;
-    let mut writer = BufWriter::new(file);
-
+    let mut writer = BufWriter::new(File::create(path)?);
     write_base64_span_map(span_map, &mut writer)
 }
 
