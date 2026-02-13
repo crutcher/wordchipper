@@ -39,13 +39,13 @@
 //!     encoders::DefaultTokenEncoder,
 //!     pretrained::openai::OA_CL100K_BASE_PATTERN,
 //!     training::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions},
-//!     vocab::{ByteMapVocab, UnifiedTokenVocab, io::save_tiktoken_span_map_path},
+//!     vocab::{ByteMapVocab, UnifiedTokenVocab, io::save_base64_span_map_path},
 //! };
 //!
 //! fn example<I, S>(
 //!     vocab_size: usize,
 //!     batches: I,
-//!     tiktoken_save_path: Option<String>,
+//!     vocab_save_path: Option<String>,
 //! ) where
 //!     I: IntoIterator,
 //!     I::Item: AsRef<[S]>,
@@ -74,9 +74,9 @@
 //!     let vocab: UnifiedTokenVocab<T> =
 //!         trainer.train(byte_vocab.clone()).expect("training failed");
 //!
-//!     if let Some(path) = tiktoken_save_path {
-//!         save_tiktoken_span_map_path(&vocab.span_vocab().span_map(), &path)
-//!             .expect("failed to save tiktoken vocab");
+//!     if let Some(path) = vocab_save_path {
+//!         save_base64_span_map_path(&vocab.span_vocab().span_map(), &path)
+//!             .expect("failed to save vocab");
 //!         println!("- tiktoken vocab: {path:?}");
 //!     }
 //!

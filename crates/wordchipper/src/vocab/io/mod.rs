@@ -12,13 +12,13 @@
 //!         SpanMapVocab,
 //!         SpanTokenMap,
 //!         UnifiedTokenVocab,
-//!         io::load_tiktoken_unified_vocab_path,
+//!         io::load_base64_unified_vocab_path,
 //!     },
 //! };
 //!
 //! fn example() -> anyhow::Result<(DefaultTokenEncoder<u32>, DefaultTokenDecoder<u32>)> {
 //!     type T = u32;
-//!     let vocab: UnifiedTokenVocab<T> = load_tiktoken_unified_vocab_path(
+//!     let vocab: UnifiedTokenVocab<T> = load_base64_unified_vocab_path(
 //!         "vocab.tiktoken",
 //!         TextSpanningConfig::from_pattern(OA_O200K_BASE_PATTERN),
 //!     )
@@ -32,9 +32,6 @@
 //! ```
 
 mod base64_vocab;
-mod tiktoken_io;
 
 #[doc(inline)]
 pub use base64_vocab::*;
-#[doc(inline)]
-pub use tiktoken_io::*;
