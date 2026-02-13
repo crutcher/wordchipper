@@ -17,6 +17,8 @@ use crate::{
             OA_R50K_BASE_TIKTOKEN_RESOURCE,
         },
         specials::{
+            oa_cl100k_edit_special_tokens,
+            oa_o200k_base_special_tokens,
             oa_o200k_harmony_special_tokens,
             oa_p50k_base_special_tokens,
             oa_p50k_edit_special_tokens,
@@ -167,7 +169,7 @@ pub const OA_CL100K_BASE_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabulary
         resource: OA_CL100K_BASE_TIKTOKEN_RESOURCE,
     },
     pattern: OA_CL100K_BASE_PATTERN,
-    special_builder: &oa_p50k_edit_special_tokens,
+    special_builder: &oa_cl100k_edit_special_tokens,
 };
 
 /// The "`o200k_base`" tokenizer.
@@ -178,7 +180,7 @@ pub const OA_O200K_BASE_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabularyF
         resource: OA_O200K_BASE_TIKTOKEN_RESOURCE,
     },
     pattern: OA_O200K_BASE_PATTERN,
-    special_builder: &oa_p50k_edit_special_tokens,
+    special_builder: &oa_o200k_base_special_tokens,
 };
 
 /// The "`o200k_harmony`" tokenizer.

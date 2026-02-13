@@ -32,13 +32,13 @@ pub fn oa_p50k_edit_spanning_config<T: TokenType>() -> TextSpanningConfig<T> {
 /// Get the [`TextSpanningConfig`] for the "`cl100k_base`" pretrained vocabulary.
 pub fn oa_cl100k_base_spanning_config<T: TokenType>() -> TextSpanningConfig<T> {
     TextSpanningConfig::<T>::from_pattern(OA_CL100K_BASE_PATTERN)
-        .with_special_words(specials::oa_cl100k_edit_specials())
+        .with_special_words(specials::oa_cl100k_edit_special_tokens())
 }
 
 /// Get the [`TextSpanningConfig`] for the "`o200k_base`" pretrained vocabulary.
 pub fn oa_o200k_base_spanning_config<T: TokenType>() -> TextSpanningConfig<T> {
     TextSpanningConfig::<T>::from_pattern(OA_O200K_BASE_PATTERN)
-        .with_special_words(specials::oa_o200k_base_specials())
+        .with_special_words(specials::oa_o200k_base_special_tokens())
 }
 
 /// Get the [`TextSpanningConfig`] for the "`o200k_harmony`" pretrained vocabulary.

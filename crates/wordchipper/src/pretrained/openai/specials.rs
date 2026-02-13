@@ -65,7 +65,7 @@ pub const OA_CL100K_EDIT_SPECIAL_TOKENS: &[(&str, usize)] = &[
 ];
 
 /// The "cl100k" special tokens.
-pub fn oa_cl100k_edit_specials<T: TokenType>() -> Vec<(String, T)> {
+pub fn oa_cl100k_edit_special_tokens<T: TokenType>() -> Vec<(String, T)> {
     OA_CL100K_EDIT_SPECIAL_TOKENS.to_token_list::<T>()
 }
 
@@ -74,7 +74,7 @@ pub const OA_O200K_BASE_SPECIAL_TOKENS: &[(&str, usize)] =
     &[(ENDOFTEXT, 199999), (ENDOFPROMPT, 200018)];
 
 /// The "o200k base" special tokens.
-pub fn oa_o200k_base_specials<T: TokenType>() -> Vec<(String, T)> {
+pub fn oa_o200k_base_special_tokens<T: TokenType>() -> Vec<(String, T)> {
     OA_O200K_BASE_SPECIAL_TOKENS.to_token_list::<T>()
 }
 
@@ -170,7 +170,7 @@ mod tests {
     #[test]
     fn test_oa_gpt3_cl100k_edit_specials() {
         assert_eq!(
-            oa_cl100k_edit_specials::<usize>(),
+            oa_cl100k_edit_special_tokens::<usize>(),
             vec![
                 ("<|endoftext|>".to_string(), 100257),
                 ("<|fim_prefix|>".to_string(), 100258),
@@ -184,7 +184,7 @@ mod tests {
     #[test]
     fn test_oa_gpt5_o200k_base_specials() {
         assert_eq!(
-            oa_o200k_base_specials::<usize>(),
+            oa_o200k_base_special_tokens::<usize>(),
             vec![
                 ("<|endoftext|>".to_string(), 199999),
                 ("<|endofprompt|>".to_string(), 200018)
