@@ -19,7 +19,9 @@ pub fn alternate_choice_regex_pattern<S: AsRef<str>>(alts: &[S]) -> RegexWrapper
         .iter()
         .map(|s| fancy_regex::escape(s.as_ref()))
         .collect::<Vec<_>>();
-    RegexWrapperPattern::Basic(format!("({})", parts.join("|")))
+
+    // turns out, 'fancy_regex' is ... faster?
+    RegexWrapperPattern::Fancy(format!("({})", parts.join("|")))
 }
 
 #[cfg(test)]
