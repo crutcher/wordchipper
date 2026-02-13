@@ -1,4 +1,4 @@
-//! # Special Tokens
+//! `OpenAI` Tokenizer Special Tokens.
 
 use crate::{
     alloc::{
@@ -6,7 +6,8 @@ use crate::{
         vec::Vec,
     },
     declare_carrot_special,
-    vocab::utility::format_reserved_carrot,
+    types::TokenType,
+    vocab::utility::{ToTokenList, format_reserved_carrot},
 };
 
 declare_carrot_special!(
@@ -25,46 +26,37 @@ declare_carrot_special!(
     (CALL, "call"),
 );
 
-/// The GPT-2 "r50k" special tokens.
-pub const OA_GPT2_R50K_SPECIALS: &[(&str, usize)] = &[(ENDOFTEXT, 50256)];
+/// The "r50k" special tokens.
+pub const OA_R50K_SPECIAL_TOKENS: &[(&str, usize)] = &[(ENDOFTEXT, 50256)];
 
-/// The GPT-2 "r50k" special tokens.
-pub fn oa_gpt2_r50k_specials() -> Vec<(String, usize)> {
-    OA_GPT2_R50K_SPECIALS
-        .iter()
-        .map(|&(k, v)| (k.to_string(), v))
-        .collect()
+/// The "r50k" special tokens.
+pub fn oa_r50k_base_special_tokens<T: TokenType>() -> Vec<(String, T)> {
+    OA_R50K_SPECIAL_TOKENS.to_token_list::<T>()
 }
 
-/// The GPT-2 "p50k base" special tokens.
-pub const OA_GPT2_P50K_BASE_SPECIALS: &[(&str, usize)] = &[(ENDOFTEXT, 50256)];
+/// The "p50k base" special tokens.
+pub const OA_P50K_BASE_SPECIAL_TOKENS: &[(&str, usize)] = &[(ENDOFTEXT, 50256)];
 
-/// The GPT-2 "p50k base" special tokens.
-pub fn oa_gpt2_p50k_base_specials() -> Vec<(String, usize)> {
-    OA_GPT2_P50K_BASE_SPECIALS
-        .iter()
-        .map(|&(k, v)| (k.to_string(), v))
-        .collect()
+/// The "p50k base" special tokens.
+pub fn oa_p50k_base_special_tokens<T: TokenType>() -> Vec<(String, T)> {
+    OA_P50K_BASE_SPECIAL_TOKENS.to_token_list::<T>()
 }
 
-/// The GPT-2 "p50k edit" special tokens.
-pub const OA_GPT2_P50K_EDIT_SPECIALS: &[(&str, usize)] = &[
+/// The "p50k edit" special tokens.
+pub const OA_P50K_EDIT_SPECIAL_TOKENS: &[(&str, usize)] = &[
     (ENDOFTEXT, 50256),
     (FIM_PREFIX, 50281),
     (FIM_MIDDLE, 50282),
     (FIM_SUFFIX, 50283),
 ];
 
-/// The GPT-2 "p50k edit" special tokens.
-pub fn oa_gpt2_p50k_edit_specials() -> Vec<(String, usize)> {
-    OA_GPT2_P50K_EDIT_SPECIALS
-        .iter()
-        .map(|&(k, v)| (k.to_string(), v))
-        .collect()
+/// The "p50k edit" special tokens.
+pub fn oa_p50k_edit_special_tokens<T: TokenType>() -> Vec<(String, T)> {
+    OA_P50K_EDIT_SPECIAL_TOKENS.to_token_list::<T>()
 }
 
-/// The GPT-3 "cl100k" special tokens.
-pub const OA_GPT3_CL100K_EDIT_SPECIALS: &[(&str, usize)] = &[
+/// The "cl100k" special tokens.
+pub const OA_CL100K_EDIT_SPECIAL_TOKENS: &[(&str, usize)] = &[
     (ENDOFTEXT, 100257),
     (FIM_PREFIX, 100258),
     (FIM_MIDDLE, 100259),
@@ -72,28 +64,22 @@ pub const OA_GPT3_CL100K_EDIT_SPECIALS: &[(&str, usize)] = &[
     (ENDOFPROMPT, 100276),
 ];
 
-/// The GPT-3 "cl100k" special tokens.
-pub fn oa_gpt3_cl100k_edit_specials() -> Vec<(String, usize)> {
-    OA_GPT3_CL100K_EDIT_SPECIALS
-        .iter()
-        .map(|&(k, v)| (k.to_string(), v))
-        .collect()
+/// The "cl100k" special tokens.
+pub fn oa_cl100k_edit_specials<T: TokenType>() -> Vec<(String, T)> {
+    OA_CL100K_EDIT_SPECIAL_TOKENS.to_token_list::<T>()
 }
 
-/// The GPT-5 "o200k base" special tokens.
-pub const OA_GPT5_O200K_BASE_SPECIALS: &[(&str, usize)] =
+/// The "o200k base" special tokens.
+pub const OA_O200K_BASE_SPECIAL_TOKENS: &[(&str, usize)] =
     &[(ENDOFTEXT, 199999), (ENDOFPROMPT, 200018)];
 
-/// The GPT-5 "o200k base" special tokens.
-pub fn oa_gt5_o200k_base_specials() -> Vec<(String, usize)> {
-    OA_GPT5_O200K_BASE_SPECIALS
-        .iter()
-        .map(|&(k, v)| (k.to_string(), v))
-        .collect()
+/// The "o200k base" special tokens.
+pub fn oa_o200k_base_specials<T: TokenType>() -> Vec<(String, T)> {
+    OA_O200K_BASE_SPECIAL_TOKENS.to_token_list::<T>()
 }
 
-/// The GPT-5 "o200k harmony" special tokens.
-pub const OA_GPT5_O200K_HARMONY_NAMED_SPECIALS: &[(&str, usize)] = &[
+/// The "o200k harmony" special tokens.
+pub const OA_O200K_HARMONY_NAMED_SPECIAL_TOKENS: &[(&str, usize)] = &[
     (STARTOFTEXT, 199998),
     (ENDOFTEXT, 199999),
     (ENDOFPROMPT, 200018),
@@ -106,16 +92,13 @@ pub const OA_GPT5_O200K_HARMONY_NAMED_SPECIALS: &[(&str, usize)] = &[
     (CALL, 200012),
 ];
 
-/// The GPT-5 "o200k harmony" named special tokens; excluding reserved tokens.
-pub fn oa_gpt5_o200k_harmony_named_specials() -> Vec<(String, usize)> {
-    OA_GPT5_O200K_HARMONY_NAMED_SPECIALS
-        .iter()
-        .map(|&(k, v)| (k.to_string(), v))
-        .collect()
+/// The "o200k harmony" named special tokens; excluding reserved tokens.
+pub fn oa_o200k_harmony_named_special_tokens<T: TokenType>() -> Vec<(String, T)> {
+    OA_O200K_HARMONY_NAMED_SPECIAL_TOKENS.to_token_list::<T>()
 }
 
-/// Generate the GPT-5 "o200k harmony" reserved tokens.
-pub fn oa_gpt5_o200k_harmony_gen_reserved() -> Vec<(String, usize)> {
+/// Generate the "`o200k_harmony`" reserved tokens.
+pub fn oa_o200k_harmony_reserved_tokens<T: TokenType>() -> Vec<(String, T)> {
     let mut specials: Vec<(String, usize)> = Vec::with_capacity(6 + (201088 - 200013));
 
     let mut reserve = |val| {
@@ -134,15 +117,18 @@ pub fn oa_gpt5_o200k_harmony_gen_reserved() -> Vec<(String, usize)> {
     }
 
     specials
+        .iter()
+        .map(|(s, t)| (s.to_string(), T::from_usize(*t).unwrap()))
+        .collect()
 }
 
 /// The GPT-5 "o200k harmony" special tokens.
 ///
 /// Generated due to the large number of reserved tokens.
-pub fn oa_gpt5_o200k_harmony_specials() -> Vec<(String, usize)> {
-    let mut specials = oa_gpt5_o200k_harmony_named_specials();
+pub fn oa_o200k_harmony_special_tokens<T: TokenType>() -> Vec<(String, T)> {
+    let mut specials = oa_o200k_harmony_named_special_tokens();
 
-    specials.extend(oa_gpt5_o200k_harmony_gen_reserved());
+    specials.extend(oa_o200k_harmony_reserved_tokens());
 
     specials
 }
@@ -150,12 +136,12 @@ pub fn oa_gpt5_o200k_harmony_specials() -> Vec<(String, usize)> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::alloc::vec;
+    use crate::alloc::{string::ToString, vec, vec::Vec};
 
     #[test]
     fn test_oa_gpt2_r50k_specials() {
         assert_eq!(
-            oa_gpt2_r50k_specials(),
+            oa_r50k_base_special_tokens::<usize>(),
             vec![("<|endoftext|>".to_string(), 50256),]
         );
     }
@@ -163,7 +149,7 @@ mod tests {
     #[test]
     fn test_oa_gpt2_p50k_base_specials() {
         assert_eq!(
-            oa_gpt2_p50k_base_specials(),
+            oa_p50k_base_special_tokens::<usize>(),
             vec![("<|endoftext|>".to_string(), 50256),]
         );
     }
@@ -171,7 +157,7 @@ mod tests {
     #[test]
     fn test_oa_gpt2_p50k_edit_specials() {
         assert_eq!(
-            oa_gpt2_p50k_edit_specials(),
+            oa_p50k_edit_special_tokens::<usize>(),
             vec![
                 ("<|endoftext|>".to_string(), 50256),
                 ("<|fim_prefix|>".to_string(), 50281),
@@ -184,7 +170,7 @@ mod tests {
     #[test]
     fn test_oa_gpt3_cl100k_edit_specials() {
         assert_eq!(
-            oa_gpt3_cl100k_edit_specials(),
+            oa_cl100k_edit_specials::<usize>(),
             vec![
                 ("<|endoftext|>".to_string(), 100257),
                 ("<|fim_prefix|>".to_string(), 100258),
@@ -198,7 +184,7 @@ mod tests {
     #[test]
     fn test_oa_gpt5_o200k_base_specials() {
         assert_eq!(
-            oa_gt5_o200k_base_specials(),
+            oa_o200k_base_specials::<usize>(),
             vec![
                 ("<|endoftext|>".to_string(), 199999),
                 ("<|endofprompt|>".to_string(), 200018)
@@ -218,10 +204,10 @@ mod tests {
         ];
         (200013..201088).for_each(|i| expected.push((format_reserved_carrot(i), i)));
 
-        let reserved = oa_gpt5_o200k_harmony_gen_reserved();
+        let reserved = oa_o200k_harmony_reserved_tokens();
         assert_eq!(&reserved, &expected);
 
-        let named = oa_gpt5_o200k_harmony_named_specials();
+        let named = oa_o200k_harmony_named_special_tokens();
         assert_eq!(
             &named,
             &vec![
@@ -244,6 +230,6 @@ mod tests {
             .cloned()
             .collect::<Vec<_>>();
 
-        assert_eq!(oa_gpt5_o200k_harmony_specials(), expected);
+        assert_eq!(oa_o200k_harmony_special_tokens(), expected);
     }
 }

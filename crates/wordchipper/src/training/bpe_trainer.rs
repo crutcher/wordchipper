@@ -419,17 +419,17 @@ mod tests {
         compat::traits::static_is_send_sync_check,
         decoders::{TokenDecoder, TokenDictDecoder},
         encoders::{DefaultTokenEncoder, TokenEncoder},
-        pretrained::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN,
+        pretrained::openai::OA_CL100K_BASE_PATTERN,
         training::{BinaryPairVocabTrainerOptions, bpe_trainer::MergeJob},
         vocab::{ByteMapVocab, UnifiedTokenVocab},
     };
 
     #[test]
     fn test_tokenizer_options() {
-        let options = BinaryPairVocabTrainerOptions::new(OA_GPT3_CL100K_WORD_PATTERN, 1000);
+        let options = BinaryPairVocabTrainerOptions::new(OA_CL100K_BASE_PATTERN, 1000);
 
         assert_eq!(options.vocab_size, 1000);
-        assert_eq!(options.pattern, OA_GPT3_CL100K_WORD_PATTERN.into());
+        assert_eq!(options.pattern, OA_CL100K_BASE_PATTERN.into());
 
         let options = options.with_vocab_size(2000).with_pattern(r"\S+");
 
@@ -449,7 +449,7 @@ mod tests {
         type C = u32;
         type K = CompactString;
 
-        let options = BinaryPairVocabTrainerOptions::new(OA_GPT3_CL100K_WORD_PATTERN, 1000);
+        let options = BinaryPairVocabTrainerOptions::new(OA_CL100K_BASE_PATTERN, 1000);
 
         let samples = vec![
             "hello world",

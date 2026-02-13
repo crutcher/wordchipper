@@ -5,7 +5,7 @@ use crate::{
     compat::{slices::inner_slice_view, traits::static_is_send_sync_check},
     decoders::{TokenDecoder, TokenDictDecoder},
     encoders::TokenEncoder,
-    pretrained::openai::patterns::OA_GPT3_CL100K_WORD_PATTERN,
+    pretrained::openai::OA_CL100K_BASE_PATTERN,
     spanning::TextSpanningConfig,
     types::TokenType,
     vocab::{
@@ -19,7 +19,7 @@ use crate::{
 pub fn common_encoder_test_vocab<T: TokenType>() -> UnifiedTokenVocab<T> {
     let mut vocab: UnifiedTokenVocab<T> = build_test_vocab(
         build_test_shift_byte_vocab(10),
-        TextSpanningConfig::from_pattern(OA_GPT3_CL100K_WORD_PATTERN),
+        TextSpanningConfig::from_pattern(OA_CL100K_BASE_PATTERN),
     );
     let hi_token = vocab.max_token().unwrap() + T::one();
     vocab.special_vocab_mut().add_str_word("<|HI|>", hi_token);

@@ -157,7 +157,7 @@ impl ModelSelector {
         &self,
         disk_cache: &mut WordchipperDiskCache,
     ) -> anyhow::Result<UnifiedTokenVocab<T>> {
-        self.model().load(disk_cache)
+        self.model().load_vocab(disk_cache)
     }
 
     pub fn load_tiktoken_bpe(&self) -> anyhow::Result<(String, Arc<CoreBPE>)> {

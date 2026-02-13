@@ -6,16 +6,21 @@
 //! use wordchipper::{
 //!     decoders::DefaultTokenDecoder,
 //!     encoders::DefaultTokenEncoder,
-//!     pretrained::openai::patterns::OA_GPT5_O2O0K_WORD_PATTERN,
+//!     pretrained::openai::OA_O200K_BASE_PATTERN,
 //!     spanning::TextSpanningConfig,
-//!     vocab::{SpanMapVocab, SpanTokenMap, UnifiedTokenVocab, io::load_base64_span_vocab_path},
+//!     vocab::{
+//!         SpanMapVocab,
+//!         SpanTokenMap,
+//!         UnifiedTokenVocab,
+//!         io::load_tiktoken_unified_vocab_path,
+//!     },
 //! };
 //!
 //! fn example() -> anyhow::Result<(DefaultTokenEncoder<u32>, DefaultTokenDecoder<u32>)> {
 //!     type T = u32;
-//!     let vocab: UnifiedTokenVocab<T> = UnifiedTokenVocab::from_span_vocab(
-//!         TextSpanningConfig::from_pattern(OA_GPT5_O2O0K_WORD_PATTERN),
-//!         load_base64_span_vocab_path("vocab.tiktoken")?,
+//!     let vocab: UnifiedTokenVocab<T> = load_tiktoken_unified_vocab_path(
+//!         "vocab.tiktoken",
+//!         TextSpanningConfig::from_pattern(OA_O200K_BASE_PATTERN),
 //!     )
 //!     .expect("failed to load vocab");
 //!
@@ -30,18 +35,6 @@ mod base64_vocab;
 mod tiktoken_io;
 
 #[doc(inline)]
-pub use base64_vocab::{
-    load_base64_span_map_path,
-    load_base64_span_vocab_path,
-    read_base64_span_map,
-    save_base64_span_map_path,
-    write_base64_span_map,
-};
+pub use base64_vocab::*;
 #[doc(inline)]
-pub use tiktoken_io::{
-    load_tiktoken_span_vocab_path,
-    load_tiktoken_vocab_path,
-    read_tiktoken_vocab,
-    save_tiktoken_vocab_path,
-    write_tiktoken_vocab,
-};
+pub use tiktoken_io::*;
