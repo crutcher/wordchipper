@@ -185,7 +185,7 @@ fn main() -> anyhow::Result<()> {
     println!("{:#?}", args);
 
     let mut disk_cache = WordchipperDiskCache::default();
-    println!("Loading wordchipper...");
+    // println!("Loading wordchipper...");
     let vocab: UnifiedTokenVocab<Rank> = args.model.load_vocab(&mut disk_cache)?;
 
     let spanner = TextSpanner::from_config(vocab.spanning().clone(), None);
@@ -225,7 +225,7 @@ fn main() -> anyhow::Result<()> {
     };
 
     if args.tiktoken {
-        println!("Loading tiktoken...");
+        // println!("Loading tiktoken...");
         match args.model.load_tiktoken_bpe() {
             Ok((name, bpe)) => candidate_engines.push(Arc::new(TiktokenRsEngine::new(name, bpe))),
             Err(e) => {
@@ -240,7 +240,7 @@ fn main() -> anyhow::Result<()> {
 
     #[cfg(feature = "tokenizers")]
     if args.tokenizers {
-        println!("Loading tokenizers...");
+        // println!("Loading tokenizers...");
         match args.model.load_tokenizers_tokenizer() {
             Ok((name, tok)) => candidate_engines.push(Arc::new(TokenizersEngine::new(name, tok))),
             Err(e) => {

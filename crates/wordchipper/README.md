@@ -13,61 +13,22 @@ The current status is productionization towards an alpha release.
 
 ## Encode/Decode Side-by-Side Benchmarks
 
+| Model         | wordchipper  | tiktoken-rs  | tokenizers  |
+|---------------|--------------|--------------|-------------|
+| r50k_base     | 239.19 MiB/s | 169.30 MiB/s | 22.03 MiB/s |
+| p50k_base     | 250.55 MiB/s | 163.07 MiB/s | 22.23 MiB/s |
+| p50k_edit     | 241.69 MiB/s | 169.76 MiB/s | 21.27 MiB/s |
+| cl100k_base   | 214.26 MiB/s | 125.43 MiB/s | 21.62 MiB/s |
+| o200k_base    | 119.49 MiB/s | 123.75 MiB/s | 22.03 MiB/s |
+| o200k_harmony | 121.80 MiB/s | 121.54 MiB/s | 22.08 MiB/s |
+
+* *Help?* - I'm assuming some bug on my part for `tokenizers` + `rayon`.
+* Methodology; 90MB shards of 1024 samples each, 48 threads.
+
 ```terminaloutput
-$ RAYON_NUM_THREADS=48 cargo run --release -p sample-timer -- \
-    --dataset-dir $DATASET_DIR --decode
-Args {
-    dataset_dir: "/media/Data/nanochat/dataset",
-    shards: [
-        0,
-        1,
-    ],
-    batch_size: 1024,
-    model: OpenaiO200kHarmony,
-    ignore_missing: true,
-    tiktoken: true,
-    tokenizers: true,
-    decode: true,
-    validate: true,
-    respan_input_for_decode_check: false,
-}
-Loaded:
-- "wordchipper::openai/o200k_harmony"
-- "tiktoken-rs::o200k_harmony"
-- "tokenizers::Xenova/gpt-4o"
-
-Samples Summary:
-- num batches: 104
-- avg bytes/sample: 4777
-- avg bytes/token: 4.8
-
-Encoder Batch Timing:
-- "wordchipper::openai/o200k_harmony"
-  - batch:      37.1ms
-  - sample:     36.2µs
-  - bps:    125.85 MiB/s
-- "tiktoken-rs::o200k_harmony"
-  - batch:      37.4ms
-  - sample:     36.5µs
-  - bps:    124.68 MiB/s
-- "tokenizers::Xenova/gpt-4o"
-  - batch:     201.1ms
-  - sample:    196.4µs
-  - bps:    23.20 MiB/s
-  
-Decoder Batch Timing:
-- "wordchipper::openai/o200k_harmony"
-  - batch:       2.9ms
-  - sample:      2.9µs
-  - bps:    1.55 GiB/s
-- "tiktoken-rs::o200k_harmony"
-  - batch:       2.2ms
-  - sample:      2.1µs
-  - bps:    2.12 GiB/s
-- "tokenizers::Xenova/gpt-4o"
-  - batch:       9.0ms
-  - sample:      8.8µs
-  - bps:    518.15 MiB/s
+$ for m in openai/{r50k_base,p50k_base,p50k_edit,cl100k_base,o200k_base,o200k_harmony}; \
+  do RAYON_NUM_THREADS=48 cargo run --release -p sample-timer -- \
+   --dataset-dir $DATASET_DIR --shards 0 --model $m; done
 ```
 
 ## Client Usage
