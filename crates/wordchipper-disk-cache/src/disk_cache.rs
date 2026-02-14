@@ -146,17 +146,19 @@ impl WordchipperDiskCache {
     /// # Errors
     /// * Returns an error if the cached file does not exist and `download` is `false`.
     /// * Returns an error if the downloading process fails.
-    pub fn load_cached_path<C>(
+    pub fn load_cached_path<C, S>(
         &mut self,
         context: &[C],
-        urls: &[&str],
+        urls: &[S],
         download: bool,
         /* TODO: hash: Option<&str>, */
     ) -> anyhow::Result<PathBuf>
     where
         C: AsRef<Path>,
+        S: AsRef<str>,
     {
-        let mut dl = Download::new_mirrored(urls);
+        let urls: Vec<_> = urls.iter().map(|s| s.as_ref()).collect();
+        let mut dl = Download::new_mirrored(&urls);
         let file_name = dl.file_name.clone();
         let path = self.cache_path(context, &file_name);
         dl.file_name = path.clone();

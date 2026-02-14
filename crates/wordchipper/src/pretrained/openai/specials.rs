@@ -136,7 +136,10 @@ pub fn oa_o200k_harmony_special_tokens<T: TokenType>() -> Vec<(String, T)> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::alloc::{string::ToString, vec, vec::Vec};
+    use crate::{
+        alloc::{string::ToString, vec, vec::Vec},
+        vocab::utility::format_reserved_carrot,
+    };
 
     #[test]
     fn test_oa_gpt2_r50k_specials() {

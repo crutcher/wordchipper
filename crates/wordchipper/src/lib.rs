@@ -80,6 +80,7 @@ pub mod decoders;
 pub mod encoders;
 pub mod pretrained;
 pub mod regex;
+pub mod resources;
 pub mod spanning;
 pub mod types;
 pub mod vocab;

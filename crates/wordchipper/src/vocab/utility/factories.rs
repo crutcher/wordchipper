@@ -1,4 +1,4 @@
-//! # Remote Resource Tools
+//! # Vocab Factory Support
 
 #[cfg(feature = "std")]
 use std::{
@@ -7,37 +7,17 @@ use std::{
     path::{Path, PathBuf},
 };
 
-#[cfg(feature = "download")]
-use crate::disk_cache::WordchipperDiskCache;
+#[cfg(feature = "std")]
+use crate::resources::ResourceLoader;
 #[cfg(feature = "std")]
 use crate::vocab::UnifiedTokenVocab;
 use crate::{
     alloc::{string::String, vec::Vec},
     regex::{ConstRegexWrapperPattern, RegexWrapperPattern},
+    resources::ConstKeyedResource,
     spanning::TextSpanningConfig,
     types::TokenType,
 };
-
-/// A resource with a constant URL and optional hash.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ConstUrlResource {
-    /// The URL associated with this resource.
-    pub urls: &'static [&'static str],
-
-    /// The hash associated with this resource, if available.
-    pub hash: Option<&'static str>,
-}
-
-/// A keyed resource, where the key is a list of strings.
-pub struct ConstKeyedResource {
-    /// The key associated with this resource.
-    ///
-    /// This is intended for the [`WordchipperDiskCache`].
-    pub key: &'static [&'static str],
-
-    /// The resource associated with this key.
-    pub resource: ConstUrlResource,
-}
 
 /// A pretrained tokenizer bundle.
 pub struct ConstVocabularyFactory {
@@ -55,20 +35,6 @@ pub struct ConstVocabularyFactory {
 }
 
 impl ConstVocabularyFactory {
-    /// Fetch a path to the resource; downloading if necessary.
-    #[cfg(feature = "download")]
-    pub fn fetch_resource(
-        &self,
-        disk_cache: &mut WordchipperDiskCache,
-        download_if_missing: bool,
-    ) -> anyhow::Result<PathBuf> {
-        disk_cache.load_cached_path(
-            self.resource.key,
-            self.resource.resource.urls,
-            download_if_missing,
-        )
-    }
-
     /// Get the regex pattern for this tokenizer.
     pub fn pattern(&self) -> RegexWrapperPattern {
         self.pattern.to_pattern()
@@ -87,13 +53,22 @@ impl ConstVocabularyFactory {
         TextSpanningConfig::from_pattern(self.pattern()).with_special_words(self.special_tokens())
     }
 
-    /// Load the pretrained vocabulary, downloading if necessary.
-    #[cfg(feature = "download")]
-    pub fn load_vocab<T: TokenType>(
+    /// Fetch a path to the resource through the loader.
+    #[cfg(feature = "std")]
+    fn fetch_resource<L: ResourceLoader>(
         &self,
-        disk_cache: &mut WordchipperDiskCache,
+        loader: &mut L,
+    ) -> anyhow::Result<PathBuf> {
+        loader.load_resource_path(self.resource.clone())
+    }
+
+    /// Load the pretrained vocabulary through the loader.
+    #[cfg(feature = "std")]
+    pub fn load_vocab<T: TokenType, L: ResourceLoader>(
+        &self,
+        loader: &mut L,
     ) -> anyhow::Result<UnifiedTokenVocab<T>> {
-        let path = self.fetch_resource(disk_cache, true)?;
+        let path = self.fetch_resource(loader)?;
         self.load_vocab_path(path)
     }
 

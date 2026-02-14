@@ -2,8 +2,6 @@
 
 use std::{io::BufRead, path::Path};
 
-#[cfg(feature = "download")]
-use crate::disk_cache::WordchipperDiskCache;
 use crate::{
     pretrained::openai::{
         OA_CL100K_BASE_PATTERN,
@@ -26,12 +24,10 @@ use crate::{
         },
     },
     regex::RegexWrapperPattern,
+    resources::{ConstKeyedResource, ResourceLoader},
     spanning::TextSpanningConfig,
     types::TokenType,
-    vocab::{
-        UnifiedTokenVocab,
-        utility::{ConstKeyedResource, ConstVocabularyFactory},
-    },
+    vocab::{UnifiedTokenVocab, utility::factories::ConstVocabularyFactory},
 };
 
 /// `OpenAI` Pretrained Tokenizer types.
@@ -104,11 +100,11 @@ impl OATokenizer {
     ///
     /// Downloads and caches resources using the `disk_cache`.
     #[cfg(feature = "download")]
-    pub fn load_vocab<T: TokenType>(
+    pub fn load_vocab<T: TokenType, L: ResourceLoader>(
         &self,
-        disk_cache: &mut WordchipperDiskCache,
+        loader: &mut L,
     ) -> anyhow::Result<UnifiedTokenVocab<T>> {
-        self.factory().load_vocab(disk_cache)
+        self.factory().load_vocab(loader)
     }
 
     /// Load pretrained `OpenAI` tokenizer vocabulary from disk.
