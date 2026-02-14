@@ -2,22 +2,29 @@
 
 use std::{io::BufRead, path::Path};
 
-use crate::resources::ResourceLoader;
 use crate::{
     pretrained::openai::{
-        OA_CL100K_BASE_PATTERN, OA_O200K_BASE_PATTERN, OA_P50K_BASE_PATTERN, OA_R50K_BASE_PATTERN,
+        OA_CL100K_BASE_PATTERN,
+        OA_O200K_BASE_PATTERN,
+        OA_P50K_BASE_PATTERN,
+        OA_R50K_BASE_PATTERN,
         resources::{
-            OA_CL100K_BASE_TIKTOKEN_RESOURCE, OA_O200K_BASE_TIKTOKEN_RESOURCE,
-            OA_P50K_BASE_TIKTOKEN_RESOURCE, OA_R50K_BASE_TIKTOKEN_RESOURCE,
+            OA_CL100K_BASE_TIKTOKEN_RESOURCE,
+            OA_O200K_BASE_TIKTOKEN_RESOURCE,
+            OA_P50K_BASE_TIKTOKEN_RESOURCE,
+            OA_R50K_BASE_TIKTOKEN_RESOURCE,
         },
         specials::{
-            oa_cl100k_edit_special_tokens, oa_o200k_base_special_tokens,
-            oa_o200k_harmony_special_tokens, oa_p50k_base_special_tokens,
-            oa_p50k_edit_special_tokens, oa_r50k_base_special_tokens,
+            oa_cl100k_edit_special_tokens,
+            oa_o200k_base_special_tokens,
+            oa_o200k_harmony_special_tokens,
+            oa_p50k_base_special_tokens,
+            oa_p50k_edit_special_tokens,
+            oa_r50k_base_special_tokens,
         },
     },
     regex::RegexWrapperPattern,
-    resources::ConstKeyedResource,
+    resources::{ConstKeyedResource, ResourceLoader},
     spanning::TextSpanningConfig,
     types::TokenType,
     vocab::{UnifiedTokenVocab, utility::factories::ConstVocabularyFactory},
