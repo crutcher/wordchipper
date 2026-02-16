@@ -101,7 +101,8 @@ pub trait TextSpanner: Send + Sync {
         &self,
         text: &str,
     ) -> Vec<SpanRef> {
-        let mut words = Vec::with_capacity(self.expected_span_count(text) * 6 / 5);
+        let capacity = self.expected_span_count(text) * 115 / 100;
+        let mut words = Vec::with_capacity(capacity);
 
         self.for_each_split_span(text, &mut |span_ref| {
             words.push(span_ref);

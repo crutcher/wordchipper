@@ -4,7 +4,7 @@ use crate::{
     alloc::{sync::Arc, vec::Vec},
     spanning::TextSpanner,
     types::TokenType,
-    vocab::{DEFAULT_BYTE_PER_TOKEN_RATIO, SpecialVocab},
+    vocab::SpecialVocab,
 };
 
 /// The common trait for `String/&[u8] -> Vec<T>` encoders.
@@ -27,20 +27,20 @@ pub trait TokenEncoder<T: TokenType>: Send + Sync {
 
     /// Return the expected bytes per token ratio.
     ///
-    /// This is used by [`TokenEncoder::predict_token_buffer_size`] to predict
+    /// This is used by [`TokenEncoder::expected_token_count`] to predict
     /// the size needed when pre-allocating token buffers.
     fn expected_bytes_per_token(&self) -> f32 {
-        DEFAULT_BYTE_PER_TOKEN_RATIO
+        self.spanner().expected_bytes_per_span()
     }
 
     /// Predict the capacity needed when pre-allocating token buffers.
     ///
     /// See: [`TokenEncoder::expected_bytes_per_token`].
-    fn predict_token_buffer_size(
+    fn expected_token_count(
         &self,
         text: &str,
     ) -> usize {
-        ((text.len() as f32 * 1.1) / self.expected_bytes_per_token()) as usize
+        (text.len() as f32 / self.expected_bytes_per_token()) as usize
     }
 
     /// Encode bytes into tokens.
@@ -68,7 +68,7 @@ pub trait TokenEncoder<T: TokenType>: Send + Sync {
         &self,
         text: &str,
     ) -> anyhow::Result<Vec<T>> {
-        let capacity = self.predict_token_buffer_size(text);
+        let capacity = self.expected_token_count(text) * 115 / 100;
         let mut tokens = Vec::with_capacity(capacity);
 
         self.try_encode_append(text, &mut tokens)?;

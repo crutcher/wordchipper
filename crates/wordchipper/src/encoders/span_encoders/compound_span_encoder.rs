@@ -16,7 +16,7 @@ use crate::{
 /// A [`TokenEncoder`] with pluggable [`SpanPolicy`]s.
 ///
 /// This encoder pre-allocates output buffers based upon the capacity
-/// predicted by [`CompoundSpanVocabEncoder::predict_token_buffer_size`].
+/// predicted by [`CompoundSpanVocabEncoder::expected_token_count`].
 /// The behavior can be tuned by adjusting the `expected_bytes_per_token` parameter.
 ///
 /// This [`TokenEncoder`] leverages [`RegexTextSpanner`] to split text:
