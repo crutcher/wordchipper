@@ -57,9 +57,7 @@ See: [wordchipper::pretrained::openai::OATokenizer](https://docs.rs/wordchipper/
 use std::sync::Arc;
 
 use wordchipper::{
-    TokenDecoderBuilder,
     TokenDecoder,
-    TokenEncoderBuilder,
     TokenEncoder,
     UnifiedTokenVocab,
     disk_cache::WordchipperDiskCache,
@@ -71,8 +69,8 @@ fn example() -> anyhow::Result<(Arc<dyn TokenEncoder<u32>>, Arc<dyn TokenDecoder
     let mut disk_cache = WordchipperDiskCache::default();
     let vocab: UnifiedTokenVocab<u32> = model.load_vocab(&mut disk_cache)?;
 
-    let encoder = TokenEncoderBuilder::default(vocab.clone());
-    let decoder = TokenDecoderBuilder::default(vocab);
+    let encoder = vocab.to_default_encoder();
+    let decoder = vocab.to_default_decoder();
 
     Ok((encoder, decoder))
 }
