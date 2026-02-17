@@ -27,7 +27,10 @@ use crate::{
     resources::{ConstKeyedResource, ResourceLoader},
     spanning::TextSpanningConfig,
     types::TokenType,
-    vocab::{UnifiedTokenVocab, utility::factories::ConstVocabularyFactory},
+    vocab::{
+        UnifiedTokenVocab,
+        utility::factories::{ConstBase64VocabFactory, VocabFactory},
+    },
 };
 
 /// `OpenAI` Pretrained Tokenizer types.
@@ -69,7 +72,7 @@ pub enum OATokenizer {
 
 impl OATokenizer {
     /// Get the tokenizer vocabulary factory.
-    pub fn factory(&self) -> &ConstVocabularyFactory {
+    pub fn factory(&self) -> &ConstBase64VocabFactory {
         use OATokenizer::*;
         match self {
             R50kBase => &OA_R50K_BASE_VOCAB_FACTORY,
@@ -128,7 +131,7 @@ impl OATokenizer {
 const OA_KEY: &str = "openai";
 
 /// The "`r50k_base`" tokenizer.
-pub const OA_R50K_BASE_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabularyFactory {
+pub const OA_R50K_BASE_VOCAB_FACTORY: ConstBase64VocabFactory = ConstBase64VocabFactory {
     name: "r50k_base",
     resource: ConstKeyedResource {
         key: &[OA_KEY, "r50k_base"],
@@ -139,7 +142,7 @@ pub const OA_R50K_BASE_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabularyFa
 };
 
 /// The "`p50k_base`" tokenizer.
-pub const OA_P50K_BASE_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabularyFactory {
+pub const OA_P50K_BASE_VOCAB_FACTORY: ConstBase64VocabFactory = ConstBase64VocabFactory {
     name: "p50k_base",
     resource: ConstKeyedResource {
         key: &[OA_KEY, "p50k_base"],
@@ -150,7 +153,7 @@ pub const OA_P50K_BASE_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabularyFa
 };
 
 /// The "`p50k_base`" tokenizer.
-pub const OA_P50K_EDIT_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabularyFactory {
+pub const OA_P50K_EDIT_VOCAB_FACTORY: ConstBase64VocabFactory = ConstBase64VocabFactory {
     name: "p50k_edit",
     resource: OA_P50K_BASE_VOCAB_FACTORY.resource,
     pattern: OA_P50K_BASE_VOCAB_FACTORY.pattern,
@@ -158,7 +161,7 @@ pub const OA_P50K_EDIT_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabularyFa
 };
 
 /// The "`cl100k_base`" tokenizer.
-pub const OA_CL100K_BASE_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabularyFactory {
+pub const OA_CL100K_BASE_VOCAB_FACTORY: ConstBase64VocabFactory = ConstBase64VocabFactory {
     name: "cl100k_base",
     resource: ConstKeyedResource {
         key: &[OA_KEY, "cl100k_base"],
@@ -169,7 +172,7 @@ pub const OA_CL100K_BASE_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabulary
 };
 
 /// The "`o200k_base`" tokenizer.
-pub const OA_O200K_BASE_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabularyFactory {
+pub const OA_O200K_BASE_VOCAB_FACTORY: ConstBase64VocabFactory = ConstBase64VocabFactory {
     name: "o200k_base",
     resource: ConstKeyedResource {
         key: &[OA_KEY, "o200k_base"],
@@ -180,7 +183,7 @@ pub const OA_O200K_BASE_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabularyF
 };
 
 /// The "`o200k_harmony`" tokenizer.
-pub const OA_O200K_HARMONY_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabularyFactory {
+pub const OA_O200K_HARMONY_VOCAB_FACTORY: ConstBase64VocabFactory = ConstBase64VocabFactory {
     name: "o200k_harmony",
     resource: OA_O200K_BASE_VOCAB_FACTORY.resource,
     pattern: OA_O200K_BASE_VOCAB_FACTORY.pattern,

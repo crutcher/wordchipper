@@ -23,7 +23,7 @@ use crate::{
 };
 
 /// Unified token vocabulary.
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct UnifiedTokenVocab<T: TokenType> {
     /// Text Spanning Configuration
     spanning: TextSpanningConfig<T>,

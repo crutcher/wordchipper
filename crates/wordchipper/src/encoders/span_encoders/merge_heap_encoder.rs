@@ -111,7 +111,7 @@ mod tests {
             vocab.clone(),
             Arc::new(|| Box::new(MergeHeapSpanEncoder::<T>::default())),
         );
-        common_encoder_tests(vocab.into(), encoder)
+        common_encoder_tests(vocab.into(), Arc::new(encoder))
     }
 
     #[test]

@@ -4,7 +4,7 @@
 use std::{
     fs::File,
     io::{BufRead, BufReader},
-    path::{Path, PathBuf},
+    path::Path,
 };
 
 #[cfg(feature = "std")]
@@ -19,8 +19,27 @@ use crate::{
     types::TokenType,
 };
 
+/// A trait for pretrained tokenizer factories.
+pub trait VocabFactory {
+    /// Get the regex pattern for this tokenizer.
+    fn pattern(&self) -> RegexWrapperPattern;
+
+    /// List the special tokens for this tokenizer.
+    fn special_tokens<T: TokenType>(&self) -> Vec<(String, T)>;
+
+    /// Get the spanning config for this tokenizer.
+    fn spanning_config<T: TokenType>(&self) -> TextSpanningConfig<T>;
+
+    /// Load the pretrained vocabulary through the loader.
+    #[cfg(feature = "std")]
+    fn load_vocab<T: TokenType, L: ResourceLoader>(
+        &self,
+        loader: &mut L,
+    ) -> anyhow::Result<UnifiedTokenVocab<T>>;
+}
+
 /// A pretrained tokenizer bundle.
-pub struct ConstVocabularyFactory {
+pub struct ConstBase64VocabFactory {
     /// The name of the tokenizer.
     pub name: &'static str,
 
@@ -34,14 +53,14 @@ pub struct ConstVocabularyFactory {
     pub special_builder: &'static dyn Fn() -> Vec<(String, usize)>,
 }
 
-impl ConstVocabularyFactory {
+impl VocabFactory for ConstBase64VocabFactory {
     /// Get the regex pattern for this tokenizer.
-    pub fn pattern(&self) -> RegexWrapperPattern {
+    fn pattern(&self) -> RegexWrapperPattern {
         self.pattern.to_pattern()
     }
 
     /// List the special tokens for this tokenizer.
-    pub fn special_tokens<T: TokenType>(&self) -> Vec<(String, T)> {
+    fn special_tokens<T: TokenType>(&self) -> Vec<(String, T)> {
         (self.special_builder)()
             .into_iter()
             .map(|(s, t)| (s, T::from_usize(t).unwrap()))
@@ -49,29 +68,22 @@ impl ConstVocabularyFactory {
     }
 
     /// Load the spanning config for this tokenizer.
-    pub fn spanning_config<T: TokenType>(&self) -> TextSpanningConfig<T> {
+    fn spanning_config<T: TokenType>(&self) -> TextSpanningConfig<T> {
         TextSpanningConfig::from_pattern(self.pattern()).with_special_words(self.special_tokens())
-    }
-
-    /// Fetch a path to the resource through the loader.
-    #[cfg(feature = "std")]
-    fn fetch_resource<L: ResourceLoader>(
-        &self,
-        loader: &mut L,
-    ) -> anyhow::Result<PathBuf> {
-        loader.load_resource_path(self.resource.clone())
     }
 
     /// Load the pretrained vocabulary through the loader.
     #[cfg(feature = "std")]
-    pub fn load_vocab<T: TokenType, L: ResourceLoader>(
+    fn load_vocab<T: TokenType, L: ResourceLoader>(
         &self,
         loader: &mut L,
     ) -> anyhow::Result<UnifiedTokenVocab<T>> {
-        let path = self.fetch_resource(loader)?;
+        let path = loader.load_resource_path(self.resource.clone())?;
         self.load_vocab_path(path)
     }
+}
 
+impl ConstBase64VocabFactory {
     /// Load the pretrained vocabulary from disk.
     #[cfg(feature = "std")]
     pub fn load_vocab_path<T: TokenType>(

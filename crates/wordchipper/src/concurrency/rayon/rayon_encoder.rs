@@ -90,7 +90,7 @@ mod tests {
 
         assert_eq!(encoder.special_vocab(), encoder.inner.special_vocab());
 
-        common_encoder_tests(vocab, encoder)
+        common_encoder_tests(vocab, Arc::new(encoder))
     }
 
     #[test]

@@ -19,9 +19,9 @@ use rand::prelude::SliceRandom;
 use similar::TextDiff;
 use tiktoken_rs::{CoreBPE, Rank};
 use tiktoken_support::TiktokenRsEngine;
+use wordchipper::vocab::io::load_gpt2_vocab;
 use wordchipper::{
-    TokenType,
-    UnifiedTokenVocab,
+    TokenType, UnifiedTokenVocab,
     compat::{
         slices::{inner_slice_view, inner_str_view},
         timers::timeit,
@@ -182,16 +182,18 @@ fn main() -> anyhow::Result<()> {
 
     println!("{:#?}", args);
 
-    let mut disk_cache = WordchipperDiskCache::default();
-    // println!("Loading wordchipper...");
-    let vocab: UnifiedTokenVocab<Rank> = args.model.load_vocab(&mut disk_cache)?;
-
-    let spanner = RegexTextSpanner::from_config(vocab.spanning().clone(), None);
-
-    // TODO: complete batch-observer inversion of control for additional tokenizer wrappers.
-
     let mut candidate_engines: Vec<Arc<dyn EncDecEngine<Rank>>> = Vec::new();
 
+    let mut disk_cache = WordchipperDiskCache::default();
+
+    /*
+    // println!("Loading wordchipper...");
+    let vocab: UnifiedTokenVocab<Rank> = args.model.load_vocab(&mut disk_cache)?;
+     */
+
+    let vocab = load_gpt2_vocab(&mut disk_cache)?;
+
+    let spanner = RegexTextSpanner::from_config(vocab.spanning().clone(), None);
     let wc_engine = Arc::new(WordchipperEngine::<Rank>::new(
         args.model.to_string(),
         vocab.to_default_encoder(),
