@@ -41,7 +41,7 @@ impl<T> TokenEncoder<T> for ParallelRayonEncoder<T>
 where
     T: TokenType,
 {
-    fn spanner(&self) -> &TextSpanner {
+    fn spanner(&self) -> Arc<dyn TextSpanner> {
         self.inner.spanner()
     }
 
@@ -76,26 +76,27 @@ where
 mod tests {
     use std::sync::Arc;
 
+    use super::*;
     use crate::{
-        concurrency::rayon::rayon_encoder::ParallelRayonEncoder,
         encoders::{
-            DefaultTokenEncoder,
             TokenEncoder,
+            span_encoders::CompoundSpanVocabEncoder,
             testing::{common_encoder_test_vocab, common_encoder_tests},
         },
+        spanning::RegexTextSpanner,
         types::TokenType,
     };
 
     fn test_encoder<T: TokenType>() {
         let vocab = common_encoder_test_vocab();
 
-        let encoder = DefaultTokenEncoder::<T>::new(vocab.clone().into(), None);
-        let encoder = ParallelRayonEncoder::new(Arc::new(encoder));
+        let spanner = Arc::new(RegexTextSpanner::from_config(
+            vocab.spanning().clone(),
+            None,
+        ));
+        let inner = CompoundSpanVocabEncoder::<T>::new(spanner, vocab.clone());
+        let encoder = ParallelRayonEncoder::new(Arc::new(inner));
 
-        assert_eq!(
-            encoder.spanner().word_regex().as_str(),
-            vocab.spanning().pattern().as_str()
-        );
         assert_eq!(encoder.special_vocab(), encoder.inner.special_vocab());
 
         common_encoder_tests(vocab, encoder)

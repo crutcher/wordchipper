@@ -79,13 +79,20 @@ impl<T: TokenType> SpanPolicy<T> for MergeScanCompoundPolicy<T> {
 mod tests {
     use super::*;
     use crate::{
+        alloc::sync::Arc,
         encoders::testing::{common_encoder_test_vocab, common_encoder_tests},
+        spanning::RegexTextSpanner,
         types::TokenType,
     };
 
     fn test_encoder<T: TokenType>() {
         let vocab = common_encoder_test_vocab();
-        let encoder = MergeScanVocabEncoder::<T>::new(vocab.clone(), None);
+        let spanner = Arc::new(RegexTextSpanner::from_config(
+            vocab.spanning().clone(),
+            None,
+        ));
+        let encoder =
+            CompoundSpanVocabEncoder::<T, MergeScanCompoundPolicy<T>>::new(spanner, vocab.clone());
         common_encoder_tests(vocab, encoder)
     }
 

@@ -418,7 +418,7 @@ mod tests {
     use crate::{
         compat::traits::static_is_send_sync_check,
         decoders::{TokenDecoder, TokenDictDecoder},
-        encoders::{DefaultTokenEncoder, TokenEncoder},
+        encoders::TokenEncoderBuilder,
         pretrained::openai::OA_CL100K_BASE_PATTERN,
         training::{BinaryPairVocabTrainerOptions, bpe_trainer::MergeJob},
         vocab::{ByteMapVocab, UnifiedTokenVocab},
@@ -464,7 +464,7 @@ mod tests {
 
         let vocab: UnifiedTokenVocab<T> = trainer.train(byte_vocab.clone()).unwrap();
 
-        let encoder = DefaultTokenEncoder::<T>::new(vocab.clone(), None);
+        let encoder = TokenEncoderBuilder::<T>::new(vocab.clone()).init();
         static_is_send_sync_check(&encoder);
 
         let decoder = TokenDictDecoder::from_unified_vocab(vocab);

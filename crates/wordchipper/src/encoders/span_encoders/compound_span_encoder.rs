@@ -3,12 +3,12 @@
 use core::num::NonZeroUsize;
 
 use crate::{
-    alloc::vec::Vec,
+    alloc::{sync::Arc, vec::Vec},
     encoders::{
         TokenEncoder,
         span_encoders::{MergeHeapSpanPolicy, SpanPolicy},
     },
-    spanning::{SpanRef, TextSpanner},
+    spanning::{RegexTextSpanner, SpanRef, TextSpanner},
     types::TokenType,
     vocab::{DEFAULT_BYTE_PER_TOKEN_RATIO, SpecialVocab, UnifiedTokenVocab},
 };
@@ -16,10 +16,10 @@ use crate::{
 /// A [`TokenEncoder`] with pluggable [`SpanPolicy`]s.
 ///
 /// This encoder pre-allocates output buffers based upon the capacity
-/// predicted by [`CompoundSpanVocabEncoder::predict_token_buffer_size`].
+/// predicted by [`CompoundSpanVocabEncoder::expected_token_count`].
 /// The behavior can be tuned by adjusting the `expected_bytes_per_token` parameter.
 ///
-/// This [`TokenEncoder`] leverages [`TextSpanner`] to split text:
+/// This [`TokenEncoder`] leverages [`RegexTextSpanner`] to split text:
 /// * [`SpanRef::Gap`] spans are ignored.
 /// * [`SpanRef::Special`] spans are encoded using the [`SpecialVocab`].
 /// * [`SpanRef::Word`] spans are:
@@ -41,29 +41,14 @@ where
     S: SpanPolicy<T>,
 {
     /// The reference vocabulary.
-    pub vocab: UnifiedTokenVocab<T>,
+    vocab: UnifiedTokenVocab<T>,
 
     /// Text Spanner.
-    pub spanner: TextSpanner,
+    spanner: Arc<dyn TextSpanner>,
 
     expected_bytes_per_token: f32,
 
     marker: core::marker::PhantomData<fn() -> S>,
-}
-
-impl<T, S> Clone for CompoundSpanVocabEncoder<T, S>
-where
-    T: TokenType,
-    S: SpanPolicy<T>,
-{
-    fn clone(&self) -> Self {
-        Self {
-            vocab: self.vocab.clone(),
-            spanner: self.spanner.clone(),
-            expected_bytes_per_token: self.expected_bytes_per_token,
-            marker: Default::default(),
-        }
-    }
 }
 
 impl<T: TokenType, S: SpanPolicy<T>> CompoundSpanVocabEncoder<T, S> {
@@ -74,12 +59,24 @@ impl<T: TokenType, S: SpanPolicy<T>> CompoundSpanVocabEncoder<T, S> {
     ///
     /// ## Returns
     /// A new `MergeHeapVocabEncoder` instance.
-    pub fn new(
+    pub fn init(
         vocab: UnifiedTokenVocab<T>,
         max_pool: Option<NonZeroUsize>,
     ) -> Self {
-        let spanner = TextSpanner::from_config(vocab.spanning().clone(), max_pool);
+        Self::new(
+            Arc::new(RegexTextSpanner::from_config(
+                vocab.spanning().clone(),
+                max_pool,
+            )),
+            vocab,
+        )
+    }
 
+    /// Create a new encoder.
+    pub fn new(
+        spanner: Arc<dyn TextSpanner>,
+        vocab: UnifiedTokenVocab<T>,
+    ) -> Self {
         Self {
             vocab,
             spanner,
@@ -140,8 +137,8 @@ impl<T: TokenType, S: SpanPolicy<T>> CompoundSpanVocabEncoder<T, S> {
 }
 
 impl<T: TokenType, S: SpanPolicy<T>> TokenEncoder<T> for CompoundSpanVocabEncoder<T, S> {
-    fn spanner(&self) -> &TextSpanner {
-        &self.spanner
+    fn spanner(&self) -> Arc<dyn TextSpanner> {
+        self.spanner.clone()
     }
 
     fn special_vocab(&self) -> &SpecialVocab<T> {
@@ -178,7 +175,11 @@ mod tests {
 
     fn test_encoder<T: TokenType>() {
         let vocab = common_encoder_test_vocab();
-        let encoder = CompoundSpanVocabEncoder::<T>::new(vocab.clone().into(), None)
+        let spanner = Arc::new(RegexTextSpanner::from_config(
+            vocab.spanning().clone(),
+            None,
+        ));
+        let encoder = CompoundSpanVocabEncoder::<T>::new(spanner, vocab.clone())
             .with_expected_bytes_per_token(7.5);
 
         assert_eq!(encoder.expected_bytes_per_token(), 7.5);

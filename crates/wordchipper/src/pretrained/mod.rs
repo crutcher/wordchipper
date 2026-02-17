@@ -17,9 +17,11 @@
 //! use std::sync::Arc;
 //!
 //! use wordchipper::{
-//!     decoders::{DefaultTokenDecoder, TokenDecoder},
+//!     TokenDecoder,
+//!     TokenDecoderBuilder,
+//!     TokenEncoder,
+//!     TokenEncoderBuilder,
 //!     disk_cache::WordchipperDiskCache,
-//!     encoders::{DefaultTokenEncoder, TokenEncoder},
 //!     pretrained::openai::OATokenizer,
 //!     vocab::UnifiedTokenVocab,
 //! };
@@ -29,19 +31,8 @@
 //!     let mut disk_cache = WordchipperDiskCache::default();
 //!     let vocab: UnifiedTokenVocab<u32> = model.load_vocab(&mut disk_cache)?;
 //!
-//!     let encoder: Arc<DefaultTokenEncoder<u32>> =
-//!         DefaultTokenEncoder::new(vocab.clone(), None).into();
-//!     let decoder: Arc<DefaultTokenDecoder<u32>> =
-//!         DefaultTokenDecoder::from_unified_vocab(vocab).into();
-//!
-//!     #[cfg(feature = "rayon")]
-//!     use wordchipper::concurrency::rayon::*;
-//!
-//!     #[cfg(feature = "rayon")]
-//!     let encoder = Arc::new(ParallelRayonEncoder::new(encoder));
-//!
-//!     #[cfg(feature = "rayon")]
-//!     let decoder = Arc::new(ParallelRayonDecoder::new(decoder));
+//!     let encoder: Arc<dyn TokenEncoder<u32>> = TokenEncoderBuilder::new(vocab.clone()).init();
+//!     let decoder: Arc<dyn TokenDecoder<u32>> = TokenDecoderBuilder::new(vocab.clone()).init();
 //!
 //!     Ok((encoder, decoder))
 //! }

@@ -34,9 +34,8 @@
 //! use std::sync::Arc;
 //!
 //! use wordchipper::{
-//!     concurrency::rayon::{ParallelRayonDecoder, ParallelRayonEncoder},
 //!     decoders::TokenDictDecoder,
-//!     encoders::DefaultTokenEncoder,
+//!     encoders::TokenEncoderBuilder,
 //!     pretrained::openai::OA_CL100K_BASE_PATTERN,
 //!     training::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions},
 //!     vocab::{ByteMapVocab, UnifiedTokenVocab, io::save_base64_span_map_path},
@@ -80,11 +79,8 @@
 //!         println!("- tiktoken vocab: {path:?}");
 //!     }
 //!
-//!     let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::new(vocab.clone(), None);
-//!     let encoder = ParallelRayonEncoder::new(Arc::new(encoder));
-//!
+//!     let encoder = TokenEncoderBuilder::new(vocab.clone()).init();
 //!     let decoder = TokenDictDecoder::from_unified_vocab(vocab.clone());
-//!     let decoder = ParallelRayonDecoder::new(Arc::new(decoder));
 //! }
 //! ```
 

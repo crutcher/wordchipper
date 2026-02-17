@@ -6,13 +6,16 @@
 //! * `pattern` - the word/span split pattern.
 //! * `specials` - a map of `{ Vec<u8> -> T }` special tokens to handle out-of-band.
 //!
-//! [`TextSpanner`] implements the run-time management of spanning,
+//! [`RegexTextSpanner`] implements the run-time management of spanning,
 //! as well as any per-thread regex pooling.
 
+mod regex_text_spanner;
 mod spanning_config;
 mod text_spanner;
 
 #[doc(inline)]
-pub use spanning_config::TextSpanningConfig;
+pub use regex_text_spanner::*;
 #[doc(inline)]
-pub use text_spanner::{SpanRef, TextSpanner};
+pub use spanning_config::*;
+#[doc(inline)]
+pub use text_spanner::*;

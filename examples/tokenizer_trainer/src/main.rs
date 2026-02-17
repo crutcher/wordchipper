@@ -1,13 +1,12 @@
-use std::{collections::HashSet, sync::Arc, time::Duration};
+use std::{collections::HashSet, time::Duration};
 
 use arrow::array::{Array, StringArray};
 use clap::Parser;
 use similar::{ChangeTag, TextDiff};
 use wordchipper::{
+    TokenDecoderBuilder,
+    TokenEncoderBuilder,
     compat::slices::{inner_slice_view, inner_str_view},
-    concurrency::rayon::{ParallelRayonDecoder, ParallelRayonEncoder},
-    decoders::{TokenDecoder, TokenDictDecoder},
-    encoders::{DefaultTokenEncoder, TokenEncoder},
     pretrained::openai::OA_O200K_BASE_PATTERN,
     training::BinaryPairVocabTrainerOptions,
     vocab::{ByteMapVocab, TokenVocab, UnifiedTokenVocab, io::save_base64_span_map_path},
@@ -127,11 +126,8 @@ fn main() -> anyhow::Result<()> {
     }
 
     if args.time_encode_decode {
-        let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::new(vocab.clone(), None);
-        let encoder = ParallelRayonEncoder::new(Arc::new(encoder));
-
-        let decoder = TokenDictDecoder::from_unified_vocab(vocab);
-        let decoder = ParallelRayonDecoder::new(Arc::new(decoder));
+        let encoder = TokenEncoderBuilder::new(vocab.clone()).init();
+        let decoder = TokenDecoderBuilder::new(vocab.clone()).init();
 
         let mut samples = Vec::new();
         {

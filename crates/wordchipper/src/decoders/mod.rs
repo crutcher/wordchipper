@@ -1,29 +1,17 @@
 //! # Token Decoders
 //!
-//! Decoder clients should use:
-//!
-//! * `TokenDictDecoder` - the fastest `TokenDecoder`.
-//! * `ParallelRayonDecoder` - a batch parallelism wrapper around any `TokenDecoder`.
-//!
 //! ## Example
 //!
 //! ```rust,no_run
 //! use std::sync::Arc;
 //!
-//! use wordchipper::{
-//!     decoders::{TokenDecoder, TokenDictDecoder},
-//!     types::TokenType,
-//!     vocab::UnifiedTokenVocab,
-//! };
+//! use wordchipper::{TokenDecoder, TokenDecoderBuilder, TokenType, UnifiedTokenVocab};
 //!
 //! fn example<T: TokenType>(
 //!     vocab: UnifiedTokenVocab<T>,
 //!     batch: &[Vec<T>],
 //! ) -> Vec<String> {
-//!     let decoder: TokenDictDecoder<T> = TokenDictDecoder::from_unified_vocab(vocab);
-//!
-//!     #[cfg(feature = "rayon")]
-//!     let decoder = wordchipper::concurrency::rayon::ParallelRayonDecoder::new(Arc::new(decoder));
+//!     let decoder = TokenDecoderBuilder::new(vocab.clone()).init();
 //!
 //!     let slices: Vec<&[T]> = batch.iter().map(|v| v.as_ref()).collect();
 //!
@@ -37,20 +25,15 @@
 pub mod utility;
 
 mod decode_results;
+mod decoder_builder;
 mod token_decoder;
 mod token_dict_decoder;
 
 #[doc(inline)]
-pub use decode_results::{BatchDecodeResult, DecodeResult};
+pub use decode_results::*;
 #[doc(inline)]
-pub use token_decoder::TokenDecoder;
+pub use decoder_builder::*;
 #[doc(inline)]
-pub use token_dict_decoder::TokenDictDecoder;
-
-/// The default `TokenDecoder` implementation.
-///
-/// ## Style Hints
-///
-/// When there is no local ambiguity with other decoders,
-/// prefer `decoder` for instance names.
-pub type DefaultTokenDecoder<T> = TokenDictDecoder<T>;
+pub use token_decoder::*;
+#[doc(inline)]
+pub use token_dict_decoder::*;

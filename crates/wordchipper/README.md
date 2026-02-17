@@ -57,11 +57,14 @@ See: [wordchipper::pretrained::openai::OATokenizer](https://docs.rs/wordchipper/
 use std::sync::Arc;
 
 use wordchipper::{
-    decoders::{DefaultTokenDecoder, TokenDecoder},
+    TokenDecoderBuilder,
+    TokenDecoder,
+    TokenEncoderBuilder,
+    TokenEncoder,
+    UnifiedTokenVocab,
+    decoders::{DefaultTokenDecoder,},
     disk_cache::WordchipperDiskCache,
-    encoders::{DefaultTokenEncoder, TokenEncoder},
     pretrained::openai::OATokenizer,
-    vocab::UnifiedTokenVocab,
 };
 
 fn example() -> anyhow::Result<(Arc<dyn TokenEncoder<u32>>, Arc<dyn TokenDecoder<u32>>)> {
@@ -69,19 +72,8 @@ fn example() -> anyhow::Result<(Arc<dyn TokenEncoder<u32>>, Arc<dyn TokenDecoder
     let mut disk_cache = WordchipperDiskCache::default();
     let vocab: UnifiedTokenVocab<u32> = model.load_vocab(&mut disk_cache)?;
 
-    let encoder: Arc<DefaultTokenEncoder<u32>> =
-        DefaultTokenEncoder::new(vocab.clone(), None).into();
-    let decoder: Arc<DefaultTokenDecoder<u32>> =
-        DefaultTokenDecoder::from_unified_vocab(vocab).into();
-        
-    #[cfg(feature = "rayon")]
-    use wordchipper::concurrency::rayon::*;
-    
-    #[cfg(feature = "rayon")]
-    let encoder = Arc::new(ParallelRayonEncoder::new(encoder));
-
-    #[cfg(feature = "rayon")]
-    let decoder = Arc::new(ParallelRayonDecoder::new(decoder));
+    let encoder = TokenEncoderBuilder::new(vocab.clone()).build();
+    let decoder = TokenDecoderBuilder::new(vocab).into();
 
     Ok((encoder, decoder))
 }

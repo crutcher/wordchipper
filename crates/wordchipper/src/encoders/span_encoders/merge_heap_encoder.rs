@@ -110,13 +110,20 @@ impl<T: TokenType> SpanPolicy<T> for MergeHeapSpanPolicy<T> {
 mod tests {
     use super::*;
     use crate::{
+        alloc::sync::Arc,
         encoders::testing::{common_encoder_test_vocab, common_encoder_tests},
+        spanning::RegexTextSpanner,
         types::TokenType,
     };
 
     fn test_encoder<T: TokenType>() {
         let vocab = common_encoder_test_vocab();
-        let encoder = MergeHeapVocabEncoder::<T>::new(vocab.clone().into(), None);
+        let spanner = Arc::new(RegexTextSpanner::from_config(
+            vocab.spanning().clone(),
+            None,
+        ));
+        let encoder =
+            CompoundSpanVocabEncoder::<T, MergeHeapSpanPolicy<T>>::new(spanner, vocab.clone());
         common_encoder_tests(vocab.into(), encoder)
     }
 

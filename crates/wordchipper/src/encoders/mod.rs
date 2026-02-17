@@ -1,46 +1,35 @@
 //! # Token Encoders
 //!
-//! Encoder clients should use:
-//!
-//! * `DefaultTokenEncoder` - the current default (only?) `TokenEncoder`.
-//! * `ParallelRayonEncoder` - a batch parallelism wrapper around any `TokenEncoder`.
-//!
 //! ## Example
 //!
 //! ```rust,no_run
 //! use std::sync::Arc;
 //!
 //! use wordchipper::{
-//!     encoders::{DefaultTokenEncoder, TokenEncoder},
-//!     types::TokenType,
-//!     vocab::UnifiedTokenVocab,
+//!     TokenEncoder,
+//!     TokenEncoderBuilder,
+//!     TokenType,
+//!     UnifiedTokenVocab,
+//!     spanning::RegexTextSpanner,
 //! };
 //!
 //! fn example<T: TokenType>(
 //!     vocab: UnifiedTokenVocab<T>,
 //!     batch: &[&str],
 //! ) -> Vec<Vec<T>> {
-//!     let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::new(vocab, None);
-//!
-//!     #[cfg(feature = "rayon")]
-//!     let encoder = wordchipper::concurrency::rayon::ParallelRayonEncoder::new(Arc::new(encoder));
+//!     let encoder = TokenEncoderBuilder::new(vocab.clone()).init();
 //!
 //!     encoder.try_encode_batch(batch).unwrap()
 //! }
 //! ```
 
+mod encoder_builder;
 pub mod span_encoders;
 #[cfg(any(test, feature = "testing"))]
 pub mod testing;
 mod token_encoder;
 
 #[doc(inline)]
-pub use token_encoder::TokenEncoder;
-
-/// The default `TokenEncoder` implementation.
-///
-/// ## Style Hints
-///
-/// When there is no local ambiguity with other encoders,
-/// prefer `encoder` for instance names.
-pub type DefaultTokenEncoder<T> = span_encoders::CompoundSpanVocabEncoder<T>;
+pub use encoder_builder::*;
+#[doc(inline)]
+pub use token_encoder::*;

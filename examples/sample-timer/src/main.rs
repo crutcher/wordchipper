@@ -20,15 +20,15 @@ use similar::TextDiff;
 use tiktoken_rs::{CoreBPE, Rank};
 use tiktoken_support::TiktokenRsEngine;
 use wordchipper::{
+    TokenDecoderBuilder,
     compat::{
         slices::{inner_slice_view, inner_str_view},
         timers::timeit,
     },
-    decoders::DefaultTokenDecoder,
     disk_cache::WordchipperDiskCache,
-    encoders::DefaultTokenEncoder,
+    encoders::TokenEncoderBuilder,
     pretrained::openai::OATokenizer,
-    spanning::TextSpanner,
+    spanning::RegexTextSpanner,
     types::TokenType,
     vocab::UnifiedTokenVocab,
 };
@@ -188,41 +188,18 @@ fn main() -> anyhow::Result<()> {
     // println!("Loading wordchipper...");
     let vocab: UnifiedTokenVocab<Rank> = args.model.load_vocab(&mut disk_cache)?;
 
-    let spanner = TextSpanner::from_config(vocab.spanning().clone(), None);
+    let spanner = RegexTextSpanner::from_config(vocab.spanning().clone(), None);
 
     // TODO: complete batch-observer inversion of control for additional tokenizer wrappers.
 
     let mut candidate_engines: Vec<Arc<dyn EncDecEngine<Rank>>> = Vec::new();
 
-    let wc_engine = {
-        let encoder = {
-            let encoder = Arc::new(DefaultTokenEncoder::new(vocab.clone(), None));
-
-            #[cfg(feature = "rayon")]
-            let encoder = Arc::new(wordchipper::concurrency::rayon::ParallelRayonEncoder::new(
-                encoder,
-            ));
-
-            encoder
-        };
-        let decoder = {
-            let decoder = Arc::new(DefaultTokenDecoder::from_unified_vocab(vocab.clone()));
-
-            #[cfg(feature = "rayon")]
-            let decoder = Arc::new(wordchipper::concurrency::rayon::ParallelRayonDecoder::new(
-                decoder,
-            ));
-
-            decoder
-        };
-        let wc_engine = Arc::new(WordchipperEngine::<Rank>::new(
-            args.model.to_string(),
-            encoder,
-            decoder,
-        ));
-        candidate_engines.push(wc_engine.clone());
-        wc_engine
-    };
+    let wc_engine = Arc::new(WordchipperEngine::<Rank>::new(
+        args.model.to_string(),
+        TokenEncoderBuilder::new(vocab.clone()).init(),
+        TokenDecoderBuilder::new(vocab.clone()).init(),
+    ));
+    candidate_engines.push(wc_engine.clone());
 
     if args.tiktoken {
         // println!("Loading tiktoken...");

@@ -79,11 +79,13 @@ CI runs all of the above on every push/PR to `main`.
 **Text → Spans → Tokens → Text**
 
 1. **Spanning** (`spanning/`): Regex-based text splitting + special token handling via `TextSpanningConfig`.
-2. **Encoding** (`encoders/`): Span → token sequences via BPE merge. Multiple `SpanPolicy` implementations exist for
-   cross-benchmarking:
+   `RegexTextSpanner` implements runtime management with thread-safe regex pooling.
+2. **Encoding** (`encoders/`): Span → token sequences via BPE merge. Use `TokenEncoderBuilder` to construct encoders.
+   Multiple `SpanPolicy` implementations exist for cross-benchmarking:
     - `MergeHeapSpanPolicy` — heap-based best-merge selection
     - `MergeScanCompoundPolicy` — incremental rescan for merges
-3. **Decoding** (`decoders/`): Token → bytes via dictionary lookup (`TokenDictDecoder`) or pair expansion.
+3. **Decoding** (`decoders/`): Token → bytes via dictionary lookup (`TokenDictDecoder`). Use `TokenDecoderBuilder` to
+   construct decoders.
 4. **Vocabulary** (`vocab/`): Layered vocab types — `ByteMapVocab`, `SpanMapVocab`, `PairMapVocab`, `SpecialVocab`,
    unified in `UnifiedTokenVocab`.
 
@@ -95,12 +97,16 @@ CI runs all of the above on every push/PR to `main`.
 - **Generic over `TokenType`** (`T: TokenType`). Common concrete types: `u16`, `u32`.
 - **Hash strategy is swappable** via `CommonHashMap`/`CommonHashSet` type aliases in `types/`, controlled by `ahash`/
   `foldhash`/`hashbrown` features.
+- **Builder pattern for encoders/decoders.** Use `TokenEncoderBuilder` and `TokenDecoderBuilder` to construct
+  production-ready encoder/decoder instances with appropriate parallelism configuration.
 
 ### Concurrency
 
 - `PoolToy<T>` — thread-ID-hashed pool (avoids contention vs true thread-local storage).
-- `ParallelRayonEncoder` / `ParallelRayonDecoder` — batch-level `rayon` wrappers.
+- `ParallelRayonEncoder` / `ParallelRayonDecoder` — batch-level `rayon` wrappers, automatically included when using
+  builders with `parallel = true` (the default).
 - Thread ID hashing uses an `unsafe transmute` (documented, mirrors `tiktoken`'s approach).
+- `TokenEncoder::spanner()` now returns `Arc<dyn TextSpanner>` for safe sharing of spanner instances across threads.
 
 ### Pretrained Models
 
@@ -118,9 +124,11 @@ instance variable names. **Follow these.** Examples:
 
 - `SpanTokenMap<T>` → instance name `span_map` or `span_token_map`
 - `PoolToy<T>` → instance name `${T-name}_pool` (e.g. `regex_pool`)
-- `DefaultTokenEncoder<T>` → prefer `encoder` when unambiguous
-- `DefaultTokenDecoder<T>` → prefer `decoder` when unambiguous
+- `TokenEncoder<T>` → prefer `encoder` when unambiguous
+- `TokenDecoder<T>` → prefer `decoder` when unambiguous
+- `TokenEncoderBuilder<T>` / `TokenDecoderBuilder<T>` → use `builder` suffixes when constructing
 - `TextSpanningConfig<T>` → prefer `spanner_config` or `config`
+- `RegexTextSpanner` → prefer `spanner`
 
 ### Rust Style
 

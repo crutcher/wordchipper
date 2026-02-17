@@ -3,9 +3,13 @@
 //! ## Loading A Vocab
 //!
 //! ```rust,no_run
+//! use std::sync::Arc;
+//!
 //! use wordchipper::{
-//!     decoders::DefaultTokenDecoder,
-//!     encoders::DefaultTokenEncoder,
+//!     TokenDecoder,
+//!     TokenDecoderBuilder,
+//!     TokenEncoder,
+//!     TokenEncoderBuilder,
 //!     pretrained::openai::OA_O200K_BASE_PATTERN,
 //!     spanning::TextSpanningConfig,
 //!     vocab::{
@@ -16,7 +20,7 @@
 //!     },
 //! };
 //!
-//! fn example() -> anyhow::Result<(DefaultTokenEncoder<u32>, DefaultTokenDecoder<u32>)> {
+//! fn example() -> anyhow::Result<(Arc<dyn TokenEncoder<u32>>, Arc<dyn TokenDecoder<u32>>)> {
 //!     type T = u32;
 //!     let vocab: UnifiedTokenVocab<T> = load_base64_unified_vocab_path(
 //!         "vocab.tiktoken",
@@ -24,8 +28,8 @@
 //!     )
 //!     .expect("failed to load vocab");
 //!
-//!     let encoder: DefaultTokenEncoder<T> = DefaultTokenEncoder::new(vocab.clone(), None);
-//!     let decoder: DefaultTokenDecoder<T> = DefaultTokenDecoder::from_unified_vocab(vocab);
+//!     let encoder = TokenEncoderBuilder::new(vocab.clone()).init();
+//!     let decoder = TokenDecoderBuilder::new(vocab).init();
 //!
 //!     Ok((encoder, decoder))
 //! }
