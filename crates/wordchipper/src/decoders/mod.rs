@@ -11,7 +11,7 @@
 //!     vocab: UnifiedTokenVocab<T>,
 //!     batch: &[Vec<T>],
 //! ) -> Vec<String> {
-//!     let decoder = TokenDecoderBuilder::new(vocab.clone()).init();
+//!     let decoder = TokenDecoderBuilder::default(vocab);
 //!
 //!     let slices: Vec<&[T]> = batch.iter().map(|v| v.as_ref()).collect();
 //!

@@ -196,8 +196,8 @@ fn main() -> anyhow::Result<()> {
 
     let wc_engine = Arc::new(WordchipperEngine::<Rank>::new(
         args.model.to_string(),
-        TokenEncoderBuilder::new(vocab.clone()).init(),
-        TokenDecoderBuilder::new(vocab.clone()).init(),
+        TokenEncoderBuilder::default(vocab.clone()),
+        TokenDecoderBuilder::default(vocab.clone()),
     ));
     candidate_engines.push(wc_engine.clone());
 

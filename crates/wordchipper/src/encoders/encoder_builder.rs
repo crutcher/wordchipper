@@ -19,6 +19,11 @@ pub struct TokenEncoderBuilder<T: TokenType> {
 }
 
 impl<T: TokenType> TokenEncoderBuilder<T> {
+    /// Build a [`TokenEncoder`] with the default configuration.
+    pub fn default(vocab: UnifiedTokenVocab<T>) -> Arc<dyn TokenEncoder<T>> {
+        Self::new(vocab).init()
+    }
+
     /// Create a new builder for the vocab.
     pub fn new(vocab: UnifiedTokenVocab<T>) -> Self {
         Self {
@@ -70,14 +75,12 @@ impl<T: TokenType> TokenEncoderBuilder<T> {
     }
 
     /// Build the configured `TokenEncoder`.
-    pub fn init(&self) -> Arc<dyn TokenEncoder<T>> {
+    pub fn init(self) -> Arc<dyn TokenEncoder<T>> {
         let spanner = self.build_spanner();
 
         #[allow(unused_mut)]
-        let mut enc: Arc<dyn TokenEncoder<T>> = Arc::new(CompoundSpanVocabEncoder::<T>::new(
-            spanner,
-            self.vocab.clone(),
-        ));
+        let mut enc: Arc<dyn TokenEncoder<T>> =
+            Arc::new(CompoundSpanVocabEncoder::<T>::new(spanner, self.vocab));
 
         #[cfg(feature = "rayon")]
         if self.parallel {

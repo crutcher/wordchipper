@@ -15,6 +15,11 @@ pub struct TokenDecoderBuilder<T: TokenType> {
 }
 
 impl<T: TokenType> TokenDecoderBuilder<T> {
+    /// Build a [`TokenDecoder`] with the default configuration.
+    pub fn default(vocab: UnifiedTokenVocab<T>) -> Arc<dyn TokenDecoder<T>> {
+        Self::new(vocab).init()
+    }
+
     /// Create a new `TokenDecoderBuilder`.
     pub fn new(vocab: UnifiedTokenVocab<T>) -> Self {
         Self {
@@ -38,10 +43,10 @@ impl<T: TokenType> TokenDecoderBuilder<T> {
     }
 
     /// Build a `TokenDecoder` from the builder's state.
-    pub fn init(&self) -> Arc<dyn TokenDecoder<T>> {
+    pub fn init(self) -> Arc<dyn TokenDecoder<T>> {
         #[allow(unused_mut)]
         let mut dec: Arc<dyn TokenDecoder<T>> =
-            Arc::new(TokenDictDecoder::from_unified_vocab(self.vocab.clone()));
+            Arc::new(TokenDictDecoder::from_unified_vocab(self.vocab));
 
         #[cfg(feature = "rayon")]
         if self.parallel {
