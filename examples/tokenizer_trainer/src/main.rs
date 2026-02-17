@@ -128,8 +128,8 @@ fn main() -> anyhow::Result<()> {
     }
 
     if args.time_encode_decode {
-        let encoder = TokenEncoderBuilder::new(vocab.clone()).init();
-        let decoder = TokenDecoderBuilder::new(vocab.clone()).init();
+        let encoder = TokenEncoderBuilder::default(vocab.clone());
+        let decoder = TokenDecoderBuilder::default(vocab.clone());
 
         let mut samples = Vec::new();
         {

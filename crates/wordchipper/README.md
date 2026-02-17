@@ -71,8 +71,8 @@ fn example() -> anyhow::Result<(Arc<dyn TokenEncoder<u32>>, Arc<dyn TokenDecoder
     let mut disk_cache = WordchipperDiskCache::default();
     let vocab: UnifiedTokenVocab<u32> = model.load_vocab(&mut disk_cache)?;
 
-    let encoder = TokenEncoderBuilder::new(vocab.clone()).init();
-    let decoder = TokenDecoderBuilder::new(vocab).init();
+    let encoder = TokenEncoderBuilder::default(vocab.clone());
+    let decoder = TokenDecoderBuilder::default(vocab);
 
     Ok((encoder, decoder))
 }
