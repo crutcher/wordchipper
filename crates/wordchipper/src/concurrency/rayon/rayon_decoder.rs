@@ -77,13 +77,11 @@ where
 mod tests {
     use super::*;
     use crate::{
-        decoders::utility::{PairExpansionDecoder, testing::common_decoder_unit_test},
+        UnifiedTokenVocab,
+        decoders::utility::testing::common_decoder_unit_test,
         pretrained::openai::OA_CL100K_BASE_PATTERN,
         spanning::TextSpanningConfig,
-        vocab::{
-            UnifiedTokenVocab,
-            utility::testing::{build_test_shift_byte_vocab, build_test_vocab},
-        },
+        vocab::utility::testing::{build_test_shift_byte_vocab, build_test_vocab},
     };
 
     #[test]
@@ -95,9 +93,8 @@ mod tests {
             TextSpanningConfig::from_pattern(OA_CL100K_BASE_PATTERN),
         );
 
-        let decoder = PairExpansionDecoder::from_pair_vocab(&vocab.pair_vocab());
-
-        let decoder = ParallelRayonDecoder::new(Arc::new(decoder));
+        let inner = vocab.to_decoder_builder().with_parallel(false).init();
+        let decoder = ParallelRayonDecoder::new(inner);
 
         common_decoder_unit_test(vocab, &decoder);
     }

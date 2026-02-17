@@ -1,45 +1,26 @@
-//! # Merge Heap based [`SpanPolicy`] and [`CompoundSpanVocabEncoder`].
+//! # Merge Heap based [`SpanEncoder`].
 //!
 //! Maintains a heap of the best available merges from the pair vocab,
 //! iterates until no more merges remain.
 
 use crate::{
     alloc::vec::Vec,
-    encoders::span_encoders::{CompoundSpanVocabEncoder, SpanPolicy},
+    encoders::span_encoders::span_encoder::SpanEncoder,
     types::TokenType,
     vocab::UnifiedTokenVocab,
 };
 
-/// A [`CompoundSpanVocabEncoder`] using [`MergeHeapSpanPolicy`].
+/// A [`SpanEncoder`] using a merge heap algorithm.
 ///
 /// This encoder builds and maintains a best-merge heap of potential merges,
 /// to avoid secondary lookups in the pair vocab.
-///
-/// ## Style Hints
-///
-/// When there is no local ambiguity with other encoders,
-/// instance names for implementing types should prefer `decoder`;
-/// and prefer `merge_heap_encoder` when there is a conflict.
-pub type MergeHeapVocabEncoder<T> = CompoundSpanVocabEncoder<T, MergeHeapSpanPolicy<T>>;
-
-/// A [`SpanPolicy`] using a merge heap algorithm.
-///
-/// This encoder builds and maintains a best-merge heap of potential merges,
-/// to avoid secondary lookups in the pair vocab.
-///
-/// ## Style Hints
-///
-/// When there is no local ambiguity with other encoders,
-/// [`CompoundSpanVocabEncoder`] encoders specialized by
-/// this policy should should prefer the instance name `decoder`;
-/// and fall back to `merge_heap_encoder` when there is a conflict.
 #[derive(Default, Debug, Clone)]
-pub struct MergeHeapSpanPolicy<T: TokenType> {
+pub struct MergeHeapSpanEncoder<T: TokenType> {
     pair_ranks: Vec<T>,
 }
 
-impl<T: TokenType> SpanPolicy<T> for MergeHeapSpanPolicy<T> {
-    fn encode_compound_span(
+impl<T: TokenType> SpanEncoder<T> for MergeHeapSpanEncoder<T> {
+    fn encode_append_compound_span(
         &mut self,
         vocab: &UnifiedTokenVocab<T>,
         span: &[u8],
@@ -110,8 +91,11 @@ impl<T: TokenType> SpanPolicy<T> for MergeHeapSpanPolicy<T> {
 mod tests {
     use super::*;
     use crate::{
-        alloc::sync::Arc,
-        encoders::testing::{common_encoder_test_vocab, common_encoder_tests},
+        alloc::{boxed::Box, sync::Arc},
+        encoders::{
+            span_encoders::TokenSpanEncoder,
+            testing::{common_encoder_test_vocab, common_encoder_tests},
+        },
         spanning::RegexTextSpanner,
         types::TokenType,
     };
@@ -122,8 +106,11 @@ mod tests {
             vocab.spanning().clone(),
             None,
         ));
-        let encoder =
-            CompoundSpanVocabEncoder::<T, MergeHeapSpanPolicy<T>>::new(spanner, vocab.clone());
+        let encoder = TokenSpanEncoder::<T>::new(
+            spanner.clone(),
+            vocab.clone(),
+            Arc::new(|| Box::new(MergeHeapSpanEncoder::<T>::default())),
+        );
         common_encoder_tests(vocab.into(), encoder)
     }
 

@@ -74,28 +74,19 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
-
     use super::*;
     use crate::{
         encoders::{
             TokenEncoder,
-            span_encoders::CompoundSpanVocabEncoder,
             testing::{common_encoder_test_vocab, common_encoder_tests},
         },
-        spanning::RegexTextSpanner,
         types::TokenType,
     };
 
     fn test_encoder<T: TokenType>() {
-        let vocab = common_encoder_test_vocab();
-
-        let spanner = Arc::new(RegexTextSpanner::from_config(
-            vocab.spanning().clone(),
-            None,
-        ));
-        let inner = CompoundSpanVocabEncoder::<T>::new(spanner, vocab.clone());
-        let encoder = ParallelRayonEncoder::new(Arc::new(inner));
+        let vocab = common_encoder_test_vocab::<T>();
+        let inner = vocab.to_encoder_builder().with_parallel(false).init();
+        let encoder = ParallelRayonEncoder::new(inner);
 
         assert_eq!(encoder.special_vocab(), encoder.inner.special_vocab());
 
