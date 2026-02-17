@@ -7,7 +7,7 @@ use crate::{
     vocab::UnifiedTokenVocab,
 };
 
-/// Builder for production `TokenDecoder`s.
+/// Builder for production [`TokenDecoder`]s.
 pub struct TokenDecoderBuilder<T: TokenType> {
     vocab: UnifiedTokenVocab<T>,
 

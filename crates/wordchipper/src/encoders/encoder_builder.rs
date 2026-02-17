@@ -10,7 +10,7 @@ use crate::{
     vocab::UnifiedTokenVocab,
 };
 
-/// Builder for configuring a [`TokenEncoder`].
+/// Builder for production [`TokenEncoder`]s.
 pub struct TokenEncoderBuilder<T: TokenType> {
     vocab: UnifiedTokenVocab<T>,
 
