@@ -30,12 +30,25 @@ default = [
 ## The base set of features needed to load and run pre-trained encoders and decoders.
 client = [
     "download",
+    "datagym",
     "std",
 ]
 
 ## The download feature enables downloading vocabularies from the internet.
 download = [
     "dep:wordchipper-disk-cache",
+    "std",
+]
+
+## Enable support for loading legacy datagym tokenizers.
+datagym = [
+    "json",
+    "dep:encoding",
+]
+
+## Enable support for json parsers.
+json = [
+    "dep:serde_json",
     "std",
 ]
 
@@ -132,8 +145,15 @@ strum_macros = { workspace = true, optional = true }
 # "no_std" feature deps:
 hashbrown = { workspace = true, optional = true }
 
+# "ahash" and "foldhash" feature deps:
 ahash = { workspace = true, optional = true }
 foldhash = { workspace = true, optional = true }
+
+# "datagym" feature deps:
+encoding = { workspace = true, optional = true }
+
+# "json" feature deps:
+serde_json = { workspace = true, optional = true }
 
 # "download" feature deps:
 wordchipper-disk-cache = { version = "0.7.0", path = "../wordchipper-disk-cache", optional = true }

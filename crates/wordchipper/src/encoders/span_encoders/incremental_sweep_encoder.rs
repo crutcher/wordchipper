@@ -80,7 +80,7 @@ mod tests {
             vocab.clone(),
             Arc::new(|| Box::new(IncrementalSweepSpanEncoder::<T>::default())),
         );
-        common_encoder_tests(vocab, encoder)
+        common_encoder_tests(vocab, Arc::new(encoder))
     }
 
     #[test]

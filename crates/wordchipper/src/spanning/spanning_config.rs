@@ -7,7 +7,7 @@ use crate::{regex::RegexWrapperPattern, types::TokenType, vocab::SpecialVocab};
 ///
 /// Instance names should prefer `spanner_config`,
 /// or `config` when there is no ambiguity.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct TextSpanningConfig<T: TokenType> {
     /// Regex pattern for word splitting.
     pattern: RegexWrapperPattern,
