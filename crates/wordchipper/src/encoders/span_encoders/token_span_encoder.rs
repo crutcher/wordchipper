@@ -56,7 +56,12 @@ impl<T: TokenType> TokenEncoder<T> for TokenSpanEncoder<T> {
         tokens: &mut Vec<T>,
     ) -> anyhow::Result<()> {
         let mut se = (self.se_builder)();
+
         self.spanner.for_each_split_span(text, &mut |span_ref| {
+            // Note: .split_spans().into_iter().for_each() is *very* slightly faster
+            // But, extending this interface to allow early exit via accepted specials
+            // would end up slowing us down when that was enabled.
+
             se.encode_append_span_ref(&self.vocab, text, span_ref, tokens);
             true
         });
