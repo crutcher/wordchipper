@@ -1,4 +1,4 @@
-//! # Merge Scan based [`SpanEncoder`].
+//! # Incremental merge-sweep [`SpanEncoder`].
 //!
 //! Incrementally re-scans for the best available merge,
 //! iterates until no more merges remain.
@@ -15,11 +15,11 @@ use crate::{
 /// This encoder incrementally re-scans for the best available merge,
 /// iterates until no more merges remain.
 #[derive(Default, Debug, Clone)]
-pub struct MergeScanScanEncoder<T: TokenType> {
+pub struct IncrementalSweepSpanEncoder<T: TokenType> {
     marker: core::marker::PhantomData<T>,
 }
 
-impl<T: TokenType> SpanEncoder<T> for MergeScanScanEncoder<T> {
+impl<T: TokenType> SpanEncoder<T> for IncrementalSweepSpanEncoder<T> {
     fn encode_append_compound_span(
         &mut self,
         vocab: &UnifiedTokenVocab<T>,
@@ -78,7 +78,7 @@ mod tests {
         let encoder = TokenSpanEncoder::<T>::new(
             spanner.clone(),
             vocab.clone(),
-            Arc::new(|| Box::new(MergeScanScanEncoder::<T>::default())),
+            Arc::new(|| Box::new(IncrementalSweepSpanEncoder::<T>::default())),
         );
         common_encoder_tests(vocab, encoder)
     }
