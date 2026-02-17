@@ -11,7 +11,7 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-wordchipper = { version = "0.6.2", path = "../wordchipper", features = ["std"] }
+wordchipper = { version = "0.7.0", path = "../wordchipper", features = ["std"] }
 parking_lot = { workspace = true }
 hashlru = { workspace = true }
 
