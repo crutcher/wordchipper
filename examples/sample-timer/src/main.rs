@@ -20,8 +20,6 @@ use similar::TextDiff;
 use tiktoken_rs::{CoreBPE, Rank};
 use tiktoken_support::TiktokenRsEngine;
 use wordchipper::{
-    TokenDecoderBuilder,
-    TokenEncoderBuilder,
     TokenType,
     UnifiedTokenVocab,
     compat::{
@@ -196,8 +194,8 @@ fn main() -> anyhow::Result<()> {
 
     let wc_engine = Arc::new(WordchipperEngine::<Rank>::new(
         args.model.to_string(),
-        TokenEncoderBuilder::default(vocab.clone()),
-        TokenDecoderBuilder::default(vocab.clone()),
+        vocab.to_default_encoder(),
+        vocab.to_default_decoder(),
     ));
     candidate_engines.push(wc_engine.clone());
 

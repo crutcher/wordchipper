@@ -3,7 +3,11 @@
 use anyhow::bail;
 
 use crate::{
-    alloc::vec::Vec,
+    TokenDecoder,
+    TokenDecoderBuilder,
+    TokenEncoder,
+    TokenEncoderBuilder,
+    alloc::{sync::Arc, vec::Vec},
     compat::strings::string_from_utf8_lossy,
     spanning::TextSpanningConfig,
     types::{CommonHashSet, Pair, TokenType},
@@ -100,6 +104,26 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
             span_vocab,
             pair_vocab,
         })
+    }
+
+    /// Get a [`TokenEncoderBuilder`] for this [`UnifiedTokenVocab`].
+    pub fn to_encoder_builder(&self) -> TokenEncoderBuilder<T> {
+        TokenEncoderBuilder::new(self.clone())
+    }
+
+    /// Get a default [`TokenEncoder`] for this [`UnifiedTokenVocab`].
+    pub fn to_default_encoder(&self) -> Arc<dyn TokenEncoder<T>> {
+        TokenEncoderBuilder::default(self.clone())
+    }
+
+    /// Get a [`TokenDecoderBuilder`] for this [`UnifiedTokenVocab`].
+    pub fn to_decoder_builder(&self) -> TokenDecoderBuilder<T> {
+        TokenDecoderBuilder::new(self.clone())
+    }
+
+    /// Get a default [`TokenDecoder`] for this [`UnifiedTokenVocab`].
+    pub fn to_default_decoder(&self) -> Arc<dyn TokenDecoder<T>> {
+        TokenDecoderBuilder::default(self.clone())
     }
 
     /// Convert to a different token type.

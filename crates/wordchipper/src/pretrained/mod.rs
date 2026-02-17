@@ -31,8 +31,8 @@
 //!     let mut disk_cache = WordchipperDiskCache::default();
 //!     let vocab: UnifiedTokenVocab<u32> = model.load_vocab(&mut disk_cache)?;
 //!
-//!     let encoder: Arc<dyn TokenEncoder<u32>> = TokenEncoderBuilder::default(vocab.clone());
-//!     let decoder: Arc<dyn TokenDecoder<u32>> = TokenDecoderBuilder::default(vocab);
+//!     let encoder: Arc<dyn TokenEncoder<u32>> = vocab.to_default_encoder();
+//!     let decoder: Arc<dyn TokenDecoder<u32>> = vocab.to_default_decoder();
 //!
 //!     Ok((encoder, decoder))
 //! }

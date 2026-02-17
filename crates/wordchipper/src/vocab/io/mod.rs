@@ -28,8 +28,8 @@
 //!     )
 //!     .expect("failed to load vocab");
 //!
-//!     let encoder = TokenEncoderBuilder::default(vocab.clone());
-//!     let decoder = TokenDecoderBuilder::default(vocab);
+//!     let encoder = vocab.to_default_encoder();
+//!     let decoder = vocab.to_default_decoder();
 //!
 //!     Ok((encoder, decoder))
 //! }

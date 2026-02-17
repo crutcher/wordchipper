@@ -4,8 +4,6 @@ use arrow::array::{Array, StringArray};
 use clap::Parser;
 use similar::{ChangeTag, TextDiff};
 use wordchipper::{
-    TokenDecoderBuilder,
-    TokenEncoderBuilder,
     UnifiedTokenVocab,
     VocabIndex,
     compat::slices::{inner_slice_view, inner_str_view},
@@ -128,8 +126,8 @@ fn main() -> anyhow::Result<()> {
     }
 
     if args.time_encode_decode {
-        let encoder = TokenEncoderBuilder::default(vocab.clone());
-        let decoder = TokenDecoderBuilder::default(vocab.clone());
+        let encoder = vocab.to_default_encoder();
+        let decoder = vocab.to_default_decoder();
 
         let mut samples = Vec::new();
         {
