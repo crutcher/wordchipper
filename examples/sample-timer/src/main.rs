@@ -202,6 +202,13 @@ fn main() -> anyhow::Result<()> {
     candidate_engines.push(wc_engine.clone());
 
     if args.tiktoken {
+        let bpe = tiktoken_rs::get_bpe_from_model("gpt2").unwrap();
+        candidate_engines.push(Arc::new(TiktokenRsEngine::new(
+            "gpt2".to_string(),
+            Arc::new(bpe),
+        )));
+
+        /*
         // println!("Loading tiktoken...");
         match args.model.load_tiktoken_bpe() {
             Ok((name, bpe)) => candidate_engines.push(Arc::new(TiktokenRsEngine::new(name, bpe))),
@@ -213,6 +220,7 @@ fn main() -> anyhow::Result<()> {
                 }
             }
         }
+         */
     }
 
     #[cfg(feature = "tokenizers")]
