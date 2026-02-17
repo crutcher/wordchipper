@@ -1,15 +1,15 @@
 //! # Span Encoders
 
-mod compound_span_encoder;
 mod merge_heap_encoder;
 mod merge_scan_encoder;
-mod span_policy;
+mod span_encoder;
+mod token_span_encoder;
 
 #[doc(inline)]
-pub use compound_span_encoder::CompoundSpanVocabEncoder;
+pub use merge_heap_encoder::*;
 #[doc(inline)]
-pub use merge_heap_encoder::{MergeHeapSpanPolicy, MergeHeapVocabEncoder};
+pub use merge_scan_encoder::*;
 #[doc(inline)]
-pub use merge_scan_encoder::{MergeScanCompoundPolicy, MergeScanVocabEncoder};
+pub use span_encoder::*;
 #[doc(inline)]
-pub use span_policy::SpanPolicy;
+pub use token_span_encoder::*;

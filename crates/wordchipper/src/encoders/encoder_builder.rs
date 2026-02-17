@@ -3,8 +3,11 @@
 use core::num::NonZeroUsize;
 
 use crate::{
-    alloc::sync::Arc,
-    encoders::{TokenEncoder, span_encoders::CompoundSpanVocabEncoder},
+    alloc::{boxed::Box, sync::Arc},
+    encoders::{
+        TokenEncoder,
+        span_encoders::{MergeScanScanEncoder, TokenSpanEncoder},
+    },
     spanning::{RegexTextSpanner, TextSpanner},
     types::TokenType,
     vocab::UnifiedTokenVocab,
@@ -79,8 +82,11 @@ impl<T: TokenType> TokenEncoderBuilder<T> {
         let spanner = self.build_spanner();
 
         #[allow(unused_mut)]
-        let mut enc: Arc<dyn TokenEncoder<T>> =
-            Arc::new(CompoundSpanVocabEncoder::<T>::new(spanner, self.vocab));
+        let mut enc: Arc<dyn TokenEncoder<T>> = Arc::new(TokenSpanEncoder::<T>::new(
+            spanner,
+            self.vocab,
+            Arc::new(|| Box::new(MergeScanScanEncoder::<T>::default())),
+        ));
 
         #[cfg(feature = "rayon")]
         if self.parallel {
