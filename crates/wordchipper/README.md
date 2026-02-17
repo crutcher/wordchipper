@@ -65,8 +65,9 @@ use wordchipper::{
 };
 
 fn example() -> anyhow::Result<(Arc<dyn TokenEncoder<u32>>, Arc<dyn TokenDecoder<u32>>)> {
-    let model = OATokenizer::O200kHarmony;
     let mut disk_cache = WordchipperDiskCache::default();
+    
+    let model = OATokenizer::O200kHarmony;
     let vocab: UnifiedTokenVocab<u32> = model.load_vocab(&mut disk_cache)?;
 
     let encoder = vocab.to_default_encoder();
