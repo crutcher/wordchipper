@@ -3,7 +3,7 @@
 use crate::{
     alloc::vec::Vec,
     types::{CommonHashSet, TokenType},
-    vocab::{SpanTokenMap, TokenVocab, utility::validators::try_vocab_size},
+    vocab::{SpanTokenMap, VocabIndex, utility::validators::try_vocab_size},
 };
 
 /// Token vocabulary for special words.
@@ -116,7 +116,7 @@ impl<T: TokenType> SpecialVocab<T> {
     }
 }
 
-impl<T: TokenType> TokenVocab<T> for SpecialVocab<T> {
+impl<T: TokenType> VocabIndex<T> for SpecialVocab<T> {
     type Token = T;
 
     fn len(&self) -> usize {

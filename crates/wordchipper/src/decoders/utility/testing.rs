@@ -6,7 +6,7 @@ use crate::{
     compat::{strings::string_from_utf8_lossy, traits::static_is_send_sync_check},
     decoders::TokenDecoder,
     types::TokenType,
-    vocab::{TokenVocab, UnifiedTokenVocab},
+    vocab::{UnifiedTokenVocab, VocabIndex},
 };
 
 /// Common Unittest for TokenDecoder implementations.

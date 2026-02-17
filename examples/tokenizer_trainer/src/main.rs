@@ -6,10 +6,12 @@ use similar::{ChangeTag, TextDiff};
 use wordchipper::{
     TokenDecoderBuilder,
     TokenEncoderBuilder,
+    UnifiedTokenVocab,
+    VocabIndex,
     compat::slices::{inner_slice_view, inner_str_view},
     pretrained::openai::OA_O200K_BASE_PATTERN,
     training::BinaryPairVocabTrainerOptions,
-    vocab::{ByteMapVocab, TokenVocab, UnifiedTokenVocab, io::save_base64_span_map_path},
+    vocab::{ByteMapVocab, io::save_base64_span_map_path},
 };
 use wordchipper_data::dataset::DatasetCacheConfig;
 

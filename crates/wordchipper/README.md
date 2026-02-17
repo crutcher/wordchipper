@@ -62,7 +62,6 @@ use wordchipper::{
     TokenEncoderBuilder,
     TokenEncoder,
     UnifiedTokenVocab,
-    decoders::{DefaultTokenDecoder,},
     disk_cache::WordchipperDiskCache,
     pretrained::openai::OATokenizer,
 };

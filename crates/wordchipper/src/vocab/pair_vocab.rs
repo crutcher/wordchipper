@@ -4,7 +4,7 @@ use crate::{
     alloc::vec::Vec,
     decoders::{TokenDecoder, utility::PairExpansionDecoder},
     types::{CommonHashSet, Pair, TokenType},
-    vocab::{ByteMapVocab, PairTokenMap, TokenVocab, utility::validators::try_vocab_size},
+    vocab::{ByteMapVocab, PairTokenMap, VocabIndex, utility::validators::try_vocab_size},
 };
 
 /// Validate that a [`ByteMapVocab`] and [`PairTokenMap`] are compatible.
@@ -128,7 +128,7 @@ impl<T: TokenType> PairMapVocab<T> {
     }
 }
 
-impl<T: TokenType> TokenVocab<T> for PairMapVocab<T> {
+impl<T: TokenType> VocabIndex<T> for PairMapVocab<T> {
     type Token = T;
 
     fn len(&self) -> usize {

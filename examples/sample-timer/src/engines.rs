@@ -1,6 +1,6 @@
 //! Timing Candidate Wrappers
 
-use wordchipper::types::TokenType;
+use wordchipper::TokenType;
 
 pub trait EncDecEngine<T: TokenType> {
     fn name(&self) -> &str;

@@ -5,7 +5,7 @@ use core::fmt::Debug;
 use crate::{
     alloc::{vec, vec::Vec},
     types::{CommonHashSet, TokenType},
-    vocab::{ByteTokenArray, ByteTokenMap, TokenByteMap, TokenVocab},
+    vocab::{ByteTokenArray, ByteTokenMap, TokenByteMap, VocabIndex},
 };
 
 /// ``0..=255`` Rank Byte/Token Bijection Table
@@ -178,7 +178,7 @@ impl<T: TokenType> ByteMapVocab<T> {
     }
 }
 
-impl<T: TokenType> TokenVocab<T> for ByteMapVocab<T> {
+impl<T: TokenType> VocabIndex<T> for ByteMapVocab<T> {
     type Token = T;
 
     fn len(&self) -> usize {

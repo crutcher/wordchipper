@@ -10,7 +10,7 @@ use crate::{
     regex::{RegexWrapper, RegexWrapperPattern, alternate_choice_regex_pattern},
     spanning::{SpanRef, TextSpanner, TextSpanningConfig},
     types::TokenType,
-    vocab::TokenVocab,
+    vocab::VocabIndex,
 };
 
 cfg_if! {

@@ -6,7 +6,7 @@ use crate::{
 };
 
 /// Common traits for token vocabularies.
-pub trait TokenVocab<T: TokenType>: Clone + Send + Sync {
+pub trait VocabIndex<T: TokenType>: Clone + Send + Sync {
     /// The token type: T.
     type Token: TokenType;
 

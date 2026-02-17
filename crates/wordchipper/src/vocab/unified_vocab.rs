@@ -14,7 +14,7 @@ use crate::{
         SpanTokenMap,
         SpecialVocab,
         TokenSpanMap,
-        TokenVocab,
+        VocabIndex,
     },
 };
 
@@ -199,7 +199,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     }
 }
 
-impl<T: TokenType> TokenVocab<T> for UnifiedTokenVocab<T> {
+impl<T: TokenType> VocabIndex<T> for UnifiedTokenVocab<T> {
     type Token = T;
 
     fn len(&self) -> usize {

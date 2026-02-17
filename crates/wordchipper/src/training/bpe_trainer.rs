@@ -23,8 +23,8 @@ use crate::{
         ByteMapVocab,
         PairMapVocab,
         PairTokenMap,
-        TokenVocab,
         UnifiedTokenVocab,
+        VocabIndex,
         utility::validators::{U8_SIZE, expect_vocab_size},
     },
 };

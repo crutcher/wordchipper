@@ -9,7 +9,7 @@ use crate::{
         PairMapVocab,
         PairTokenMap,
         SpanTokenMap,
-        TokenVocab,
+        VocabIndex,
         utility::validators::try_vocab_size,
     },
 };
@@ -243,7 +243,7 @@ impl<T: TokenType> SpanMapVocab<T> {
     }
 }
 
-impl<T: TokenType> TokenVocab<T> for SpanMapVocab<T> {
+impl<T: TokenType> VocabIndex<T> for SpanMapVocab<T> {
     type Token = T;
 
     fn len(&self) -> usize {
@@ -275,7 +275,7 @@ impl<T: TokenType> TokenVocab<T> for SpanMapVocab<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::vocab::{ByteMapVocab, SpanTokenMap, TokenVocab};
+    use crate::vocab::{ByteMapVocab, SpanTokenMap, VocabIndex};
 
     #[test]
     fn test_access() {

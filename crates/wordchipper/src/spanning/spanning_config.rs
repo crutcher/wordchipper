@@ -120,7 +120,7 @@ mod tests {
     use super::*;
     use crate::{
         alloc::string::ToString,
-        vocab::{SpecialVocab, TokenVocab},
+        vocab::{SpecialVocab, VocabIndex},
     };
 
     #[test]

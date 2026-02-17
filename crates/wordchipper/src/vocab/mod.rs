@@ -35,7 +35,7 @@ pub use span_vocab::SpanMapVocab;
 #[doc(inline)]
 pub use special_vocab::SpecialVocab;
 #[doc(inline)]
-pub use token_vocab::TokenVocab;
+pub use token_vocab::VocabIndex;
 #[doc(inline)]
 pub use unified_vocab::UnifiedTokenVocab;
 #[doc(inline)]

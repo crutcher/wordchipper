@@ -21,16 +21,16 @@ use tiktoken_rs::{CoreBPE, Rank};
 use tiktoken_support::TiktokenRsEngine;
 use wordchipper::{
     TokenDecoderBuilder,
+    TokenEncoderBuilder,
+    TokenType,
+    UnifiedTokenVocab,
     compat::{
         slices::{inner_slice_view, inner_str_view},
         timers::timeit,
     },
     disk_cache::WordchipperDiskCache,
-    encoders::TokenEncoderBuilder,
     pretrained::openai::OATokenizer,
     spanning::RegexTextSpanner,
-    types::TokenType,
-    vocab::UnifiedTokenVocab,
 };
 use wordchipper_data::dataset::{DatasetCache, DatasetCacheConfig};
 use wordchipper_support::WordchipperEngine;

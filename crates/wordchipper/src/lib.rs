@@ -83,4 +83,4 @@ pub use encoders::{TokenEncoder, TokenEncoderBuilder};
 #[doc(inline)]
 pub use types::*;
 #[doc(inline)]
-pub use vocab::UnifiedTokenVocab;
+pub use vocab::{UnifiedTokenVocab, VocabIndex};
