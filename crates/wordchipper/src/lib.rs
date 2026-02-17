@@ -34,21 +34,20 @@
 //!
 //! use wordchipper::{
 //!     TokenDecoder,
-//!     TokenDecoderBuilder,
 //!     TokenEncoder,
-//!     TokenEncoderBuilder,
 //!     UnifiedTokenVocab,
 //!     disk_cache::WordchipperDiskCache,
 //!     pretrained::openai::OATokenizer,
 //! };
 //!
 //! fn example() -> anyhow::Result<(Arc<dyn TokenEncoder<u32>>, Arc<dyn TokenDecoder<u32>>)> {
-//!     let model = OATokenizer::O200kHarmony;
 //!     let mut disk_cache = WordchipperDiskCache::default();
+//!
+//!     let model = OATokenizer::O200kHarmony;
 //!     let vocab: UnifiedTokenVocab<u32> = model.load_vocab(&mut disk_cache)?;
 //!
-//!     let encoder = TokenEncoderBuilder::new(vocab.clone()).init();
-//!     let decoder = TokenDecoderBuilder::new(vocab).init();
+//!     let encoder = vocab.to_default_encoder();
+//!     let decoder = vocab.to_default_decoder();
 //!
 //!     Ok((encoder, decoder))
 //! }
