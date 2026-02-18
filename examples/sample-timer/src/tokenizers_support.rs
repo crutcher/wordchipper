@@ -10,15 +10,27 @@ use crate::engines::EncDecEngine;
 pub struct TokenizersEngine {
     name: String,
     inner: Arc<Tokenizer>,
+    use_batch: bool,
 }
 
 impl TokenizersEngine {
     pub fn new(
         name: String,
         inner: Arc<Tokenizer>,
+        use_batch: bool,
     ) -> Self {
-        let name = format!("tokenizers::{name}");
-        Self { name, inner }
+        let mode = if use_batch {
+            "batch_encode"
+        } else {
+            "par_iter"
+        };
+
+        let name = format!("tokenizers({mode})::{name}");
+        Self {
+            name,
+            inner,
+            use_batch,
+        }
     }
 }
 
@@ -31,12 +43,20 @@ impl EncDecEngine<u32> for TokenizersEngine {
         &self,
         batch: &[&str],
     ) -> anyhow::Result<Vec<Vec<u32>>> {
-        let batch = batch.iter().map(|s| s.to_string()).collect::<Vec<_>>();
-        let br = self.inner.encode_batch(batch, true).unwrap();
-        Ok(br
-            .iter()
-            .map(|e: &Encoding| e.get_ids().to_vec())
-            .collect::<Vec<_>>())
+        if self.use_batch {
+            let batch = batch.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+            let br = self.inner.encode_batch(batch, true).unwrap();
+            Ok(br
+                .iter()
+                .map(|e: &Encoding| e.get_ids().to_vec())
+                .collect::<Vec<_>>())
+        } else {
+            use rayon::prelude::*;
+            Ok(batch
+                .par_iter()
+                .map(|s| self.inner.encode(*s, true).unwrap().get_ids().to_vec())
+                .collect::<Vec<_>>())
+        }
     }
 
     fn decode_batch(
