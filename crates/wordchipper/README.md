@@ -56,7 +56,8 @@ configuration.
 For a number of pretrained models, simplified constructors are
 available to download, cache, and load the vocabulary.
 
-See: [wordchipper::get_model](https://docs.rs/wordchipper/latest/wordchipper/get_model.html)
+See: [wordchipper::get_model](
+https://docs.rs/wordchipper/latest/wordchipper/fn.get_model.html)
 
 ```rust,no_run
 use std::sync::Arc;
