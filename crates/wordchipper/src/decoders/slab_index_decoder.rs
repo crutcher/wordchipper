@@ -1,7 +1,9 @@
 //! # Slab Index Decoder
 
+use core::marker::PhantomData;
+
 use crate::{
-    alloc::vec::Vec,
+    alloc::{vec, vec::Vec},
     decoders::{DecodeResult, TokenDecoder},
     types::TokenType,
     vocab::{DEFAULT_BYTE_PER_TOKEN_RATIO, TokenSpanMap, UnifiedTokenVocab},
@@ -22,7 +24,7 @@ pub struct SlabIndexDecoder<T: TokenType> {
     slab: Vec<u8>,
 
     expected_bytes_per_token: f32,
-    _marker: std::marker::PhantomData<T>,
+    _marker: PhantomData<T>,
 }
 
 impl<T: TokenType> SlabIndexDecoder<T> {
@@ -45,7 +47,7 @@ impl<T: TokenType> SlabIndexDecoder<T> {
         let total_bytes = token_spans.values().map(|span| span.len()).sum();
         let mut slab = Vec::with_capacity(total_bytes);
 
-        let mut tokens: Vec<T> = token_spans.keys().map(|token| *token).collect();
+        let mut tokens: Vec<T> = token_spans.keys().copied().collect();
         tokens.sort_unstable();
 
         for token in tokens {
@@ -59,7 +61,7 @@ impl<T: TokenType> SlabIndexDecoder<T> {
             index,
             slab,
             expected_bytes_per_token: DEFAULT_BYTE_PER_TOKEN_RATIO,
-            _marker: std::marker::PhantomData,
+            _marker: PhantomData,
         }
     }
 

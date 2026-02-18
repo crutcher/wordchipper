@@ -1,7 +1,11 @@
 //! `TokenDecoder` Builder
 
-use crate::decoders::SlabIndexDecoder;
-use crate::{alloc::sync::Arc, decoders::TokenDecoder, types::TokenType, vocab::UnifiedTokenVocab};
+use crate::{
+    alloc::sync::Arc,
+    decoders::{SlabIndexDecoder, TokenDecoder},
+    types::TokenType,
+    vocab::UnifiedTokenVocab,
+};
 
 /// Builder for production [`TokenDecoder`]s.
 pub struct TokenDecoderBuilder<T: TokenType> {
