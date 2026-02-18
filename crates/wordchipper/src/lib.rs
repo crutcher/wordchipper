@@ -61,10 +61,15 @@
 //!
 //! ## Loading Public Pre-trained Models
 //!
-//! A number of public pre-trained `OpenAI` models are
-//! available via the [`pretrained::openai::OATokenizer`] enum,
-//! which supports parsing from strings and loading the models
-//! via a disk cache.
+//! For a number of pretrained models, simplified constructors are
+//! available to download, cache, and load the vocabulary.
+//!
+//! Most users will want to use the [`get_model`] function, which will
+//! return a [`UnifiedTokenVocab`] containing the vocabulary and
+//! spanning configuration.
+//!
+//! There is also a [`list_models`] function which lists the available
+//! pretrained models.
 //!
 //! See [`disk_cache::WordchipperDiskCache`] for details on the disk cache.
 #![cfg_attr(feature = "std", doc = "```rust,no_run")]
@@ -72,18 +77,16 @@
 //! use std::sync::Arc;
 //!
 //! use wordchipper::{
+//!     get_model,
 //!     TokenDecoder,
 //!     TokenEncoder,
 //!     UnifiedTokenVocab,
 //!     disk_cache::WordchipperDiskCache,
-//!     pretrained::openai::OATokenizer,
 //! };
 //!
 //! fn example() -> anyhow::Result<(Arc<dyn TokenEncoder<u32>>, Arc<dyn TokenDecoder<u32>>)> {
 //!     let mut disk_cache = WordchipperDiskCache::default();
-//!
-//!     let model = OATokenizer::O200kHarmony;
-//!     let vocab: UnifiedTokenVocab<u32> = model.load_vocab(&mut disk_cache)?;
+//!     let vocab: UnifiedTokenVocab<u32> = get_model("openai/o200k_harmony", &mut disk_cache)?;
 //!
 //!     let encoder = vocab.to_default_encoder();
 //!     let decoder = vocab.to_default_decoder();
@@ -125,6 +128,8 @@ pub mod vocab;
 pub use decoders::{TokenDecoder, TokenDecoderBuilder};
 #[doc(inline)]
 pub use encoders::{TokenEncoder, TokenEncoderBuilder};
+#[doc(inline)]
+pub use pretrained::{get_model, list_models};
 #[doc(inline)]
 pub use types::*;
 #[doc(inline)]

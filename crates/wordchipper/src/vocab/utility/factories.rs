@@ -14,7 +14,7 @@ use crate::vocab::UnifiedTokenVocab;
 use crate::{
     alloc::{string::String, vec::Vec},
     regex::{ConstRegexWrapperPattern, RegexWrapperPattern},
-    resources::ConstKeyedResource,
+    resources::{ConstKeyedResource, KeyedResource},
     spanning::TextSpanningConfig,
     types::TokenType,
 };
@@ -55,18 +55,19 @@ impl ConstVocabularyFactory {
 
     /// Fetch a path to the resource through the loader.
     #[cfg(feature = "std")]
-    fn fetch_resource<L: ResourceLoader>(
+    fn fetch_resource(
         &self,
-        loader: &mut L,
+        loader: &mut dyn ResourceLoader,
     ) -> anyhow::Result<PathBuf> {
-        loader.load_resource_path(self.resource.clone())
+        let res: KeyedResource = self.resource.clone().into();
+        loader.load_resource_path(&res)
     }
 
     /// Load the pretrained vocabulary through the loader.
     #[cfg(feature = "std")]
-    pub fn load_vocab<T: TokenType, L: ResourceLoader>(
+    pub fn load_vocab<T: TokenType>(
         &self,
-        loader: &mut L,
+        loader: &mut dyn ResourceLoader,
     ) -> anyhow::Result<UnifiedTokenVocab<T>> {
         let path = self.fetch_resource(loader)?;
         self.load_vocab_path(path)

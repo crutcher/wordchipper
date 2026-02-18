@@ -184,7 +184,9 @@ fn main() -> anyhow::Result<()> {
 
     let mut disk_cache = WordchipperDiskCache::default();
     // println!("Loading wordchipper...");
-    let vocab: UnifiedTokenVocab<Rank> = args.model.load_vocab(&mut disk_cache)?;
+    let vocab: UnifiedTokenVocab<Rank> =
+        wordchipper::get_model(args.model.to_string().as_str(), &mut disk_cache)?
+            .to_token_type()?;
 
     let spanner = RegexTextSpanner::from_config(vocab.spanning().clone(), None);
 

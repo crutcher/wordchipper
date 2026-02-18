@@ -10,20 +10,19 @@ use crate::resources::KeyedResource;
 pub trait ResourceLoader {
     /// Load a resource.
     #[cfg(feature = "std")]
-    fn load_resource_path<R: Into<KeyedResource>>(
+    fn load_resource_path(
         &mut self,
-        resource: R,
+        resource: &KeyedResource,
     ) -> anyhow::Result<PathBuf>;
 }
 
 #[cfg(feature = "download")]
 impl ResourceLoader for crate::disk_cache::WordchipperDiskCache {
     #[cfg(feature = "std")]
-    fn load_resource_path<R: Into<KeyedResource>>(
+    fn load_resource_path(
         &mut self,
-        resource: R,
+        resource: &KeyedResource,
     ) -> anyhow::Result<PathBuf> {
-        let resource = resource.into();
         self.load_cached_path(&resource.key, &resource.resource.urls, true)
     }
 }

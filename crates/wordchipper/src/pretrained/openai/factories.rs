@@ -100,9 +100,9 @@ impl OATokenizer {
     ///
     /// Downloads and caches resources using the `disk_cache`.
     #[cfg(feature = "download")]
-    pub fn load_vocab<T: TokenType, L: ResourceLoader>(
+    pub fn load_vocab<T: TokenType>(
         &self,
-        loader: &mut L,
+        loader: &mut dyn ResourceLoader,
     ) -> anyhow::Result<UnifiedTokenVocab<T>> {
         self.factory().load_vocab(loader)
     }
