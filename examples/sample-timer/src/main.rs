@@ -20,8 +20,7 @@ use similar::TextDiff;
 use tiktoken_rs::{CoreBPE, Rank};
 use tiktoken_support::TiktokenRsEngine;
 use wordchipper::{
-    TokenType,
-    UnifiedTokenVocab,
+    TokenType, UnifiedTokenVocab,
     compat::{
         slices::{inner_slice_view, inner_str_view},
         timers::timeit,
@@ -217,7 +216,14 @@ fn main() -> anyhow::Result<()> {
     if args.tokenizers {
         // println!("Loading tokenizers...");
         match args.model.load_tokenizers_tokenizer() {
-            Ok((name, tok)) => candidate_engines.push(Arc::new(TokenizersEngine::new(name, tok))),
+            Ok((name, tok)) => {
+                candidate_engines.push(Arc::new(TokenizersEngine::new(
+                    name.clone(),
+                    tok.clone(),
+                    true,
+                )));
+                candidate_engines.push(Arc::new(TokenizersEngine::new(name, tok, false)));
+            }
             Err(e) => {
                 if args.ignore_missing {
                     println!("Unable to load HuggingFace tokenizer");
