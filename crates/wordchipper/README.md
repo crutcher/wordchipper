@@ -9,7 +9,12 @@
 
 This is a high-performance rust BPE tokenizer trainer/encoder/decoder.
 
-The current status is productionization towards an alpha release.
+This is ready for alpha users, and is 2x the speed of `tiktoken-rs`
+for many current models.
+
+The productionization towards an LTR stable release can be
+tracked in the
+[Alpha Release Tracking Issue](https://github.com/crutcher/wordchipper/issues/2).
 
 ## Encode/Decode Side-by-Side Benchmarks
 

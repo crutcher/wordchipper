@@ -11,6 +11,15 @@ I am usually available as `@crutcher` on the Burn Discord:
 * Burn
   Discord: [![Discord](https://img.shields.io/discord/1038839012602941528.svg?color=7289da&&logo=discord)](https://discord.gg/uPEBbYYDB6)
 
+## Status
+
+This is ready for alpha users, and is 2x the speed of `tiktoken-rs`
+for many current models.
+
+The productionization towards an LTR stable release can be
+tracked in the
+[Alpha Release Tracking Issue](https://github.com/crutcher/wordchipper/issues/2).
+
 ## Overview
 
 This is a high-performance rust BPE tokenizer trainer/encoder/decoder.
