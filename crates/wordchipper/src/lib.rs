@@ -13,7 +13,7 @@
 //!
 //! ### Pre-Trained Models
 //! * [`WordchipperDiskCache`](`disk_cache::WordchipperDiskCache`) - the disk cache for loading models.
-//! * [`OATokenizer`](`pretrained::openai::OATokenizer`) - public pre-trained OpenAI tokenizers.
+//! * [`OATokenizer`](`pretrained::openai::OATokenizer`) - public pre-trained `OpenAI` tokenizers.
 //!
 //! ## `TokenType` and `WCHash`* Types
 //!
