@@ -94,7 +94,7 @@
 //!     Ok((encoder, decoder))
 //! }
 //! ```
-//! 
+//!
 //! ## Training Models
 //!
 //! Training models is supported via the [`training`] module.

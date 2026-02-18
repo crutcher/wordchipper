@@ -1,4 +1,4 @@
-//! # Dictionary ``{ T -> Vec<u8> }`` Token Decoder
+//! # Slab Index Decoder
 
 use crate::{
     alloc::vec::Vec,
@@ -7,27 +7,26 @@ use crate::{
     vocab::{DEFAULT_BYTE_PER_TOKEN_RATIO, TokenSpanMap, UnifiedTokenVocab},
 };
 
-/// A [`TokenDecoder<T>`] over a unified `{ T -> Vec<u8> }` dictionary.
+/// A [`TokenDecoder<T>`] which keeps a dense array index into a shared slab.
 ///
 /// It is expected that all tokens (single-byte and multibyte words,
-/// and special tokens) are stored in the dictionary.
+/// and special tokens) are stored in the slab index.
 ///
 /// ## Style Hints
 ///
 /// When there is no local ambiguity, instance names should prefer `decoder`;
 /// and expand to `dict_decoder` when there is ambiguity.
 #[derive(Clone)]
-pub struct TokenDictDecoder<T: TokenType> {
-    /// Token to bytes mapping.
-    ///
-    /// Does not include byte-tokens.
-    token_spans: TokenSpanMap<T>,
+pub struct SlabIndexDecoder<T: TokenType> {
+    index: Vec<(usize, usize)>,
+    slab: Vec<u8>,
 
     expected_bytes_per_token: f32,
+    _marker: std::marker::PhantomData<T>,
 }
 
-impl<T: TokenType> TokenDictDecoder<T> {
-    /// Build a [`TokenDictDecoder`] from this [`UnifiedTokenVocab`].
+impl<T: TokenType> SlabIndexDecoder<T> {
+    /// Build a [`SlabIndexDecoder`] from this [`UnifiedTokenVocab`].
     ///
     /// ## Arguments
     /// * `unified_vocab` - The unified token vocabulary to build the decoder from.
@@ -40,9 +39,27 @@ impl<T: TokenType> TokenDictDecoder<T> {
     /// ## Arguments
     /// * `token_spans` - The token to word mapping.
     pub fn new(token_spans: TokenSpanMap<T>) -> Self {
+        let max_token = token_spans.keys().max().unwrap().to_usize().unwrap();
+        let mut index = vec![(0, 0); max_token + 1];
+
+        let total_bytes = token_spans.values().map(|span| span.len()).sum();
+        let mut slab = Vec::with_capacity(total_bytes);
+
+        let mut tokens: Vec<T> = token_spans.keys().map(|token| *token).collect();
+        tokens.sort_unstable();
+
+        for token in tokens {
+            let idx = token.to_usize().unwrap();
+            let span = token_spans.get(&token).unwrap();
+            index[idx] = (slab.len(), slab.len() + span.len());
+            slab.extend_from_slice(span);
+        }
+
         Self {
-            token_spans,
+            index,
+            slab,
             expected_bytes_per_token: DEFAULT_BYTE_PER_TOKEN_RATIO,
+            _marker: std::marker::PhantomData,
         }
     }
 
@@ -70,21 +87,25 @@ impl<T: TokenType> TokenDictDecoder<T> {
         (tokens.len() as f32 * 1.1 * self.expected_bytes_per_token) as usize
     }
 
-    /// Get the [`TokenSpanMap`].
-    pub fn token_spans(&self) -> &TokenSpanMap<T> {
-        &self.token_spans
-    }
-
     /// Lookup a token.
     pub fn lookup_span(
         &self,
         token: &T,
     ) -> Option<&[u8]> {
-        self.token_spans.get(token).map(|span| span.as_ref())
+        let idx = token.to_usize().unwrap();
+        if idx >= self.index.len() {
+            return None;
+        }
+        let (start, end) = &self.index[idx];
+        if end > start {
+            Some(&self.slab[*start..*end])
+        } else {
+            None
+        }
     }
 }
 
-impl<T: TokenType> TokenDecoder<T> for TokenDictDecoder<T> {
+impl<T: TokenType> TokenDecoder<T> for SlabIndexDecoder<T> {
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, tokens)))]
     fn try_decode_to_bytes(
         &self,
@@ -120,7 +141,7 @@ mod tests {
     };
 
     #[test]
-    fn test_dictionary_decoder() {
+    fn test_decoder() {
         type T = u16;
 
         let vocab: UnifiedTokenVocab<T> = build_test_vocab(
@@ -129,11 +150,9 @@ mod tests {
         );
 
         let decoder =
-            TokenDictDecoder::from_unified_vocab(vocab.clone()).with_expected_bytes_per_token(7.5);
+            SlabIndexDecoder::from_unified_vocab(vocab.clone()).with_expected_bytes_per_token(7.5);
 
         assert_eq!(decoder.expected_bytes_per_token(), 7.5);
-
-        assert_eq!(decoder.token_spans(), &decoder.token_spans);
 
         common_decoder_unit_test(vocab, &decoder);
     }

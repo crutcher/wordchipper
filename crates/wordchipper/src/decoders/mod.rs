@@ -26,6 +26,7 @@ pub mod utility;
 
 mod decode_results;
 mod decoder_builder;
+mod slab_index_decoder;
 mod token_decoder;
 mod token_dict_decoder;
 
@@ -33,6 +34,8 @@ mod token_dict_decoder;
 pub use decode_results::*;
 #[doc(inline)]
 pub use decoder_builder::*;
+#[doc(inline)]
+pub use slab_index_decoder::*;
 #[doc(inline)]
 pub use token_decoder::*;
 #[doc(inline)]
