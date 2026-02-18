@@ -1,7 +1,5 @@
 //! # Unified Token Vocabulary
 
-use anyhow::bail;
-
 use crate::{
     TokenDecoder,
     TokenDecoderBuilder,
@@ -9,6 +7,7 @@ use crate::{
     TokenEncoderBuilder,
     alloc::{sync::Arc, vec::Vec},
     compat::strings::string_from_utf8_lossy,
+    errors::WordchipperError,
     spanning::TextSpanningConfig,
     types::{Pair, TokenType, WCHashSet},
     vocab::{
@@ -85,7 +84,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     pub fn from_span_vocab(
         span_config: TextSpanningConfig<T>,
         span_vocab: SpanMapVocab<T>,
-    ) -> anyhow::Result<Self> {
+    ) -> crate::errors::Result<Self> {
         let pair_vocab = span_vocab.to_pair_vocab();
         Self::new(span_config, span_vocab, pair_vocab)
     }
@@ -101,7 +100,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     pub fn from_pair_vocab(
         span_config: TextSpanningConfig<T>,
         pair_vocab: PairMapVocab<T>,
-    ) -> anyhow::Result<Self> {
+    ) -> crate::errors::Result<Self> {
         let word_vocab = pair_vocab.span_pairs().collect::<SpanTokenMap<T>>().into();
         Self::from_span_vocab(span_config, word_vocab)
     }
@@ -119,21 +118,27 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
         span_config: TextSpanningConfig<T>,
         span_vocab: SpanMapVocab<T>,
         pair_vocab: PairMapVocab<T>,
-    ) -> anyhow::Result<Self> {
+    ) -> crate::errors::Result<Self> {
         if span_vocab.byte_vocab() != pair_vocab.byte_vocab() {
-            bail!("span vocab and pair vocab have different byte vocabularies");
+            return Err(WordchipperError::VocabConflict(
+                "span vocab and pair vocab have different byte vocabularies".into(),
+            ));
         }
 
         let tokens = span_vocab.tokens();
         if tokens != pair_vocab.tokens() {
-            bail!("span vocab and pair vocab have different token sets");
+            return Err(WordchipperError::VocabConflict(
+                "span vocab and pair vocab have different token sets".into(),
+            ));
         }
 
         for t in span_config.specials().tokens() {
             if tokens.contains(&t) {
                 let span = span_config.specials().lookup_span(&t).unwrap();
                 let special = string_from_utf8_lossy(span.to_vec());
-                bail!("special token \"{special:?}\" -> ({t:?}) found in word vocab");
+                return Err(WordchipperError::VocabConflict(crate::alloc::format!(
+                    "special token \"{special:?}\" -> ({t:?}) found in word vocab"
+                )));
             }
         }
 
@@ -171,7 +176,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     /// Create a copy of this [`UnifiedTokenVocab`] with a different [`TokenType`].
     ///
     /// This will fail if the maximum token index for the new token type is exceeded.
-    pub fn to_token_type<G: TokenType>(&self) -> anyhow::Result<UnifiedTokenVocab<G>> {
+    pub fn to_token_type<G: TokenType>(&self) -> crate::errors::Result<UnifiedTokenVocab<G>> {
         Ok(UnifiedTokenVocab::<G> {
             spanning: self.spanning.to_token_type::<G>()?,
             span_vocab: self.span_vocab.to_token_type::<G>()?,

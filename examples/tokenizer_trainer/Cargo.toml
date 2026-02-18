@@ -13,7 +13,6 @@ workspace = true
 wordchipper-data = { path = "../../crates/wordchipper-data" }
 wordchipper = { path = "../../crates/wordchipper", features = ["training"] }
 
-anyhow = { workspace = true }
 arrow = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 similar = { workspace = true }

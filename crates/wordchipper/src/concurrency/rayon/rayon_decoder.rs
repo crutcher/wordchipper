@@ -42,33 +42,33 @@ where
     fn try_decode_to_bytes(
         &self,
         tokens: &[T],
-    ) -> anyhow::Result<DecodeResult<Vec<u8>>> {
+    ) -> crate::errors::Result<DecodeResult<Vec<u8>>> {
         self.inner.try_decode_to_bytes(tokens)
     }
 
     fn try_decode_batch_to_bytes(
         &self,
         batch: &[&[T]],
-    ) -> anyhow::Result<BatchDecodeResult<Vec<u8>>> {
+    ) -> crate::errors::Result<BatchDecodeResult<Vec<u8>>> {
         use rayon::prelude::*;
 
         batch
             .par_iter()
             .map(|tokens| self.try_decode_to_bytes(tokens))
-            .collect::<anyhow::Result<Vec<_>>>()
+            .collect::<crate::errors::Result<Vec<_>>>()
             .map(BatchDecodeResult::from)
     }
 
     fn try_decode_batch_to_strings(
         &self,
         batch: &[&[T]],
-    ) -> anyhow::Result<BatchDecodeResult<String>> {
+    ) -> crate::errors::Result<BatchDecodeResult<String>> {
         use rayon::prelude::*;
 
         batch
             .par_iter()
             .map(|tokens| self.try_decode_to_string(tokens))
-            .collect::<anyhow::Result<Vec<_>>>()
+            .collect::<crate::errors::Result<Vec<_>>>()
             .map(BatchDecodeResult::from)
     }
 }

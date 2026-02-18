@@ -28,7 +28,6 @@ tokenizers = [
 wordchipper-data = { path = "../../crates/wordchipper-data" }
 wordchipper = { path = "../../crates/wordchipper", features = ["default"] }
 
-anyhow = { workspace = true }
 arrow = { workspace = true }
 cfg-if = { workspace = true }
 clap = { workspace = true, features = ["derive"] }

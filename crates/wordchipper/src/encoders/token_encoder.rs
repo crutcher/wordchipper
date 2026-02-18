@@ -55,7 +55,7 @@ pub trait TokenEncoder<T: TokenType>: Send + Sync {
         &self,
         text: &str,
         tokens: &mut Vec<T>,
-    ) -> anyhow::Result<()>;
+    ) -> crate::errors::Result<()>;
 
     /// Encode text into tokens, returning an error if the encoding fails.
     ///
@@ -67,7 +67,7 @@ pub trait TokenEncoder<T: TokenType>: Send + Sync {
     fn try_encode(
         &self,
         text: &str,
-    ) -> anyhow::Result<Vec<T>> {
+    ) -> crate::errors::Result<Vec<T>> {
         let capacity = self.expected_token_count(text) * 115 / 100;
         let mut tokens = Vec::with_capacity(capacity);
 
@@ -85,7 +85,7 @@ pub trait TokenEncoder<T: TokenType>: Send + Sync {
     fn try_encode_batch(
         &self,
         batch: &[&str],
-    ) -> anyhow::Result<Vec<Vec<T>>> {
+    ) -> crate::errors::Result<Vec<Vec<T>>> {
         batch.iter().map(|s| self.try_encode(s)).collect()
     }
 }

@@ -6,6 +6,7 @@ resolver = "2"
 members = [
     "crates/*",
     "examples/*",
+    "bindings/python",
 ]
 
 [workspace.package]
@@ -60,7 +61,8 @@ tiktoken-rs = "0.9.1"
 tokenizers = "0.22.0"
 rand = "0.9.2"
 
-anyhow = { version = "1.0.90", default-features = false }
+thiserror = { version = "^2.0", default-features = false }
+pyo3 = { version = "^0.24", features = ["extension-module"] }
 log = { version = "0.4.20", default-features = false }
 num-traits = { version = "0.2.19", default-features = false }
 regex = { version = "1.12.3", default-features = false }

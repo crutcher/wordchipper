@@ -6,10 +6,10 @@ use std::{
     path::Path,
 };
 
-use anyhow::Context;
 use base64::{Engine, prelude::BASE64_STANDARD};
 
 use crate::{
+    errors::WordchipperError,
     spanning::TextSpanningConfig,
     types::TokenType,
     vocab::{SpanMapVocab, UnifiedTokenVocab, vocab_types::SpanTokenMap},
@@ -24,7 +24,7 @@ use crate::{
 pub fn load_base64_unified_vocab_path<T: TokenType>(
     path: impl AsRef<Path>,
     spanning: TextSpanningConfig<T>,
-) -> anyhow::Result<UnifiedTokenVocab<T>> {
+) -> crate::errors::Result<UnifiedTokenVocab<T>> {
     let reader = BufReader::new(File::open(path)?);
     read_base64_unified_vocab(reader, spanning)
 }
@@ -38,7 +38,7 @@ pub fn load_base64_unified_vocab_path<T: TokenType>(
 pub fn read_base64_unified_vocab<T: TokenType, R: BufRead>(
     reader: R,
     spanning: TextSpanningConfig<T>,
-) -> anyhow::Result<UnifiedTokenVocab<T>> {
+) -> crate::errors::Result<UnifiedTokenVocab<T>> {
     UnifiedTokenVocab::from_span_vocab(spanning, read_base64_span_map(reader)?.into())
 }
 
@@ -51,7 +51,7 @@ pub fn read_base64_unified_vocab<T: TokenType, R: BufRead>(
 ///
 /// # Arguments
 /// * `path` - the path to the vocabulary file.
-pub fn load_base64_span_vocab_path<T, P>(path: P) -> anyhow::Result<SpanMapVocab<T>>
+pub fn load_base64_span_vocab_path<T, P>(path: P) -> crate::errors::Result<SpanMapVocab<T>>
 where
     T: TokenType,
     P: AsRef<Path>,
@@ -68,7 +68,7 @@ where
 ///
 /// # Arguments
 /// * `path` - the path to the vocabulary file.
-pub fn load_base64_span_map_path<T, P>(path: P) -> anyhow::Result<SpanTokenMap<T>>
+pub fn load_base64_span_map_path<T, P>(path: P) -> crate::errors::Result<SpanTokenMap<T>>
 where
     T: TokenType,
     P: AsRef<Path>,
@@ -87,7 +87,7 @@ where
 /// # Arguments
 /// * `span_map` - the vocabulary to extend.
 /// * `reader` - the line reader.
-pub fn read_base64_span_map<T, R>(reader: R) -> anyhow::Result<SpanTokenMap<T>>
+pub fn read_base64_span_map<T, R>(reader: R) -> crate::errors::Result<SpanTokenMap<T>>
 where
     T: TokenType,
     R: BufRead,
@@ -102,9 +102,14 @@ where
         let parts = s.splitn(2, ' ').collect::<Vec<&str>>();
         assert_eq!(parts.len(), 2);
 
-        let span = BASE64_STANDARD.decode(parts[0])?;
+        let span = BASE64_STANDARD
+            .decode(parts[0])
+            .map_err(|e| WordchipperError::Parse(e.to_string()))?;
 
-        let token = T::from_u64(parts[1].parse()?).context("token out of range")?;
+        let id: u64 = parts[1]
+            .parse()
+            .map_err(|e: core::num::ParseIntError| WordchipperError::Parse(e.to_string()))?;
+        let token = T::from_u64(id).ok_or(WordchipperError::TokenOutOfRange)?;
 
         vocab.insert(span, token);
     }
@@ -125,7 +130,7 @@ where
 pub fn save_base64_span_map_path<T: TokenType, P: AsRef<Path>>(
     span_map: &SpanTokenMap<T>,
     path: P,
-) -> anyhow::Result<()> {
+) -> crate::errors::Result<()> {
     let mut writer = BufWriter::new(File::create(path)?);
     write_base64_span_map(span_map, &mut writer)
 }
@@ -143,7 +148,7 @@ pub fn save_base64_span_map_path<T: TokenType, P: AsRef<Path>>(
 pub fn write_base64_span_map<T, W>(
     span_map: &SpanTokenMap<T>,
     writer: &mut W,
-) -> anyhow::Result<()>
+) -> crate::errors::Result<()>
 where
     T: TokenType,
     W: Write,

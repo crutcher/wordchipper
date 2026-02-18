@@ -1,10 +1,9 @@
 use std::sync::Arc;
 
-use anyhow::bail;
 use tokenizers::{Encoding, tokenizer::Tokenizer};
 use wordchipper::pretrained::openai::OATokenizer;
 
-use crate::engines::EncDecEngine;
+use crate::engines::{BoxError, EncDecEngine};
 
 /// [`EncDecEngine`] implementation for [`Tokenizer`].
 pub struct TokenizersEngine {
@@ -42,7 +41,7 @@ impl EncDecEngine<u32> for TokenizersEngine {
     fn encode_batch(
         &self,
         batch: &[&str],
-    ) -> anyhow::Result<Vec<Vec<u32>>> {
+    ) -> Result<Vec<Vec<u32>>, BoxError> {
         if self.use_batch {
             let batch = batch.iter().map(|s| s.to_string()).collect::<Vec<_>>();
             let br = self.inner.encode_batch(batch, true).unwrap();
@@ -62,30 +61,27 @@ impl EncDecEngine<u32> for TokenizersEngine {
     fn decode_batch(
         &self,
         batch: &[&[u32]],
-    ) -> anyhow::Result<Vec<String>> {
+    ) -> Result<Vec<String>, BoxError> {
         match self.inner.decode_batch(batch, false) {
             Ok(res) => Ok(res),
-            Err(e) => Err(anyhow::anyhow!(
-                "failed to decode batch with \"{}\": {}",
-                self.name(),
-                e
-            )),
+            Err(e) => Err(format!("failed to decode batch with \"{}\": {}", self.name(), e).into()),
         }
     }
 }
 
-pub fn load_tokenizers_tok(model: OATokenizer) -> anyhow::Result<(String, Arc<Tokenizer>)> {
+pub fn load_tokenizers_tok(model: OATokenizer) -> Result<(String, Arc<Tokenizer>), BoxError> {
     use OATokenizer::*;
     let source = match model {
         R50kBase => "Xenova/gpt-3",
         P50kBase | P50kEdit => "Xenova/text-davinci-002",
         Cl100kBase => "Xenova/text-embedding-ada-002",
         O200kBase | O200kHarmony => "Xenova/gpt-4o",
-        _ => bail!("unsupported model: {:?}", model),
+        _ => return Err(format!("unsupported model: {:?}", model).into()),
     };
 
-    let tok = Tokenizer::from_pretrained(source, None)
-        .map_err(|e| anyhow::anyhow!("failed to load tokenizer from {}: {}", source, e))?;
+    let tok = Tokenizer::from_pretrained(source, None).map_err(|e| -> BoxError {
+        format!("failed to load tokenizer from {}: {}", source, e).into()
+    })?;
 
     Ok((source.to_string(), Arc::new(tok)))
 }

@@ -15,7 +15,6 @@ workspace = true
 
 
 [dependencies]
-anyhow = { workspace = true }
 directories-next = { workspace = true }
 
 # features=["tui"} incompatible with conflicting indicatif versions.

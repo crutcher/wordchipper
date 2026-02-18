@@ -84,7 +84,7 @@
 //!     disk_cache::WordchipperDiskCache,
 //! };
 //!
-//! fn example() -> anyhow::Result<(Arc<dyn TokenEncoder<u32>>, Arc<dyn TokenDecoder<u32>>)> {
+//! fn example() -> wordchipper::errors::Result<(Arc<dyn TokenEncoder<u32>>, Arc<dyn TokenDecoder<u32>>)> {
 //!     let mut disk_cache = WordchipperDiskCache::default();
 //!     let vocab: UnifiedTokenVocab<u32> = get_model("openai/o200k_harmony", &mut disk_cache)?;
 //!
@@ -113,6 +113,8 @@ pub use wordchipper_disk_cache as disk_cache;
 
 #[cfg(feature = "std")]
 pub mod concurrency;
+
+pub mod errors;
 
 pub mod compat;
 pub mod decoders;

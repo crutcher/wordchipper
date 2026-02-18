@@ -3,7 +3,7 @@ use std::sync::Arc;
 use tiktoken_rs::{CoreBPE, Rank};
 use wordchipper::pretrained::openai::OATokenizer;
 
-use crate::engines::EncDecEngine;
+use crate::engines::{BoxError, EncDecEngine};
 
 /// [`EncDecEngine`] implementation for [`CoreBPE`].
 pub struct TiktokenRsEngine {
@@ -29,7 +29,7 @@ impl EncDecEngine<Rank> for TiktokenRsEngine {
     fn encode_batch(
         &self,
         batch: &[&str],
-    ) -> anyhow::Result<Vec<Vec<Rank>>> {
+    ) -> Result<Vec<Vec<Rank>>, BoxError> {
         cfg_if::cfg_if! {
             if #[cfg(feature = "rayon")] {
                 use rayon::prelude::*;
@@ -46,7 +46,7 @@ impl EncDecEngine<Rank> for TiktokenRsEngine {
     fn decode_batch(
         &self,
         batch: &[&[Rank]],
-    ) -> anyhow::Result<Vec<String>> {
+    ) -> Result<Vec<String>, BoxError> {
         cfg_if::cfg_if! {
             if #[cfg(feature = "rayon")] {
                 use rayon::prelude::*;
@@ -62,8 +62,7 @@ impl EncDecEngine<Rank> for TiktokenRsEngine {
 }
 
 /// Load a tiktoken model from the given `OATokenizer` enum variant.
-pub fn load_tiktoken_bpe(model: OATokenizer) -> anyhow::Result<(String, Arc<CoreBPE>)> {
-    use anyhow::bail;
+pub fn load_tiktoken_bpe(model: OATokenizer) -> Result<(String, Arc<CoreBPE>), BoxError> {
     use wordchipper::pretrained::openai::OATokenizer::*;
 
     let (source, bpe) = match model {
@@ -73,7 +72,7 @@ pub fn load_tiktoken_bpe(model: OATokenizer) -> anyhow::Result<(String, Arc<Core
         Cl100kBase => ("cl100k_base", tiktoken_rs::cl100k_base()?),
         O200kBase => ("o200k_base", tiktoken_rs::o200k_base()?),
         O200kHarmony => ("o200k_harmony", tiktoken_rs::o200k_harmony()?),
-        _ => bail!("unsupported model: {:?}", model),
+        _ => return Err(format!("unsupported model: {:?}", model).into()),
     };
     Ok((source.to_string(), Arc::new(bpe)))
 }

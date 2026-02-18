@@ -47,7 +47,7 @@ impl<T: TokenType> TokenDecoder<T> for ByteDecoder<T> {
     fn try_decode_to_bytes(
         &self,
         tokens: &[T],
-    ) -> anyhow::Result<DecodeResult<Vec<u8>>> {
+    ) -> crate::errors::Result<DecodeResult<Vec<u8>>> {
         let capacity = (tokens.len() as f32 * DEFAULT_BYTE_PER_TOKEN_RATIO) as usize;
         let mut value = Vec::with_capacity(capacity);
         let mut consumed = 0;

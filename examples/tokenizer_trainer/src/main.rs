@@ -50,7 +50,7 @@ pub struct Args {
     pub verbose: bool,
 }
 
-fn main() -> anyhow::Result<()> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
     if args.verbose {
         println!("{:#?}", args);

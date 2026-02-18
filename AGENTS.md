@@ -13,7 +13,7 @@ with compatibility for `tiktoken` and `nanochat/rustbpe` formats.
 - **License**: MIT
 - **Rust Edition**: 2024
 - **MSRV**: 1.93.0
-- **Current Version**: 0.6.2
+- **Current Version**: 0.7.3
 
 ## Workspace Layout
 
@@ -24,6 +24,8 @@ wordchipper/
 │   ├── wordchipper-disk-cache/# Download cache (published)
 │   ├── wordchipper-data/      # Dataset loading (unpublished)
 │   └── wordchipper-experimental/ # Experimental extensions (unpublished)
+├── bindings/
+│   └── python/                # Python bindings (PyO3 + maturin)
 ├── examples/
 │   ├── sample-timer/          # Benchmark tool vs tiktoken/tokenizers
 │   └── tokenizer_trainer/     # Training example
@@ -55,6 +57,17 @@ cargo doc --no-deps --quiet --all-features
 ```
 
 CI runs all of the above on every push/PR to `main`.
+
+### Python Bindings
+
+```sh
+cd bindings/python
+uv venv .venv
+source .venv/bin/activate
+uv pip install maturin pytest
+maturin develop
+pytest tests/ -v
+```
 
 ## Feature Flags
 
@@ -115,6 +128,18 @@ OpenAI tokenizer support in `pretrained/openai/`:
 - `OATokenizer` enum: `R50kBase`, `P50kBase`, `P50kEdit`, `Cl100kBase`, `O200kBase`, `O200kHarmony`
 - Each has associated regex patterns, special tokens, and vocabulary resources.
 
+### Python Bindings (`bindings/python/`)
+
+PyO3 + maturin based Python package exposing the core tokenizer API:
+
+- `src/lib.rs` — FFI layer: `Tokenizer` pyclass wrapping `UnifiedTokenVocab`, `Arc<dyn TokenEncoder>`,
+  `Arc<dyn TokenDecoder>`. Errors convert via `WordchipperError` to `PyValueError`/`PyIOError`.
+- `py_src/wordchipper/` — Python package with `__init__.py` (re-export), `__init__.pyi` (type stubs),
+  `py.typed` (PEP 561 marker).
+- Methods: `from_pretrained()`, `encode()`, `decode()`, `encode_batch()`, `decode_batch()`,
+  `vocab_size`, `token_to_id()`, `id_to_token()`, `get_special_tokens()`, `available_models()`, `save_vocab()`.
+- Build: `maturin develop` for dev, `maturin build --release` for wheels.
+
 ## Code Style Conventions
 
 ### "Style Hints" Pattern
@@ -140,7 +165,7 @@ instance variable names. **Follow these.** Examples:
 - **`#![warn(missing_docs, unused)]`** is set at crate root.
 - **Doc comments**: Use `///` with `## Arguments`, `## Returns`, `## Panics` sections as appropriate.
 - All public items must have doc comments.
-- **Constructor pattern**: Prefer `from_*` and `new()` returning `Self` or `anyhow::Result<Self>`.
+- **Constructor pattern**: Prefer `from_*` and `new()` returning `Self` or `wordchipper::errors::Result<Self>`.
 - Builder-style methods use `with_*` naming and consume `self`.
 - **Encapsulation**: Struct fields are private; provide accessor methods.
 - **`cfg` gating**: Feature-gated modules use `#[cfg(feature = "...")]` at `mod` declarations.
@@ -155,8 +180,11 @@ instance variable names. **Follow these.** Examples:
 
 ### Dependencies
 
+- **Error handling**: The core `wordchipper` crate uses `thiserror` (not `anyhow`) for structured error types.
+  See `crates/wordchipper/src/errors.rs` for the `WordchipperError` enum and `Result<T>` alias.
+  Ancillary crates (disk-cache, examples) may still use `anyhow` at their own boundaries.
 - **Regex pinning**: `fancy-regex = "0.13.0"` and `regex = "1.10.3"` are intentionally pinned. Upgrading introduces
-  performance regressions under concurrent encoding due to contention — do not upgrade without benchmarking.
+  performance regressions under concurrent encoding due to contention; do not upgrade without benchmarking.
 - `pip install` equivalent: always add deps to `[workspace.dependencies]` first, then reference with
   `{ workspace = true }` in crate-level `Cargo.toml`.
 

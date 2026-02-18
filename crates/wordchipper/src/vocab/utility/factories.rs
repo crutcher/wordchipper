@@ -58,7 +58,7 @@ impl ConstVocabularyFactory {
     fn fetch_resource(
         &self,
         loader: &mut dyn ResourceLoader,
-    ) -> anyhow::Result<PathBuf> {
+    ) -> crate::errors::Result<PathBuf> {
         let res: crate::resources::KeyedResource = self.resource.clone().into();
         loader.load_resource_path(&res)
     }
@@ -68,7 +68,7 @@ impl ConstVocabularyFactory {
     pub fn load_vocab<T: TokenType>(
         &self,
         loader: &mut dyn ResourceLoader,
-    ) -> anyhow::Result<UnifiedTokenVocab<T>> {
+    ) -> crate::errors::Result<UnifiedTokenVocab<T>> {
         let path = self.fetch_resource(loader)?;
         self.load_vocab_path(path)
     }
@@ -78,7 +78,7 @@ impl ConstVocabularyFactory {
     pub fn load_vocab_path<T: TokenType>(
         &self,
         path: impl AsRef<Path>,
-    ) -> anyhow::Result<UnifiedTokenVocab<T>> {
+    ) -> crate::errors::Result<UnifiedTokenVocab<T>> {
         let reader = BufReader::new(File::open(path)?);
         self.read_vocab(reader)
     }
@@ -88,7 +88,7 @@ impl ConstVocabularyFactory {
     pub fn read_vocab<T: TokenType, R: BufRead>(
         &self,
         reader: R,
-    ) -> anyhow::Result<UnifiedTokenVocab<T>> {
+    ) -> crate::errors::Result<UnifiedTokenVocab<T>> {
         crate::vocab::io::read_base64_unified_vocab(reader, self.spanning_config())
     }
 }

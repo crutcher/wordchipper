@@ -1,0 +1,20 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "wordchipper"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+]
+dynamic = ["version"]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+python-source = "py_src"
+module-name = "wordchipper._wordchipper"

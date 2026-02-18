@@ -1,0 +1,63 @@
+# wordchipper
+
+Python bindings for the [wordchipper](https://github.com/crutcher/wordchipper) BPE tokenizer
+library.
+
+## Installation
+
+```bash
+pip install wordchipper
+```
+
+## Usage
+
+```python
+from wordchipper import Tokenizer
+
+# See available models
+Tokenizer.available_models()
+# ['r50k_base', 'p50k_base', 'p50k_edit', 'cl100k_base', 'o200k_base', 'o200k_harmony']
+
+# Load a tokenizer
+tok = Tokenizer.from_pretrained("cl100k_base")
+
+# Encode / decode
+tokens = tok.encode("hello world")        # [15339, 1917]
+text = tok.decode(tokens)                  # "hello world"
+
+# Batch encode / decode (parallel via rayon)
+results = tok.encode_batch(["hello", "world", "foo bar"])
+texts = tok.decode_batch(results)
+
+# Vocab inspection
+tok.vocab_size                             # 100256
+tok.token_to_id("hello")                   # 15339
+tok.id_to_token(15339)                     # "hello"
+tok.token_to_id("nonexistent")             # None
+
+# Special tokens
+tok.get_special_tokens()
+# [('<|endoftext|>', 100257), ...]
+
+# Save vocab to file (base64 tiktoken format, excludes special tokens)
+tok.save_base64_vocab("vocab.tiktoken")
+```
+
+## Development
+
+Requires [Rust](https://rustup.rs/) and [uv](https://docs.astral.sh/uv/).
+
+```bash
+cd bindings/python
+
+# Set up environment and build
+uv venv .venv
+source .venv/bin/activate
+uv pip install maturin pytest
+maturin develop
+
+# Run tests
+pytest tests/ -v
+```
+
+After making changes to `src/lib.rs`, rebuild with `maturin develop` before re-running tests.

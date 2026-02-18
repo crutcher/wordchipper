@@ -2,13 +2,15 @@
 
 use wordchipper::TokenType;
 
+pub type BoxError = Box<dyn std::error::Error>;
+
 pub trait EncDecEngine<T: TokenType> {
     fn name(&self) -> &str;
 
     fn encode_batch(
         &self,
         batch: &[&str],
-    ) -> anyhow::Result<Vec<Vec<T>>>;
+    ) -> Result<Vec<Vec<T>>, BoxError>;
 
     fn expect_encode_batch(
         &self,
@@ -21,7 +23,7 @@ pub trait EncDecEngine<T: TokenType> {
     fn decode_batch(
         &self,
         batch: &[&[T]],
-    ) -> anyhow::Result<Vec<String>>;
+    ) -> Result<Vec<String>, BoxError>;
 
     fn expect_decode_batch(
         &self,

@@ -13,7 +13,7 @@ pub trait ResourceLoader {
     fn load_resource_path(
         &mut self,
         resource: &KeyedResource,
-    ) -> anyhow::Result<PathBuf>;
+    ) -> crate::errors::Result<PathBuf>;
 }
 
 #[cfg(feature = "download")]
@@ -22,7 +22,8 @@ impl ResourceLoader for crate::disk_cache::WordchipperDiskCache {
     fn load_resource_path(
         &mut self,
         resource: &KeyedResource,
-    ) -> anyhow::Result<PathBuf> {
+    ) -> crate::errors::Result<PathBuf> {
         self.load_cached_path(&resource.key, &resource.resource.urls, true)
+            .map_err(|e| crate::errors::WordchipperError::External(e.to_string()))
     }
 }

@@ -55,3 +55,20 @@ jobs:
 
       - name: Test no-std
         run: cargo test -p wordchipper --no-default-features --features no_std --tests
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Python Bindings
+        run: |
+          cd bindings/python
+          uv venv .venv
+          source .venv/bin/activate
+          uv pip install maturin pytest
+          maturin develop
+          pytest tests/ -v

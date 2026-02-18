@@ -240,7 +240,7 @@ where
     fn train_basic_pairs<T>(
         self,
         byte_vocab: ByteMapVocab<T>,
-    ) -> anyhow::Result<TrainResults<T>>
+    ) -> crate::errors::Result<TrainResults<T>>
     where
         T: TokenType,
         C: CountType,
@@ -250,7 +250,10 @@ where
         let num_merges = self.options.vocab_size - U8_SIZE;
         log::info!("Starting BPE training: {} merges to compute", num_merges);
 
-        self.options.pattern.compile()?;
+        self.options
+            .pattern
+            .compile()
+            .map_err(|e| crate::errors::WordchipperError::External(e.to_string()))?;
 
         let mut pairs: PairTokenMap<T> = WCHashMap::with_capacity(num_merges);
 
@@ -399,7 +402,7 @@ where
     pub fn train<T>(
         self,
         byte_vocab: ByteMapVocab<T>,
-    ) -> anyhow::Result<UnifiedTokenVocab<T>>
+    ) -> crate::errors::Result<UnifiedTokenVocab<T>>
     where
         T: TokenType,
         C: CountType,

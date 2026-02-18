@@ -5,6 +5,8 @@ use std::{fs, fs::File, path::PathBuf};
 use downloader::{Download, Downloader};
 use parquet::arrow::arrow_reader::{ParquetRecordBatchReader, ParquetRecordBatchReaderBuilder};
 
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+
 /// The upstream dataset URL.
 pub const NANOCHAT_TRAIN_BASE_URL: &str =
     "https://huggingface.co/datasets/karpathy/fineweb-edu-100b-shuffle/resolve/main";
@@ -84,7 +86,7 @@ impl Default for DatasetCacheConfig {
 }
 
 impl DatasetCacheConfig {
-    pub fn init(self) -> anyhow::Result<DatasetCache> {
+    pub fn init(self) -> Result<DatasetCache> {
         let cache_dir = shellexpand::full(&self.cache_dir)?.to_string();
 
         fs::create_dir_all(&cache_dir)?;
@@ -142,12 +144,12 @@ impl DatasetCache {
     pub fn try_shard_path(
         &self,
         index: usize,
-    ) -> anyhow::Result<PathBuf> {
+    ) -> Result<PathBuf> {
         let path = self.format_shard_path(index);
         if path.exists() {
             Ok(path)
         } else {
-            Err(anyhow::anyhow!("shard {} not found", index))
+            Err(format!("shard {} not found", index).into())
         }
     }
 
@@ -161,7 +163,7 @@ impl DatasetCache {
     }
 
     /// List all parquet files in the cache.
-    pub fn list_cached_shard_paths(&self) -> anyhow::Result<Vec<PathBuf>> {
+    pub fn list_cached_shard_paths(&self) -> Result<Vec<PathBuf>> {
         const EXTENSION: &str = "parquet";
 
         let mut paths = Vec::new();
@@ -178,7 +180,7 @@ impl DatasetCache {
     }
 
     /// List the ids of all cached shards.
-    pub fn list_cached_shard_ids(&self) -> anyhow::Result<Vec<usize>> {
+    pub fn list_cached_shard_ids(&self) -> Result<Vec<usize>> {
         let (pre, post) = self.source.shard_template.split_once("{index}").unwrap();
 
         Ok(self
@@ -196,7 +198,7 @@ impl DatasetCache {
     pub fn load_shard(
         &mut self,
         index: usize,
-    ) -> anyhow::Result<PathBuf> {
+    ) -> Result<PathBuf> {
         let path = self.format_shard_path(index);
         if path.exists() {
             return Ok(path);
@@ -218,7 +220,7 @@ impl DatasetCache {
     pub fn load_shards(
         &mut self,
         shards: &[usize],
-    ) -> anyhow::Result<Vec<PathBuf>> {
+    ) -> Result<Vec<PathBuf>> {
         let mut paths = Vec::with_capacity(shards.len());
         let mut downloads = Vec::new();
         for &shard in shards {
@@ -252,12 +254,12 @@ impl DatasetCache {
     /// * `download` - Whether to download the shard if not cached.
     ///
     /// # Returns
-    /// An `anyhow::Result<PathBuf>` containing the shard path.
+    /// An `Result<PathBuf>` containing the shard path.
     pub fn get_shard(
         &mut self,
         shard: usize,
         download: bool,
-    ) -> anyhow::Result<PathBuf> {
+    ) -> Result<PathBuf> {
         if download {
             self.load_shard(shard)
         } else {
@@ -278,7 +280,7 @@ impl DatasetCache {
         &mut self,
         shard: usize,
         download: bool,
-    ) -> anyhow::Result<ParquetRecordBatchReader> {
+    ) -> Result<ParquetRecordBatchReader> {
         if download {
             let _ = self.load_shard(shard)?;
         }
@@ -296,7 +298,7 @@ impl DatasetCache {
     pub fn read_cached_batches(
         &self,
         shard: usize,
-    ) -> anyhow::Result<ParquetRecordBatchReader> {
+    ) -> Result<ParquetRecordBatchReader> {
         let path = self.format_shard_path(shard);
         let file = File::open(path)?;
         let reader = ParquetRecordBatchReaderBuilder::try_new(file)?.build()?;
@@ -328,7 +330,7 @@ mod tests {
     }
 
     #[test]
-    fn test_dataset_cache() -> anyhow::Result<()> {
+    fn test_dataset_cache() -> Result<()> {
         let tmpdir = TempDir::new("brn-nanochat-test")?;
         let base_dir = tmpdir.path();
 

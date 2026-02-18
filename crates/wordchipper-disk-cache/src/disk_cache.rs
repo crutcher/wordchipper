@@ -5,7 +5,6 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::Context;
 use downloader::{Download, Downloader};
 
 use crate::{WORDCHIPPER_CACHE_CONFIG, path_utils};
@@ -76,14 +75,14 @@ impl Default for WordchipperDiskCache {
 
 impl WordchipperDiskCache {
     /// Construct a new [`WordchipperDiskCache`].
-    pub fn new(options: WordchipperDiskCacheOptions) -> anyhow::Result<Self> {
+    pub fn new(options: WordchipperDiskCacheOptions) -> Result<Self, Box<dyn std::error::Error>> {
         let cache_dir = WORDCHIPPER_CACHE_CONFIG
             .resolve_cache_dir(options.cache_dir)
-            .context("failed to resolve cache directory")?;
+            .ok_or("failed to resolve cache directory")?;
 
         let data_dir = WORDCHIPPER_CACHE_CONFIG
             .resolve_data_dir(options.data_dir)
-            .context("failed to resolve data directory")?;
+            .ok_or("failed to resolve data directory")?;
 
         let downloader = match options.downloader {
             Some(builder) => builder(),
@@ -156,7 +155,7 @@ impl WordchipperDiskCache {
         urls: &[S],
         download: bool,
         /* TODO: hash: Option<&str>, */
-    ) -> anyhow::Result<PathBuf>
+    ) -> Result<PathBuf, Box<dyn std::error::Error>>
     where
         C: AsRef<Path>,
         S: AsRef<str>,
@@ -172,7 +171,7 @@ impl WordchipperDiskCache {
         }
 
         if !download {
-            anyhow::bail!("cached file not found: {}", path.display());
+            return Err(format!("cached file not found: {}", path.display()).into());
         }
 
         fs::create_dir_all(path.parent().unwrap())?;

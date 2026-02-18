@@ -1,0 +1,23 @@
+[package]
+name = "wordchipper-python"
+description = "Python bindings for the wordchipper tokenizer library"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+
+[lints]
+workspace = true
+
+
+[lib]
+name = "_wordchipper"
+crate-type = ["cdylib"]
+
+
+[dependencies]
+pyo3 = { workspace = true }
+strum = { workspace = true }
+wordchipper = { path = "../../crates/wordchipper", features = ["client"] }

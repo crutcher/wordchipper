@@ -9,11 +9,10 @@ use std::{
     time::Duration,
 };
 
-use anyhow::bail;
 use arrow::array::{Array, StringArray};
 use batch_stats::{BatchStats, EngineBatchTimes};
 use clap::{Parser, ValueEnum};
-use engines::EncDecEngine;
+use engines::{BoxError, EncDecEngine};
 use indicatif::ProgressBar;
 use rand::prelude::SliceRandom;
 use similar::TextDiff;
@@ -154,25 +153,25 @@ impl ModelSelector {
     pub fn load_vocab<T: TokenType>(
         &self,
         disk_cache: &mut WordchipperDiskCache,
-    ) -> anyhow::Result<UnifiedTokenVocab<T>> {
-        self.model().load_vocab(disk_cache)
+    ) -> Result<UnifiedTokenVocab<T>, BoxError> {
+        Ok(self.model().load_vocab(disk_cache)?)
     }
 
-    pub fn load_tiktoken_bpe(&self) -> anyhow::Result<(String, Arc<CoreBPE>)> {
+    pub fn load_tiktoken_bpe(&self) -> Result<(String, Arc<CoreBPE>), BoxError> {
         tiktoken_support::load_tiktoken_bpe(self.model())
     }
 
     #[cfg(feature = "tokenizers")]
     pub fn load_tokenizers_tokenizer(
         &self
-    ) -> anyhow::Result<(String, Arc<tokenizers::tokenizer::Tokenizer>)> {
+    ) -> Result<(String, Arc<tokenizers::tokenizer::Tokenizer>), BoxError> {
         load_tokenizers_tok(self.model())
     }
 }
 
 #[allow(unused)]
 #[allow(clippy::vec_init_then_push)]
-fn main() -> anyhow::Result<()> {
+fn main() -> Result<(), BoxError> {
     let args = Args::parse();
     let display_progress = io::stdout().is_terminal();
 
@@ -209,7 +208,7 @@ fn main() -> anyhow::Result<()> {
                 if args.ignore_missing {
                     println!("Unable to load tiktoken model");
                 } else {
-                    bail!("Unable to load tiktoken model: {}", e);
+                    return Err(format!("Unable to load tiktoken model: {}", e).into());
                 }
             }
         }
@@ -231,7 +230,7 @@ fn main() -> anyhow::Result<()> {
                 if args.ignore_missing {
                     println!("Unable to load HuggingFace tokenizer");
                 } else {
-                    bail!("Unable to load HuggingFace tokenizer: {}", e);
+                    return Err(format!("Unable to load HuggingFace tokenizer: {}", e).into());
                 }
             }
         }
@@ -249,7 +248,7 @@ fn main() -> anyhow::Result<()> {
         &args.shards,
         args.batch_size,
         &mut shard_data_cache,
-        &mut |str_batch: &[&str]| -> anyhow::Result<()> {
+        &mut |str_batch: &[&str]| -> Result<(), BoxError> {
             let degapped_input =
                 if args.decode && args.validate && args.respan_input_for_decode_check {
                     Some(wc_engine.spanner().batch_remove_gaps(str_batch))
@@ -384,8 +383,8 @@ fn for_each_batch(
     shards: &[usize],
     batch_size: usize,
     shard_data_cache: &mut DatasetCache,
-    observe_batch: &mut dyn FnMut(&[&str]) -> anyhow::Result<()>,
-) -> anyhow::Result<()> {
+    observe_batch: &mut dyn FnMut(&[&str]) -> Result<(), BoxError>,
+) -> Result<(), BoxError> {
     let progress_bar = if display_progress {
         ProgressBar::new_spinner()
     } else {
@@ -438,7 +437,7 @@ pub fn verify_encode(
     actual_batch: &[Vec<Rank>],
     expected_name: &str,
     expected_batch: &[Vec<Rank>],
-) -> anyhow::Result<()> {
+) -> Result<(), BoxError> {
     assert_eq!(source_batch.len(), actual_batch.len());
     assert_eq!(source_batch.len(), expected_batch.len());
     for (i, source) in source_batch.iter().enumerate() {
@@ -449,12 +448,12 @@ pub fn verify_encode(
             continue;
         }
 
-        bail!(
+        return Err(format!(
             "ENCODER MISMATCH: {actual_name} != {expected_name}\nSOURCE:\n{}\nACTUAL: {actual_name}\n{:?}\nEXPECTED: {expected_name}\n{:?}",
             source,
             actual_tokens,
             expected_tokens,
-        )
+        ).into());
     }
     Ok(())
 }
@@ -464,7 +463,7 @@ pub fn verify_decode(
     batch_tokens: &[&[Rank]],
     actual_decode: &[String],
     expected_decode: &[&str],
-) -> anyhow::Result<()> {
+) -> Result<(), BoxError> {
     assert_eq!(batch_tokens.len(), expected_decode.len());
     assert_eq!(batch_tokens.len(), actual_decode.len());
 
@@ -478,7 +477,7 @@ pub fn verify_decode(
         let mut udiff = diff.unified_diff();
         udiff.header("expected", decoder_name);
 
-        bail!("DECODER MISMATCH: {decoder_name}\n{}", udiff)
+        return Err(format!("DECODER MISMATCH: {decoder_name}\n{}", udiff).into());
     }
 
     Ok(())

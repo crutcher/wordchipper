@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use wordchipper::{TokenDecoder, TokenEncoder, TokenType, spanning::TextSpanner};
 
-use crate::engines::EncDecEngine;
+use crate::engines::{BoxError, EncDecEngine};
 
 /// [`EncDecEngine`] implementation for [`TokenEncoder`] + [`TokenDecoder`].
 pub struct WordchipperEngine<T: TokenType> {
@@ -38,14 +38,15 @@ impl<T: TokenType> EncDecEngine<T> for WordchipperEngine<T> {
     fn encode_batch(
         &self,
         batch: &[&str],
-    ) -> anyhow::Result<Vec<Vec<T>>> {
-        self.encoder.try_encode_batch(batch)
+    ) -> Result<Vec<Vec<T>>, BoxError> {
+        Ok(self.encoder.try_encode_batch(batch)?)
     }
 
     fn decode_batch(
         &self,
         batch: &[&[T]],
-    ) -> anyhow::Result<Vec<String>> {
-        Ok(self.decoder.try_decode_batch_to_strings(batch)?.unwrap())
+    ) -> Result<Vec<String>, BoxError> {
+        let decoded = self.decoder.try_decode_batch_to_strings(batch)?;
+        Ok(decoded.unwrap())
     }
 }

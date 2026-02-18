@@ -20,7 +20,8 @@
 //!     },
 //! };
 //!
-//! fn example() -> anyhow::Result<(Arc<dyn TokenEncoder<u32>>, Arc<dyn TokenDecoder<u32>>)> {
+//! fn example()
+//! -> wordchipper::errors::Result<(Arc<dyn TokenEncoder<u32>>, Arc<dyn TokenDecoder<u32>>)> {
 //!     type T = u32;
 //!     let vocab: UnifiedTokenVocab<T> = load_base64_unified_vocab_path(
 //!         "vocab.tiktoken",

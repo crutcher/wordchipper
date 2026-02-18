@@ -92,7 +92,7 @@ impl<T: TokenType> TextSpanningConfig<T> {
     }
 
     /// Convert to a different token type.
-    pub fn to_token_type<G: TokenType>(&self) -> anyhow::Result<TextSpanningConfig<G>> {
+    pub fn to_token_type<G: TokenType>(&self) -> crate::errors::Result<TextSpanningConfig<G>> {
         Ok(TextSpanningConfig::<G> {
             pattern: self.pattern.clone(),
             specials: self.specials.to_token_type()?,
