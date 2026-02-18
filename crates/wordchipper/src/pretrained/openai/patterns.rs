@@ -1,67 +1,62 @@
 //! # `OpenAI` Patterns
 
-use crate::{join_patterns, regex::ConstRegexWrapperPattern};
+use crate::{join_patterns, regex::ConstRegexPattern};
 
 /// The original "`r50k_base`" pretrained vocabulary word pattern.
 ///
 /// Slower, use [`OA_R50K_BASE_PATTERN`].
-pub const OA_R50K_BASE_PATTERN_SLOW: ConstRegexWrapperPattern =
-    ConstRegexWrapperPattern::Fancy(join_patterns!(
-        r"'s",
-        r"'t",
-        r"'re",
-        r"'ve",
-        r"'m",
-        r"'ll",
-        r"'d",
-        r" ?[\p{L}]+",
-        r" ?[\p{N}]+",
-        r" ?[^\s\p{L}\p{N}]+",
-        r"\s+(?!\S)",
-        r"\s+",
-    ));
+pub const OA_R50K_BASE_PATTERN_SLOW: ConstRegexPattern = ConstRegexPattern::Fancy(join_patterns!(
+    r"'s",
+    r"'t",
+    r"'re",
+    r"'ve",
+    r"'m",
+    r"'ll",
+    r"'d",
+    r" ?[\p{L}]+",
+    r" ?[\p{N}]+",
+    r" ?[^\s\p{L}\p{N}]+",
+    r"\s+(?!\S)",
+    r"\s+",
+));
 
 /// The optimized "`r50k_base`" pretrained vocabulary word pattern.
 ///
 /// Faster than [`OA_R50K_BASE_PATTERN_SLOW`], optimized for performance.
-pub const OA_R50K_BASE_PATTERN: ConstRegexWrapperPattern =
-    ConstRegexWrapperPattern::Fancy(join_patterns!(
-        r"'(?:[sdmt]|ll|ve|re)",
-        r" ?\p{L}++",
-        r" ?\p{N}++",
-        r" ?[^\s\p{L}\p{N}]++",
-        r"\s++$",
-        r"\s+(?!\S)",
-        r"\s",
-    ));
+pub const OA_R50K_BASE_PATTERN: ConstRegexPattern = ConstRegexPattern::Fancy(join_patterns!(
+    r"'(?:[sdmt]|ll|ve|re)",
+    r" ?\p{L}++",
+    r" ?\p{N}++",
+    r" ?[^\s\p{L}\p{N}]++",
+    r"\s++$",
+    r"\s+(?!\S)",
+    r"\s",
+));
 
 /// The "`p50k_base`" pretrained vocabulary word pattern.
-pub const OA_P50K_BASE_PATTERN: ConstRegexWrapperPattern = OA_R50K_BASE_PATTERN;
+pub const OA_P50K_BASE_PATTERN: ConstRegexPattern = OA_R50K_BASE_PATTERN;
 /// The "`cl100k_base`" pretrained vocabulary word pattern.
-pub const OA_CL100K_BASE_PATTERN: ConstRegexWrapperPattern =
-    ConstRegexWrapperPattern::Fancy(join_patterns!(
-        r"'(?i:[sdmt]|ll|ve|re)",
-        r"[^\r\n\p{L}\p{N}]?+\p{L}++",
-        r"\p{N}{1,3}+",
-        r" ?[^\s\p{L}\p{N}]++[\r\n]*+",
-        r"\s++$",
-        r"\s*[\r\n]",
-        r"\s+(?!\S)",
-        r"\s",
-    ));
+pub const OA_CL100K_BASE_PATTERN: ConstRegexPattern = ConstRegexPattern::Fancy(join_patterns!(
+    r"'(?i:[sdmt]|ll|ve|re)",
+    r"[^\r\n\p{L}\p{N}]?+\p{L}++",
+    r"\p{N}{1,3}+",
+    r" ?[^\s\p{L}\p{N}]++[\r\n]*+",
+    r"\s++$",
+    r"\s*[\r\n]",
+    r"\s+(?!\S)",
+    r"\s",
+));
 
 /// The "`o200k_base`" pretrained vocabulary word pattern.
-pub const OA_O200K_BASE_PATTERN: ConstRegexWrapperPattern = ConstRegexWrapperPattern::Fancy(
-    join_patterns!(
-        r"[^\r\n\p{L}\p{N}]?[\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]*[\p{Ll}\p{Lm}\p{Lo}\p{M}]+(?i:'s|'t|'re|'ve|'m|'ll|'d)?",
-        r"[^\r\n\p{L}\p{N}]?[\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]+[\p{Ll}\p{Lm}\p{Lo}\p{M}]*(?i:'s|'t|'re|'ve|'m|'ll|'d)?",
-        r"\p{N}{1,3}",
-        r" ?[^\s\p{L}\p{N}]+[\r\n/]*",
-        r"\s*[\r\n]+",
-        r"\s+(?!\S)",
-        r"\s+"
-    ),
-);
+pub const OA_O200K_BASE_PATTERN: ConstRegexPattern = ConstRegexPattern::Fancy(join_patterns!(
+    r"[^\r\n\p{L}\p{N}]?[\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]*[\p{Ll}\p{Lm}\p{Lo}\p{M}]+(?i:'s|'t|'re|'ve|'m|'ll|'d)?",
+    r"[^\r\n\p{L}\p{N}]?[\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]+[\p{Ll}\p{Lm}\p{Lo}\p{M}]*(?i:'s|'t|'re|'ve|'m|'ll|'d)?",
+    r"\p{N}{1,3}",
+    r" ?[^\s\p{L}\p{N}]+[\r\n/]*",
+    r"\s*[\r\n]+",
+    r"\s+(?!\S)",
+    r"\s+"
+));
 
 #[cfg(test)]
 mod test {

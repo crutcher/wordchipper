@@ -13,7 +13,7 @@ use crate::resources::ResourceLoader;
 use crate::vocab::UnifiedTokenVocab;
 use crate::{
     alloc::{string::String, vec::Vec},
-    regex::{ConstRegexWrapperPattern, RegexWrapperPattern},
+    regex::{ConstRegexPattern, RegexPattern},
     resources::ConstKeyedResource,
     spanning::TextSpanningConfig,
     types::TokenType,
@@ -28,7 +28,7 @@ pub struct ConstVocabularyFactory {
     pub resource: ConstKeyedResource,
 
     /// The tokenizer regex pattern.
-    pub pattern: ConstRegexWrapperPattern,
+    pub pattern: ConstRegexPattern,
 
     /// A generator for special tokens.
     pub special_builder: &'static dyn Fn() -> Vec<(String, usize)>,
@@ -36,7 +36,7 @@ pub struct ConstVocabularyFactory {
 
 impl ConstVocabularyFactory {
     /// Get the regex pattern for this tokenizer.
-    pub fn pattern(&self) -> RegexWrapperPattern {
+    pub fn pattern(&self) -> RegexPattern {
         self.pattern.to_pattern()
     }
 

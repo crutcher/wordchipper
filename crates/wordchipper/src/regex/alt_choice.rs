@@ -2,26 +2,26 @@
 
 use crate::{
     alloc::{format, vec::Vec},
-    regex::regex_wrapper::RegexWrapperPattern,
+    regex::regex_pattern::RegexPattern,
 };
 
 /// Create a union pattern of exact matches.
 ///
-/// This will always be a [`RegexWrapperPattern::Basic`] variant.
+/// This will always be a [`RegexPattern::Basic`] variant.
 ///
 /// ## Arguments
 /// * `alts` - A slice of string-like alternatives to union.
 ///
 /// ## Returns
 /// A new `RegexWrapperPattern::Basic` containing the union pattern.
-pub fn alternate_choice_regex_pattern<S: AsRef<str>>(alts: &[S]) -> RegexWrapperPattern {
+pub fn alternate_choice_regex_pattern<S: AsRef<str>>(alts: &[S]) -> RegexPattern {
     let parts = alts
         .iter()
         .map(|s| fancy_regex::escape(s.as_ref()))
         .collect::<Vec<_>>();
 
     // turns out, 'fancy_regex' is ... faster?
-    RegexWrapperPattern::Fancy(format!("({})", parts.join("|")))
+    RegexPattern::Fancy(format!("({})", parts.join("|")))
 }
 
 #[cfg(test)]

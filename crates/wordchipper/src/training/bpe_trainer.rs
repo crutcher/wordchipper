@@ -6,7 +6,7 @@ use compact_str::CompactString;
 use dary_heap::OctonaryHeap;
 
 use crate::{
-    regex::RegexWrapperPattern,
+    regex::RegexPattern,
     training::{
         CountType,
         StringChunkType,
@@ -33,7 +33,7 @@ use crate::{
 #[derive(Debug, Clone)]
 pub struct BinaryPairVocabTrainerOptions {
     /// The regex pattern used for text splitting.
-    pub pattern: RegexWrapperPattern,
+    pub pattern: RegexPattern,
 
     /// The vocab size.
     pub vocab_size: usize,
@@ -48,7 +48,7 @@ impl BinaryPairVocabTrainerOptions {
     ///
     /// ## Returns
     /// A new `BinaryPairVocabTrainerOptions` instance.
-    pub fn new<P: Into<RegexWrapperPattern>>(
+    pub fn new<P: Into<RegexPattern>>(
         pattern: P,
         vocab_size: usize,
     ) -> Self {
@@ -84,7 +84,7 @@ impl BinaryPairVocabTrainerOptions {
     ///
     /// ## Panics
     /// Panics if the regex pattern compilation fails.
-    pub fn with_pattern<P: Into<RegexWrapperPattern>>(
+    pub fn with_pattern<P: Into<RegexPattern>>(
         self,
         pattern: P,
     ) -> Self {
@@ -176,7 +176,7 @@ where
 #[derive(Debug, Clone)]
 pub struct TrainResults<T: TokenType> {
     /// The trained vocab's word split pattern.
-    pub pattern: RegexWrapperPattern,
+    pub pattern: RegexPattern,
 
     /// The trained vocab's byte/token mapping table.
     pub pair_vocab: PairMapVocab<T>,

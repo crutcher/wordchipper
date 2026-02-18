@@ -119,7 +119,7 @@ where
 mod tests {
     use super::*;
     use crate::{
-        regex::RegexWrapperPattern,
+        regex::RegexPattern,
         training::{CountType, StringChunkType, utility::token_span_buffer::TokenSpanBuf},
         vocab::ByteMapVocab,
     };
@@ -127,7 +127,7 @@ mod tests {
     const PATTERN: &str = r"\w+";
 
     fn get_regex() -> RegexWrapper {
-        let pattern: RegexWrapperPattern = PATTERN.into();
+        let pattern: RegexPattern = PATTERN.into();
         pattern.compile().unwrap()
     }
 

@@ -7,24 +7,22 @@
 //!
 //! This recurses into two problems:
 //!
-//! * Labeling Patterns - [`RegexWrapperPattern`]
-//!   * [`RegexWrapperPattern::Basic`] - a pattern which was written for [`regex`].
-//!   * [`RegexWrapperPattern::Fancy`] - a pattern which was written for [`fancy_regex`].
-//!   * [`RegexWrapperPattern::Adaptive`] - unknown target, try basic; then fall-up to fancy.
+//! * Labeling Patterns - [`RegexPattern`]
+//!   * [`RegexPattern::Basic`] - a pattern which was written for [`regex`].
+//!   * [`RegexPattern::Fancy`] - a pattern which was written for [`fancy_regex`].
+//!   * [`RegexPattern::Adaptive`] - unknown target, try basic; then fall-up to fancy.
 //! * Wrapping Compiled Regex - [`RegexWrapper`]
 //!
 //! The [`RegexWrapper`] type supports only one operation, ``find_iter()`` which requires
 //! some adaptation of the `Iterator` stream to function.
 
-mod exact_match_union;
+mod alt_choice;
+mod regex_pattern;
 mod regex_wrapper;
 
 #[doc(inline)]
-pub use exact_match_union::alternate_choice_regex_pattern;
+pub use alt_choice::alternate_choice_regex_pattern;
 #[doc(inline)]
-pub use regex_wrapper::{
-    ConstRegexWrapperPattern,
-    ErrorWrapper,
-    RegexWrapper,
-    RegexWrapperPattern,
-};
+pub use regex_pattern::*;
+#[doc(inline)]
+pub use regex_wrapper::*;

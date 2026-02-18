@@ -3,10 +3,7 @@
 
 use core::fmt::Debug;
 
-use crate::alloc::{
-    boxed::Box,
-    string::{String, ToString},
-};
+use crate::{alloc::boxed::Box, regex::RegexPattern};
 
 /// Error wrapper for regex patterns.
 #[non_exhaustive]
@@ -45,118 +42,9 @@ impl core::fmt::Display for ErrorWrapper {
 
 impl core::error::Error for ErrorWrapper {}
 
-/// Const Regex Wrapper Pattern
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[non_exhaustive]
-pub enum ConstRegexWrapperPattern {
-    /// This is a pattern for the `regex` crate.
-    Basic(&'static str),
-
-    /// This is a pattern for the `fancy_regex` crate.
-    Fancy(&'static str),
-}
-
-impl ConstRegexWrapperPattern {
-    /// Get the underlying regex pattern.
-    ///
-    /// ## Returns
-    /// The regex pattern string slice.
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::Basic(pattern) => pattern,
-            Self::Fancy(pattern) => pattern,
-        }
-    }
-
-    /// Convert to [`RegexWrapperPattern`]
-    ///
-    /// ## Returns
-    /// A new `RegexWrapperPattern` instance.
-    pub fn to_pattern(&self) -> RegexWrapperPattern {
-        (*self).into()
-    }
-
-    /// Compile the regex pattern into a `RegexWrapper`.
-    ///
-    /// ## Returns
-    /// A `Result` containing the compiled `RegexWrapper` or an `ErrorWrapper`.
-    pub fn compile(&self) -> Result<RegexWrapper, ErrorWrapper> {
-        RegexWrapperPattern::from(*self).compile()
-    }
-}
-
-impl From<ConstRegexWrapperPattern> for RegexWrapperPattern {
-    fn from(pattern: ConstRegexWrapperPattern) -> Self {
-        use ConstRegexWrapperPattern::*;
-        match pattern {
-            Basic(pattern) => RegexWrapperPattern::Basic(pattern.to_string()),
-            Fancy(pattern) => RegexWrapperPattern::Fancy(pattern.to_string()),
-        }
-    }
-}
-
-/// Label for regex patterns.
-#[derive(Debug, Clone, PartialEq)]
-#[non_exhaustive]
-pub enum RegexWrapperPattern {
-    /// This is a pattern for the `regex` crate.
-    Basic(String),
-
-    /// This is a pattern for the `fancy_regex` crate.
-    Fancy(String),
-
-    /// This pattern will try the `regex` crate first,
-    /// and fallback to `fancy_regex` if it fails.
-    Adaptive(String),
-}
-
-impl<S: AsRef<str>> From<S> for RegexWrapperPattern {
-    fn from(pattern: S) -> Self {
-        Self::Adaptive(pattern.as_ref().to_string())
-    }
-}
-
-impl From<RegexWrapperPattern> for RegexWrapper {
-    fn from(pattern: RegexWrapperPattern) -> Self {
+impl From<RegexPattern> for RegexWrapper {
+    fn from(pattern: RegexPattern) -> Self {
         pattern.compile().unwrap()
-    }
-}
-
-impl RegexWrapperPattern {
-    /// Get the underlying regex pattern.
-    ///
-    /// ## Returns
-    /// The regex pattern string slice.
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::Basic(pattern) => pattern,
-            Self::Fancy(pattern) => pattern,
-            Self::Adaptive(pattern) => pattern,
-        }
-    }
-
-    /// Compile the regex pattern into a `RegexWrapper`.
-    ///
-    /// ## Returns
-    /// A `Result` containing the compiled `RegexWrapper` or an `ErrorWrapper`.
-    pub fn compile(&self) -> Result<RegexWrapper, ErrorWrapper> {
-        match self {
-            Self::Basic(pattern) => regex::Regex::new(pattern)
-                .map(RegexWrapper::from)
-                .map_err(ErrorWrapper::from),
-            Self::Fancy(pattern) => fancy_regex::Regex::new(pattern)
-                .map(RegexWrapper::from)
-                .map_err(ErrorWrapper::from),
-            Self::Adaptive(pattern) => {
-                regex::Regex::new(pattern)
-                    .map(RegexWrapper::from)
-                    .or_else(|_| {
-                        fancy_regex::Regex::new(pattern)
-                            .map(RegexWrapper::from)
-                            .map_err(ErrorWrapper::from)
-                    })
-            }
-        }
     }
 }
 
@@ -284,23 +172,23 @@ impl<'r, 'h> Iterator for MatchesWrapper<'r, 'h> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{alloc::format, join_patterns};
+    use crate::{
+        alloc::{format, string::ToString},
+        join_patterns,
+        regex::regex_pattern::ConstRegexPattern,
+    };
 
     #[test]
     fn test_partial_eq() {
-        let b0 = RegexWrapperPattern::Basic("hello world".to_string())
+        let b0 = RegexPattern::Basic("hello world".to_string())
             .compile()
             .unwrap();
-        let b1 = RegexWrapperPattern::Basic("world".to_string())
-            .compile()
-            .unwrap();
+        let b1 = RegexPattern::Basic("world".to_string()).compile().unwrap();
 
-        let f0 = RegexWrapperPattern::Fancy("hello world".to_string())
+        let f0 = RegexPattern::Fancy("hello world".to_string())
             .compile()
             .unwrap();
-        let f1 = RegexWrapperPattern::Fancy("world".to_string())
-            .compile()
-            .unwrap();
+        let f1 = RegexPattern::Fancy("world".to_string()).compile().unwrap();
 
         assert_eq!(&b0, &b0);
         assert_eq!(&b1, &b1);
@@ -321,7 +209,7 @@ mod tests {
 
     #[test]
     fn test_const_pattern() {
-        const BASIC: ConstRegexWrapperPattern = ConstRegexWrapperPattern::Basic("hello world");
+        const BASIC: ConstRegexPattern = ConstRegexPattern::Basic("hello world");
         assert_eq!(BASIC.as_str(), "hello world");
 
         let rw = BASIC.compile().unwrap();
@@ -332,7 +220,7 @@ mod tests {
         let pattern = BASIC.to_pattern();
         assert_eq!(pattern.as_str(), "hello world");
 
-        const FANCY: ConstRegexWrapperPattern = ConstRegexWrapperPattern::Fancy("hello");
+        const FANCY: ConstRegexPattern = ConstRegexPattern::Fancy("hello");
         assert_eq!(FANCY.as_str(), "hello");
 
         let rw = FANCY.compile().unwrap();
@@ -346,7 +234,7 @@ mod tests {
 
     #[test]
     fn test_basic_pattern() {
-        let pattern = RegexWrapperPattern::Basic("hello world".to_string());
+        let pattern = RegexPattern::Basic("hello world".to_string());
         assert_eq!(pattern.as_str(), "hello world");
 
         let rw: RegexWrapper = pattern.into();
@@ -357,7 +245,7 @@ mod tests {
 
     #[test]
     fn test_fancy_pattern() {
-        let pattern = RegexWrapperPattern::Fancy("hello world".to_string());
+        let pattern = RegexPattern::Fancy("hello world".to_string());
         assert_eq!(pattern.as_str(), "hello world");
 
         let rw = pattern.compile().unwrap();
@@ -368,7 +256,7 @@ mod tests {
 
     #[test]
     fn test_adaptive_pattern() {
-        let pattern: RegexWrapperPattern = "hello world".to_string().into();
+        let pattern: RegexPattern = "hello world".to_string().into();
         assert_eq!(pattern.as_str(), "hello world");
 
         let rw = pattern.compile().unwrap();
@@ -389,7 +277,7 @@ mod tests {
 
     #[test]
     fn test_basic_pattern_failure() {
-        let pattern = RegexWrapperPattern::Basic(FANCY_PATTERN.to_string());
+        let pattern = RegexPattern::Basic(FANCY_PATTERN.to_string());
         let err = pattern.compile().unwrap_err();
         assert!(matches!(err, ErrorWrapper::Basic(_)));
 
@@ -398,7 +286,7 @@ mod tests {
 
     #[test]
     fn test_fancy_pattern_failure() {
-        let pattern = RegexWrapperPattern::Fancy(r"[".to_string());
+        let pattern = RegexPattern::Fancy(r"[".to_string());
         let err = pattern.compile().unwrap_err();
         assert!(matches!(err, ErrorWrapper::Fancy(_)));
 
@@ -407,8 +295,8 @@ mod tests {
 
     #[test]
     fn test_adaptive_pattern_fallback() {
-        let pattern: RegexWrapperPattern = FANCY_PATTERN.into();
-        assert!(matches!(pattern, RegexWrapperPattern::Adaptive(_)));
+        let pattern: RegexPattern = FANCY_PATTERN.into();
+        assert!(matches!(pattern, RegexPattern::Adaptive(_)));
 
         let rw = pattern.compile().unwrap();
         assert!(!rw.is_basic());

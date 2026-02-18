@@ -1,5 +1,5 @@
 //! # Text Spanner Configuration
-use crate::{regex::RegexWrapperPattern, types::TokenType, vocab::SpecialVocab};
+use crate::{regex::RegexPattern, types::TokenType, vocab::SpecialVocab};
 
 /// Description of text spanning configuration.
 ///
@@ -10,14 +10,14 @@ use crate::{regex::RegexWrapperPattern, types::TokenType, vocab::SpecialVocab};
 #[derive(Debug, Clone)]
 pub struct TextSpanningConfig<T: TokenType> {
     /// Regex pattern for word splitting.
-    pattern: RegexWrapperPattern,
+    pattern: RegexPattern,
 
     /// Special tokens vocabulary.
     specials: SpecialVocab<T>,
 }
 
-impl<T: TokenType> From<RegexWrapperPattern> for TextSpanningConfig<T> {
-    fn from(value: RegexWrapperPattern) -> Self {
+impl<T: TokenType> From<RegexPattern> for TextSpanningConfig<T> {
+    fn from(value: RegexPattern) -> Self {
         TextSpanningConfig::<T>::from_pattern(value)
     }
 }
@@ -31,7 +31,7 @@ impl<T: TokenType> TextSpanningConfig<T> {
     /// * `pattern` - The word split pattern.
     pub fn from_pattern<P>(pattern: P) -> Self
     where
-        P: Into<RegexWrapperPattern>,
+        P: Into<RegexPattern>,
     {
         Self {
             pattern: pattern.into(),
@@ -48,7 +48,7 @@ impl<T: TokenType> TextSpanningConfig<T> {
         pattern: P,
     ) -> Self
     where
-        P: Into<RegexWrapperPattern>,
+        P: Into<RegexPattern>,
     {
         Self {
             pattern: pattern.into(),
@@ -100,7 +100,7 @@ impl<T: TokenType> TextSpanningConfig<T> {
     }
 
     /// Get the word pattern.
-    pub fn pattern(&self) -> &RegexWrapperPattern {
+    pub fn pattern(&self) -> &RegexPattern {
         &self.pattern
     }
 
@@ -127,7 +127,7 @@ mod tests {
     fn test_from_pattern() {
         type T = u32;
 
-        let pattern = RegexWrapperPattern::Adaptive("hello".to_string());
+        let pattern = RegexPattern::Adaptive("hello".to_string());
 
         let mut config: TextSpanningConfig<T> = pattern.into();
         assert_eq!(config.pattern().as_str(), "hello");
@@ -137,10 +137,7 @@ mod tests {
         assert_eq!(config.specials().len(), 1);
 
         let config = config.with_pattern("hi");
-        assert_eq!(
-            &config.pattern,
-            &RegexWrapperPattern::Adaptive("hi".to_string())
-        );
+        assert_eq!(&config.pattern, &RegexPattern::Adaptive("hi".to_string()));
 
         let mut specials = SpecialVocab::default();
         specials.add_str_word("apple", 1);

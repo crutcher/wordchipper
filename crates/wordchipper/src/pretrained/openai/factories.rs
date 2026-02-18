@@ -23,7 +23,7 @@ use crate::{
             oa_r50k_base_special_tokens,
         },
     },
-    regex::RegexWrapperPattern,
+    regex::RegexPattern,
     resources::{ConstKeyedResource, ResourceLoader},
     spanning::TextSpanningConfig,
     types::TokenType,
@@ -82,7 +82,7 @@ impl OATokenizer {
     }
 
     /// Get the tokenizer regex pattern.
-    pub fn pattern(&self) -> RegexWrapperPattern {
+    pub fn pattern(&self) -> RegexPattern {
         self.factory().pattern()
     }
 

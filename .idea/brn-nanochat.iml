@@ -14,6 +14,8 @@
       <sourceFolder url="file://$MODULE_DIR$/examples/side-by-side/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/examples/sample-timer/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/wordchipper-experimental/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/bindings/python/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/bindings/python/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/crates/nanochat/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/crates/wordchipper/target" />

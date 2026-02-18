@@ -7,7 +7,7 @@ use cfg_if::cfg_if;
 use crate::{
     alloc::{string::String, vec::Vec},
     compat::ranges::offset_range,
-    regex::{RegexWrapper, RegexWrapperPattern, alternate_choice_regex_pattern},
+    regex::{RegexPattern, RegexWrapper, alternate_choice_regex_pattern},
     spanning::{SpanRef, TextSpanner, TextSpanningConfig},
     types::TokenType,
     vocab::VocabIndex,
@@ -71,7 +71,7 @@ impl RegexTextSpanner {
         max_pool: Option<NonZeroUsize>,
     ) -> Self
     where
-        P: Into<RegexWrapperPattern>,
+        P: Into<RegexPattern>,
         S: AsRef<str>,
     {
         let span_re = word_pattern.into().into();
