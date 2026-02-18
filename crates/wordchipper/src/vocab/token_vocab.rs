@@ -2,7 +2,7 @@
 
 use crate::{
     alloc::vec::Vec,
-    types::{CommonHashSet, TokenType},
+    types::{TokenType, WCHashSet},
 };
 
 /// Common traits for token vocabularies.
@@ -11,7 +11,7 @@ pub trait VocabIndex<T: TokenType>: Clone + Send + Sync {
     type Token: TokenType;
 
     /// Returns a set of all tokens.
-    fn tokens(&self) -> CommonHashSet<T>;
+    fn tokens(&self) -> WCHashSet<T>;
 
     /// Returns the number of tokens in the vocabulary.
     fn len(&self) -> usize;

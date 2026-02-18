@@ -5,7 +5,7 @@ use core::fmt::Debug;
 use crate::{
     regex::RegexWrapper,
     training::{CountType, StringChunkType, utility::TokenSpanBuf},
-    types::{CommonHashMap, TokenType},
+    types::{TokenType, WCHashMap},
     vocab::ByteMapVocab,
 };
 
@@ -49,7 +49,7 @@ where
     pub regex: RegexWrapper,
 
     /// The word counts.
-    pub word_counts: CommonHashMap<K, C>,
+    pub word_counts: WCHashMap<K, C>,
 }
 
 impl<K, C> TextSpanCounter<K, C>
@@ -65,12 +65,12 @@ where
         Self {
             options,
             regex,
-            word_counts: CommonHashMap::with_capacity(100_000),
+            word_counts: WCHashMap::with_capacity(100_000),
         }
     }
 
     /// Release the word counts and return them.
-    pub fn release(self) -> CommonHashMap<K, C> {
+    pub fn release(self) -> WCHashMap<K, C> {
         self.word_counts
     }
 
@@ -143,7 +143,7 @@ mod tests {
         check_common_counts(counts);
     }
 
-    fn check_common_counts<K, C>(counts: CommonHashMap<K, C>)
+    fn check_common_counts<K, C>(counts: WCHashMap<K, C>)
     where
         K: StringChunkType,
         C: CountType,
@@ -178,12 +178,12 @@ mod tests {
 
         word_counts.update_from_samples(samples.iter());
 
-        let counts: CommonHashMap<TokenSpanBuf<T>, C> =
+        let counts: WCHashMap<TokenSpanBuf<T>, C> =
             word_counts.to_text_span_counts_iter(&byte_vocab).collect();
         let mut counts = counts.into_iter().collect::<Vec<_>>();
         counts.sort();
 
-        let mut expected = CommonHashMap::new();
+        let mut expected = WCHashMap::new();
         expected.insert(TokenSpanBuf::from_string("Hello", &byte_vocab), 1);
         expected.insert(TokenSpanBuf::from_string("Foo", &byte_vocab), 1);
         expected.insert(TokenSpanBuf::from_string("bar", &byte_vocab), 1);

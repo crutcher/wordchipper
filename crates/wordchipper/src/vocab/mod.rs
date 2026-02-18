@@ -10,10 +10,35 @@
 //!
 //! ## Unified Vocabulary
 //!
-//! The primary user-oriented vocabulary is [`UnifiedTokenVocab`], which contains:
-//! * `spanning` - a [`crate::spanning::TextSpanningConfig`],
-//! * `span_vocab` - a [`SpanMapVocab`] ``{ Vec<u8> -> T }`` vocabulary,
-//! * `pair_vocab` - a [`PairMapVocab`] ``{ (T, T) -> T }`` vocabulary.
+//! [`UnifiedTokenVocab<T>`] is the primary vocabulary type for end users.
+//! It unifies several component vocabularies into a coherent interface:
+//! * [`ByteMapVocab`] - bidirectional byte⟷token mapping
+//! * [`PairMapVocab`] - BPE merge pair mapping: `(T, T) → T`
+//! * [`SpanMapVocab`] - span dictionary mapping: `Vec<u8> → T`
+//! * [`crate::spanning::TextSpanningConfig`] - text spanning configuration
+//!   that defines how text is split into spans for encoding, including
+//!   special token words
+//!
+//! Pre-trained vocabulary loaders return [`UnifiedTokenVocab<T>`] instances,
+//! which can be converted between [`crate::TokenType`]s via [`UnifiedTokenVocab::to_token_type`].
+//!
+//! Default [`crate::TokenEncoder`] and [`crate::TokenDecoder`] implementations
+//! can be constructed directly using [`UnifiedTokenVocab::to_default_encoder`]
+//! and [`UnifiedTokenVocab::to_default_decoder`].
+//! [`UnifiedTokenVocab::to_encoder_builder`] and
+//! [`UnifiedTokenVocab::to_decoder_builder`] return [`crate::TokenEncoderBuilder`] and
+//! [`crate::TokenDecoderBuilder`] instances, which can be further configured
+//! with additional options.
+//!
+//! ## Loading and Saving Models
+//!
+//! Loading a pre-trained model requires reading in the vocabulary,
+//! either as a [`SpanMapVocab`] or [`PairMapVocab`]
+//! (either of which must have an attached [`ByteMapVocab`]);
+//! and merging that with a [`crate::spanning::TextSpanningConfig`]
+//! to produce a [`UnifiedTokenVocab<T>`].
+//!
+//! A number of IO helpers are provided in [`io`].
 #[cfg(feature = "std")]
 pub mod io;
 pub mod utility;
@@ -27,17 +52,17 @@ mod unified_vocab;
 mod vocab_types;
 
 #[doc(inline)]
-pub use byte_vocab::ByteMapVocab;
+pub use byte_vocab::*;
 #[doc(inline)]
-pub use pair_vocab::PairMapVocab;
+pub use pair_vocab::*;
 #[doc(inline)]
-pub use span_vocab::SpanMapVocab;
+pub use span_vocab::*;
 #[doc(inline)]
-pub use special_vocab::SpecialVocab;
+pub use special_vocab::*;
 #[doc(inline)]
-pub use token_vocab::VocabIndex;
+pub use token_vocab::*;
 #[doc(inline)]
-pub use unified_vocab::UnifiedTokenVocab;
+pub use unified_vocab::*;
 #[doc(inline)]
 pub use vocab_types::*;
 

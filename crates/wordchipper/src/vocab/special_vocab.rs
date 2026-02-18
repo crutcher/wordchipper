@@ -2,7 +2,7 @@
 
 use crate::{
     alloc::vec::Vec,
-    types::{CommonHashSet, TokenType},
+    types::{TokenType, WCHashSet},
     vocab::{SpanTokenMap, VocabIndex, utility::validators::try_vocab_size},
 };
 
@@ -123,7 +123,7 @@ impl<T: TokenType> VocabIndex<T> for SpecialVocab<T> {
         self.span_map.len()
     }
 
-    fn tokens(&self) -> CommonHashSet<T> {
+    fn tokens(&self) -> WCHashSet<T> {
         self.span_map.values().copied().collect()
     }
 

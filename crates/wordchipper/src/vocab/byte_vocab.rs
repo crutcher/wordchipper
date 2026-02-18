@@ -4,7 +4,7 @@ use core::fmt::Debug;
 
 use crate::{
     alloc::{vec, vec::Vec},
-    types::{CommonHashSet, TokenType},
+    types::{TokenType, WCHashSet},
     vocab::{ByteTokenArray, ByteTokenMap, TokenByteMap, VocabIndex},
 };
 
@@ -185,7 +185,7 @@ impl<T: TokenType> VocabIndex<T> for ByteMapVocab<T> {
         256
     }
 
-    fn tokens(&self) -> CommonHashSet<T> {
+    fn tokens(&self) -> WCHashSet<T> {
         self.byte_tokens.iter().copied().collect()
     }
 

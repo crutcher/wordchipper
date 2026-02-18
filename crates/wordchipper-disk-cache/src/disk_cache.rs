@@ -53,6 +53,10 @@ impl WordchipperDiskCacheOptions {
 }
 
 /// Disk cache for downloaded files.
+///
+/// Leverages [`Downloader`] for downloading files,
+/// and [`PathResolver`] for resolving cache and data paths
+/// appropriate for a user/system combo, and any environment overrides.
 pub struct WordchipperDiskCache {
     /// Cache directory.
     cache_dir: PathBuf,
@@ -206,9 +210,7 @@ mod tests {
     use serial_test::serial;
 
     use crate::{
-        WORDCHIPPER_CACHE_CONFIG,
-        WORDCHIPPER_CACHE_DIR,
-        WORDCHIPPER_DATA_DIR,
+        WORDCHIPPER_CACHE_CONFIG, WORDCHIPPER_CACHE_DIR, WORDCHIPPER_DATA_DIR,
         disk_cache::{WordchipperDiskCache, WordchipperDiskCacheOptions},
     };
 

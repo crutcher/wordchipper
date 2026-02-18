@@ -95,7 +95,7 @@ CI runs all of the above on every push/PR to `main`.
   Dynamic span caching was tested and abandoned due to cacheline contention under concurrent access.
 - **Multiple encoder/decoder implementations coexist** for cross-benchmarking across workloads and hardware.
 - **Generic over `TokenType`** (`T: TokenType`). Common concrete types: `u16`, `u32`.
-- **Hash strategy is swappable** via `CommonHashMap`/`CommonHashSet` type aliases in `types/`, controlled by `ahash`/
+- **Hash strategy is swappable** via `WCHashMap`/`WCHashSet` type aliases in `types/`, controlled by `ahash`/
   `foldhash`/`hashbrown` features.
 - **Builder pattern for encoders/decoders.** Use `TokenEncoderBuilder` and `TokenDecoderBuilder` to construct
   production-ready encoder/decoder instances with appropriate parallelism configuration.

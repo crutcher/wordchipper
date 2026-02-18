@@ -3,26 +3,56 @@
 use anyhow::bail;
 
 use crate::{
-    TokenDecoder,
-    TokenDecoderBuilder,
-    TokenEncoder,
-    TokenEncoderBuilder,
+    TokenDecoder, TokenDecoderBuilder, TokenEncoder, TokenEncoderBuilder,
     alloc::{sync::Arc, vec::Vec},
     compat::strings::string_from_utf8_lossy,
     spanning::TextSpanningConfig,
-    types::{CommonHashSet, Pair, TokenType},
+    types::{Pair, TokenType, WCHashSet},
     vocab::{
-        ByteMapVocab,
-        PairMapVocab,
-        SpanMapVocab,
-        SpanTokenMap,
-        SpecialVocab,
-        TokenSpanMap,
+        ByteMapVocab, PairMapVocab, SpanMapVocab, SpanTokenMap, SpecialVocab, TokenSpanMap,
         VocabIndex,
     },
 };
 
-/// Unified token vocabulary.
+/// A unified vocabulary structure for BPE tokenization that provides coherent views
+/// of vocabulary components through multiple mapping interfaces.
+///
+/// # Overview
+///
+/// [`UnifiedTokenVocab<T>`] is the primary user-facing vocabulary type, generic over
+/// `T: TokenType` (unsigned integer types like `u16`, `u32`, `u64`). It provides
+/// several complementary views of the same vocabulary data:
+///
+/// * [`ByteMapVocab`] - Bijective `u8 ↔ T` byte-to-token mapping (256 entries)
+/// * [`SpanMapVocab`] - Dictionary mapping `Vec<u8> → T` for multi-byte sequences
+/// * [`PairMapVocab`] - BPE merge rules mapping `(T, T) → T` for token pairs
+/// * [`TextSpanningConfig`] - Text segmentation rules (regex patterns, special tokens)
+///
+/// # Typical Usage
+///
+/// Pre-trained vocabulary loaders return `UnifiedTokenVocab<T>`, which can be:
+///
+/// - Converted to different token types via [`to_token_type`](Self::to_token_type)
+/// - Used to build default encoders/decoders via [`to_default_encoder`](Self::to_default_encoder)
+///   and [`to_default_decoder`](Self::to_default_decoder)
+/// - Configured with [`TokenEncoderBuilder`] and
+///   [`TokenDecoderBuilder`] for custom runtime behavior
+///   (parallelism, tokenization strategies, etc.)
+///
+/// # Example
+///
+/// ```ignore
+/// // Load a pre-trained vocabulary
+/// let vocab: UnifiedTokenVocab<u32> = load_pretrained_vocab()?;
+///
+/// // Create a default encoder
+/// let encoder = vocab.to_default_encoder();
+///
+/// // Or configure with custom options
+/// let encoder = vocab.to_encoder_builder()
+///     .parallel(true)
+///     .build();
+/// ```
 #[derive(Clone)]
 pub struct UnifiedTokenVocab<T: TokenType> {
     /// Text Spanning Configuration
@@ -112,6 +142,8 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     }
 
     /// Get a default [`TokenEncoder`] for this [`UnifiedTokenVocab`].
+    ///
+    /// This is a simple wrapper around [`TokenEncoderBuilder::default`].
     pub fn to_default_encoder(&self) -> Arc<dyn TokenEncoder<T>> {
         TokenEncoderBuilder::default(self.clone())
     }
@@ -122,11 +154,15 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     }
 
     /// Get a default [`TokenDecoder`] for this [`UnifiedTokenVocab`].
+    ///
+    /// This is a simple wrapper around [`TokenDecoderBuilder::default`].
     pub fn to_default_decoder(&self) -> Arc<dyn TokenDecoder<T>> {
         TokenDecoderBuilder::default(self.clone())
     }
 
-    /// Convert to a different token type.
+    /// Create a copy of this [`UnifiedTokenVocab`] with a different [`TokenType`].
+    ///
+    /// This will fail if the maximum token index for the new token type is exceeded.
     pub fn to_token_type<G: TokenType>(&self) -> anyhow::Result<UnifiedTokenVocab<G>> {
         Ok(UnifiedTokenVocab::<G> {
             spanning: self.spanning.to_token_type::<G>()?,
@@ -140,22 +176,22 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
         &self.spanning
     }
 
-    /// Get the [`PairMapVocab`].
+    /// Get the `{ (T, T) -> T }` [`PairMapVocab`].
     pub fn pair_vocab(&self) -> &PairMapVocab<T> {
         &self.pair_vocab
     }
 
-    /// Get the [`SpanMapVocab`].
+    /// Get the `{ Vec<u8> -> T }` [`SpanMapVocab`].
     pub fn span_vocab(&self) -> &SpanMapVocab<T> {
         &self.span_vocab
     }
 
-    /// Get the byte table for the word vocabulary.
+    /// Get the `{ u8 -> T }` [`ByteMapVocab`].
     pub fn byte_vocab(&self) -> &ByteMapVocab<T> {
         self.span_vocab.byte_vocab()
     }
 
-    /// Get a reference to the [`SpecialVocab`]
+    /// Get the `{ Vec<u8> -> T }` special token [`SpanMapVocab`].
     pub fn special_vocab(&self) -> &SpecialVocab<T> {
         self.spanning.specials()
     }
@@ -165,10 +201,10 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
         self.spanning.specials_mut()
     }
 
-    /// Compiled expansion dictionary.
+    /// Compile a unified `{ T -> Vec<u8> }` expansion dictionary.
     ///
-    /// ## Returns
-    /// A hash map from tokens to their corresponding byte vectors.
+    /// This will include the single-byte entries in the byte map,
+    /// as well as the entries in the special tokens map.
     pub fn unified_dictionary(&self) -> TokenSpanMap<T> {
         let mut tmp = SpanTokenMap::default();
 
@@ -230,12 +266,12 @@ impl<T: TokenType> VocabIndex<T> for UnifiedTokenVocab<T> {
         self.tokens().len()
     }
 
-    fn tokens(&self) -> CommonHashSet<T> {
+    fn tokens(&self) -> WCHashSet<T> {
         self.span_vocab
             .tokens()
             .into_iter()
             .chain(self.pair_vocab.tokens())
-            .collect::<CommonHashSet<T>>()
+            .collect::<WCHashSet<T>>()
     }
 
     fn span_pairs(&self) -> impl Iterator<Item = (Vec<u8>, T)> {

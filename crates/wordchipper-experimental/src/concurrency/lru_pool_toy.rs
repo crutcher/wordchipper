@@ -9,7 +9,7 @@ use std::{
 use parking_lot::lock_api::RwLock;
 use wordchipper::{
     concurrency::threads::{resolve_max_pool, unstable_current_thread_id_hash},
-    types::CommonHashSet,
+    types::WCHashSet,
 };
 
 /// Experimental LRU-based variant of [`wordchipper::concurrency::PoolToy`].
@@ -113,7 +113,7 @@ where
                 // This also doesn't seem to help.
                 if self.probe {
                     // Be even more aggressive about avoiding collisions.
-                    let active = writer.values().copied().collect::<CommonHashSet<_>>();
+                    let active = writer.values().copied().collect::<WCHashSet<_>>();
                     for j in 0..self.pool.len() {
                         if !active.contains(&j) {
                             idx = j;

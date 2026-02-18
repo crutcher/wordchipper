@@ -66,13 +66,13 @@ mod tests {
     use serial_test::serial;
 
     use super::*;
-    use crate::types::CommonHashMap;
+    use crate::types::WCHashMap;
 
     #[test]
     #[serial]
     fn test_est_max_parallelism() {
         #[allow(unused_mut)]
-        let mut orig_env: CommonHashMap<String, Option<String>> = Default::default();
+        let mut orig_env: WCHashMap<String, Option<String>> = Default::default();
 
         #[cfg(feature = "rayon")]
         for name in RAYON_VARS {

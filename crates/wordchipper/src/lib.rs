@@ -4,30 +4,69 @@
 //!
 //! This is a high-performance LLM tokenizer suite.
 //!
-//! `wordchipper` is compatible with `nanochat/rustbpe` and `tiktoken` tokenizers.
+//! ## Client Summary
 //!
-//! See:
-//! * [`encoders`] to encode text into tokens.
-//! * [`decoders`] to decode tokens into text.
-//! * [`training`] to train a [`vocab::UnifiedTokenVocab`].
-//! * [`vocab`] to manage token vocabularies, vocab io, and pre-trained tokenizers.
+//! ### Core Client Types
+//! * [`TokenType`] - the parameterized integer type used for tokens; choose from `{ u16, u32, u64 }`.
+//! * [`UnifiedTokenVocab<T>`] - the unified vocabulary type.
+//! * [`TokenEncoder<T>`] and [`TokenDecoder<T>`] - the encoder and decoder interfaces.
 //!
-//! A number of pre-trained tokenizers are available through:
-//! * [`pretrained`]
+//! ### Pre-Trained Models
+//! * [`WordchipperDiskCache`](`disk_cache::WordchipperDiskCache`) - the disk cache for loading models.
+//! * [`OATokenizer`](`pretrained::openai::OATokenizer`) - public pre-trained OpenAI tokenizers.
 //!
-//! ## Crate Features
-#![doc = document_features::document_features!()]
+//! ## `TokenType` and `WCHash`* Types
 //!
-//! ## Loading Pretrained Models
+//! `wordchipper` is parameterized over an abstract primitive integer [`TokenType`].
+//! This permits vocabularies and tokenizers in the `{ u16, u32, u64 }` types.
 //!
-//! Loading a pre-trained model requires reading the vocabulary,
-//! as well as configuring the spanning (regex and special words)
-//! configuration.
+//! It is also feature-parameterized over the [`WCHashSet`] and [`WCHashMap`] types,
+//! which are used to represent sets and maps of tokens.
+//! These are provided for convenience and are not required for correctness.
 //!
-//! For a number of pretrained models, simplified constructors are
-//! available to download, cache, and load the vocabulary.
 //!
-//! See: [`pretrained::openai::OATokenizer`]
+//! ## Text Spanning
+//!
+//! Text spanning, splitting text into word and special token spans,
+//! is defined by a [`spanning::TextSpanningConfig`];
+//! and provided by implementors of [`spanning::TextSpanner`],
+//! such as the [`spanning::RegexTextSpanner`].
+//!
+//! These interfaces can be used independently of the [`TokenEncoder`] and [`TokenDecoder`]
+//! interfaces.
+//!
+//! ## Unified Vocabulary
+//!
+//! The core user-facing vocabulary type is [`UnifiedTokenVocab<T>`].
+//!
+//! Pre-trained vocabulary loaders return [`UnifiedTokenVocab<T>`] instances,
+//! which can be converted between [`TokenType`]s via [`UnifiedTokenVocab::to_token_type`].
+//!
+//! Default [`TokenEncoder`] and [`TokenDecoder`] implementations
+//! can be constructed directly using [`UnifiedTokenVocab::to_default_encoder`]
+//! and [`UnifiedTokenVocab::to_default_decoder`].
+//! [`UnifiedTokenVocab::to_encoder_builder`] and [`UnifiedTokenVocab::to_decoder_builder`]
+//! return [`TokenEncoderBuilder`] and [`TokenDecoderBuilder`] instances,
+//! which can be further configured with additional options.
+//!
+//! ## Loading and Saving Models
+//!
+//! Loading a pre-trained model requires reading in the vocabulary,
+//! either as a [`vocab::SpanMapVocab`] or [`vocab::PairMapVocab`]
+//! (either of which must have an attached [`vocab::ByteMapVocab`]);
+//! and merging that with a [`spanning::TextSpanningConfig`]
+//! to produce a [`UnifiedTokenVocab<T>`].
+//!
+//! A number of IO helpers are provided in [`vocab::io`].
+//!
+//! ## Loading Public Pre-trained Models
+//!
+//! A number of public pre-trained `OpenAI` models are
+//! available via the [`pretrained::openai::OATokenizer`] enum,
+//! which supports parsing from strings and loading the models
+//! via a disk cache.
+//!
+//! See [`disk_cache::WordchipperDiskCache`] for details on the disk cache.
 #![cfg_attr(feature = "std", doc = "```rust,no_run")]
 #![cfg_attr(not(feature = "std"), doc = "```rust,ignore")]
 //! use std::sync::Arc;
@@ -52,6 +91,13 @@
 //!     Ok((encoder, decoder))
 //! }
 //! ```
+//!
+//! ## Training Models
+//!
+//! Training models is supported via the [`training`] module.
+//!
+//! ## Crate Features
+#![doc = document_features::document_features!()]
 
 extern crate alloc;
 

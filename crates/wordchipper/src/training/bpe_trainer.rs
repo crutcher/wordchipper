@@ -8,23 +8,14 @@ use dary_heap::OctonaryHeap;
 use crate::{
     regex::RegexWrapperPattern,
     training::{
-        CountType,
-        StringChunkType,
+        CountType, StringChunkType,
         utility::{
-            PairIndexMap,
-            PairSpanIndex,
-            TextSpanCounter,
-            TextSpanCounterOptions,
-            TokenSpanBuf,
+            PairIndexMap, PairSpanIndex, TextSpanCounter, TextSpanCounterOptions, TokenSpanBuf,
         },
     },
-    types::{CommonHashMap, CommonHashSet, Pair, TokenType},
+    types::{Pair, TokenType, WCHashMap, WCHashSet},
     vocab::{
-        ByteMapVocab,
-        PairMapVocab,
-        PairTokenMap,
-        UnifiedTokenVocab,
-        VocabIndex,
+        ByteMapVocab, PairMapVocab, PairTokenMap, UnifiedTokenVocab, VocabIndex,
         utility::validators::{U8_SIZE, expect_vocab_size},
     },
 };
@@ -116,7 +107,7 @@ pub struct MergeJob<T: TokenType, C: CountType> {
     pub pair: Pair<T>,
 
     /// Word indices that may contain this pair.
-    pub word_indices: CommonHashSet<usize>,
+    pub word_indices: WCHashSet<usize>,
 }
 
 impl<T: TokenType, C: CountType> MergeJob<T, C> {
@@ -252,7 +243,7 @@ where
 
         self.options.pattern.compile()?;
 
-        let mut pairs: PairTokenMap<T> = CommonHashMap::with_capacity(num_merges);
+        let mut pairs: PairTokenMap<T> = WCHashMap::with_capacity(num_merges);
 
         let (mut words, word_counts): (Vec<TokenSpanBuf<T>>, Vec<C>) = self
             .span_counter
@@ -320,7 +311,7 @@ where
             // Record merge
             pairs.insert(job.pair, new_token);
 
-            let mut new_token_pair_map: PairIndexMap<T> = CommonHashMap::with_capacity(16);
+            let mut new_token_pair_map: PairIndexMap<T> = WCHashMap::with_capacity(16);
 
             // Merge this pair in all words where it occurs
             for &word_idx in &job.word_indices {

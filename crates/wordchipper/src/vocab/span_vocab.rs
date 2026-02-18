@@ -2,14 +2,9 @@
 
 use crate::{
     alloc::vec::Vec,
-    types::{CommonHashMap, CommonHashSet, TokenType},
+    types::{TokenType, WCHashMap, WCHashSet},
     vocab::{
-        ByteMapVocab,
-        ByteTokenMap,
-        PairMapVocab,
-        PairTokenMap,
-        SpanTokenMap,
-        VocabIndex,
+        ByteMapVocab, ByteTokenMap, PairMapVocab, PairTokenMap, SpanTokenMap, VocabIndex,
         utility::validators::try_vocab_size,
     },
 };
@@ -216,7 +211,7 @@ impl<T: TokenType> SpanMapVocab<T> {
 
         let mut pairs = PairTokenMap::default();
 
-        let token_to_span: CommonHashMap<T, &[u8]> = self
+        let token_to_span: WCHashMap<T, &[u8]> = self
             .span_map
             .iter()
             .map(|(chunk, &token)| (token, chunk.as_ref()))
@@ -250,13 +245,13 @@ impl<T: TokenType> VocabIndex<T> for SpanMapVocab<T> {
         self.span_map.len()
     }
 
-    fn tokens(&self) -> CommonHashSet<T> {
+    fn tokens(&self) -> WCHashSet<T> {
         self.byte_vocab
             .byte_tokens()
             .iter()
             .copied()
             .chain(self.span_map.values().copied())
-            .collect::<CommonHashSet<T>>()
+            .collect::<WCHashSet<T>>()
     }
 
     fn max_token(&self) -> Option<T> {

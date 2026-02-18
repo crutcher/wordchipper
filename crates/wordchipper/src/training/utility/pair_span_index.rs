@@ -2,14 +2,14 @@
 
 use crate::{
     training::{CountType, utility::TokenSpanBuf},
-    types::{CommonHashMap, CommonHashSet, Pair, TokenType},
+    types::{Pair, TokenType, WCHashMap, WCHashSet},
 };
 
 /// A map from [`Pair`] to its occurrence count.
-pub type PairCountMap<T, C> = CommonHashMap<Pair<T>, C>;
+pub type PairCountMap<T, C> = WCHashMap<Pair<T>, C>;
 
 /// A map from [`Pair`] to indices over ``words``.
-pub type PairIndexMap<T> = CommonHashMap<Pair<T>, CommonHashSet<usize>>;
+pub type PairIndexMap<T> = WCHashMap<Pair<T>, WCHashSet<usize>>;
 
 /// An index of ``(T, T)`` pair information relative to a ``&[TokenSpanBuf<T>]``.
 #[derive(Debug, Clone)]
@@ -134,7 +134,7 @@ mod tests {
             .into_iter()
             .map(|((a, b), s)| (
                 (T::from_u8(a as u8).unwrap(), T::from_u8(b as u8).unwrap()),
-                CommonHashSet::from_iter(s)
+                WCHashSet::from_iter(s)
             ))
             .collect::<PairIndexMap<T>>()
         );

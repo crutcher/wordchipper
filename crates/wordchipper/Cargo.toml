@@ -73,7 +73,7 @@ no_std = [
 ##
 ## If both "ahash" and "foldhash" are enabled, then "ahash" will win.
 ##
-## This is done by the ``types::CommonHash{*}`` type alias machinery.
+## This is done by the ``types::WCHash{*}`` type alias machinery.
 ## See also the ``hashbrown`` dep used by ``no_std``.
 ahash = [
     "dep:ahash",
@@ -85,7 +85,7 @@ ahash = [
 ##
 ## If both "ahash" and "foldhash" are enabled, then "ahash" will win.
 ##
-## This is done by the ``types::CommonHash{*}`` type alias machinery.
+## This is done by the ``types::WCHash{*}`` type alias machinery.
 ## See also the ``hashbrown`` dep used by ``no_std``.
 foldhash = [
     "dep:foldhash",

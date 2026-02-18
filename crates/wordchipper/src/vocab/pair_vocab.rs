@@ -3,7 +3,7 @@
 use crate::{
     alloc::vec::Vec,
     decoders::{TokenDecoder, utility::PairExpansionDecoder},
-    types::{CommonHashSet, Pair, TokenType},
+    types::{Pair, TokenType, WCHashSet},
     vocab::{ByteMapVocab, PairTokenMap, VocabIndex, utility::validators::try_vocab_size},
 };
 
@@ -24,7 +24,7 @@ pub fn try_validate_pair_map<T: TokenType>(
     byte_vocab: &ByteMapVocab<T>,
     pairs: &PairTokenMap<T>,
 ) -> anyhow::Result<()> {
-    let pair_targets: CommonHashSet<T> = pairs.values().copied().collect();
+    let pair_targets: WCHashSet<T> = pairs.values().copied().collect();
 
     for t in &pair_targets {
         if let Some(b) = byte_vocab.get_byte(*t) {
@@ -135,13 +135,13 @@ impl<T: TokenType> VocabIndex<T> for PairMapVocab<T> {
         self.byte_vocab.len() + self.pair_map.len()
     }
 
-    fn tokens(&self) -> CommonHashSet<T> {
+    fn tokens(&self) -> WCHashSet<T> {
         self.byte_vocab
             .tokens()
             .iter()
             .copied()
             .chain(self.pair_map.values().copied())
-            .collect::<CommonHashSet<T>>()
+            .collect::<WCHashSet<T>>()
     }
 
     fn max_token(&self) -> Option<T> {
