@@ -8,8 +8,8 @@
 //! This recurses into two problems:
 //!
 //! * Labeling Patterns - [`RegexPattern`]
-//!   * [`RegexPattern::Basic`] - a pattern which was written for [`regex`].
-//!   * [`RegexPattern::Fancy`] - a pattern which was written for [`fancy_regex`].
+//!   * [`RegexPattern::Basic`] - a pattern which was written for basic regular expressions.
+//!   * [`RegexPattern::Fancy`] - a pattern which was written for regex extensions.
 //!   * [`RegexPattern::Adaptive`] - unknown target, try basic; then fall-up to fancy.
 //! * Wrapping Compiled Regex - [`RegexWrapper`]
 //!
