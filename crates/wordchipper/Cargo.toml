@@ -136,7 +136,7 @@ ahash = { workspace = true, optional = true }
 foldhash = { workspace = true, optional = true }
 
 # "download" feature deps:
-wordchipper-disk-cache = { version = "0.7.1", path = "../wordchipper-disk-cache", optional = true }
+wordchipper-disk-cache = { version = "0.7.2", path = "../wordchipper-disk-cache", optional = true }
 
 # "rayon" feature deps:
 rayon = { workspace = true, optional = true }
