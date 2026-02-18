@@ -58,6 +58,9 @@ jobs:
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: "bindings/python/pyproject.toml"
 
       - name: Set up Python
         uses: actions/setup-python@v5
