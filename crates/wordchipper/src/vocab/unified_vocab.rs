@@ -3,13 +3,21 @@
 use anyhow::bail;
 
 use crate::{
-    TokenDecoder, TokenDecoderBuilder, TokenEncoder, TokenEncoderBuilder,
+    TokenDecoder,
+    TokenDecoderBuilder,
+    TokenEncoder,
+    TokenEncoderBuilder,
     alloc::{sync::Arc, vec::Vec},
     compat::strings::string_from_utf8_lossy,
     spanning::TextSpanningConfig,
     types::{Pair, TokenType, WCHashSet},
     vocab::{
-        ByteMapVocab, PairMapVocab, SpanMapVocab, SpanTokenMap, SpecialVocab, TokenSpanMap,
+        ByteMapVocab,
+        PairMapVocab,
+        SpanMapVocab,
+        SpanTokenMap,
+        SpecialVocab,
+        TokenSpanMap,
         VocabIndex,
     },
 };
