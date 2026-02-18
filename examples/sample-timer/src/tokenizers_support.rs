@@ -1,8 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::bail;
-use tokenizers::Encoding;
-use tokenizers::tokenizer::Tokenizer;
+use tokenizers::{Encoding, tokenizer::Tokenizer};
 use wordchipper::pretrained::openai::OATokenizer;
 
 use crate::engines::EncDecEngine;
