@@ -129,6 +129,7 @@ pub use decoders::{TokenDecoder, TokenDecoderBuilder};
 #[doc(inline)]
 pub use encoders::{TokenEncoder, TokenEncoderBuilder};
 #[doc(inline)]
+#[cfg(feature = "download")]
 pub use pretrained::{get_model, list_models};
 #[doc(inline)]
 pub use types::*;

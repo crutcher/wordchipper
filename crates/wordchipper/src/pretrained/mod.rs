@@ -42,8 +42,10 @@
 //! }
 //! ```
 
+#[cfg(feature = "download")]
 mod load_by_name;
 pub mod openai;
 
 #[doc(inline)]
+#[cfg(feature = "download")]
 pub use load_by_name::*;

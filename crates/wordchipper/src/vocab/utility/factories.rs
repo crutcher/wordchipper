@@ -14,7 +14,7 @@ use crate::vocab::UnifiedTokenVocab;
 use crate::{
     alloc::{string::String, vec::Vec},
     regex::{ConstRegexWrapperPattern, RegexWrapperPattern},
-    resources::{ConstKeyedResource, KeyedResource},
+    resources::ConstKeyedResource,
     spanning::TextSpanningConfig,
     types::TokenType,
 };
@@ -59,7 +59,7 @@ impl ConstVocabularyFactory {
         &self,
         loader: &mut dyn ResourceLoader,
     ) -> anyhow::Result<PathBuf> {
-        let res: KeyedResource = self.resource.clone().into();
+        let res: crate::resources::KeyedResource = self.resource.clone().into();
         loader.load_resource_path(&res)
     }
 
