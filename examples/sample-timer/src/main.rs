@@ -545,5 +545,5 @@ pub fn format_bps(
     duration: Duration,
 ) -> String {
     let bps = bytes as f64 / duration.as_secs_f64();
-    format!(r"{}/s", humansize::format_size_i(bps, humansize::BINARY))
+    format!(r"{}/s", humansize::format_size_i(bps, humansize::DECIMAL))
 }
