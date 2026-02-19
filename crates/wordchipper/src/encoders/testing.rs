@@ -9,7 +9,8 @@ use crate::{
     spanning::TextSpanningConfig,
     types::TokenType,
     vocab::{
-        UnifiedTokenVocab, VocabIndex,
+        UnifiedTokenVocab,
+        VocabIndex,
         utility::testing::{build_test_shift_byte_vocab, build_test_vocab},
     },
 };

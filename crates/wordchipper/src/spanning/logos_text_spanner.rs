@@ -598,8 +598,7 @@ mod tests {
     fn test_logos_cl100k_unicode() {
         use core::num::NonZeroUsize;
 
-        use crate::pretrained::openai::OA_CL100K_BASE_PATTERN;
-        use crate::spanning::RegexTextSpanner;
+        use crate::{pretrained::openai::OA_CL100K_BASE_PATTERN, spanning::RegexTextSpanner};
 
         let regex_config: crate::spanning::TextSpanningConfig<u32> =
             crate::spanning::TextSpanningConfig::from_pattern(OA_CL100K_BASE_PATTERN);
@@ -634,8 +633,7 @@ mod tests {
     fn test_logos_cl100k_realworld() {
         use core::num::NonZeroUsize;
 
-        use crate::pretrained::openai::OA_CL100K_BASE_PATTERN;
-        use crate::spanning::RegexTextSpanner;
+        use crate::{pretrained::openai::OA_CL100K_BASE_PATTERN, spanning::RegexTextSpanner};
 
         let regex_config: crate::spanning::TextSpanningConfig<u32> =
             crate::spanning::TextSpanningConfig::from_pattern(OA_CL100K_BASE_PATTERN);
@@ -703,8 +701,7 @@ mod tests {
     fn test_logos_cl100k_long_text() {
         use core::num::NonZeroUsize;
 
-        use crate::pretrained::openai::OA_CL100K_BASE_PATTERN;
-        use crate::spanning::RegexTextSpanner;
+        use crate::{pretrained::openai::OA_CL100K_BASE_PATTERN, spanning::RegexTextSpanner};
 
         let regex_config: crate::spanning::TextSpanningConfig<u32> =
             crate::spanning::TextSpanningConfig::from_pattern(OA_CL100K_BASE_PATTERN);
@@ -806,8 +803,7 @@ mod tests {
     fn test_o200k_unicode() {
         use core::num::NonZeroUsize;
 
-        use crate::pretrained::openai::OA_O200K_BASE_PATTERN;
-        use crate::spanning::RegexTextSpanner;
+        use crate::{pretrained::openai::OA_O200K_BASE_PATTERN, spanning::RegexTextSpanner};
 
         let regex_config: crate::spanning::TextSpanningConfig<u32> =
             crate::spanning::TextSpanningConfig::from_pattern(OA_O200K_BASE_PATTERN);
@@ -914,8 +910,10 @@ mod tests {
     fn bench_regex_vs_logos() {
         use core::num::NonZeroUsize;
 
-        use crate::pretrained::openai::{OA_CL100K_BASE_PATTERN, OA_O200K_BASE_PATTERN};
-        use crate::spanning::RegexTextSpanner;
+        use crate::{
+            pretrained::openai::{OA_CL100K_BASE_PATTERN, OA_O200K_BASE_PATTERN},
+            spanning::RegexTextSpanner,
+        };
 
         let text = benchmark_text();
         let iterations = 1000;

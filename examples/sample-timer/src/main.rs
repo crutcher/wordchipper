@@ -19,7 +19,8 @@ use similar::TextDiff;
 use tiktoken_rs::{CoreBPE, Rank};
 use tiktoken_support::TiktokenRsEngine;
 use wordchipper::{
-    TokenType, UnifiedTokenVocab,
+    TokenType,
+    UnifiedTokenVocab,
     compat::{
         slices::{inner_slice_view, inner_str_view},
         timers::timeit,

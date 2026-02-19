@@ -1,7 +1,10 @@
 //! # Parallel Encoder
 
 use crate::{
-    alloc::sync::Arc, encoders::TokenEncoder, spanning::TextSpanner, types::TokenType,
+    alloc::sync::Arc,
+    encoders::TokenEncoder,
+    spanning::TextSpanner,
+    types::TokenType,
     vocab::SpecialVocab,
 };
 

@@ -209,7 +209,9 @@ mod tests {
     use serial_test::serial;
 
     use crate::{
-        WORDCHIPPER_CACHE_CONFIG, WORDCHIPPER_CACHE_DIR, WORDCHIPPER_DATA_DIR,
+        WORDCHIPPER_CACHE_CONFIG,
+        WORDCHIPPER_CACHE_DIR,
+        WORDCHIPPER_DATA_DIR,
         disk_cache::{WordchipperDiskCache, WordchipperDiskCacheOptions},
     };
 
