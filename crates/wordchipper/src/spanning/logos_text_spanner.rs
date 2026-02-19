@@ -979,8 +979,9 @@ mod tests {
     /// Comparative benchmark: regex vs logos for cl100k and o200k.
     ///
     /// Run with:
-    ///   cargo test -p wordchipper --release bench_regex_vs_logos -- --nocapture
+    ///   cargo test -p wordchipper --release bench_regex_vs_logos -- --nocapture --ignored
     #[test]
+    #[ignore]
     #[cfg(feature = "std")]
     fn bench_regex_vs_logos() {
         use core::num::NonZeroUsize;
