@@ -3,7 +3,7 @@
 
 use core::fmt::Debug;
 
-use crate::{alloc::boxed::Box, regex::RegexPattern};
+use crate::{alloc::boxed::Box, regex::RegexPattern, spanning::SpanScanner};
 
 /// Error wrapper for regex patterns.
 #[non_exhaustive]
@@ -132,6 +132,15 @@ impl RegexWrapper {
             Self::Basic(regex) => regex.find_iter(haystack).into(),
             Self::Fancy(regex) => regex.find_iter(haystack).into(),
         }
+    }
+}
+
+impl SpanScanner for RegexWrapper {
+    fn next_span(
+        &self,
+        text: &str,
+    ) -> Option<(usize, usize)> {
+        self.find_iter(text).next().map(|m| (m.start(), m.end()))
     }
 }
 

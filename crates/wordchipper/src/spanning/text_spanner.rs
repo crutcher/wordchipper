@@ -57,19 +57,6 @@ pub trait TextSpanner: Send + Sync {
         text.len() / self.expected_bytes_per_span() as usize
     }
 
-    /// Find the next special span in the text.
-    ///
-    /// ## Arguments
-    /// * `text` - The text to search in.
-    ///
-    /// ## Returns
-    /// * `Some(Range<usize>)` if a special span is found,
-    /// * `None` otherwise.
-    fn next_special_span(
-        &self,
-        text: &str,
-    ) -> Option<Range<usize>>;
-
     /// Iterate over all split [`SpanRef`]s in the text.
     ///
     /// # Arguments

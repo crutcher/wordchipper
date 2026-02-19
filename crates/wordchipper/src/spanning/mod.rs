@@ -10,11 +10,17 @@
 //! as well as any per-thread regex pooling.
 
 mod regex_text_spanner;
+mod span_scanner;
+mod span_scanner_spanner;
 mod spanning_config;
 mod text_spanner;
 
 #[doc(inline)]
 pub use regex_text_spanner::*;
+#[doc(inline)]
+pub use span_scanner::*;
+#[doc(inline)]
+pub use span_scanner_spanner::*;
 #[doc(inline)]
 pub use spanning_config::*;
 #[doc(inline)]
