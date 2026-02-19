@@ -613,6 +613,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "std")]
     fn test_logos_cl100k_unicode() {
         use core::num::NonZeroUsize;
 
@@ -648,6 +649,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "std")]
     fn test_logos_cl100k_realworld() {
         use core::num::NonZeroUsize;
 
@@ -716,6 +718,7 @@ mod tests {
     /// Run with:
     ///   cargo test -p wordchipper test_logos_cl100k_long_text -- --nocapture
     #[test]
+    #[cfg(feature = "std")]
     fn test_logos_cl100k_long_text() {
         use core::num::NonZeroUsize;
 
@@ -818,6 +821,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "std")]
     fn test_o200k_unicode() {
         use core::num::NonZeroUsize;
 
@@ -854,6 +858,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "std")]
     fn test_o200k_realworld() {
         use core::num::NonZeroUsize;
 
@@ -892,9 +897,10 @@ mod tests {
     }
 
     // -----------------------------------------------------------------------
-    // Benchmarks
+    // Benchmarks (require std for timing and RegexTextSpanner)
     // -----------------------------------------------------------------------
 
+    #[cfg(feature = "std")]
     /// Shared benchmark corpus.
     fn benchmark_text() -> String {
         let paragraph = "The quick brown fox jumps over the lazy dog. \
@@ -908,6 +914,7 @@ mod tests {
         paragraph.repeat(100)
     }
 
+    #[cfg(feature = "std")]
     /// Print formatted benchmark results for one pattern.
     fn run_benchmark(
         label: &str,
@@ -963,6 +970,7 @@ mod tests {
     /// Run with:
     ///   cargo test -p wordchipper --release bench_regex_vs_logos -- --nocapture
     #[test]
+    #[cfg(feature = "std")]
     fn bench_regex_vs_logos() {
         use core::num::NonZeroUsize;
 
