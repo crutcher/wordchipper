@@ -321,12 +321,23 @@ fn for_each_logos_word(
                     let trim = flush_ws_split!(ws);
                     let single_char = trim == ws_start;
 
-                    // Safety: text is always &str bytes (valid UTF-8).
-                    let first_is_letter = text
-                        .get(start..)
-                        .and_then(|b| core::str::from_utf8(b).ok())
-                        .and_then(|s| s.chars().next())
-                        .is_some_and(char::is_alphabetic);
+                    // Decode only the first UTF-8 char from bytes to avoid
+                    // validating the entire tail (which would be O(n^2) overall).
+                    let first_is_letter = {
+                        let tail = &text[start..];
+                        let char_len = match tail.first() {
+                            Some(&b) if b < 0x80 => 1,
+                            Some(&b) if b < 0xE0 => 2,
+                            Some(&b) if b < 0xF0 => 3,
+                            Some(_) => 4,
+                            None => 0,
+                        };
+                        char_len > 0
+                            && core::str::from_utf8(&tail[..char_len])
+                                .ok()
+                                .and_then(|s| s.chars().next())
+                                .is_some_and(char::is_alphabetic)
+                    };
 
                     if first_is_letter {
                         // Token has no existing prefix; merge last ws char.

@@ -483,31 +483,23 @@ pub fn verify_encode(
         let hi_a = (div + window).min(actual_tokens.len());
         let hi_e = (div + window).min(expected_tokens.len());
 
-        // Show source bytes around the divergence by decoding token byte offsets.
-        let ctx_start = source.len().min(div.saturating_sub(50));
-        let ctx_end = source.len().min(div + 200);
-
-        // Dump the full failing source text for analysis.
-        let dump_path = "/tmp/wordchipper_mismatch.txt";
-        let _ = std::fs::write(dump_path, source);
-        eprintln!(
-            "Full source text dumped to {dump_path} ({} bytes)",
-            source.len()
-        );
+        // Truncate source preview at a char boundary.
+        let preview = match source.get(..500) {
+            Some(s) => s,
+            None => source,
+        };
 
         return Err(format!(
             "ENCODER MISMATCH: {actual_name} != {expected_name}\n\
              First diff at token index {div} (of {} vs {})\n\
              ACTUAL[{lo}..{hi_a}]: {:?}\n\
              EXPECTED[{lo}..{hi_e}]: {:?}\n\
-             SOURCE (first 500 chars): {:?}\n\
-             SOURCE bytes around idx {div}: {:?}",
+             SOURCE (first 500 chars): {:?}",
             actual_tokens.len(),
             expected_tokens.len(),
             &actual_tokens[lo..hi_a],
             &expected_tokens[lo..hi_e],
-            &source[..source.len().min(500)],
-            source.as_bytes().get(ctx_start..ctx_end),
+            preview,
         )
         .into());
     }
