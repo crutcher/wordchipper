@@ -5,6 +5,7 @@
 
 use core::ops::Range;
 
+use aho_corasick::AhoCorasick;
 use logos::Logos;
 
 use crate::{
@@ -399,19 +400,28 @@ fn for_each_logos_word(
 /// A text spanner using a compile-time logos DFA lexer.
 ///
 /// Supports cl100k and o200k patterns with full Unicode matching.
-/// Special token handling uses linear string search.
+/// Special token matching uses an Aho-Corasick automaton for O(n) scanning
+/// regardless of the number of special tokens.
 #[derive(Clone)]
 pub struct LogosTextSpanner {
     variant: LogosVariant,
-    special_words: Vec<String>,
+    special_ac: Option<AhoCorasick>,
 }
 
 impl LogosTextSpanner {
+    /// Build the Aho-Corasick automaton from special words, or `None` if empty.
+    fn build_ac(special_words: &[String]) -> Option<AhoCorasick> {
+        if special_words.is_empty() {
+            return None;
+        }
+        Some(AhoCorasick::new(special_words).expect("special tokens are valid patterns"))
+    }
+
     /// Create a cl100k logos spanner with the given special tokens.
     pub fn cl100k(special_words: Vec<String>) -> Self {
         Self {
             variant: LogosVariant::Cl100k,
-            special_words,
+            special_ac: Self::build_ac(&special_words),
         }
     }
 
@@ -419,7 +429,7 @@ impl LogosTextSpanner {
     pub fn o200k(special_words: Vec<String>) -> Self {
         Self {
             variant: LogosVariant::O200k,
-            special_words,
+            special_ac: Self::build_ac(&special_words),
         }
     }
 
@@ -434,26 +444,12 @@ impl LogosTextSpanner {
     }
 
     /// Find the earliest special token occurrence in text.
-    ///
-    /// Linear scan: O(n * m) where n = text length, m = special word count.
-    /// Assumes no special token is a prefix of another (holds for `OpenAI` tokens).
-    /// On same-position ties, the first word in `special_words` wins.
     fn find_special(
         &self,
         text: &str,
     ) -> Option<Range<usize>> {
-        let mut best: Option<Range<usize>> = None;
-        for word in &self.special_words {
-            if let Some(pos) = text.find(word.as_str()) {
-                let range = pos..pos + word.len();
-                match &best {
-                    None => best = Some(range),
-                    Some(prev) if range.start < prev.start => best = Some(range),
-                    _ => {}
-                }
-            }
-        }
-        best
+        let ac = self.special_ac.as_ref()?;
+        ac.find(text).map(|m| m.start()..m.end())
     }
 
     fn for_each_word(

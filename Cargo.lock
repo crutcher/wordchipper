@@ -3465,6 +3465,7 @@ name = "wordchipper"
 version = "0.7.3"
 dependencies = [
  "ahash",
+ "aho-corasick",
  "base64 0.22.1",
  "cfg-if",
  "compact_str",

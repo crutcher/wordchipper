@@ -58,6 +58,7 @@ std = [
     "dep:base64",
     "dep:strum",
     "dep:strum_macros",
+    "aho-corasick/std",
     "fancy-regex/default",
     "log/std",
     "num-traits/std",
@@ -121,6 +122,7 @@ document-features = { workspace = true }
 thiserror = { workspace = true }
 fancy-regex = { workspace = true, features = ["unicode"] }
 log = { workspace = true }
+aho-corasick = { workspace = true }
 logos = { workspace = true }
 num-traits = { workspace = true }
 regex = { workspace = true, features = ["unicode"] }
