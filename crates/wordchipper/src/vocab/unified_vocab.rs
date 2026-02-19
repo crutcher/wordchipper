@@ -8,7 +8,7 @@ use crate::{
     alloc::{sync::Arc, vec::Vec},
     compat::strings::string_from_utf8_lossy,
     errors::WordchipperError,
-    spanning::TextSpanningConfig,
+    spanning::{TextSpanner, TextSpannerBuilder, TextSpanningConfig},
     types::{Pair, TokenType, WCHashSet},
     vocab::{
         ByteMapVocab,
@@ -147,6 +147,16 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
             span_vocab,
             pair_vocab,
         })
+    }
+
+    /// Get a [`TextSpannerBuilder`] for this [`UnifiedTokenVocab`].
+    pub fn to_spanner_builder(&self) -> TextSpannerBuilder<T> {
+        TextSpannerBuilder::from_vocab(self)
+    }
+
+    /// Get the default [`TextSpanner`] for this [`UnifiedTokenVocab`].
+    pub fn to_default_spanner(&self) -> Arc<dyn TextSpanner> {
+        self.to_spanner_builder().build()
     }
 
     /// Get a [`TokenEncoderBuilder`] for this [`UnifiedTokenVocab`].

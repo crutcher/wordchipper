@@ -96,18 +96,13 @@ mod tests {
             span_encoders::TokenSpanEncoder,
             testing::{common_encoder_test_vocab, common_encoder_tests},
         },
-        spanning::RegexTextSpanner,
         types::TokenType,
     };
 
     fn test_encoder<T: TokenType>() {
         let vocab = common_encoder_test_vocab();
-        let spanner = Arc::new(RegexTextSpanner::from_config(
-            vocab.spanning().clone(),
-            None,
-        ));
         let encoder = TokenSpanEncoder::<T>::new(
-            spanner.clone(),
+            vocab.to_default_spanner(),
             vocab.clone(),
             Arc::new(|| Box::new(MergeHeapSpanEncoder::<T>::default())),
         );

@@ -8,7 +8,7 @@ use crate::{
         TokenEncoder,
         span_encoders::{IncrementalSweepSpanEncoder, TokenSpanEncoder},
     },
-    spanning::SpannerBuilder,
+    spanning::TextSpannerBuilder,
     types::TokenType,
     vocab::UnifiedTokenVocab,
 };
@@ -17,7 +17,7 @@ use crate::{
 #[derive(Clone, PartialEq)]
 pub struct TokenEncoderBuilder<T: TokenType> {
     vocab: UnifiedTokenVocab<T>,
-    spanner_builder: SpannerBuilder<T>,
+    spanner_builder: TextSpannerBuilder<T>,
 }
 
 impl<T: TokenType> TokenEncoderBuilder<T> {
@@ -28,7 +28,7 @@ impl<T: TokenType> TokenEncoderBuilder<T> {
 
     /// Create a new builder for the vocab.
     pub fn new(vocab: UnifiedTokenVocab<T>) -> Self {
-        let spanner_builder = SpannerBuilder::from_vocab(&vocab);
+        let spanner_builder = TextSpannerBuilder::from_vocab(&vocab);
         Self {
             vocab,
             spanner_builder,
@@ -40,13 +40,13 @@ impl<T: TokenType> TokenEncoderBuilder<T> {
         &self.vocab
     }
 
-    /// Get the underlying [`SpannerBuilder`].
-    pub fn spanner_builder(&self) -> &SpannerBuilder<T> {
+    /// Get the underlying [`TextSpannerBuilder`].
+    pub fn spanner_builder(&self) -> &TextSpannerBuilder<T> {
         &self.spanner_builder
     }
 
-    /// Get the underlying [`SpannerBuilder`] for mutable access.
-    pub fn spanner_builder_mut(&mut self) -> &mut SpannerBuilder<T> {
+    /// Get the underlying [`TextSpannerBuilder`] for mutable access.
+    pub fn spanner_builder_mut(&mut self) -> &mut TextSpannerBuilder<T> {
         &mut self.spanner_builder
     }
 

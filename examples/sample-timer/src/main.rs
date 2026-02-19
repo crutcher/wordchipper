@@ -27,7 +27,6 @@ use wordchipper::{
     },
     disk_cache::WordchipperDiskCache,
     pretrained::openai::OATokenizer,
-    spanning::RegexTextSpanner,
 };
 use wordchipper_data::dataset::{DatasetCache, DatasetCacheConfig};
 use wordchipper_support::WordchipperEngine;
@@ -187,7 +186,7 @@ fn main() -> Result<(), BoxError> {
         wordchipper::get_model(args.model.to_string().as_str(), &mut disk_cache)?
             .to_token_type()?;
 
-    let spanner = RegexTextSpanner::from_config(vocab.spanning().clone(), None);
+    let spanner = vocab.to_default_spanner();
 
     // TODO: complete batch-observer inversion of control for additional tokenizer wrappers.
 

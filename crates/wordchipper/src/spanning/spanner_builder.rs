@@ -10,22 +10,22 @@ use crate::{
 
 /// Builder for [`TextSpanner`]s.
 #[derive(Clone, PartialEq)]
-pub struct SpannerBuilder<T: TokenType> {
+pub struct TextSpannerBuilder<T: TokenType> {
     config: TextSpanningConfig<T>,
 
     parallel: bool,
     max_pool: Option<NonZeroUsize>,
 }
 
-impl<T: TokenType> SpannerBuilder<T> {
-    /// Create a new [`SpannerBuilder`].
+impl<T: TokenType> TextSpannerBuilder<T> {
+    /// Create a new [`TextSpannerBuilder`].
     ///
     /// Clones out the spanning configuration from the provided vocabulary.
     pub fn from_vocab(vocab: &crate::vocab::UnifiedTokenVocab<T>) -> Self {
         Self::new(vocab.spanning().clone())
     }
 
-    /// Create a new [`SpannerBuilder`] with the given configuration.
+    /// Create a new [`TextSpannerBuilder`] with the given configuration.
     pub fn new(config: TextSpanningConfig<T>) -> Self {
         Self {
             config,

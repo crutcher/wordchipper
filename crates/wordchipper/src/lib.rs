@@ -24,17 +24,6 @@
 //! which are used to represent sets and maps of tokens.
 //! These are provided for convenience and are not required for correctness.
 //!
-//!
-//! ## Text Spanning
-//!
-//! Text spanning, splitting text into word and special token spans,
-//! is defined by a [`spanning::TextSpanningConfig`];
-//! and provided by implementors of [`spanning::TextSpanner`],
-//! such as the [`spanning::RegexTextSpanner`].
-//!
-//! These interfaces can be used independently of the [`TokenEncoder`] and [`TokenDecoder`]
-//! interfaces.
-//!
 //! ## Unified Vocabulary
 //!
 //! The core user-facing vocabulary type is [`UnifiedTokenVocab<T>`].
