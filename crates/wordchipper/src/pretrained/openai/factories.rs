@@ -4,31 +4,33 @@ use std::{io::BufRead, path::Path};
 
 use crate::{
     pretrained::openai::{
-        OA_CL100K_BASE_PATTERN,
-        OA_O200K_BASE_PATTERN,
-        OA_P50K_BASE_PATTERN,
-        OA_R50K_BASE_PATTERN,
+        OA_CL100K_BASE_PATTERN, OA_O200K_BASE_PATTERN, OA_P50K_BASE_PATTERN, OA_R50K_BASE_PATTERN,
         resources::{
-            OA_CL100K_BASE_TIKTOKEN_RESOURCE,
-            OA_O200K_BASE_TIKTOKEN_RESOURCE,
-            OA_P50K_BASE_TIKTOKEN_RESOURCE,
-            OA_R50K_BASE_TIKTOKEN_RESOURCE,
+            OA_CL100K_BASE_TIKTOKEN_RESOURCE, OA_O200K_BASE_TIKTOKEN_RESOURCE,
+            OA_P50K_BASE_TIKTOKEN_RESOURCE, OA_R50K_BASE_TIKTOKEN_RESOURCE,
         },
         specials::{
-            oa_cl100k_edit_special_tokens,
-            oa_o200k_base_special_tokens,
-            oa_o200k_harmony_special_tokens,
-            oa_p50k_base_special_tokens,
-            oa_p50k_edit_special_tokens,
-            oa_r50k_base_special_tokens,
+            oa_cl100k_edit_special_tokens, oa_o200k_base_special_tokens,
+            oa_o200k_harmony_special_tokens, oa_p50k_base_special_tokens,
+            oa_p50k_edit_special_tokens, oa_r50k_base_special_tokens,
         },
     },
     regex::RegexPattern,
     resources::{ConstKeyedResource, ResourceLoader},
-    spanning::TextSpanningConfig,
+    spanning::{SpannerPattern, TextSpanningConfig},
     types::TokenType,
     vocab::{UnifiedTokenVocab, utility::factories::ConstVocabularyFactory},
 };
+
+/// Spanner override for cl100k: use logos DFA.
+fn logos_cl100k() -> SpannerPattern {
+    SpannerPattern::LogosCl100k
+}
+
+/// Spanner override for o200k: use logos DFA.
+fn logos_o200k() -> SpannerPattern {
+    SpannerPattern::LogosO200k
+}
 
 /// `OpenAI` Pretrained Tokenizer types.
 #[derive(
@@ -136,6 +138,7 @@ pub const OA_R50K_BASE_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabularyFa
     },
     pattern: OA_R50K_BASE_PATTERN,
     special_builder: &oa_r50k_base_special_tokens,
+    spanner_override: None,
 };
 
 /// The "`p50k_base`" tokenizer.
@@ -147,6 +150,7 @@ pub const OA_P50K_BASE_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabularyFa
     },
     pattern: OA_P50K_BASE_PATTERN,
     special_builder: &oa_p50k_base_special_tokens,
+    spanner_override: None,
 };
 
 /// The "`p50k_base`" tokenizer.
@@ -155,6 +159,7 @@ pub const OA_P50K_EDIT_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabularyFa
     resource: OA_P50K_BASE_VOCAB_FACTORY.resource,
     pattern: OA_P50K_BASE_VOCAB_FACTORY.pattern,
     special_builder: &oa_p50k_edit_special_tokens,
+    spanner_override: None,
 };
 
 /// The "`cl100k_base`" tokenizer.
@@ -166,6 +171,7 @@ pub const OA_CL100K_BASE_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabulary
     },
     pattern: OA_CL100K_BASE_PATTERN,
     special_builder: &oa_cl100k_edit_special_tokens,
+    spanner_override: Some(logos_cl100k),
 };
 
 /// The "`o200k_base`" tokenizer.
@@ -177,6 +183,7 @@ pub const OA_O200K_BASE_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabularyF
     },
     pattern: OA_O200K_BASE_PATTERN,
     special_builder: &oa_o200k_base_special_tokens,
+    spanner_override: Some(logos_o200k),
 };
 
 /// The "`o200k_harmony`" tokenizer.
@@ -185,6 +192,7 @@ pub const OA_O200K_HARMONY_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabula
     resource: OA_O200K_BASE_VOCAB_FACTORY.resource,
     pattern: OA_O200K_BASE_VOCAB_FACTORY.pattern,
     special_builder: &oa_o200k_harmony_special_tokens,
+    spanner_override: Some(logos_o200k),
 };
 
 #[cfg(test)]

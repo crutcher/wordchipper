@@ -4,12 +4,7 @@ use crate::{
     alloc::vec::Vec,
     types::{TokenType, WCHashMap, WCHashSet},
     vocab::{
-        ByteMapVocab,
-        ByteTokenMap,
-        PairMapVocab,
-        PairTokenMap,
-        SpanTokenMap,
-        VocabIndex,
+        ByteMapVocab, ByteTokenMap, PairMapVocab, PairTokenMap, SpanTokenMap, VocabIndex,
         utility::validators::try_vocab_size,
     },
 };

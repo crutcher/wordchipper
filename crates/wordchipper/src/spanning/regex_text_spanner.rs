@@ -8,7 +8,7 @@ use crate::{
     alloc::{string::String, vec::Vec},
     compat::ranges::offset_range,
     regex::{RegexPattern, RegexWrapper, alternate_choice_regex_pattern},
-    spanning::{SpanRef, TextSpanner, TextSpanningConfig},
+    spanning::{SpanRef, SpannerPattern, TextSpanner, TextSpanningConfig},
     types::TokenType,
     vocab::VocabIndex,
 };
@@ -43,6 +43,9 @@ impl RegexTextSpanner {
     ///
     /// ## Arguments
     /// * `config` - The spanning configuration.
+    ///
+    /// ## Panics
+    /// Panics if the config uses a non-regex [`SpannerPattern`].
     pub fn from_config<T>(
         config: TextSpanningConfig<T>,
         max_pool: Option<NonZeroUsize>,
@@ -50,13 +53,18 @@ impl RegexTextSpanner {
     where
         T: TokenType,
     {
+        let pattern = match config.pattern() {
+            SpannerPattern::Regex(p) => p.clone(),
+            other => panic!("RegexTextSpanner requires SpannerPattern::Regex, got {other:?}"),
+        };
+
         let specials = config
             .specials()
             .span_pairs()
             .map(|(span, _)| String::from_utf8(span.clone()).unwrap())
             .collect::<Vec<_>>();
 
-        Self::from_patterns(config.pattern().clone(), &specials, max_pool)
+        Self::from_patterns(pattern, &specials, max_pool)
     }
 
     /// Build a new [`RegexTextSpanner`] from patterns.

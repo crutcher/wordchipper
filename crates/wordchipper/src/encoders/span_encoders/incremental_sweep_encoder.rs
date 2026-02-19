@@ -4,9 +4,7 @@
 //! iterates until no more merges remain.
 
 use crate::{
-    alloc::vec::Vec,
-    encoders::span_encoders::span_encoder::SpanEncoder,
-    types::TokenType,
+    alloc::vec::Vec, encoders::span_encoders::span_encoder::SpanEncoder, types::TokenType,
     vocab::UnifiedTokenVocab,
 };
 

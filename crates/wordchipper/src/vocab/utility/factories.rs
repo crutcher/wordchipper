@@ -15,7 +15,7 @@ use crate::{
     alloc::{string::String, vec::Vec},
     regex::{ConstRegexPattern, RegexPattern},
     resources::ConstKeyedResource,
-    spanning::TextSpanningConfig,
+    spanning::{SpannerPattern, TextSpanningConfig},
     types::TokenType,
 };
 
@@ -32,6 +32,13 @@ pub struct ConstVocabularyFactory {
 
     /// A generator for special tokens.
     pub special_builder: &'static dyn Fn() -> Vec<(String, usize)>,
+
+    /// Optional override for the spanner pattern.
+    ///
+    /// When set, [`Self::spanning_config`] uses this instead of wrapping
+    /// [`Self::pattern`] in [`SpannerPattern::Regex`]. Used for patterns
+    /// that have a faster logos DFA implementation.
+    pub spanner_override: Option<fn() -> SpannerPattern>,
 }
 
 impl ConstVocabularyFactory {
@@ -50,7 +57,11 @@ impl ConstVocabularyFactory {
 
     /// Load the spanning config for this tokenizer.
     pub fn spanning_config<T: TokenType>(&self) -> TextSpanningConfig<T> {
-        TextSpanningConfig::from_pattern(self.pattern()).with_special_words(self.special_tokens())
+        let pattern = match self.spanner_override {
+            Some(f) => f(),
+            None => SpannerPattern::from(self.pattern()),
+        };
+        TextSpanningConfig::from_pattern(pattern).with_special_words(self.special_tokens())
     }
 
     /// Fetch a path to the resource through the loader.

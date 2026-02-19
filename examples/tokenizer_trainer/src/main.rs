@@ -4,8 +4,7 @@ use arrow::array::{Array, StringArray};
 use clap::Parser;
 use similar::{ChangeTag, TextDiff};
 use wordchipper::{
-    UnifiedTokenVocab,
-    VocabIndex,
+    UnifiedTokenVocab, VocabIndex,
     compat::slices::{inner_slice_view, inner_str_view},
     pretrained::openai::OA_O200K_BASE_PATTERN,
     training::BinaryPairVocabTrainerOptions,

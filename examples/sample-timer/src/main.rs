@@ -19,15 +19,14 @@ use similar::TextDiff;
 use tiktoken_rs::{CoreBPE, Rank};
 use tiktoken_support::TiktokenRsEngine;
 use wordchipper::{
-    TokenType,
-    UnifiedTokenVocab,
+    TokenType, UnifiedTokenVocab,
     compat::{
         slices::{inner_slice_view, inner_str_view},
         timers::timeit,
     },
     disk_cache::WordchipperDiskCache,
     pretrained::openai::OATokenizer,
-    spanning::RegexTextSpanner,
+    spanning::SpannerPattern,
 };
 use wordchipper_data::dataset::{DatasetCache, DatasetCacheConfig};
 use wordchipper_support::WordchipperEngine;
@@ -187,8 +186,6 @@ fn main() -> Result<(), BoxError> {
         wordchipper::get_model(args.model.to_string().as_str(), &mut disk_cache)?
             .to_token_type()?;
 
-    let spanner = RegexTextSpanner::from_config(vocab.spanning().clone(), None);
-
     // TODO: complete batch-observer inversion of control for additional tokenizer wrappers.
 
     let mut candidate_engines: Vec<Arc<dyn EncDecEngine<Rank>>> = Vec::new();
@@ -199,6 +196,30 @@ fn main() -> Result<(), BoxError> {
         vocab.to_default_decoder(),
     ));
     candidate_engines.push(wc_engine.clone());
+
+    // When the model uses logos, also add a regex-forced engine for comparison.
+    if matches!(
+        vocab.spanning().pattern(),
+        SpannerPattern::LogosCl100k | SpannerPattern::LogosO200k
+    ) {
+        let model = args.model.model();
+        let regex_spanning = vocab
+            .spanning()
+            .clone()
+            .with_pattern(model.factory().pattern());
+        let regex_vocab = UnifiedTokenVocab::<Rank>::new(
+            regex_spanning,
+            vocab.span_vocab().clone(),
+            vocab.pair_vocab().clone(),
+        )
+        .unwrap();
+        let regex_engine = Arc::new(WordchipperEngine::<Rank>::new(
+            format!("{} (regex)", args.model),
+            regex_vocab.to_default_encoder(),
+            regex_vocab.to_default_decoder(),
+        ));
+        candidate_engines.push(regex_engine);
+    }
 
     if args.tiktoken {
         // println!("Loading tiktoken...");
@@ -448,12 +469,46 @@ pub fn verify_encode(
             continue;
         }
 
+        // Find first divergence index.
+        let div = actual_tokens
+            .iter()
+            .zip(expected_tokens.iter())
+            .position(|(a, e)| a != e)
+            .unwrap_or(actual_tokens.len().min(expected_tokens.len()));
+
+        // Show a window of tokens around the divergence.
+        let window = 5;
+        let lo = div.saturating_sub(window);
+        let hi_a = (div + window).min(actual_tokens.len());
+        let hi_e = (div + window).min(expected_tokens.len());
+
+        // Show source bytes around the divergence by decoding token byte offsets.
+        let ctx_start = source.len().min(div.saturating_sub(50));
+        let ctx_end = source.len().min(div + 200);
+
+        // Dump the full failing source text for analysis.
+        let dump_path = "/tmp/wordchipper_mismatch.txt";
+        let _ = std::fs::write(dump_path, source);
+        eprintln!(
+            "Full source text dumped to {dump_path} ({} bytes)",
+            source.len()
+        );
+
         return Err(format!(
-            "ENCODER MISMATCH: {actual_name} != {expected_name}\nSOURCE:\n{}\nACTUAL: {actual_name}\n{:?}\nEXPECTED: {expected_name}\n{:?}",
-            source,
-            actual_tokens,
-            expected_tokens,
-        ).into());
+            "ENCODER MISMATCH: {actual_name} != {expected_name}\n\
+             First diff at token index {div} (of {} vs {})\n\
+             ACTUAL[{lo}..{hi_a}]: {:?}\n\
+             EXPECTED[{lo}..{hi_e}]: {:?}\n\
+             SOURCE (first 500 chars): {:?}\n\
+             SOURCE bytes around idx {div}: {:?}",
+            actual_tokens.len(),
+            expected_tokens.len(),
+            &actual_tokens[lo..hi_a],
+            &expected_tokens[lo..hi_e],
+            &source[..source.len().min(500)],
+            source.as_bytes().get(ctx_start..ctx_end),
+        )
+        .into());
     }
     Ok(())
 }

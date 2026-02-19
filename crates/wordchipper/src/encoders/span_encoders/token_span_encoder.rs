@@ -1,7 +1,5 @@
 use crate::{
-    TokenEncoder,
-    TokenType,
-    UnifiedTokenVocab,
+    TokenEncoder, TokenType, UnifiedTokenVocab,
     alloc::{boxed::Box, sync::Arc, vec::Vec},
     encoders::span_encoders::SpanEncoder,
     spanning::TextSpanner,

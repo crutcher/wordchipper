@@ -9,10 +9,13 @@
 //! [`RegexTextSpanner`] implements the run-time management of spanning,
 //! as well as any per-thread regex pooling.
 
+pub mod logos_text_spanner;
 mod regex_text_spanner;
 mod spanning_config;
 mod text_spanner;
 
+#[doc(inline)]
+pub use logos_text_spanner::{LogosTextSpanner, LogosVariant};
 #[doc(inline)]
 pub use regex_text_spanner::*;
 #[doc(inline)]

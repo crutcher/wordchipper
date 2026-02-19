@@ -1,5 +1,45 @@
 //! # Text Spanner Configuration
-use crate::{regex::RegexPattern, types::TokenType, vocab::SpecialVocab};
+use crate::{
+    regex::{ConstRegexPattern, RegexPattern},
+    types::TokenType,
+    vocab::SpecialVocab,
+};
+
+/// Selects which spanner implementation to use.
+///
+/// `Regex` uses runtime regex matching (supports arbitrary patterns).
+/// `LogosCl100k` / `LogosO200k` use compile-time DFA lexers for known
+/// `OpenAI` patterns, providing ~40-65x faster spanning.
+#[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
+pub enum SpannerPattern {
+    /// Use regex-based spanning with the given pattern.
+    Regex(RegexPattern),
+
+    /// Use logos DFA for the `cl100k_base` pattern.
+    LogosCl100k,
+
+    /// Use logos DFA for the `o200k_base` pattern.
+    LogosO200k,
+}
+
+impl From<RegexPattern> for SpannerPattern {
+    fn from(pattern: RegexPattern) -> Self {
+        Self::Regex(pattern)
+    }
+}
+
+impl From<ConstRegexPattern> for SpannerPattern {
+    fn from(pattern: ConstRegexPattern) -> Self {
+        Self::Regex(pattern.into())
+    }
+}
+
+impl<S: AsRef<str>> From<S> for SpannerPattern {
+    fn from(pattern: S) -> Self {
+        Self::Regex(RegexPattern::from(pattern))
+    }
+}
 
 /// Description of text spanning configuration.
 ///
@@ -9,8 +49,8 @@ use crate::{regex::RegexPattern, types::TokenType, vocab::SpecialVocab};
 /// or `config` when there is no ambiguity.
 #[derive(Debug, Clone)]
 pub struct TextSpanningConfig<T: TokenType> {
-    /// Regex pattern for word splitting.
-    pattern: RegexPattern,
+    /// Pattern / strategy for word splitting.
+    pattern: SpannerPattern,
 
     /// Special tokens vocabulary.
     specials: SpecialVocab<T>,
@@ -31,7 +71,7 @@ impl<T: TokenType> TextSpanningConfig<T> {
     /// * `pattern` - The word split pattern.
     pub fn from_pattern<P>(pattern: P) -> Self
     where
-        P: Into<RegexPattern>,
+        P: Into<SpannerPattern>,
     {
         Self {
             pattern: pattern.into(),
@@ -48,7 +88,7 @@ impl<T: TokenType> TextSpanningConfig<T> {
         pattern: P,
     ) -> Self
     where
-        P: Into<RegexPattern>,
+        P: Into<SpannerPattern>,
     {
         Self {
             pattern: pattern.into(),
@@ -99,8 +139,8 @@ impl<T: TokenType> TextSpanningConfig<T> {
         })
     }
 
-    /// Get the word pattern.
-    pub fn pattern(&self) -> &RegexPattern {
+    /// Get the spanner pattern.
+    pub fn pattern(&self) -> &SpannerPattern {
         &self.pattern
     }
 
@@ -130,14 +170,20 @@ mod tests {
         let pattern = RegexPattern::Adaptive("hello".to_string());
 
         let mut config: TextSpanningConfig<T> = pattern.into();
-        assert_eq!(config.pattern().as_str(), "hello");
+        assert_eq!(
+            config.pattern(),
+            &SpannerPattern::Regex(RegexPattern::Adaptive("hello".to_string()))
+        );
         assert_eq!(config.specials().len(), 0);
 
         config.specials_mut().add_str_word("hello", 1);
         assert_eq!(config.specials().len(), 1);
 
         let config = config.with_pattern("hi");
-        assert_eq!(&config.pattern, &RegexPattern::Adaptive("hi".to_string()));
+        assert_eq!(
+            &config.pattern,
+            &SpannerPattern::Regex(RegexPattern::Adaptive("hi".to_string()))
+        );
 
         let mut specials = SpecialVocab::default();
         specials.add_str_word("apple", 1);
@@ -145,5 +191,18 @@ mod tests {
 
         let config = config.with_specials(specials.clone());
         assert_eq!(config.specials(), &specials);
+    }
+
+    #[test]
+    fn test_logos_variants() {
+        type T = u32;
+
+        let config: TextSpanningConfig<T> =
+            TextSpanningConfig::from_pattern(SpannerPattern::LogosCl100k);
+        assert_eq!(config.pattern(), &SpannerPattern::LogosCl100k);
+
+        let config: TextSpanningConfig<T> =
+            TextSpanningConfig::from_pattern(SpannerPattern::LogosO200k);
+        assert_eq!(config.pattern(), &SpannerPattern::LogosO200k);
     }
 }

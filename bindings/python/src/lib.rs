@@ -5,10 +5,7 @@ use pyo3::{
     prelude::*,
 };
 use wordchipper::{
-    TokenDecoder,
-    TokenEncoder,
-    UnifiedTokenVocab,
-    VocabIndex,
+    TokenDecoder, TokenEncoder, UnifiedTokenVocab, VocabIndex,
     compat::{
         slices::{inner_slice_view, inner_str_view},
         strings::string_from_utf8_lossy,

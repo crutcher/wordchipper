@@ -8,23 +8,14 @@ use dary_heap::OctonaryHeap;
 use crate::{
     regex::RegexPattern,
     training::{
-        CountType,
-        StringChunkType,
+        CountType, StringChunkType,
         utility::{
-            PairIndexMap,
-            PairSpanIndex,
-            TextSpanCounter,
-            TextSpanCounterOptions,
-            TokenSpanBuf,
+            PairIndexMap, PairSpanIndex, TextSpanCounter, TextSpanCounterOptions, TokenSpanBuf,
         },
     },
     types::{Pair, TokenType, WCHashMap, WCHashSet},
     vocab::{
-        ByteMapVocab,
-        PairMapVocab,
-        PairTokenMap,
-        UnifiedTokenVocab,
-        VocabIndex,
+        ByteMapVocab, PairMapVocab, PairTokenMap, UnifiedTokenVocab, VocabIndex,
         utility::validators::{U8_SIZE, expect_vocab_size},
     },
 };
