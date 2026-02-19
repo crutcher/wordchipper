@@ -75,7 +75,9 @@ impl<T: TokenType> TokenEncoderBuilder<T> {
             .spanning()
             .specials()
             .span_pairs()
-            .map(|(span, _)| String::from_utf8(span.clone()).unwrap())
+            .map(|(span, _)| {
+                String::from_utf8(span.clone()).expect("special tokens must be valid UTF-8")
+            })
             .collect()
     }
 
@@ -120,147 +122,6 @@ mod tests {
         vocab::utility::testing::{build_test_shift_byte_vocab, build_test_vocab},
     };
 
-    /// Load the full cl100k vocab from disk and compare logos vs regex
-    /// on a long, realistic text. Run with:
-    ///   cargo test -p wordchipper --release test_logos_vs_regex_full_vocab -- --nocapture --ignored
-    #[test]
-    #[ignore]
-    fn test_logos_vs_regex_full_vocab() {
-        type T = u32;
-        let path = std::path::Path::new(env!("HOME"))
-            .join("Library/Caches/wordchipper.io.crates.wordchipper/openai/cl100k_base/cl100k_base.tiktoken");
-        if !path.exists() {
-            eprintln!("Skipping: vocab not cached at {}", path.display());
-            return;
-        }
-
-        let logos_vocab: UnifiedTokenVocab<T> = crate::pretrained::openai::OATokenizer::Cl100kBase
-            .read_vocab(std::io::BufReader::new(std::fs::File::open(&path).unwrap()))
-            .unwrap();
-
-        let regex_spanning = logos_vocab.spanning().clone().with_pattern(
-            crate::pretrained::openai::OATokenizer::Cl100kBase
-                .factory()
-                .pattern(),
-        );
-        let regex_vocab = UnifiedTokenVocab::<T>::new(
-            regex_spanning,
-            logos_vocab.span_vocab().clone(),
-            logos_vocab.pair_vocab().clone(),
-        )
-        .unwrap();
-
-        let logos_enc = TokenEncoderBuilder::new(logos_vocab.clone())
-            .with_parallel(false)
-            .init();
-        let regex_enc = TokenEncoderBuilder::new(regex_vocab.clone())
-            .with_parallel(false)
-            .init();
-
-        // Full text from benchmark mismatch (loaded from file if available).
-        let mut texts: Vec<String> = vec![
-            "Shakespeare's Macbeth: From Saga to Screen|\nA close reading of Shakespeare's play that will position the play in terms of its historical and political contexts and its relation to early modern discourses on the feminine, witchcraft, and the divinity of kings. We will begin with a consideration of the historical legends that constitute Shakespeare's \"sources,\" then read the play slowly and closely, coupling our discussions with readings from the period, exploring how Shakespeare's contemporaries thought of the political and cultural issues raised in the play.".into(),
-            "'The items we buy are important, and we've been looking at 123 different options since 10:30am.".into(),
-            "  Like all Choctaw counties, Wade County\u{2019}s boundaries were\n  modified before the Civil War\u{2014}in which the nation\u{2019}s capital".into(),
-            "foo  \"bar\" baz\n   $400 (hello)\t\tworld".into(),
-        ];
-        // Try to load the actual failing benchmark text.
-        let mismatch_path = "/tmp/wordchipper_mismatch.txt";
-        if std::path::Path::new(mismatch_path).exists() {
-            let full = std::fs::read_to_string(mismatch_path).unwrap();
-            eprintln!("Loaded mismatch text: {} bytes", full.len());
-            texts.push(full);
-        }
-
-        let logos_spanner =
-            self::TokenEncoderBuilder::<T>::new(logos_vocab.clone()).build_spanner();
-        let regex_spanner =
-            self::TokenEncoderBuilder::<T>::new(regex_vocab.clone()).build_spanner();
-
-        for text in &texts {
-            // First compare spans to isolate the issue.
-            let logos_spans = logos_spanner.split_spans(text);
-            let regex_spans = regex_spanner.split_spans(text);
-            if logos_spans != regex_spans {
-                let div = logos_spans
-                    .iter()
-                    .zip(regex_spans.iter())
-                    .position(|(a, e)| a != e)
-                    .unwrap_or(logos_spans.len().min(regex_spans.len()));
-                let lo = div.saturating_sub(2);
-                let hi_l = (div + 3).min(logos_spans.len());
-                let hi_r = (div + 3).min(regex_spans.len());
-                let logos_words: Vec<&str> = logos_spans[lo..hi_l]
-                    .iter()
-                    .map(|s| {
-                        let r = match s {
-                            crate::spanning::SpanRef::Word(r)
-                            | crate::spanning::SpanRef::Gap(r)
-                            | crate::spanning::SpanRef::Special(r) => r.clone(),
-                        };
-                        &text[r]
-                    })
-                    .collect();
-                let regex_words: Vec<&str> = regex_spans[lo..hi_r]
-                    .iter()
-                    .map(|s| {
-                        let r = match s {
-                            crate::spanning::SpanRef::Word(r)
-                            | crate::spanning::SpanRef::Gap(r)
-                            | crate::spanning::SpanRef::Special(r) => r.clone(),
-                        };
-                        &text[r]
-                    })
-                    .collect();
-                panic!(
-                    "SPAN mismatch at index {} (logos {} vs regex {} spans)\n\
-                     logos[{}..{}]: {:?} = {:?}\n\
-                     regex[{}..{}]: {:?} = {:?}\n\
-                     text len: {}",
-                    div,
-                    logos_spans.len(),
-                    regex_spans.len(),
-                    lo,
-                    hi_l,
-                    &logos_spans[lo..hi_l],
-                    logos_words,
-                    lo,
-                    hi_r,
-                    &regex_spans[lo..hi_r],
-                    regex_words,
-                    text.len(),
-                );
-            }
-
-            let logos_tokens = logos_enc.try_encode(text).unwrap();
-            let regex_tokens = regex_enc.try_encode(text).unwrap();
-            if logos_tokens != regex_tokens {
-                let div = logos_tokens
-                    .iter()
-                    .zip(regex_tokens.iter())
-                    .position(|(a, e)| a != e)
-                    .unwrap_or(logos_tokens.len().min(regex_tokens.len()));
-                panic!(
-                    "Full-vocab token mismatch at index {} (logos {} vs regex {} tokens)\n\
-                     logos[{}..{}]: {:?}\n\
-                     regex[{}..{}]: {:?}\n\
-                     text: {:?}",
-                    div,
-                    logos_tokens.len(),
-                    regex_tokens.len(),
-                    div.saturating_sub(3),
-                    (div + 5).min(logos_tokens.len()),
-                    &logos_tokens[div.saturating_sub(3)..(div + 5).min(logos_tokens.len())],
-                    div.saturating_sub(3),
-                    (div + 5).min(regex_tokens.len()),
-                    &regex_tokens[div.saturating_sub(3)..(div + 5).min(regex_tokens.len())],
-                    text,
-                );
-            }
-        }
-        eprintln!("All {} texts match!", texts.len());
-    }
-
     /// Build two encoders from the same BPE data but different spanners
     /// (regex vs logos) and verify they produce identical tokens.
     #[test]
@@ -301,6 +162,15 @@ mod tests {
             "  multiple   spaces  ",
             "line1\nline2\r\nline3",
             "123 + 456 = 789",
+            // Unicode letters and digits.
+            "caf\u{00e9} na\u{00ef}ve \u{4f60}\u{597d}",
+            "Geburtstag 2024: Alles Gute!",
+            // Punctuation-heavy.
+            "$$$!!!...---",
+            // Edge cases.
+            "",
+            " ",
+            "a",
         ];
 
         for text in &samples {

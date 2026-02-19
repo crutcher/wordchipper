@@ -41,6 +41,9 @@ pub enum Cl100kToken {
     #[regex(r" ?[^\s\p{Letter}\p{Number}]+[\r\n]*")]
     Punctuation,
 
+    // The `+` on `[\r\n]+` is equivalent to the regex `\s*[\r\n]` in practice:
+    // consecutive newlines are consumed identically because `\s*` in the regex
+    // greedily eats preceding newlines. Both produce the same total span.
     #[regex(r"\s*[\r\n]+")]
     Newline,
 
@@ -112,8 +115,8 @@ pub enum O200kToken {
 /// whitespace character can be absorbed as a prefix by the next pattern
 /// (e.g. `[^\r\n\p{L}\p{N}]?\p{L}+`). Logos DFA can't express lookaheads,
 /// so we post-process the token stream: when a `Whitespace` token precedes
-/// a `SpaceAbsorbing` token, the last byte merges into it; before other
-/// tokens, it becomes a standalone Word.
+/// certain token kinds, the last character merges into the next span;
+/// before other tokens, it becomes a standalone Word.
 enum SpanKind {
     /// Horizontal whitespace (`[ \t]+`). May need splitting.
     Whitespace,
@@ -168,7 +171,9 @@ fn contraction_split(bytes: &[u8]) -> Option<usize> {
     if matches!(c1, b's' | b'S' | b't' | b'T' | b'd' | b'D' | b'm' | b'M') {
         return (bytes.len() > 2).then_some(2);
     }
-    // Two-char suffixes: 're, 've, 'll
+    // Two-char suffixes: 're, 've, 'll.
+    // Need >= 4 bytes: apostrophe + 2-char suffix + at least 1 trailing letter.
+    // A 3-byte input like 're is a standalone contraction, not a split candidate.
     if bytes.len() >= 4 {
         let c2 = bytes[2];
         let is_two = matches!(
@@ -235,11 +240,18 @@ fn for_each_logos_word(
     macro_rules! flush_ws_split {
         ($ws:expr) => {{
             let ws = $ws;
+            debug_assert!(!ws.is_empty(), "flush_ws_split called with empty range");
             // Find start of the last character (may be multi-byte, e.g. NBSP).
+            // Safety: text is &str bytes, so valid UTF-8; the scan always finds
+            // a leading byte before reaching ws.start.
             let mut trim = ws.end - 1;
             while trim > ws.start && (text[trim] & 0xC0) == 0x80 {
                 trim -= 1;
             }
+            debug_assert!(
+                (text[trim] & 0xC0) != 0x80,
+                "no leading byte found in ws range"
+            );
             if ws.start < trim {
                 emit!(word(ws.start..trim));
             }
@@ -309,6 +321,7 @@ fn for_each_logos_word(
                     let trim = flush_ws_split!(ws);
                     let single_char = trim == ws_start;
 
+                    // Safety: text is always &str bytes (valid UTF-8).
                     let first_is_letter = text
                         .get(start..)
                         .and_then(|b| core::str::from_utf8(b).ok())
@@ -327,8 +340,9 @@ fn for_each_logos_word(
                         // prefix into one span (like Punctuation ` ?X`),
                         // then emit remaining letters separately.
                         let prefix_len = core::str::from_utf8(&text[start..end])
-                            .ok()
-                            .and_then(|s| s.chars().next())
+                            .expect("text is &str bytes, always valid UTF-8")
+                            .chars()
+                            .next()
                             .map_or(1, char::len_utf8);
                         emit!(word(trim..start + prefix_len));
                         emit_absorbing!(start + prefix_len, end, check);
@@ -408,7 +422,11 @@ impl LogosTextSpanner {
         Self::o200k(Vec::new())
     }
 
-    /// Find the next special token occurrence in text.
+    /// Find the earliest special token occurrence in text.
+    ///
+    /// Linear scan: O(n * m) where n = text length, m = special word count.
+    /// Assumes no special token is a prefix of another (holds for `OpenAI` tokens).
+    /// On same-position ties, the first word in `special_words` wins.
     fn find_special(
         &self,
         text: &str,
@@ -821,6 +839,44 @@ mod tests {
             "Hello \u{4e16}\u{754c} 123",
             "don't I'll she's",
             "HELLO WORLD",
+        ];
+
+        for text in cases {
+            let regex_spans = regex_spanner.split_spans(text);
+            let logos_spans = logos_spanner.split_spans(text);
+
+            assert_eq!(
+                regex_spans, logos_spans,
+                "o200k mismatch for {:?}:\n  regex: {:?}\n  logos: {:?}",
+                text, regex_spans, logos_spans
+            );
+        }
+    }
+
+    #[test]
+    fn test_o200k_realworld() {
+        use core::num::NonZeroUsize;
+
+        use crate::{pretrained::openai::OA_O200K_BASE_PATTERN, spanning::RegexTextSpanner};
+
+        let regex_config: crate::spanning::TextSpanningConfig<u32> =
+            crate::spanning::TextSpanningConfig::from_pattern(OA_O200K_BASE_PATTERN);
+        let regex_spanner =
+            RegexTextSpanner::from_config(regex_config, Some(NonZeroUsize::new(1).unwrap()));
+        let logos_spanner = LogosTextSpanner::o200k_without_specials();
+
+        let cases = [
+            "the Civil War\u{2014}in which",
+            "nation\u{2019}s capital",
+            "  Like all Choctaw counties",
+            "   123 numbers",
+            "hello   ",
+            "\t\thello",
+            "  \nfoo",
+            "foo  \nbar",
+            "   hello world",
+            "foo  \"bar\" baz",
+            "$$$!!!...---",
         ];
 
         for text in cases {

@@ -6,10 +6,11 @@
 //! * `pattern` - the word/span split pattern.
 //! * `specials` - a map of `{ Vec<u8> -> T }` special tokens to handle out-of-band.
 //!
-//! [`RegexTextSpanner`] implements the run-time management of spanning,
-//! as well as any per-thread regex pooling.
+//! Two [`TextSpanner`] implementations are provided:
+//! * [`RegexTextSpanner`] - regex-based spanning with per-thread pooling.
+//! * [`LogosTextSpanner`] - compile-time DFA spanning for cl100k/o200k patterns.
 
-pub mod logos_text_spanner;
+pub(crate) mod logos_text_spanner;
 mod regex_text_spanner;
 mod spanning_config;
 mod text_spanner;
