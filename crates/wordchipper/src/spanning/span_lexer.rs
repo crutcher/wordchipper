@@ -1,6 +1,6 @@
 //! # Span Lexer Trait
 
-use std::sync::Arc;
+use crate::alloc::sync::Arc;
 
 /// Trait for finding the next occurrence of a span.
 pub trait SpanLexer: Send + Sync {

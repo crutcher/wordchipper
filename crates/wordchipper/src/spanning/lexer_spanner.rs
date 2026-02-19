@@ -1,9 +1,9 @@
 //! # Regex Text Spanner
 
-use std::{num::NonZeroUsize, sync::Arc};
+use core::num::NonZeroUsize;
 
 use crate::{
-    alloc::{string::String, vec::Vec},
+    alloc::{string::String, sync::Arc, vec::Vec},
     compat::ranges::offset_range,
     regex::{RegexPattern, RegexWrapper, alternate_choice_regex_pattern},
     spanning::{SpanLexer, SpanRef, TextSpanner, TextSpanningConfig},
@@ -166,7 +166,6 @@ impl TextSpanner for LexerTextSpanner {
 
 #[cfg(test)]
 mod tests {
-    use std::num::NonZeroUsize;
 
     use super::*;
     use crate::{

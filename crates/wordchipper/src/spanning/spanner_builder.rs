@@ -1,6 +1,6 @@
 //! Text Spanner Builder
 
-use std::num::NonZeroUsize;
+use core::num::NonZeroUsize;
 
 use crate::{
     TokenType,
