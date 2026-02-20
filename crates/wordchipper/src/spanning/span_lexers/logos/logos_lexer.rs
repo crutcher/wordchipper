@@ -7,7 +7,7 @@ use core::ops::Range;
 
 use logos::Logos;
 
-use crate::spanning::{SpanLexer, SpanRef};
+use crate::spanning::{SpanRef, span_lexers::SpanLexer};
 
 // ---------------------------------------------------------------------------
 // Cl100k token
@@ -381,16 +381,16 @@ fn for_each_logos_word(
 /// A [`SpanLexer`] for the `cl100k_base` pattern (GPT-4, GPT-3.5).
 ///
 /// Uses a compile-time logos DFA for word scanning.
-/// Special token handling is provided by [`LexerTextSpanner`](super::LexerTextSpanner)
-/// composition, not by this type directly.
+///
+/// Only matches the regex spans; does not match the special tokens.
 #[derive(Clone, Debug)]
 pub struct Cl100kLexer;
 
 /// A [`SpanLexer`] for the `o200k_base` pattern (GPT-4o).
 ///
 /// Uses a compile-time logos DFA for word scanning.
-/// Special token handling is provided by [`LexerTextSpanner`](super::LexerTextSpanner)
-/// composition, not by this type directly.
+///
+/// Only matches the regex spans; does not match the special tokens.
 #[derive(Clone, Debug)]
 pub struct O200kLexer;
 
@@ -465,7 +465,7 @@ mod tests {
     use super::*;
     use crate::{
         alloc::{string::ToString, sync::Arc, vec, vec::Vec},
-        spanning::{LexerTextSpanner, TextSpanner},
+        spanning::{TextSpanner, span_lexers::LexerTextSpanner},
     };
 
     /// Build a `TextSpanner` from a logos lexer with no specials.

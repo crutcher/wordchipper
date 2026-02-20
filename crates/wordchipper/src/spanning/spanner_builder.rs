@@ -2,13 +2,14 @@
 
 use core::num::NonZeroUsize;
 
-use cfg_if::cfg_if;
-
 use crate::{
     TokenType,
     alloc::sync::Arc,
-    regex::{RegexPattern, RegexWrapper},
-    spanning::{LexerTextSpanner, SpanLexer, TextSpanner, TextSpanningConfig},
+    spanning::{
+        TextSpanner,
+        TextSpanningConfig,
+        span_lexers::{LexerTextSpanner, SpanLexer, build_regex_lexer},
+    },
 };
 
 /// Builder for [`TextSpanner`]s.
@@ -94,39 +95,16 @@ impl<T: TokenType> TextSpannerBuilder<T> {
     /// Falls back to the compiled regex otherwise.
     /// The special lexer (if any) is always built from the regex pattern.
     pub fn build(&self) -> Arc<dyn TextSpanner> {
-        fn maybe_pool(
-            pattern: RegexPattern,
-            max_pool: Option<NonZeroUsize>,
-        ) -> Arc<dyn SpanLexer> {
-            let re: RegexWrapper = pattern.into();
-
-            cfg_if! {
-                if #[cfg(feature = "std")] {
-                    Arc::new(crate::concurrency::PoolToy::new(re, max_pool))
-                } else {
-                    let _ = max_pool;
-
-                    Arc::new(re)
-                }
-            }
-        }
-
-        let word_lexer: Arc<dyn SpanLexer> = {
-            #[cfg(feature = "logos")]
-            {
-                crate::spanning::logos_lexer::lookup_word_lexer(self.config().pattern())
-                    .unwrap_or_else(|| maybe_pool(self.config().pattern().clone(), self.max_pool))
-            }
-            #[cfg(not(feature = "logos"))]
-            {
-                maybe_pool(self.config().pattern().clone(), self.max_pool)
-            }
-        };
+        let word_lexer: Arc<dyn SpanLexer> = build_regex_lexer(
+            self.config().pattern().clone(),
+            self.parallel,
+            self.max_pool,
+        );
         let special_lexer: Option<Arc<dyn SpanLexer>> = self
             .config
             .specials()
             .special_pattern()
-            .map(|pattern| maybe_pool(pattern, self.max_pool));
+            .map(|pattern| build_regex_lexer(pattern, self.parallel, self.max_pool));
 
         Arc::new(LexerTextSpanner::new(word_lexer, special_lexer))
     }

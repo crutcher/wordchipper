@@ -14,9 +14,6 @@ use crate::concurrency::threads::{resolve_max_pool, unstable_current_thread_id_h
 ///
 /// `PoolToy<T>` implements `Deref<Target = T>`, allowing it to be used
 /// transparently with any trait methods on `T` through Rust's deref coercion.
-/// This means `PoolToy<RegexWrapper>` can be used directly where
-/// `&RegexWrapper` is expected, including with trait methods like
-/// [`SpanLexer::next_span`](crate::spanning::SpanLexer::next_span).
 ///
 /// ## Style Hints for AI
 ///

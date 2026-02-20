@@ -128,7 +128,10 @@ mod tests {
         alloc::sync::Arc,
         pretrained::openai::OA_CL100K_BASE_PATTERN,
         regex::RegexWrapper,
-        spanning::{LexerTextSpanner, SpanLexer, TextSpanningConfig},
+        spanning::{
+            TextSpanningConfig,
+            span_lexers::{LexerTextSpanner, SpanLexer},
+        },
         vocab::utility::testing::{build_test_shift_byte_vocab, build_test_vocab},
     };
 

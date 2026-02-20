@@ -8,15 +8,12 @@
 //!
 //! Most users will want to use the [`TextSpannerBuilder`] to construct a [`TextSpanner`].
 
-mod lexer_spanner;
-#[cfg(feature = "logos")]
-pub(crate) mod logos_lexer;
+pub mod span_lexers;
+
 mod spanner_builder;
 mod spanning_config;
 mod text_spanner;
 
-#[doc(inline)]
-pub use lexer_spanner::*;
 #[doc(inline)]
 pub use spanner_builder::*;
 #[doc(inline)]
