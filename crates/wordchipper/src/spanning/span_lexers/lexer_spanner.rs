@@ -2,8 +2,8 @@
 
 use crate::{
     alloc::sync::Arc,
-    compat::ranges::offset_range,
     spanning::{SpanRef, TextSpanner, span_lexers::SpanLexer},
+    support::ranges::offset_range,
 };
 
 /// A [`TextSpanner`] composed over [`SpanLexer`] plugins.

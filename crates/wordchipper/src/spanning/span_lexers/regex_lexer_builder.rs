@@ -4,8 +4,8 @@ use core::num::NonZeroUsize;
 
 use crate::{
     alloc::sync::Arc,
-    regex::{RegexPattern, RegexWrapper},
     spanning::span_lexers::SpanLexer,
+    support::regex::{RegexPattern, RegexWrapper},
 };
 
 impl SpanLexer for RegexWrapper {
@@ -47,7 +47,7 @@ pub fn build_regex_lexer(
 
     #[cfg(feature = "std")]
     if concurrent {
-        return Arc::new(crate::concurrency::PoolToy::new(re, max_pool));
+        return Arc::new(crate::support::concurrency::PoolToy::new(re, max_pool));
     }
 
     Arc::new(re)

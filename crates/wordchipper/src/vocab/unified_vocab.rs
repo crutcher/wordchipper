@@ -6,9 +6,9 @@ use crate::{
     TokenEncoder,
     TokenEncoderBuilder,
     alloc::{sync::Arc, vec::Vec},
-    compat::strings::string_from_utf8_lossy,
     errors::WordchipperError,
     spanning::{TextSpanner, TextSpannerBuilder, TextSpanningConfig},
+    support::strings::string_from_utf8_lossy,
     types::{Pair, TokenType, WCHashSet},
     vocab::{
         ByteMapVocab,

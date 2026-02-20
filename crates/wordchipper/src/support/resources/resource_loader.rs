@@ -4,7 +4,7 @@
 use std::path::PathBuf;
 
 #[cfg(feature = "std")]
-use crate::resources::KeyedResource;
+use crate::support::resources::KeyedResource;
 
 /// A trait for loading resources.
 pub trait ResourceLoader {

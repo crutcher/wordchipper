@@ -8,14 +8,16 @@ use std::{
 };
 
 #[cfg(feature = "std")]
-use crate::resources::ResourceLoader;
+use crate::support::resources::ResourceLoader;
 #[cfg(feature = "std")]
 use crate::vocab::UnifiedTokenVocab;
 use crate::{
     alloc::{string::String, vec::Vec},
-    regex::{ConstRegexPattern, RegexPattern},
-    resources::ConstKeyedResource,
     spanning::TextSpanningConfig,
+    support::{
+        regex::{ConstRegexPattern, RegexPattern},
+        resources::ConstKeyedResource,
+    },
     types::TokenType,
 };
 
@@ -59,7 +61,7 @@ impl ConstVocabularyFactory {
         &self,
         loader: &mut dyn ResourceLoader,
     ) -> crate::errors::Result<PathBuf> {
-        let res: crate::resources::KeyedResource = self.resource.clone().into();
+        let res: crate::support::resources::KeyedResource = self.resource.clone().into();
         loader.load_resource_path(&res)
     }
 

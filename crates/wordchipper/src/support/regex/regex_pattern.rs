@@ -2,7 +2,7 @@
 
 use crate::{
     alloc::string::{String, ToString},
-    regex::{ErrorWrapper, RegexWrapper},
+    support::regex::{ErrorWrapper, RegexWrapper},
 };
 
 /// Const Regex Wrapper Pattern

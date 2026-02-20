@@ -3,7 +3,7 @@
 use core::{fmt::Debug, ops::Deref};
 use std::num::NonZeroUsize;
 
-use crate::concurrency::threads::{resolve_max_pool, unstable_current_thread_id_hash};
+use crate::support::concurrency::threads::{resolve_max_pool, unstable_current_thread_id_hash};
 
 /// Current Thread -> T Pool.
 ///
@@ -116,7 +116,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::concurrency::threads::resolve_max_pool;
+    use crate::support::concurrency::threads::resolve_max_pool;
 
     #[test]
     fn test_pool_toy() {

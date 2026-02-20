@@ -2,8 +2,8 @@
 
 use crate::{
     alloc::{string::String, vec::Vec},
-    compat::strings::string_from_utf8_lossy,
     decoders::{BatchDecodeResult, DecodeResult},
+    support::strings::string_from_utf8_lossy,
     types::TokenType,
 };
 

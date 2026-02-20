@@ -6,8 +6,8 @@ use similar::{ChangeTag, TextDiff};
 use wordchipper::{
     UnifiedTokenVocab,
     VocabIndex,
-    compat::slices::{inner_slice_view, inner_str_view},
     pretrained::openai::OA_O200K_BASE_PATTERN,
+    support::slices::{inner_slice_view, inner_str_view},
     training::BinaryPairVocabTrainerOptions,
     vocab::{ByteMapVocab, io::save_base64_span_map_path},
 };

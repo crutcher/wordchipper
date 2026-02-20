@@ -2,7 +2,7 @@
 
 use core::ops::Deref;
 
-use crate::{compat::ranges::offset_range, spanning::SpanRef};
+use crate::{spanning::SpanRef, support::ranges::offset_range};
 
 /// Word-scanning plugin trait.
 ///
@@ -15,7 +15,7 @@ use crate::{compat::ranges::offset_range, spanning::SpanRef};
 /// ## Implementation Notes
 ///
 /// Smart pointer types that implement `Deref<Target: SpanLexer>` (such as `Arc<T>`, `Box<T>`,
-/// and [`PoolToy<T>`](crate::concurrency::PoolToy)) automatically implement `SpanLexer` through
+/// and [`PoolToy<T>`](crate::support::concurrency::PoolToy)) automatically implement `SpanLexer` through
 /// a blanket implementation. This is the idiomatic Rust pattern used by the standard library
 /// for traits like `Iterator` and `Future`.
 pub trait SpanLexer: Send + Sync {

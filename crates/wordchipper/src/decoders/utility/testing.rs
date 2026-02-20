@@ -3,8 +3,8 @@
 use crate::{
     TokenEncoderBuilder,
     alloc::{vec, vec::Vec},
-    compat::{strings::string_from_utf8_lossy, traits::static_is_send_sync_check},
     decoders::TokenDecoder,
+    support::{strings::string_from_utf8_lossy, traits::static_is_send_sync_check},
     types::TokenType,
     vocab::{UnifiedTokenVocab, VocabIndex},
 };

@@ -2,11 +2,11 @@
 
 use crate::{
     alloc::{string::String, sync::Arc, vec, vec::Vec},
-    compat::{slices::inner_slice_view, traits::static_is_send_sync_check},
     decoders::{TokenDecoder, TokenDictDecoder},
     encoders::TokenEncoder,
     pretrained::openai::OA_CL100K_BASE_PATTERN,
     spanning::TextSpanningConfig,
+    support::{slices::inner_slice_view, traits::static_is_send_sync_check},
     types::TokenType,
     vocab::{
         UnifiedTokenVocab,
@@ -35,7 +35,7 @@ pub fn common_encoder_tests<T: TokenType, E: TokenEncoder<T>>(
     static_is_send_sync_check(&encoder);
 
     // Verify:
-    // - Arc/Box compat.
+    // - Arc/Box support.
     let encoder: Arc<dyn TokenEncoder<T>> = Arc::new(encoder);
 
     let samples = vec![

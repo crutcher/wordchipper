@@ -21,12 +21,12 @@ use tiktoken_support::TiktokenRsEngine;
 use wordchipper::{
     TokenType,
     UnifiedTokenVocab,
-    compat::{
+    disk_cache::WordchipperDiskCache,
+    pretrained::openai::OATokenizer,
+    support::{
         slices::{inner_slice_view, inner_str_view},
         timers::timeit,
     },
-    disk_cache::WordchipperDiskCache,
-    pretrained::openai::OATokenizer,
 };
 use wordchipper_data::dataset::{DatasetCache, DatasetCacheConfig};
 use wordchipper_support::WordchipperEngine;

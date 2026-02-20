@@ -95,23 +95,15 @@ extern crate alloc;
 
 #[cfg(feature = "training")]
 pub mod training;
-
 #[cfg(feature = "download")]
 #[doc(inline)]
 pub use wordchipper_disk_cache as disk_cache;
-
-#[cfg(feature = "std")]
-pub mod concurrency;
-
-pub mod errors;
-
-pub mod compat;
 pub mod decoders;
 pub mod encoders;
+pub mod errors;
 pub mod pretrained;
-pub mod regex;
-pub mod resources;
 pub mod spanning;
+pub mod support;
 pub mod types;
 pub mod vocab;
 

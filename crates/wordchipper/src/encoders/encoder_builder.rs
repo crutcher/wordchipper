@@ -113,7 +113,7 @@ impl<T: TokenType> TokenEncoderBuilder<T> {
 
         #[cfg(feature = "rayon")]
         if self.parallel() {
-            enc = Arc::new(crate::concurrency::rayon::ParallelRayonEncoder::new(enc));
+            enc = Arc::new(crate::support::concurrency::rayon::ParallelRayonEncoder::new(enc));
         }
 
         enc
@@ -127,11 +127,11 @@ mod tests {
         VocabIndex,
         alloc::sync::Arc,
         pretrained::openai::OA_CL100K_BASE_PATTERN,
-        regex::RegexWrapper,
         spanning::{
             TextSpanningConfig,
             span_lexers::{LexerTextSpanner, SpanLexer},
         },
+        support::regex::RegexWrapper,
         vocab::utility::testing::{build_test_shift_byte_vocab, build_test_vocab},
     };
 

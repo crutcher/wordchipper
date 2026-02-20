@@ -3,7 +3,7 @@ use crate::{
     alloc::{string::String, vec::Vec},
     errors::WordchipperError,
     pretrained::openai::OATokenizer,
-    resources::ResourceLoader,
+    support::resources::ResourceLoader,
 };
 
 /// A hook that can be used to load pretrained models.

@@ -3,7 +3,7 @@
 use core::fmt::Debug;
 
 use crate::{
-    regex::RegexWrapper,
+    support::regex::RegexWrapper,
     training::{CountType, StringChunkType, utility::TokenSpanBuf},
     types::{TokenType, WCHashMap},
     vocab::ByteMapVocab,
@@ -119,7 +119,7 @@ where
 mod tests {
     use super::*;
     use crate::{
-        regex::RegexPattern,
+        support::regex::RegexPattern,
         training::{CountType, StringChunkType, utility::token_span_buffer::TokenSpanBuf},
         vocab::ByteMapVocab,
     };

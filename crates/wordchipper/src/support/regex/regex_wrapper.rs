@@ -3,7 +3,7 @@
 
 use core::fmt::Debug;
 
-use crate::{alloc::boxed::Box, regex::RegexPattern};
+use crate::{alloc::boxed::Box, support::regex::RegexPattern};
 
 /// Error wrapper for regex patterns.
 #[non_exhaustive]
@@ -175,7 +175,7 @@ mod tests {
     use crate::{
         alloc::{format, string::ToString},
         join_patterns,
-        regex::regex_pattern::ConstRegexPattern,
+        support::regex::regex_pattern::ConstRegexPattern,
     };
 
     #[test]

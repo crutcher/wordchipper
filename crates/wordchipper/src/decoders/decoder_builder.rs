@@ -51,7 +51,7 @@ impl<T: TokenType> TokenDecoderBuilder<T> {
 
         #[cfg(feature = "rayon")]
         if self.parallel {
-            dec = Arc::new(crate::concurrency::rayon::ParallelRayonDecoder::new(dec));
+            dec = Arc::new(crate::support::concurrency::rayon::ParallelRayonDecoder::new(dec));
         }
 
         dec
