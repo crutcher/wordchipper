@@ -53,12 +53,8 @@ impl ConstVocabularyFactory {
 
     /// Load the spanning config for this tokenizer.
     pub fn spanning_config<T: TokenType>(&self) -> TextSpanningConfig<T> {
-        let config =
-            TextSpanningConfig::from_pattern(self.pattern()).with_special_words(self.special_tokens());
-        match self.word_lexer_factory {
-            Some(f) => config.with_word_lexer_factory(f),
-            None => config,
-        }
+        TextSpanningConfig::from_pattern(self.pattern())
+            .with_special_words(self.special_tokens())
     }
 
     /// Fetch a path to the resource through the loader.
@@ -97,6 +93,10 @@ impl ConstVocabularyFactory {
         &self,
         reader: R,
     ) -> crate::errors::Result<UnifiedTokenVocab<T>> {
-        crate::vocab::io::read_base64_unified_vocab(reader, self.spanning_config())
+        let mut vocab = crate::vocab::io::read_base64_unified_vocab(reader, self.spanning_config())?;
+        if let Some(factory) = self.word_lexer_factory {
+            vocab.set_word_lexer(factory());
+        }
+        Ok(vocab)
     }
 }

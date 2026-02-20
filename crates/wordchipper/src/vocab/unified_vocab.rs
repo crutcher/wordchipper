@@ -8,7 +8,7 @@ use crate::{
     alloc::{sync::Arc, vec::Vec},
     compat::strings::string_from_utf8_lossy,
     errors::WordchipperError,
-    spanning::{TextSpanner, TextSpannerBuilder, TextSpanningConfig},
+    spanning::{SpanLexer, TextSpanner, TextSpannerBuilder, TextSpanningConfig},
     types::{Pair, TokenType, WCHashSet},
     vocab::{
         ByteMapVocab,
@@ -60,7 +60,7 @@ use crate::{
 ///     .parallel(true)
 ///     .build();
 /// ```
-#[derive(Clone, PartialEq)]
+#[derive(Clone)]
 pub struct UnifiedTokenVocab<T: TokenType> {
     /// Text Spanning Configuration
     spanning: TextSpanningConfig<T>,
@@ -70,6 +70,24 @@ pub struct UnifiedTokenVocab<T: TokenType> {
 
     /// ``{ (T, T) -> T }`` vocabulary.
     pair_vocab: PairMapVocab<T>,
+
+    /// Optional pre-built word lexer (e.g. logos DFA).
+    /// When set, `TextSpannerBuilder` uses this instead of compiling
+    /// the regex pattern into a word lexer.
+    word_lexer: Option<Arc<dyn SpanLexer>>,
+}
+
+// Manual PartialEq: Arc<dyn SpanLexer> isn't PartialEq,
+// and the word lexer is an optimization, not a semantic distinction.
+impl<T: TokenType> PartialEq for UnifiedTokenVocab<T> {
+    fn eq(
+        &self,
+        other: &Self,
+    ) -> bool {
+        self.spanning == other.spanning
+            && self.span_vocab == other.span_vocab
+            && self.pair_vocab == other.pair_vocab
+    }
 }
 
 impl<T: TokenType> UnifiedTokenVocab<T> {
@@ -146,7 +164,21 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
             spanning: span_config,
             span_vocab,
             pair_vocab,
+            word_lexer: None,
         })
+    }
+
+    /// Set the word lexer override (e.g. a logos DFA lexer).
+    pub fn set_word_lexer(
+        &mut self,
+        lexer: Arc<dyn SpanLexer>,
+    ) {
+        self.word_lexer = Some(lexer);
+    }
+
+    /// Get the word lexer override, if set.
+    pub fn word_lexer(&self) -> Option<&Arc<dyn SpanLexer>> {
+        self.word_lexer.as_ref()
     }
 
     /// Get a [`TextSpannerBuilder`] for this [`UnifiedTokenVocab`].
@@ -191,6 +223,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
             spanning: self.spanning.to_token_type::<G>()?,
             span_vocab: self.span_vocab.to_token_type::<G>()?,
             pair_vocab: self.pair_vocab.to_token_type::<G>()?,
+            word_lexer: self.word_lexer.clone(),
         })
     }
 

@@ -127,13 +127,9 @@ mod tests {
         VocabIndex,
         alloc::sync::Arc,
         pretrained::openai::OA_CL100K_BASE_PATTERN,
-        spanning::{LogosLexer, SpanLexer, TextSpanningConfig},
+        spanning::{LogosLexer, TextSpanningConfig},
         vocab::utility::testing::{build_test_shift_byte_vocab, build_test_vocab},
     };
-
-    fn logos_cl100k_lexer() -> Arc<dyn SpanLexer> {
-        Arc::new(LogosLexer::cl100k())
-    }
 
     /// Build two encoders from the same BPE data but different spanners
     /// (regex vs logos) and verify they produce identical tokens.
@@ -149,17 +145,17 @@ mod tests {
         let hi = regex_vocab.max_token().unwrap() + 1;
         regex_vocab.special_vocab_mut().add_str_word("<|HI|>", hi);
 
-        // Clone BPE data, swap spanning config to logos.
+        // Clone BPE data, attach logos word lexer.
         let logos_config: TextSpanningConfig<T> =
             TextSpanningConfig::from_pattern(OA_CL100K_BASE_PATTERN)
-                .with_word_lexer_factory(logos_cl100k_lexer)
                 .with_special_words([("<|HI|>", hi)]);
-        let logos_vocab = UnifiedTokenVocab::<T>::new(
+        let mut logos_vocab = UnifiedTokenVocab::<T>::new(
             logos_config,
             regex_vocab.span_vocab().clone(),
             regex_vocab.pair_vocab().clone(),
         )
         .unwrap();
+        logos_vocab.set_word_lexer(Arc::new(LogosLexer::cl100k()));
 
         let regex_enc = TokenEncoderBuilder::new(regex_vocab)
             .with_parallel(false)

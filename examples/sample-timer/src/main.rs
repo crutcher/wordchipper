@@ -198,7 +198,7 @@ fn main() -> Result<(), BoxError> {
     candidate_engines.push(wc_engine.clone());
 
     // When the model uses logos, also add a regex-forced engine for comparison.
-    if vocab.spanning().word_lexer_factory().is_some() {
+    if vocab.word_lexer().is_some() {
         use wordchipper::spanning::TextSpanningConfig;
         let regex_spanning = TextSpanningConfig::<Rank>::from_pattern(
             args.model.model().factory().pattern(),
