@@ -12,10 +12,10 @@ use crate::resources::ResourceLoader;
 #[cfg(feature = "std")]
 use crate::vocab::UnifiedTokenVocab;
 use crate::{
-    alloc::{string::String, vec::Vec},
+    alloc::{string::String, sync::Arc, vec::Vec},
     regex::{ConstRegexPattern, RegexPattern},
     resources::ConstKeyedResource,
-    spanning::TextSpanningConfig,
+    spanning::{SpanLexer, TextSpanningConfig},
     types::TokenType,
 };
 
@@ -32,6 +32,9 @@ pub struct ConstVocabularyFactory {
 
     /// A generator for special tokens.
     pub special_builder: &'static dyn Fn() -> Vec<(String, usize)>,
+
+    /// Optional factory for the word lexer, overriding the regex-compiled default.
+    pub word_lexer_factory: Option<fn() -> Arc<dyn SpanLexer>>,
 }
 
 impl ConstVocabularyFactory {
@@ -50,7 +53,12 @@ impl ConstVocabularyFactory {
 
     /// Load the spanning config for this tokenizer.
     pub fn spanning_config<T: TokenType>(&self) -> TextSpanningConfig<T> {
-        TextSpanningConfig::from_pattern(self.pattern()).with_special_words(self.special_tokens())
+        let config =
+            TextSpanningConfig::from_pattern(self.pattern()).with_special_words(self.special_tokens());
+        match self.word_lexer_factory {
+            Some(f) => config.with_word_lexer_factory(f),
+            None => config,
+        }
     }
 
     /// Fetch a path to the resource through the loader.

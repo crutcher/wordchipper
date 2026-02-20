@@ -119,3 +119,75 @@ impl<T: TokenType> TokenEncoderBuilder<T> {
         enc
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        VocabIndex,
+        alloc::sync::Arc,
+        pretrained::openai::OA_CL100K_BASE_PATTERN,
+        spanning::{LogosLexer, SpanLexer, TextSpanningConfig},
+        vocab::utility::testing::{build_test_shift_byte_vocab, build_test_vocab},
+    };
+
+    fn logos_cl100k_lexer() -> Arc<dyn SpanLexer> {
+        Arc::new(LogosLexer::cl100k())
+    }
+
+    /// Build two encoders from the same BPE data but different spanners
+    /// (regex vs logos) and verify they produce identical tokens.
+    #[test]
+    fn test_logos_vs_regex_encode_identical() {
+        type T = u32;
+
+        // Build vocab with regex-based spanning (the default path).
+        let regex_config: TextSpanningConfig<T> =
+            TextSpanningConfig::from_pattern(OA_CL100K_BASE_PATTERN);
+        let mut regex_vocab: UnifiedTokenVocab<T> =
+            build_test_vocab(build_test_shift_byte_vocab(10), regex_config);
+        let hi = regex_vocab.max_token().unwrap() + 1;
+        regex_vocab.special_vocab_mut().add_str_word("<|HI|>", hi);
+
+        // Clone BPE data, swap spanning config to logos.
+        let logos_config: TextSpanningConfig<T> =
+            TextSpanningConfig::from_pattern(OA_CL100K_BASE_PATTERN)
+                .with_word_lexer_factory(logos_cl100k_lexer)
+                .with_special_words([("<|HI|>", hi)]);
+        let logos_vocab = UnifiedTokenVocab::<T>::new(
+            logos_config,
+            regex_vocab.span_vocab().clone(),
+            regex_vocab.pair_vocab().clone(),
+        )
+        .unwrap();
+
+        let regex_enc = TokenEncoderBuilder::new(regex_vocab)
+            .with_parallel(false)
+            .build();
+        let logos_enc = TokenEncoderBuilder::new(logos_vocab)
+            .with_parallel(false)
+            .build();
+
+        let samples = [
+            "hello world",
+            "hello san francisco",
+            "it's not the heat, it's the salt",
+            "<|HI|>hello<|HI|>",
+            "  multiple   spaces  ",
+            "line1\nline2\r\nline3",
+            "123 + 456 = 789",
+            "caf\u{00e9} na\u{00ef}ve \u{4f60}\u{597d}",
+            "Geburtstag 2024: Alles Gute!",
+            "$$$!!!...---",
+            "",
+            " ",
+            "a",
+        ];
+
+        for text in &samples {
+            let regex_tokens = regex_enc.try_encode(text).unwrap();
+            let logos_tokens = logos_enc.try_encode(text).unwrap();
+            assert_eq!(regex_tokens, logos_tokens, "Token mismatch for: {text:?}");
+        }
+    }
+}

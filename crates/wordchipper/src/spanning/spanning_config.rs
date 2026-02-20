@@ -1,5 +1,11 @@
 //! # Text Spanner Configuration
-use crate::{regex::RegexPattern, types::TokenType, vocab::SpecialVocab};
+use crate::{
+    alloc::sync::Arc,
+    regex::RegexPattern,
+    spanning::SpanLexer,
+    types::TokenType,
+    vocab::SpecialVocab,
+};
 
 /// Description of text spanning configuration.
 ///
@@ -7,13 +13,29 @@ use crate::{regex::RegexPattern, types::TokenType, vocab::SpecialVocab};
 ///
 /// Instance names should prefer `spanner_config`,
 /// or `config` when there is no ambiguity.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct TextSpanningConfig<T: TokenType> {
     /// Regex pattern for word splitting.
     pattern: RegexPattern,
 
     /// Special tokens vocabulary.
     specials: SpecialVocab<T>,
+
+    /// Optional factory for the word lexer.
+    /// When set, `TextSpannerBuilder::build()` uses this instead of
+    /// compiling the regex pattern into a word lexer.
+    word_lexer_factory: Option<fn() -> Arc<dyn SpanLexer>>,
+}
+
+// Manual PartialEq: fn pointers trigger `unpredictable_function_pointer_comparisons`,
+// and the factory isn't meaningful for config equality anyway.
+impl<T: TokenType> PartialEq for TextSpanningConfig<T> {
+    fn eq(
+        &self,
+        other: &Self,
+    ) -> bool {
+        self.pattern == other.pattern && self.specials == other.specials
+    }
 }
 
 impl<T: TokenType> From<RegexPattern> for TextSpanningConfig<T> {
@@ -36,6 +58,7 @@ impl<T: TokenType> TextSpanningConfig<T> {
         Self {
             pattern: pattern.into(),
             specials: SpecialVocab::default(),
+            word_lexer_factory: None,
         }
     }
 
@@ -96,6 +119,7 @@ impl<T: TokenType> TextSpanningConfig<T> {
         Ok(TextSpanningConfig::<G> {
             pattern: self.pattern.clone(),
             specials: self.specials.to_token_type()?,
+            word_lexer_factory: self.word_lexer_factory,
         })
     }
 
@@ -117,6 +141,22 @@ impl<T: TokenType> TextSpanningConfig<T> {
     /// Get a mutable view of the [`SpecialVocab`]
     pub fn specials_mut(&mut self) -> &mut SpecialVocab<T> {
         &mut self.specials
+    }
+
+    /// Get the word lexer factory, if set.
+    pub fn word_lexer_factory(&self) -> Option<fn() -> Arc<dyn SpanLexer>> {
+        self.word_lexer_factory
+    }
+
+    /// Set a factory for the word lexer, overriding the regex-compiled default.
+    pub fn with_word_lexer_factory(
+        self,
+        factory: fn() -> Arc<dyn SpanLexer>,
+    ) -> Self {
+        Self {
+            word_lexer_factory: Some(factory),
+            ..self
+        }
     }
 }
 

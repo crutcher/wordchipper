@@ -9,12 +9,15 @@
 //! Most users will want to use the [`TextSpannerBuilder`] to construct a [`TextSpanner`].
 
 mod lexer_spanner;
+pub(crate) mod logos_lexer;
 mod spanner_builder;
 mod spanning_config;
 mod text_spanner;
 
 #[doc(inline)]
 pub use lexer_spanner::*;
+#[doc(inline)]
+pub use logos_lexer::LogosLexer;
 #[doc(inline)]
 pub use spanner_builder::*;
 #[doc(inline)]

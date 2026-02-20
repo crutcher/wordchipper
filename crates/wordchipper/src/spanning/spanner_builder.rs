@@ -8,7 +8,7 @@ use crate::{
     TokenType,
     alloc::sync::Arc,
     regex::{RegexPattern, RegexWrapper},
-    spanning::{LexerTextSpanner, TextSpanner, TextSpanningConfig, lexer_spanner::SpanLexer},
+    spanning::{LexerTextSpanner, SpanLexer, TextSpanner, TextSpanningConfig},
 };
 
 /// Builder for [`TextSpanner`]s.
@@ -87,6 +87,10 @@ impl<T: TokenType> TextSpannerBuilder<T> {
     }
 
     /// Build a [`TextSpanner`] with the current configuration.
+    ///
+    /// If the config has a `word_lexer_factory`, it is called to produce the
+    /// word lexer. Otherwise, the regex pattern is compiled into one.
+    /// The special lexer (if any) is always built from the regex pattern.
     pub fn build(&self) -> Arc<dyn TextSpanner> {
         fn maybe_pool(
             pattern: RegexPattern,
@@ -105,10 +109,12 @@ impl<T: TokenType> TextSpannerBuilder<T> {
             }
         }
 
-        let word_lexer: Arc<dyn SpanLexer> = {
-            let pattern = self.config().pattern().clone();
-            maybe_pool(pattern, self.max_pool)
-        };
+        let word_lexer: Arc<dyn SpanLexer> =
+            if let Some(factory) = self.config.word_lexer_factory() {
+                factory()
+            } else {
+                maybe_pool(self.config().pattern().clone(), self.max_pool)
+            };
         let special_lexer: Option<Arc<dyn SpanLexer>> = self
             .config
             .specials()
