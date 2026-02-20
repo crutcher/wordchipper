@@ -4,7 +4,7 @@ use crate::alloc::string::String;
 
 /// Errors from wordchipper operations.
 #[derive(Debug, thiserror::Error)]
-pub enum WordchipperError {
+pub enum WCError {
     /// Vocab size exceeds the capacity of the target token type.
     #[error("vocab size ({size}) exceeds token type capacity")]
     VocabSizeOverflow {
@@ -49,4 +49,4 @@ pub enum WordchipperError {
 }
 
 /// Result type for wordchipper operations.
-pub type WCResult<T> = core::result::Result<T, WordchipperError>;
+pub type WCResult<T> = core::result::Result<T, WCError>;

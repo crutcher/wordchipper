@@ -51,7 +51,7 @@
 //!     S: AsRef<str>,
 //! {
 //!     // We can pick any unsigned integer type > vocab_size;
-//!     // See [`wordchipper::types::TokenType`].
+//!     // See [`wordchipper::TokenType`].
 //!     type T = u32;
 //!     type K = String;
 //!     type C = u64;

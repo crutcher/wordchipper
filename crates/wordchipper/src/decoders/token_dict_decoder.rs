@@ -1,9 +1,10 @@
 //! # Dictionary ``{ T -> Vec<u8> }`` Token Decoder
 
 use crate::{
+    TokenType,
+    WCResult,
     alloc::vec::Vec,
     decoders::{DecodeResult, TokenDecoder},
-    types::TokenType,
     vocab::{DEFAULT_BYTE_PER_TOKEN_RATIO, TokenSpanMap, UnifiedTokenVocab},
 };
 
@@ -89,7 +90,7 @@ impl<T: TokenType> TokenDecoder<T> for TokenDictDecoder<T> {
     fn try_decode_to_bytes(
         &self,
         tokens: &[T],
-    ) -> crate::errors::WCResult<DecodeResult<Vec<u8>>> {
+    ) -> WCResult<DecodeResult<Vec<u8>>> {
         let capacity = self.predicted_byte_buffer_size(tokens);
         let mut value = Vec::with_capacity(capacity);
 

@@ -1,9 +1,10 @@
 //! # Token Encoder Trait
 
 use crate::{
+    TokenType,
+    WCResult,
     alloc::{sync::Arc, vec::Vec},
     spanning::TextSpanner,
-    types::TokenType,
     vocab::SpecialVocab,
 };
 
@@ -17,7 +18,7 @@ use crate::{
 /// when there is a conflict.
 pub trait TokenEncoder<T: TokenType>: Send + Sync {
     /// Return the attached text segmentor.
-    fn spanner(&self) -> Arc<dyn TextSpanner>;
+    fn spanner(&self) -> &Arc<dyn TextSpanner>;
 
     /// Return the attached special vocab.
     ///
@@ -55,7 +56,7 @@ pub trait TokenEncoder<T: TokenType>: Send + Sync {
         &self,
         text: &str,
         tokens: &mut Vec<T>,
-    ) -> crate::errors::WCResult<()>;
+    ) -> WCResult<()>;
 
     /// Encode text into tokens, returning an error if the encoding fails.
     ///
@@ -67,7 +68,7 @@ pub trait TokenEncoder<T: TokenType>: Send + Sync {
     fn try_encode(
         &self,
         text: &str,
-    ) -> crate::errors::WCResult<Vec<T>> {
+    ) -> WCResult<Vec<T>> {
         let capacity = self.expected_token_count(text) * 115 / 100;
         let mut tokens = Vec::with_capacity(capacity);
 
@@ -85,7 +86,7 @@ pub trait TokenEncoder<T: TokenType>: Send + Sync {
     fn try_encode_batch(
         &self,
         batch: &[&str],
-    ) -> crate::errors::WCResult<Vec<Vec<T>>> {
+    ) -> WCResult<Vec<Vec<T>>> {
         batch.iter().map(|s| self.try_encode(s)).collect()
     }
 }

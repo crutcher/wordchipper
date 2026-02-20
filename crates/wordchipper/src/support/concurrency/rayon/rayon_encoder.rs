@@ -1,10 +1,11 @@
 //! # Parallel Encoder
 
 use crate::{
+    TokenType,
+    WCResult,
     alloc::sync::Arc,
     encoders::TokenEncoder,
     spanning::TextSpanner,
-    types::TokenType,
     vocab::SpecialVocab,
 };
 
@@ -41,7 +42,7 @@ impl<T> TokenEncoder<T> for ParallelRayonEncoder<T>
 where
     T: TokenType,
 {
-    fn spanner(&self) -> Arc<dyn TextSpanner> {
+    fn spanner(&self) -> &Arc<dyn TextSpanner> {
         self.inner.spanner()
     }
 
@@ -53,17 +54,17 @@ where
         &self,
         text: &str,
         tokens: &mut Vec<T>,
-    ) -> crate::errors::WCResult<()> {
+    ) -> WCResult<()> {
         self.inner.try_encode_append(text, tokens)
     }
 
     fn try_encode_batch(
         &self,
         batch: &[&str],
-    ) -> crate::errors::WCResult<Vec<Vec<T>>> {
+    ) -> WCResult<Vec<Vec<T>>> {
         use rayon::prelude::*;
 
-        let results: Vec<crate::errors::WCResult<Vec<T>>> = batch
+        let results: Vec<WCResult<Vec<T>>> = batch
             .par_iter()
             .map(|text| self.inner.try_encode(text))
             .collect();
@@ -76,11 +77,11 @@ where
 mod tests {
     use super::*;
     use crate::{
+        TokenType,
         encoders::{
             TokenEncoder,
             testing::{common_encoder_test_vocab, common_encoder_tests},
         },
-        types::TokenType,
     };
 
     fn test_encoder<T: TokenType>() {

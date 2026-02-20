@@ -1,15 +1,15 @@
 //! Validators for various configuration options.
-use crate::{errors::WordchipperError, types::TokenType};
+use crate::{TokenType, WCError, WCResult};
 
 /// The size of the u8 space.
 pub const U8_SIZE: usize = u8::MAX as usize + 1;
 
 /// Validates and returns the vocabulary size, ensuring it's at least the size of the u8 space.
-pub fn try_vocab_size<T: TokenType>(vocab_size: usize) -> crate::errors::WCResult<usize> {
+pub fn try_vocab_size<T: TokenType>(vocab_size: usize) -> WCResult<usize> {
     if T::from_usize(vocab_size - 1).is_none() {
-        Err(WordchipperError::VocabSizeOverflow { size: vocab_size })
+        Err(WCError::VocabSizeOverflow { size: vocab_size })
     } else if vocab_size < U8_SIZE {
-        Err(WordchipperError::VocabSizeTooSmall { size: vocab_size })
+        Err(WCError::VocabSizeTooSmall { size: vocab_size })
     } else {
         Ok(vocab_size)
     }

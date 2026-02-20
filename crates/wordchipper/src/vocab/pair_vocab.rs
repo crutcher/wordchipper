@@ -1,6 +1,7 @@
 //! # Pair Map ``{ (T, T) -> T }`` Token Vocabulary
 
 use crate::{
+    WCResult,
     alloc::vec::Vec,
     decoders::{TokenDecoder, utility::PairExpansionDecoder},
     types::{Pair, TokenType, WCHashSet},
@@ -23,14 +24,14 @@ use crate::{
 pub fn try_validate_pair_map<T: TokenType>(
     byte_vocab: &ByteMapVocab<T>,
     pairs: &PairTokenMap<T>,
-) -> crate::errors::WCResult<()> {
+) -> WCResult<()> {
     let pair_targets: WCHashSet<T> = pairs.values().copied().collect();
 
     for t in &pair_targets {
         if let Some(b) = byte_vocab.get_byte(*t) {
-            return Err(crate::errors::WordchipperError::VocabConflict(
-                crate::alloc::format!("Target token in pair map {t:?} also mapped to byte {b:0x?}"),
-            ));
+            return Err(crate::WCError::VocabConflict(crate::alloc::format!(
+                "Target token in pair map {t:?} also mapped to byte {b:0x?}"
+            )));
         }
     }
 
@@ -40,16 +41,14 @@ pub fn try_validate_pair_map<T: TokenType>(
             let byte_target = byte_vocab.get_byte(pt);
 
             if is_pair_target && let Some(b) = byte_target {
-                return Err(crate::errors::WordchipperError::VocabConflict(
-                    crate::alloc::format!(
-                        "Pair {pair:?} -> {t:?} parent {pt:?} is a pair target and byte target: {b:0x?}"
-                    ),
-                ));
+                return Err(crate::WCError::VocabConflict(crate::alloc::format!(
+                    "Pair {pair:?} -> {t:?} parent {pt:?} is a pair target and byte target: {b:0x?}"
+                )));
             }
             if !is_pair_target && byte_target.is_none() {
-                return Err(crate::errors::WordchipperError::VocabConflict(
-                    crate::alloc::format!("Pair {pair:?} -> {t:?} parent {pt:?} is not defined"),
-                ));
+                return Err(crate::WCError::VocabConflict(crate::alloc::format!(
+                    "Pair {pair:?} -> {t:?} parent {pt:?} is not defined"
+                )));
             }
         }
     }
@@ -82,7 +81,7 @@ impl<T: TokenType> PairMapVocab<T> {
     pub fn new(
         byte_vocab: ByteMapVocab<T>,
         mut pairs: PairTokenMap<T>,
-    ) -> crate::errors::WCResult<Self> {
+    ) -> WCResult<Self> {
         try_validate_pair_map(&byte_vocab, &pairs)?;
         pairs.shrink_to_fit();
         Ok(Self {
@@ -92,7 +91,7 @@ impl<T: TokenType> PairMapVocab<T> {
     }
 
     /// Convert to a different token type.
-    pub fn to_token_type<G: TokenType>(&self) -> crate::errors::WCResult<PairMapVocab<G>> {
+    pub fn to_token_type<G: TokenType>(&self) -> WCResult<PairMapVocab<G>> {
         try_vocab_size::<G>(self.max_token().unwrap().to_usize().unwrap())?;
 
         PairMapVocab::<G>::new(

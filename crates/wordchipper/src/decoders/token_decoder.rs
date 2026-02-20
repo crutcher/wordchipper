@@ -1,10 +1,11 @@
 //! # Token Decoder Trait
 
 use crate::{
+    TokenType,
+    WCResult,
     alloc::{string::String, vec::Vec},
     decoders::{BatchDecodeResult, DecodeResult},
     support::strings::string_from_utf8_lossy,
-    types::TokenType,
 };
 
 /// The common trait for `&[T] -> Vec<u8>/String>` decoders.
@@ -26,7 +27,7 @@ pub trait TokenDecoder<T: TokenType>: Send + Sync {
     fn try_decode_to_bytes(
         &self,
         tokens: &[T],
-    ) -> crate::errors::WCResult<DecodeResult<Vec<u8>>>;
+    ) -> WCResult<DecodeResult<Vec<u8>>>;
 
     /// Decodes a batch of tokens.
     ///
@@ -38,11 +39,11 @@ pub trait TokenDecoder<T: TokenType>: Send + Sync {
     fn try_decode_batch_to_bytes(
         &self,
         batch: &[&[T]],
-    ) -> crate::errors::WCResult<BatchDecodeResult<Vec<u8>>> {
+    ) -> WCResult<BatchDecodeResult<Vec<u8>>> {
         batch
             .iter()
             .map(|tokens| self.try_decode_to_bytes(tokens))
-            .collect::<crate::errors::WCResult<Vec<_>>>()
+            .collect::<WCResult<Vec<_>>>()
             .map(BatchDecodeResult::from)
     }
 
@@ -58,7 +59,7 @@ pub trait TokenDecoder<T: TokenType>: Send + Sync {
     fn try_decode_to_string(
         &self,
         tokens: &[T],
-    ) -> crate::errors::WCResult<DecodeResult<String>> {
+    ) -> WCResult<DecodeResult<String>> {
         self.try_decode_to_bytes(tokens)
             .map(|res| res.convert(string_from_utf8_lossy))
     }
@@ -75,11 +76,11 @@ pub trait TokenDecoder<T: TokenType>: Send + Sync {
     fn try_decode_batch_to_strings(
         &self,
         batch: &[&[T]],
-    ) -> crate::errors::WCResult<BatchDecodeResult<String>> {
+    ) -> WCResult<BatchDecodeResult<String>> {
         batch
             .iter()
             .map(|tokens| self.try_decode_to_string(tokens))
-            .collect::<crate::errors::WCResult<Vec<_>>>()
+            .collect::<WCResult<Vec<_>>>()
             .map(BatchDecodeResult::from)
     }
 }

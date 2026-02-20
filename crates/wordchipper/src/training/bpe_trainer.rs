@@ -6,6 +6,7 @@ use compact_str::CompactString;
 use dary_heap::OctonaryHeap;
 
 use crate::{
+    WCResult,
     support::regex::RegexPattern,
     training::{
         CountType,
@@ -240,7 +241,7 @@ where
     fn train_basic_pairs<T>(
         self,
         byte_vocab: ByteMapVocab<T>,
-    ) -> crate::errors::WCResult<TrainResults<T>>
+    ) -> WCResult<TrainResults<T>>
     where
         T: TokenType,
         C: CountType,
@@ -253,7 +254,7 @@ where
         self.options
             .pattern
             .compile()
-            .map_err(|e| crate::errors::WordchipperError::External(e.to_string()))?;
+            .map_err(|e| crate::WCError::External(e.to_string()))?;
 
         let mut pairs: PairTokenMap<T> = WCHashMap::with_capacity(num_merges);
 
@@ -402,7 +403,7 @@ where
     pub fn train<T>(
         self,
         byte_vocab: ByteMapVocab<T>,
-    ) -> crate::errors::WCResult<UnifiedTokenVocab<T>>
+    ) -> WCResult<UnifiedTokenVocab<T>>
     where
         T: TokenType,
         C: CountType,

@@ -1,9 +1,9 @@
 //! `TokenDecoder` Builder
 
 use crate::{
+    TokenType,
     alloc::sync::Arc,
     decoders::{SlabIndexDecoder, TokenDecoder},
-    types::TokenType,
     vocab::UnifiedTokenVocab,
 };
 

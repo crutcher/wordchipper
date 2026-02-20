@@ -2,6 +2,7 @@ use crate::{
     TokenEncoder,
     TokenType,
     UnifiedTokenVocab,
+    WCResult,
     alloc::{boxed::Box, sync::Arc, vec::Vec},
     encoders::span_encoders::SpanEncoder,
     spanning::TextSpanner,
@@ -38,8 +39,8 @@ impl<T: TokenType> TokenSpanEncoder<T> {
 }
 
 impl<T: TokenType> TokenEncoder<T> for TokenSpanEncoder<T> {
-    fn spanner(&self) -> Arc<dyn TextSpanner> {
-        self.spanner.clone()
+    fn spanner(&self) -> &Arc<dyn TextSpanner> {
+        &self.spanner
     }
 
     fn special_vocab(&self) -> &SpecialVocab<T> {
@@ -54,7 +55,7 @@ impl<T: TokenType> TokenEncoder<T> for TokenSpanEncoder<T> {
         &self,
         text: &str,
         tokens: &mut Vec<T>,
-    ) -> crate::errors::WCResult<()> {
+    ) -> WCResult<()> {
         let mut se = (self.se_builder)();
 
         self.spanner.for_each_split_span(text, &mut |span_ref| {

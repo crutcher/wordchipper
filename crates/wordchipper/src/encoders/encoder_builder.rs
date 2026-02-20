@@ -3,13 +3,13 @@
 use core::num::NonZeroUsize;
 
 use crate::{
+    TokenType,
     alloc::{boxed::Box, sync::Arc},
     encoders::{
         TokenEncoder,
         span_encoders::{IncrementalSweepSpanEncoder, TokenSpanEncoder},
     },
     spanning::TextSpannerBuilder,
-    types::TokenType,
     vocab::UnifiedTokenVocab,
 };
 

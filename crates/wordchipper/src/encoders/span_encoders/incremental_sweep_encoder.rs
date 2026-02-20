@@ -4,9 +4,9 @@
 //! iterates until no more merges remain.
 
 use crate::{
+    TokenType,
     alloc::vec::Vec,
     encoders::span_encoders::span_encoder::SpanEncoder,
-    types::TokenType,
     vocab::UnifiedTokenVocab,
 };
 
@@ -60,12 +60,12 @@ impl<T: TokenType> SpanEncoder<T> for IncrementalSweepSpanEncoder<T> {
 mod tests {
     use super::*;
     use crate::{
+        TokenType,
         alloc::{boxed::Box, sync::Arc},
         encoders::{
             span_encoders::TokenSpanEncoder,
             testing::{common_encoder_test_vocab, common_encoder_tests},
         },
-        types::TokenType,
     };
 
     fn test_encoder<T: TokenType>() {

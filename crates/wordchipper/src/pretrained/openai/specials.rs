@@ -1,12 +1,12 @@
 //! `OpenAI` Tokenizer Special Tokens.
 
 use crate::{
+    TokenType,
     alloc::{
         string::{String, ToString},
         vec::Vec,
     },
     declare_carrot_special,
-    types::TokenType,
     vocab::utility::{ToTokenList, format_reserved_carrot},
 };
 

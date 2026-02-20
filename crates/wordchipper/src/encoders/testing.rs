@@ -1,13 +1,13 @@
 //! # Encoder Test Utilities
 
 use crate::{
+    TokenType,
     alloc::{string::String, sync::Arc, vec, vec::Vec},
     decoders::{TokenDecoder, TokenDictDecoder},
     encoders::TokenEncoder,
     pretrained::openai::OA_CL100K_BASE_PATTERN,
     spanning::TextSpanningConfig,
     support::{slices::inner_slice_view, traits::static_is_send_sync_check},
-    types::TokenType,
     vocab::{
         UnifiedTokenVocab,
         VocabIndex,

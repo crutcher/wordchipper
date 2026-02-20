@@ -1,11 +1,11 @@
 //! # Token List Utility
 
 use crate::{
+    TokenType,
     alloc::{
         string::{String, ToString},
         vec::Vec,
     },
-    types::TokenType,
 };
 
 /// A utility trait to generate a listing of tokens.

@@ -2,10 +2,10 @@
 
 use crate::{
     TokenEncoderBuilder,
+    TokenType,
     alloc::{vec, vec::Vec},
     decoders::TokenDecoder,
     support::{strings::string_from_utf8_lossy, traits::static_is_send_sync_check},
-    types::TokenType,
     vocab::{UnifiedTokenVocab, VocabIndex},
 };
 

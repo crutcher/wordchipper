@@ -2,7 +2,7 @@
 
 use core::fmt::Debug;
 
-use crate::alloc::vec::Vec;
+use crate::{WCResult, alloc::vec::Vec};
 
 /// The result of decoding tokens into bytes.
 #[derive(Debug)]
@@ -55,11 +55,11 @@ where
     }
 
     /// Try to unwrap the result, returning an error if the decoding is incomplete.
-    pub fn try_result(self) -> crate::errors::WCResult<V> {
+    pub fn try_result(self) -> WCResult<V> {
         if let Some(remaining) = self.remaining
             && remaining > 0
         {
-            return Err(crate::errors::WordchipperError::IncompleteDecode { remaining });
+            return Err(crate::WCError::IncompleteDecode { remaining });
         }
         Ok(self.value)
     }
@@ -124,7 +124,7 @@ where
     }
 
     /// Try to unwrap the results, returning an error if any decoding is incomplete.
-    pub fn try_results(self) -> crate::errors::WCResult<Vec<V>> {
+    pub fn try_results(self) -> WCResult<Vec<V>> {
         self.results.into_iter().map(|r| r.try_result()).collect()
     }
 

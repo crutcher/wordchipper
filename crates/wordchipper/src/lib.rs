@@ -109,6 +109,7 @@ pub mod support;
 pub mod vocab;
 
 mod errors;
+mod tokenizer;
 mod types;
 
 #[doc(inline)]
@@ -120,6 +121,8 @@ pub use errors::*;
 #[doc(inline)]
 #[cfg(feature = "download")]
 pub use pretrained::{get_model, list_models};
+#[doc(inline)]
+pub use tokenizer::*;
 #[doc(inline)]
 pub use types::*;
 #[doc(inline)]

@@ -1,9 +1,10 @@
 //! # Parallel Decoder
 
 use crate::{
+    TokenType,
+    WCResult,
     alloc::sync::Arc,
     decoders::{BatchDecodeResult, DecodeResult, TokenDecoder},
-    types::TokenType,
 };
 
 /// Batch-Level Parallel Decoder Wrapper.
@@ -42,33 +43,33 @@ where
     fn try_decode_to_bytes(
         &self,
         tokens: &[T],
-    ) -> crate::errors::WCResult<DecodeResult<Vec<u8>>> {
+    ) -> WCResult<DecodeResult<Vec<u8>>> {
         self.inner.try_decode_to_bytes(tokens)
     }
 
     fn try_decode_batch_to_bytes(
         &self,
         batch: &[&[T]],
-    ) -> crate::errors::WCResult<BatchDecodeResult<Vec<u8>>> {
+    ) -> WCResult<BatchDecodeResult<Vec<u8>>> {
         use rayon::prelude::*;
 
         batch
             .par_iter()
             .map(|tokens| self.try_decode_to_bytes(tokens))
-            .collect::<crate::errors::WCResult<Vec<_>>>()
+            .collect::<WCResult<Vec<_>>>()
             .map(BatchDecodeResult::from)
     }
 
     fn try_decode_batch_to_strings(
         &self,
         batch: &[&[T]],
-    ) -> crate::errors::WCResult<BatchDecodeResult<String>> {
+    ) -> WCResult<BatchDecodeResult<String>> {
         use rayon::prelude::*;
 
         batch
             .par_iter()
             .map(|tokens| self.try_decode_to_string(tokens))
-            .collect::<crate::errors::WCResult<Vec<_>>>()
+            .collect::<WCResult<Vec<_>>>()
             .map(BatchDecodeResult::from)
     }
 }

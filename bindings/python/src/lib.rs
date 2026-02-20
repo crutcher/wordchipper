@@ -9,7 +9,7 @@ use wordchipper::{
     TokenEncoder,
     UnifiedTokenVocab,
     VocabIndex,
-    WordchipperError,
+    WCError,
     disk_cache::WordchipperDiskCache,
     support::{
         slices::{inner_slice_view, inner_str_view},
@@ -18,9 +18,9 @@ use wordchipper::{
     vocab::io::save_base64_span_map_path,
 };
 
-fn to_pyerr(err: WordchipperError) -> PyErr {
+fn to_pyerr(err: WCError) -> PyErr {
     match err {
-        WordchipperError::Io(e) => PyIOError::new_err(e.to_string()),
+        WCError::Io(e) => PyIOError::new_err(e.to_string()),
         other => PyValueError::new_err(other.to_string()),
     }
 }

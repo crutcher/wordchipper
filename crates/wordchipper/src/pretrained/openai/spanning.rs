@@ -1,6 +1,7 @@
 //! # Spanning Configuration for `OpenAI` Tokenizers
 
 use crate::{
+    TokenType,
     pretrained::openai::{
         OA_CL100K_BASE_PATTERN,
         OA_O200K_BASE_PATTERN,
@@ -9,7 +10,6 @@ use crate::{
         specials,
     },
     spanning::TextSpanningConfig,
-    types::TokenType,
 };
 /// Get the [`TextSpanningConfig`] for the "`r50k_base`" pretrained vocabulary.
 pub fn oa_r50k_base_spanning_config<T: TokenType>() -> TextSpanningConfig<T> {

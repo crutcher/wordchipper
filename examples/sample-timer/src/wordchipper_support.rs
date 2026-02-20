@@ -25,7 +25,7 @@ impl<T: TokenType> WordchipperEngine<T> {
         }
     }
 
-    pub fn spanner(&self) -> Arc<dyn TextSpanner> {
+    pub fn spanner(&self) -> &Arc<dyn TextSpanner> {
         self.encoder.spanner()
     }
 }

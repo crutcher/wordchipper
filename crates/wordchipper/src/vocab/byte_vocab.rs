@@ -3,6 +3,7 @@
 use core::fmt::Debug;
 
 use crate::{
+    WCResult,
     alloc::{vec, vec::Vec},
     types::{TokenType, WCHashSet},
     vocab::{ByteTokenArray, ByteTokenMap, TokenByteMap, VocabIndex},
@@ -107,7 +108,7 @@ impl<T: TokenType> ByteMapVocab<T> {
     }
 
     /// Convert to a different token type.
-    pub fn to_token_type<G: TokenType>(&self) -> crate::errors::WCResult<ByteMapVocab<G>> {
+    pub fn to_token_type<G: TokenType>(&self) -> WCResult<ByteMapVocab<G>> {
         Ok(ByteMapVocab::<G>::from_byte_to_token(
             &self
                 .byte_tokens

@@ -1,9 +1,9 @@
 //! # Vocab Testing Tools
 
 use crate::{
+    TokenType,
     alloc::vec::Vec,
     spanning::TextSpanningConfig,
-    types::TokenType,
     vocab::{ByteMapVocab, SpanMapVocab, SpanTokenMap, UnifiedTokenVocab},
 };
 
