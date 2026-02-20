@@ -188,31 +188,24 @@ fn main() -> Result<(), BoxError> {
 
     // TODO: complete batch-observer inversion of control for additional tokenizer wrappers.
 
+    let model = args.model.model();
+    let factory = model.factory();
+
     let mut candidate_engines: Vec<Arc<dyn EncDecEngine<Rank>>> = Vec::new();
 
     let wc_engine = Arc::new(WordchipperEngine::<Rank>::new(
         args.model.to_string(),
-        vocab.to_default_encoder(),
+        factory.default_encoder(vocab.clone()),
         vocab.to_default_decoder(),
     ));
     candidate_engines.push(wc_engine.clone());
 
-    // When the model uses logos, also add a regex-forced engine for comparison.
-    if vocab.word_lexer().is_some() {
-        use wordchipper::spanning::TextSpanningConfig;
-        let regex_spanning =
-            TextSpanningConfig::<Rank>::from_pattern(args.model.model().factory().pattern())
-                .with_specials(vocab.spanning().specials().clone());
-        let regex_vocab = UnifiedTokenVocab::<Rank>::new(
-            regex_spanning,
-            vocab.span_vocab().clone(),
-            vocab.pair_vocab().clone(),
-        )
-        .unwrap();
+    // When the model has a logos lexer, also add a regex-only engine for comparison.
+    if factory.word_lexer_factory.is_some() {
         let regex_engine = Arc::new(WordchipperEngine::<Rank>::new(
             format!("{} (regex)", args.model),
-            regex_vocab.to_default_encoder(),
-            regex_vocab.to_default_decoder(),
+            vocab.to_default_encoder(),
+            vocab.to_default_decoder(),
         ));
         candidate_engines.push(regex_engine);
     }

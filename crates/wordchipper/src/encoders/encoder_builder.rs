@@ -8,7 +8,7 @@ use crate::{
         TokenEncoder,
         span_encoders::{IncrementalSweepSpanEncoder, TokenSpanEncoder},
     },
-    spanning::TextSpannerBuilder,
+    spanning::{SpanLexer, TextSpannerBuilder},
     types::TokenType,
     vocab::UnifiedTokenVocab,
 };
@@ -100,6 +100,15 @@ impl<T: TokenType> TokenEncoderBuilder<T> {
         self
     }
 
+    /// Set the word lexer override (e.g. a logos DFA lexer).
+    pub fn with_word_lexer(
+        mut self,
+        lexer: Arc<dyn SpanLexer>,
+    ) -> Self {
+        self.spanner_builder_mut().set_word_lexer(lexer);
+        self
+    }
+
     /// Build the configured `TokenEncoder`.
     pub fn build(&self) -> Arc<dyn TokenEncoder<T>> {
         let spanner = self.spanner_builder().build();
@@ -145,22 +154,22 @@ mod tests {
         let hi = regex_vocab.max_token().unwrap() + 1;
         regex_vocab.special_vocab_mut().add_str_word("<|HI|>", hi);
 
-        // Clone BPE data, attach logos word lexer.
+        // Clone BPE data, wire logos word lexer via builder.
         let logos_config: TextSpanningConfig<T> =
             TextSpanningConfig::from_pattern(OA_CL100K_BASE_PATTERN)
                 .with_special_words([("<|HI|>", hi)]);
-        let mut logos_vocab = UnifiedTokenVocab::<T>::new(
+        let logos_vocab = UnifiedTokenVocab::<T>::new(
             logos_config,
             regex_vocab.span_vocab().clone(),
             regex_vocab.pair_vocab().clone(),
         )
         .unwrap();
-        logos_vocab.set_word_lexer(Arc::new(Cl100kLexer));
 
         let regex_enc = TokenEncoderBuilder::new(regex_vocab)
             .with_parallel(false)
             .build();
         let logos_enc = TokenEncoderBuilder::new(logos_vocab)
+            .with_word_lexer(Arc::new(Cl100kLexer))
             .with_parallel(false)
             .build();
 

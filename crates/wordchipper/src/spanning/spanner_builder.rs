@@ -42,9 +42,7 @@ impl<T: TokenType> TextSpannerBuilder<T> {
     ///
     /// Clones out the spanning configuration from the provided vocabulary.
     pub fn from_vocab(vocab: &crate::vocab::UnifiedTokenVocab<T>) -> Self {
-        let mut builder = Self::new(vocab.spanning().clone());
-        builder.word_lexer = vocab.word_lexer().cloned();
-        builder
+        Self::new(vocab.spanning().clone())
     }
 
     /// Create a new [`TextSpannerBuilder`] with the given configuration.
@@ -107,11 +105,19 @@ impl<T: TokenType> TextSpannerBuilder<T> {
     }
 
     /// Set the word lexer override.
+    pub fn set_word_lexer(
+        &mut self,
+        lexer: Arc<dyn SpanLexer>,
+    ) {
+        self.word_lexer = Some(lexer);
+    }
+
+    /// Set the word lexer override (consuming builder).
     pub fn with_word_lexer(
         mut self,
         lexer: Arc<dyn SpanLexer>,
     ) -> Self {
-        self.word_lexer = Some(lexer);
+        self.set_word_lexer(lexer);
         self
     }
 
