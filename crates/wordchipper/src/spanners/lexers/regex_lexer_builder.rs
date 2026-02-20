@@ -4,8 +4,8 @@ use core::num::NonZeroUsize;
 
 use crate::{
     alloc::sync::Arc,
-    regex::{RegexPattern, RegexWrapper},
-    spanning::span_lexers::SpanLexer,
+    spanners::lexers::SpanLexer,
+    utility::regex::{RegexPattern, RegexWrapper},
 };
 
 impl SpanLexer for RegexWrapper {
@@ -37,7 +37,7 @@ pub fn build_regex_lexer(
 
     #[cfg(feature = "logos")]
     {
-        use crate::spanning::span_lexers::logos::lookup_word_lexer;
+        use crate::spanners::lexers::logos::lookup_word_lexer;
         if let Some(lexer) = lookup_word_lexer(&pattern) {
             return lexer;
         }
@@ -47,7 +47,7 @@ pub fn build_regex_lexer(
 
     #[cfg(feature = "std")]
     if concurrent {
-        return Arc::new(crate::concurrency::PoolToy::new(re, max_pool));
+        return Arc::new(crate::utility::concurrency::PoolToy::new(re, max_pool));
     }
 
     Arc::new(re)

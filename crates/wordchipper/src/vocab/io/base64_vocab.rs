@@ -10,7 +10,7 @@ use base64::{Engine, prelude::BASE64_STANDARD};
 
 use crate::{
     errors::WordchipperError,
-    spanning::TextSpanningConfig,
+    spanners::TextSpanningConfig,
     types::TokenType,
     vocab::{SpanMapVocab, UnifiedTokenVocab, vocab_types::SpanTokenMap},
 };

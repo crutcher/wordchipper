@@ -135,7 +135,7 @@ mod tests {
     use crate::{
         decoders::utility::testing::common_decoder_unit_test,
         pretrained::openai::OA_CL100K_BASE_PATTERN,
-        spanning::TextSpanningConfig,
+        spanners::TextSpanningConfig,
         vocab::{
             UnifiedTokenVocab,
             utility::testing::{build_test_shift_byte_vocab, build_test_vocab},

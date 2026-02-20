@@ -9,12 +9,12 @@ use wordchipper::{
     TokenEncoder,
     UnifiedTokenVocab,
     VocabIndex,
-    compat::{
+    disk_cache::WordchipperDiskCache,
+    errors::WordchipperError,
+    utility::{
         slices::{inner_slice_view, inner_str_view},
         strings::string_from_utf8_lossy,
     },
-    disk_cache::WordchipperDiskCache,
-    errors::WordchipperError,
     vocab::io::save_base64_span_map_path,
 };
 

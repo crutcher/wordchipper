@@ -1,6 +1,6 @@
 //! # Public `OpenAI` Resources
 
-use crate::resources::ConstUrlResource;
+use crate::utility::resources::ConstUrlResource;
 
 /// The GPT-2 Data Gym "vocab.bpe" vocabulary resource.
 pub const OA_GPT2_DATAGYM_VOCAB_BPE_RESOURCE: ConstUrlResource = ConstUrlResource {

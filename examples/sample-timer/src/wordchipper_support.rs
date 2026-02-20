@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use wordchipper::{TokenDecoder, TokenEncoder, TokenType, spanning::TextSpanner};
+use wordchipper::{TokenDecoder, TokenEncoder, TokenType, spanners::TextSpanner};
 
 use crate::engines::{BoxError, EncDecEngine};
 

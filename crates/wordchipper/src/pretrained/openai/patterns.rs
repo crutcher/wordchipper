@@ -1,6 +1,6 @@
 //! # `OpenAI` Patterns
 
-use crate::{join_patterns, regex::ConstRegexPattern};
+use crate::{join_patterns, utility::regex::ConstRegexPattern};
 
 /// The original "`r50k_base`" pretrained vocabulary word pattern.
 ///

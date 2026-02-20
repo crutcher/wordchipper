@@ -2,7 +2,7 @@
 
 use crate::{
     alloc::{sync::Arc, vec::Vec},
-    spanning::TextSpanner,
+    spanners::TextSpanner,
     types::TokenType,
     vocab::SpecialVocab,
 };

@@ -5,7 +5,7 @@
 //! ## Loading Pretrained Models
 //!
 //! Loading a pre-trained model requires reading the vocabulary,
-//! as well as configuring the spanning (regex and special words)
+//! as well as configuring the spanners (regex and special words)
 //! configuration.
 //!
 //! For a number of pretrained models, simplified constructors are
@@ -13,7 +13,7 @@
 //!
 //! Most users will want to use the [`get_model`] function, which will
 //! return a [`UnifiedTokenVocab<u32>`](`crate::UnifiedTokenVocab`)
-//! containing the vocabulary and spanning configuration.
+//! containing the vocabulary and spanners configuration.
 //!
 //! There is also a [`list_models`] function which lists the available
 //! pretrained models.

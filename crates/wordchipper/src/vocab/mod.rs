@@ -15,7 +15,7 @@
 //! * [`ByteMapVocab`] - bidirectional byte⟷token mapping
 //! * [`PairMapVocab`] - BPE merge pair mapping: `(T, T) → T`
 //! * [`SpanMapVocab`] - span dictionary mapping: `Vec<u8> → T`
-//! * [`crate::spanning::TextSpanningConfig`] - text spanning configuration
+//! * [`crate::spanners::TextSpanningConfig`] - text spanners configuration
 //!   that defines how text is split into spans for encoding, including
 //!   special token words
 //!
@@ -35,7 +35,7 @@
 //! Loading a pre-trained model requires reading in the vocabulary,
 //! either as a [`SpanMapVocab`] or [`PairMapVocab`]
 //! (either of which must have an attached [`ByteMapVocab`]);
-//! and merging that with a [`crate::spanning::TextSpanningConfig`]
+//! and merging that with a [`crate::spanners::TextSpanningConfig`]
 //! to produce a [`UnifiedTokenVocab<T>`].
 //!
 //! A number of IO helpers are provided in [`io`].

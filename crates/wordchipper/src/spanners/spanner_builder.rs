@@ -5,10 +5,10 @@ use core::num::NonZeroUsize;
 use crate::{
     TokenType,
     alloc::sync::Arc,
-    spanning::{
+    spanners::{
         TextSpanner,
         TextSpanningConfig,
-        span_lexers::{LexerTextSpanner, SpanLexer, build_regex_lexer},
+        lexers::{LexerTextSpanner, SpanLexer, build_regex_lexer},
     },
 };
 
@@ -24,7 +24,7 @@ pub struct TextSpannerBuilder<T: TokenType> {
 impl<T: TokenType> TextSpannerBuilder<T> {
     /// Create a new [`TextSpannerBuilder`].
     ///
-    /// Clones out the spanning configuration from the provided vocabulary.
+    /// Clones out the spanners configuration from the provided vocabulary.
     pub fn from_vocab(vocab: &crate::vocab::UnifiedTokenVocab<T>) -> Self {
         Self::new(vocab.spanning().clone())
     }

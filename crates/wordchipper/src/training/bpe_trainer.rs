@@ -6,7 +6,6 @@ use compact_str::CompactString;
 use dary_heap::OctonaryHeap;
 
 use crate::{
-    regex::RegexPattern,
     training::{
         CountType,
         StringChunkType,
@@ -19,6 +18,7 @@ use crate::{
         },
     },
     types::{Pair, TokenType, WCHashMap, WCHashSet},
+    utility::regex::RegexPattern,
     vocab::{
         ByteMapVocab,
         PairMapVocab,
@@ -419,11 +419,11 @@ mod tests {
     use compact_str::CompactString;
 
     use crate::{
-        compat::traits::static_is_send_sync_check,
         decoders::{TokenDecoder, TokenDictDecoder},
         encoders::TokenEncoderBuilder,
         pretrained::openai::OA_CL100K_BASE_PATTERN,
         training::{BinaryPairVocabTrainerOptions, bpe_trainer::MergeJob},
+        utility::traits::static_is_send_sync_check,
         vocab::{ByteMapVocab, UnifiedTokenVocab},
     };
 

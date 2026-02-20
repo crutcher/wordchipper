@@ -4,7 +4,7 @@ use crate::{
     UnifiedTokenVocab,
     alloc::{boxed::Box, sync::Arc, vec::Vec},
     encoders::span_encoders::SpanEncoder,
-    spanning::TextSpanner,
+    spanners::TextSpanner,
     vocab::SpecialVocab,
 };
 

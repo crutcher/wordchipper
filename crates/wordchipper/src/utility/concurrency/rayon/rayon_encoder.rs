@@ -3,7 +3,7 @@
 use crate::{
     alloc::sync::Arc,
     encoders::TokenEncoder,
-    spanning::TextSpanner,
+    spanners::TextSpanner,
     types::TokenType,
     vocab::SpecialVocab,
 };

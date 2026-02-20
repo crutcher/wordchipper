@@ -8,11 +8,11 @@ use std::{
 
 use parking_lot::lock_api::RwLock;
 use wordchipper::{
-    concurrency::threads::{resolve_max_pool, unstable_current_thread_id_hash},
     types::WCHashSet,
+    utility::concurrency::threads::{resolve_max_pool, unstable_current_thread_id_hash},
 };
 
-/// Experimental LRU-based variant of [`wordchipper::concurrency::PoolToy`].
+/// Experimental LRU-based variant of [`wordchipper::utility::concurrency::PoolToy`].
 ///
 /// This appears to provide no benefit in benchmarks.
 ///
@@ -165,7 +165,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use wordchipper::concurrency::threads::resolve_max_pool;
+    use wordchipper::utility::concurrency::threads::resolve_max_pool;
 
     use super::*;
 

@@ -2,9 +2,9 @@
 
 use crate::{
     alloc::{string::String, vec::Vec},
-    compat::strings::string_from_utf8_lossy,
     decoders::{BatchDecodeResult, DecodeResult},
     types::TokenType,
+    utility::strings::string_from_utf8_lossy,
 };
 
 /// The common trait for `&[T] -> Vec<u8>/String>` decoders.

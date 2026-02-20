@@ -2,9 +2,11 @@
 
 use crate::{
     alloc::vec::Vec,
-    compat::strings::string_from_utf8_lossy,
-    regex::{RegexPattern, alternate_choice_regex_pattern},
     types::{TokenType, WCHashSet},
+    utility::{
+        regex::{RegexPattern, alternate_choice_regex_pattern},
+        strings::string_from_utf8_lossy,
+    },
     vocab::{SpanTokenMap, VocabIndex, utility::validators::try_vocab_size},
 };
 

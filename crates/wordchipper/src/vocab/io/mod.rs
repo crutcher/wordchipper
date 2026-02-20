@@ -11,7 +11,7 @@
 //!     TokenEncoder,
 //!     TokenEncoderBuilder,
 //!     pretrained::openai::OA_O200K_BASE_PATTERN,
-//!     spanning::TextSpanningConfig,
+//!     spanners::TextSpanningConfig,
 //!     vocab::{
 //!         SpanMapVocab,
 //!         SpanTokenMap,

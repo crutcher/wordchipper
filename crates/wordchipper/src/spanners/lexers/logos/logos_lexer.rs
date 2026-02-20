@@ -7,7 +7,7 @@ use core::ops::Range;
 
 use logos::Logos;
 
-use crate::spanning::{SpanRef, span_lexers::SpanLexer};
+use crate::spanners::{SpanRef, lexers::SpanLexer};
 
 // ---------------------------------------------------------------------------
 // Cl100k token
@@ -443,7 +443,7 @@ impl SpanLexer for O200kLexer {
 /// Returns `Some(lexer)` when the pattern matches a pattern for which
 /// a compile-time DFA lexer exists, `None` otherwise.
 pub(crate) fn lookup_word_lexer(
-    pattern: &crate::regex::RegexPattern
+    pattern: &crate::utility::regex::RegexPattern
 ) -> Option<crate::alloc::sync::Arc<dyn SpanLexer>> {
     use crate::{
         alloc::sync::Arc,
@@ -465,7 +465,7 @@ mod tests {
     use super::*;
     use crate::{
         alloc::{string::ToString, sync::Arc, vec, vec::Vec},
-        spanning::{TextSpanner, span_lexers::LexerTextSpanner},
+        spanners::{TextSpanner, lexers::LexerTextSpanner},
     };
 
     /// Build a `TextSpanner` from a logos lexer with no specials.
@@ -489,7 +489,7 @@ mod tests {
 
     #[test]
     fn test_logos_with_specials() {
-        let special_pattern = crate::regex::alternate_choice_regex_pattern(&[
+        let special_pattern = crate::utility::regex::alternate_choice_regex_pattern(&[
             "<|FNORD|>".to_string(),
             "<|NORP|>".to_string(),
         ]);
@@ -574,7 +574,7 @@ mod tests {
     fn test_logos_cl100k_unicode() {
         use crate::{
             pretrained::openai::OA_CL100K_BASE_PATTERN,
-            spanning::{TextSpannerBuilder, TextSpanningConfig},
+            spanners::{TextSpannerBuilder, TextSpanningConfig},
         };
 
         let config: TextSpanningConfig<u32> =
@@ -610,7 +610,7 @@ mod tests {
     fn test_logos_cl100k_realworld() {
         use crate::{
             pretrained::openai::OA_CL100K_BASE_PATTERN,
-            spanning::{TextSpannerBuilder, TextSpanningConfig},
+            spanners::{TextSpannerBuilder, TextSpanningConfig},
         };
 
         let config: TextSpanningConfig<u32> =
@@ -658,7 +658,7 @@ mod tests {
     fn test_logos_cl100k_long_text() {
         use crate::{
             pretrained::openai::OA_CL100K_BASE_PATTERN,
-            spanning::{TextSpannerBuilder, TextSpanningConfig},
+            spanners::{TextSpannerBuilder, TextSpanningConfig},
         };
 
         let config: TextSpanningConfig<u32> =
@@ -741,7 +741,7 @@ mod tests {
     fn test_o200k_unicode() {
         use crate::{
             pretrained::openai::OA_O200K_BASE_PATTERN,
-            spanning::{TextSpannerBuilder, TextSpanningConfig},
+            spanners::{TextSpannerBuilder, TextSpanningConfig},
         };
 
         let config: TextSpanningConfig<u32> =
@@ -778,7 +778,7 @@ mod tests {
     fn test_o200k_realworld() {
         use crate::{
             pretrained::openai::OA_O200K_BASE_PATTERN,
-            spanning::{TextSpannerBuilder, TextSpanningConfig},
+            spanners::{TextSpannerBuilder, TextSpanningConfig},
         };
 
         let config: TextSpanningConfig<u32> =
@@ -886,7 +886,7 @@ mod tests {
     fn bench_regex_vs_logos() {
         use crate::{
             pretrained::openai::{OA_CL100K_BASE_PATTERN, OA_O200K_BASE_PATTERN},
-            spanning::{TextSpannerBuilder, TextSpanningConfig},
+            spanners::{TextSpannerBuilder, TextSpanningConfig},
         };
 
         let text = benchmark_text();

@@ -1,7 +1,7 @@
 //! # Text Spanner Configuration
-use crate::{regex::RegexPattern, types::TokenType, vocab::SpecialVocab};
+use crate::{types::TokenType, utility::regex::RegexPattern, vocab::SpecialVocab};
 
-/// Description of text spanning configuration.
+/// Description of text spanners configuration.
 ///
 /// ## Style Hints
 ///

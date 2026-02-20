@@ -43,7 +43,7 @@
 //! Loading a pre-trained model requires reading in the vocabulary,
 //! either as a [`vocab::SpanMapVocab`] or [`vocab::PairMapVocab`]
 //! (either of which must have an attached [`vocab::ByteMapVocab`]);
-//! and merging that with a [`spanning::TextSpanningConfig`]
+//! and merging that with a [`spanners::TextSpanningConfig`]
 //! to produce a [`UnifiedTokenVocab<T>`].
 //!
 //! A number of IO helpers are provided in [`vocab::io`].
@@ -55,7 +55,7 @@
 //!
 //! Most users will want to use the [`get_model`] function, which will
 //! return a [`UnifiedTokenVocab`] containing the vocabulary and
-//! spanning configuration.
+//! spanners configuration.
 //!
 //! There is also a [`list_models`] function which lists the available
 //! pretrained models.
@@ -100,19 +100,14 @@ pub mod training;
 #[doc(inline)]
 pub use wordchipper_disk_cache as disk_cache;
 
-#[cfg(feature = "std")]
-pub mod concurrency;
-
 pub mod errors;
 
-pub mod compat;
 pub mod decoders;
 pub mod encoders;
 pub mod pretrained;
-pub mod regex;
-pub mod resources;
-pub mod spanning;
+pub mod spanners;
 pub mod types;
+pub mod utility;
 pub mod vocab;
 
 #[doc(inline)]

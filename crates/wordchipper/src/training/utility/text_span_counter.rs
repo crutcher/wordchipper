@@ -3,9 +3,9 @@
 use core::fmt::Debug;
 
 use crate::{
-    regex::RegexWrapper,
     training::{CountType, StringChunkType, utility::TokenSpanBuf},
     types::{TokenType, WCHashMap},
+    utility::regex::RegexWrapper,
     vocab::ByteMapVocab,
 };
 
@@ -119,8 +119,8 @@ where
 mod tests {
     use super::*;
     use crate::{
-        regex::RegexPattern,
         training::{CountType, StringChunkType, utility::token_span_buffer::TokenSpanBuf},
+        utility::regex::RegexPattern,
         vocab::ByteMapVocab,
     };
 

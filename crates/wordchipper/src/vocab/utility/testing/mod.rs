@@ -2,7 +2,7 @@
 
 use crate::{
     alloc::vec::Vec,
-    spanning::TextSpanningConfig,
+    spanners::TextSpanningConfig,
     types::TokenType,
     vocab::{ByteMapVocab, SpanMapVocab, SpanTokenMap, UnifiedTokenVocab},
 };

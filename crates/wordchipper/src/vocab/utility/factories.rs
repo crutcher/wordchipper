@@ -8,15 +8,17 @@ use std::{
 };
 
 #[cfg(feature = "std")]
-use crate::resources::ResourceLoader;
+use crate::utility::resources::ResourceLoader;
 #[cfg(feature = "std")]
 use crate::vocab::UnifiedTokenVocab;
 use crate::{
     alloc::{string::String, vec::Vec},
-    regex::{ConstRegexPattern, RegexPattern},
-    resources::ConstKeyedResource,
-    spanning::TextSpanningConfig,
+    spanners::TextSpanningConfig,
     types::TokenType,
+    utility::{
+        regex::{ConstRegexPattern, RegexPattern},
+        resources::ConstKeyedResource,
+    },
 };
 
 /// A pretrained tokenizer bundle.
@@ -48,7 +50,7 @@ impl ConstVocabularyFactory {
             .collect()
     }
 
-    /// Load the spanning config for this tokenizer.
+    /// Load the spanners config for this tokenizer.
     pub fn spanning_config<T: TokenType>(&self) -> TextSpanningConfig<T> {
         TextSpanningConfig::from_pattern(self.pattern()).with_special_words(self.special_tokens())
     }
@@ -59,7 +61,7 @@ impl ConstVocabularyFactory {
         &self,
         loader: &mut dyn ResourceLoader,
     ) -> crate::errors::Result<PathBuf> {
-        let res: crate::resources::KeyedResource = self.resource.clone().into();
+        let res: crate::utility::resources::KeyedResource = self.resource.clone().into();
         loader.load_resource_path(&res)
     }
 

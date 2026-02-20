@@ -3,7 +3,7 @@
 use std::{io::BufRead, path::Path};
 
 #[cfg(feature = "download")]
-use crate::resources::ResourceLoader;
+use crate::utility::resources::ResourceLoader;
 use crate::{
     pretrained::openai::{
         OA_CL100K_BASE_PATTERN,
@@ -25,10 +25,9 @@ use crate::{
             oa_r50k_base_special_tokens,
         },
     },
-    regex::RegexPattern,
-    resources::ConstKeyedResource,
-    spanning::TextSpanningConfig,
+    spanners::TextSpanningConfig,
     types::TokenType,
+    utility::{regex::RegexPattern, resources::ConstKeyedResource},
     vocab::{UnifiedTokenVocab, utility::factories::ConstVocabularyFactory},
 };
 
@@ -93,7 +92,7 @@ impl OATokenizer {
         self.factory().special_tokens()
     }
 
-    /// Get the tokenizer spanning config.
+    /// Get the tokenizer spanners config.
     pub fn spanning_config<T: TokenType>(&self) -> TextSpanningConfig<T> {
         self.factory().spanning_config()
     }

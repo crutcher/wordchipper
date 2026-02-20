@@ -3,9 +3,9 @@
 use crate::{
     TokenEncoderBuilder,
     alloc::{vec, vec::Vec},
-    compat::{strings::string_from_utf8_lossy, traits::static_is_send_sync_check},
     decoders::TokenDecoder,
     types::TokenType,
+    utility::{strings::string_from_utf8_lossy, traits::static_is_send_sync_check},
     vocab::{UnifiedTokenVocab, VocabIndex},
 };
 
