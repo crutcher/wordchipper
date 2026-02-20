@@ -17,9 +17,6 @@ mod text_spanner;
 
 #[doc(inline)]
 pub use lexer_spanner::*;
-#[cfg(feature = "logos")]
-#[doc(inline)]
-pub use logos_lexer::{Cl100kLexer, O200kLexer};
 #[doc(inline)]
 pub use spanner_builder::*;
 #[doc(inline)]

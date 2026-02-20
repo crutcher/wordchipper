@@ -12,10 +12,10 @@ use crate::resources::ResourceLoader;
 #[cfg(feature = "std")]
 use crate::vocab::UnifiedTokenVocab;
 use crate::{
-    alloc::{string::String, sync::Arc, vec::Vec},
+    alloc::{string::String, vec::Vec},
     regex::{ConstRegexPattern, RegexPattern},
     resources::ConstKeyedResource,
-    spanning::{SpanLexer, TextSpanningConfig},
+    spanning::TextSpanningConfig,
     types::TokenType,
 };
 
@@ -32,9 +32,6 @@ pub struct ConstVocabularyFactory {
 
     /// A generator for special tokens.
     pub special_builder: &'static dyn Fn() -> Vec<(String, usize)>,
-
-    /// Optional factory for the word lexer, overriding the regex-compiled default.
-    pub word_lexer_factory: Option<fn() -> Arc<dyn SpanLexer>>,
 }
 
 impl ConstVocabularyFactory {
@@ -93,30 +90,5 @@ impl ConstVocabularyFactory {
         reader: R,
     ) -> crate::errors::Result<UnifiedTokenVocab<T>> {
         crate::vocab::io::read_base64_unified_vocab(reader, self.spanning_config())
-    }
-
-    /// Build a [`TokenEncoderBuilder`] with the word lexer pre-wired (if available).
-    ///
-    /// Use this instead of `vocab.to_encoder_builder()` when you want the
-    /// factory's optimized lexer (e.g. logos DFA) applied automatically.
-    #[cfg(feature = "std")]
-    pub fn encoder_builder<T: TokenType>(
-        &self,
-        vocab: UnifiedTokenVocab<T>,
-    ) -> crate::TokenEncoderBuilder<T> {
-        let mut builder = crate::TokenEncoderBuilder::new(vocab);
-        if let Some(factory) = self.word_lexer_factory {
-            builder.spanner_builder_mut().set_word_lexer(factory());
-        }
-        builder
-    }
-
-    /// Build a default [`TokenEncoder`] with the word lexer pre-wired (if available).
-    #[cfg(feature = "std")]
-    pub fn default_encoder<T: TokenType>(
-        &self,
-        vocab: UnifiedTokenVocab<T>,
-    ) -> Arc<dyn crate::TokenEncoder<T>> {
-        self.encoder_builder(vocab).build()
     }
 }

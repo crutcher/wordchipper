@@ -12,29 +12,12 @@ use crate::{
 };
 
 /// Builder for [`TextSpanner`]s.
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct TextSpannerBuilder<T: TokenType> {
     config: TextSpanningConfig<T>,
 
-    /// Pre-built word lexer override (e.g. logos DFA).
-    word_lexer: Option<Arc<dyn SpanLexer>>,
-
     parallel: bool,
     max_pool: Option<NonZeroUsize>,
-}
-
-/// Manual `PartialEq`: `Arc<dyn SpanLexer>` isn't `PartialEq`.
-/// The word lexer is an optimization, not a semantic distinction,
-/// so two builders that differ only in lexer override compare as equal.
-impl<T: TokenType> PartialEq for TextSpannerBuilder<T> {
-    fn eq(
-        &self,
-        other: &Self,
-    ) -> bool {
-        self.config == other.config
-            && self.parallel == other.parallel
-            && self.max_pool == other.max_pool
-    }
 }
 
 impl<T: TokenType> TextSpannerBuilder<T> {
@@ -49,7 +32,6 @@ impl<T: TokenType> TextSpannerBuilder<T> {
     pub fn new(config: TextSpanningConfig<T>) -> Self {
         Self {
             config,
-            word_lexer: None,
             parallel: true,
             max_pool: None,
         }
@@ -104,27 +86,12 @@ impl<T: TokenType> TextSpannerBuilder<T> {
         self
     }
 
-    /// Set the word lexer override.
-    pub fn set_word_lexer(
-        &mut self,
-        lexer: Arc<dyn SpanLexer>,
-    ) {
-        self.word_lexer = Some(lexer);
-    }
-
-    /// Set the word lexer override (consuming builder).
-    pub fn with_word_lexer(
-        mut self,
-        lexer: Arc<dyn SpanLexer>,
-    ) -> Self {
-        self.set_word_lexer(lexer);
-        self
-    }
-
     /// Build a [`TextSpanner`] with the current configuration.
     ///
-    /// If a word lexer override is set, it is used directly.
-    /// Otherwise, the regex pattern is compiled into a word lexer.
+    /// Automatically selects the fastest available word lexer for the
+    /// configured pattern (e.g. a logos DFA accelerator if the `logos`
+    /// feature is enabled and the pattern is recognized).
+    /// Falls back to the compiled regex otherwise.
     /// The special lexer (if any) is always built from the regex pattern.
     pub fn build(&self) -> Arc<dyn TextSpanner> {
         fn maybe_pool(
@@ -144,9 +111,18 @@ impl<T: TokenType> TextSpannerBuilder<T> {
             }
         }
 
-        let word_lexer: Arc<dyn SpanLexer> = match &self.word_lexer {
-            Some(lexer) => lexer.clone(),
-            None => maybe_pool(self.config().pattern().clone(), self.max_pool),
+        let word_lexer: Arc<dyn SpanLexer> = {
+            #[cfg(feature = "logos")]
+            {
+                crate::spanning::logos_lexer::lookup_word_lexer(self.config().pattern())
+                    .unwrap_or_else(|| {
+                        maybe_pool(self.config().pattern().clone(), self.max_pool)
+                    })
+            }
+            #[cfg(not(feature = "logos"))]
+            {
+                maybe_pool(self.config().pattern().clone(), self.max_pool)
+            }
         };
         let special_lexer: Option<Arc<dyn SpanLexer>> = self
             .config

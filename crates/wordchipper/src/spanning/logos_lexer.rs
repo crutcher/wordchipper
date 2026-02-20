@@ -438,6 +438,28 @@ impl SpanLexer for O200kLexer {
     }
 }
 
+/// Look up an accelerated word lexer for a known regex pattern.
+///
+/// Returns `Some(lexer)` when the pattern matches a pattern for which
+/// a compile-time DFA lexer exists, `None` otherwise.
+pub(crate) fn lookup_word_lexer(
+    pattern: &crate::regex::RegexPattern,
+) -> Option<crate::alloc::sync::Arc<dyn SpanLexer>> {
+    use crate::{
+        alloc::sync::Arc,
+        pretrained::openai::{OA_CL100K_BASE_PATTERN, OA_O200K_BASE_PATTERN},
+    };
+
+    let pat = pattern.as_str();
+    if pat == OA_CL100K_BASE_PATTERN.as_str() {
+        Some(Arc::new(Cl100kLexer))
+    } else if pat == OA_O200K_BASE_PATTERN.as_str() {
+        Some(Arc::new(O200kLexer))
+    } else {
+        None
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
