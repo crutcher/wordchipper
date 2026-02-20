@@ -8,7 +8,7 @@ use crate::{
     TokenType,
     alloc::sync::Arc,
     regex::{RegexPattern, RegexWrapper},
-    spanning::{LexerTextSpanner, TextSpanner, TextSpanningConfig, lexer_spanner::SpanLexer},
+    spanning::{LexerTextSpanner, SpanLexer, TextSpanner, TextSpanningConfig},
 };
 
 /// Builder for [`TextSpanner`]s.
@@ -87,6 +87,12 @@ impl<T: TokenType> TextSpannerBuilder<T> {
     }
 
     /// Build a [`TextSpanner`] with the current configuration.
+    ///
+    /// Automatically selects the fastest available word lexer for the
+    /// configured pattern (e.g. a logos DFA accelerator if the `logos`
+    /// feature is enabled and the pattern is recognized).
+    /// Falls back to the compiled regex otherwise.
+    /// The special lexer (if any) is always built from the regex pattern.
     pub fn build(&self) -> Arc<dyn TextSpanner> {
         fn maybe_pool(
             pattern: RegexPattern,
@@ -106,8 +112,15 @@ impl<T: TokenType> TextSpannerBuilder<T> {
         }
 
         let word_lexer: Arc<dyn SpanLexer> = {
-            let pattern = self.config().pattern().clone();
-            maybe_pool(pattern, self.max_pool)
+            #[cfg(feature = "logos")]
+            {
+                crate::spanning::logos_lexer::lookup_word_lexer(self.config().pattern())
+                    .unwrap_or_else(|| maybe_pool(self.config().pattern().clone(), self.max_pool))
+            }
+            #[cfg(not(feature = "logos"))]
+            {
+                maybe_pool(self.config().pattern().clone(), self.max_pool)
+            }
         };
         let special_lexer: Option<Arc<dyn SpanLexer>> = self
             .config

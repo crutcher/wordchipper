@@ -186,8 +186,6 @@ fn main() -> Result<(), BoxError> {
         wordchipper::get_model(args.model.to_string().as_str(), &mut disk_cache)?
             .to_token_type()?;
 
-    let spanner = vocab.to_default_spanner();
-
     // TODO: complete batch-observer inversion of control for additional tokenizer wrappers.
 
     let mut candidate_engines: Vec<Arc<dyn EncDecEngine<Rank>>> = Vec::new();
@@ -447,12 +445,34 @@ pub fn verify_encode(
             continue;
         }
 
+        // Find first divergence index.
+        let div = actual_tokens
+            .iter()
+            .zip(expected_tokens.iter())
+            .position(|(a, e)| a != e)
+            .unwrap_or(actual_tokens.len().min(expected_tokens.len()));
+
+        // Show a window of tokens around the divergence.
+        let window = 5;
+        let lo = div.saturating_sub(window);
+        let hi_a = (div + window).min(actual_tokens.len());
+        let hi_e = (div + window).min(expected_tokens.len());
+
+        let preview = &source[..source.floor_char_boundary(500)];
+
         return Err(format!(
-            "ENCODER MISMATCH: {actual_name} != {expected_name}\nSOURCE:\n{}\nACTUAL: {actual_name}\n{:?}\nEXPECTED: {expected_name}\n{:?}",
-            source,
-            actual_tokens,
-            expected_tokens,
-        ).into());
+            "ENCODER MISMATCH: {actual_name} != {expected_name}\n\
+             First diff at token index {div} (of {} vs {})\n\
+             ACTUAL[{lo}..{hi_a}]: {:?}\n\
+             EXPECTED[{lo}..{hi_e}]: {:?}\n\
+             SOURCE (first 500 chars): {:?}",
+            actual_tokens.len(),
+            expected_tokens.len(),
+            &actual_tokens[lo..hi_a],
+            &expected_tokens[lo..hi_e],
+            preview,
+        )
+        .into());
     }
     Ok(())
 }
@@ -488,5 +508,5 @@ pub fn format_bps(
     duration: Duration,
 ) -> String {
     let bps = bytes as f64 / duration.as_secs_f64();
-    format!(r"{}/s", humansize::format_size_i(bps, humansize::BINARY))
+    format!(r"{}/s", humansize::format_size_i(bps, humansize::DECIMAL))
 }

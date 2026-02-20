@@ -1,4 +1,4 @@
-//! # Regex Text Spanner
+//! # Lexer Text Spanner
 
 use core::ops::Deref;
 
@@ -8,7 +8,13 @@ use crate::{
     spanning::{SpanRef, TextSpanner},
 };
 
-/// Trait for finding the next occurrence of a span.
+/// Word-scanning plugin trait.
+///
+/// Implementors provide word-level text segmentation. The default
+/// [`for_each_word`](Self::for_each_word) loops over
+/// [`next_span`](Self::next_span) matches, emitting `Word` and `Gap` spans.
+/// Lexers that produce richer token streams (e.g. logos DFA) override
+/// `for_each_word` directly and leave `next_span` at its default.
 ///
 /// ## Implementation Notes
 ///
@@ -17,19 +23,68 @@ use crate::{
 /// a blanket implementation. This is the idiomatic Rust pattern used by the standard library
 /// for traits like `Iterator` and `Future`.
 pub trait SpanLexer: Send + Sync {
-    /// Find the next occurrence of a span.
+    /// Find the next match in `text` starting from `offset`.
     ///
-    /// ## Arguments
-    /// * `text` - the text to scan over.
-    /// * `offset` - the offset to start scanning from.
-    ///
-    /// ## Returns
-    /// The span bounds, if found, relative to `text`.
+    /// Returns `(start, end)` byte positions relative to `text`, or `None`.
+    /// Used by the default [`for_each_word`](Self::for_each_word) and for
+    /// special-token scanning. Implementations that override `for_each_word`
+    /// can leave this at the default (returns `None`).
     fn next_span(
         &self,
         text: &str,
         offset: usize,
-    ) -> Option<(usize, usize)>;
+    ) -> Option<(usize, usize)> {
+        let _ = (text, offset);
+        None
+    }
+
+    /// Scan `text` into [`Word`](SpanRef::Word) and [`Gap`](SpanRef::Gap) spans.
+    ///
+    /// The default implementation loops over [`next_span`](Self::next_span),
+    /// classifying matched regions as `Word` and unmatched regions as `Gap`.
+    /// Lexers with richer token classification override this directly.
+    ///
+    /// ## Arguments
+    /// * `text` - the text segment to scan (no special tokens).
+    /// * `offset` - byte offset to add to emitted span ranges.
+    /// * `f` - callback; return `false` to halt early.
+    ///
+    /// ## Returns
+    /// `(completed, consumed)` where `consumed` is the byte count of
+    /// accepted spans and `completed` indicates all spans were accepted.
+    fn for_each_word(
+        &self,
+        text: &str,
+        offset: usize,
+        f: &mut dyn FnMut(SpanRef) -> bool,
+    ) -> (bool, usize) {
+        let mut last = 0;
+        while let Some((start, end)) = self.next_span(text, last) {
+            if last < start {
+                if !f(SpanRef::Gap(offset_range::<usize>(last..start, offset))) {
+                    return (false, last);
+                }
+                last = start;
+            }
+
+            if !f(SpanRef::Word(offset_range::<usize>(start..end, offset))) {
+                return (false, last);
+            }
+            last = end;
+        }
+
+        if last < text.len() {
+            if !f(SpanRef::Gap(offset_range::<usize>(
+                last..text.len(),
+                offset,
+            ))) {
+                return (false, last);
+            }
+            last = text.len();
+        }
+
+        (true, last)
+    }
 }
 
 // Blanket implementation for any type that derefs to a SpanLexer.
@@ -46,9 +101,26 @@ where
     ) -> Option<(usize, usize)> {
         self.deref().next_span(text, offset)
     }
+
+    fn for_each_word(
+        &self,
+        text: &str,
+        offset: usize,
+        f: &mut dyn FnMut(SpanRef) -> bool,
+    ) -> (bool, usize) {
+        self.deref().for_each_word(text, offset, f)
+    }
 }
 
 /// A [`TextSpanner`] composed over [`SpanLexer`] plugins.
+///
+/// Combines a word-scanning [`SpanLexer`] with an optional special-token
+/// scanner. The word lexer handles segmentation within text segments;
+/// the special lexer finds special tokens that split the input into
+/// those segments.
+///
+/// The word lexer is pluggable (e.g. regex-based or logos DFA). The special
+/// lexer is always regex-based, built from the special token patterns.
 #[derive(Clone)]
 pub struct LexerTextSpanner {
     word_lexer: Arc<dyn SpanLexer>,
@@ -56,11 +128,11 @@ pub struct LexerTextSpanner {
 }
 
 impl LexerTextSpanner {
-    /// Build a new [`LexerTextSpanner`] from regex.
+    /// Build a new [`LexerTextSpanner`].
     ///
     /// ## Arguments
-    /// * `word_scanner` - The regex for word splitting.
-    /// * `special_scanner` - The optional regex for special word matching.
+    /// * `word_scanner` - The lexer for word splitting.
+    /// * `special_scanner` - The optional lexer for special word matching.
     pub fn new(
         word_scanner: Arc<dyn SpanLexer>,
         special_scanner: Option<Arc<dyn SpanLexer>>,
@@ -71,51 +143,13 @@ impl LexerTextSpanner {
         }
     }
 
-    fn for_each_word(
-        &self,
-        text: &str,
-        offset: usize,
-        f: &mut dyn FnMut(SpanRef) -> bool,
-    ) -> (bool, usize) {
-        let mut last = 0;
-        while let Some((start, end)) = self.word_lexer.next_span(text, last) {
-            if last < start {
-                if !f(SpanRef::Gap(offset_range::<usize>(last..start, offset))) {
-                    // Leading Gap Exit
-                    return (false, last);
-                }
-                last = start;
-            }
-
-            if !f(SpanRef::Word(offset_range::<usize>(start..end, offset))) {
-                // Word Exit
-                return (false, last);
-            }
-            last = end;
-        }
-
-        if last < text.len() {
-            if !f(SpanRef::Gap(offset_range::<usize>(
-                last..text.len(),
-                offset,
-            ))) {
-                // Trailing Gap Exit
-                return (false, last);
-            }
-            last = text.len();
-        }
-
-        (true, last)
-    }
-
     fn next_special_span(
         &self,
         text: &str,
     ) -> Option<(usize, usize)> {
-        match &self.special_lexer {
-            None => None,
-            Some(scanner) => scanner.next_span(text, 0),
-        }
+        self.special_lexer
+            .as_ref()
+            .and_then(|s| s.next_span(text, 0))
     }
 }
 
@@ -131,23 +165,20 @@ impl TextSpanner for LexerTextSpanner {
         while let Some((start, end)) = self.next_special_span(current) {
             let pre = &current[..start];
 
-            let (cont, used) = self.for_each_word(pre, offset, f);
+            let (cont, used) = self.word_lexer.for_each_word(pre, offset, f);
             if !cont {
                 return (false, offset + used);
             }
 
-            // we've consumed `offset + start` bytes at this point.
             if !f(SpanRef::Special(offset_range::<usize>(start..end, offset))) {
-                // Special Exit
                 return (false, offset + start);
             }
 
-            // we've consumed `offset + end` bytes at this point.
             current = &current[end..];
             offset += end;
         }
 
-        self.for_each_word(current, offset, f)
+        self.word_lexer.for_each_word(current, offset, f)
     }
 }
 

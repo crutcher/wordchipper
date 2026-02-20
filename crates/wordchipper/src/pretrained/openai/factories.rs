@@ -2,6 +2,8 @@
 
 use std::{io::BufRead, path::Path};
 
+#[cfg(feature = "download")]
+use crate::resources::ResourceLoader;
 use crate::{
     pretrained::openai::{
         OA_CL100K_BASE_PATTERN,
@@ -24,7 +26,7 @@ use crate::{
         },
     },
     regex::RegexPattern,
-    resources::{ConstKeyedResource, ResourceLoader},
+    resources::ConstKeyedResource,
     spanning::TextSpanningConfig,
     types::TokenType,
     vocab::{UnifiedTokenVocab, utility::factories::ConstVocabularyFactory},
@@ -149,7 +151,7 @@ pub const OA_P50K_BASE_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabularyFa
     special_builder: &oa_p50k_base_special_tokens,
 };
 
-/// The "`p50k_base`" tokenizer.
+/// The "`p50k_edit`" tokenizer.
 pub const OA_P50K_EDIT_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabularyFactory {
     name: "p50k_edit",
     resource: OA_P50K_BASE_VOCAB_FACTORY.resource,

@@ -68,6 +68,8 @@ num-traits = { version = "0.2.19", default-features = false }
 regex = { version = "1.12.3", default-features = false }
 tracing = { version = "0.1.40", default-features = false }
 
+logos = { version = "0.16.1", default-features = false, features = ["export_derive"] }
+
 # ATTENTION:
 # Upgrading the regex deps comes with significant performance penalties
 # for concurrent encoding. Something about the multi-thread contention,

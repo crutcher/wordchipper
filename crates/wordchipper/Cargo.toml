@@ -24,8 +24,12 @@ workspace = true
 default = [
     "ahash",
     "client",
+    "logos",
     "rayon",
 ]
+
+## Enable the logos DFA word lexer for cl100k/o200k patterns.
+logos = ["dep:logos"]
 
 ## The base set of features needed to load and run pre-trained encoders and decoders.
 client = [
@@ -119,6 +123,7 @@ cfg-if = { workspace = true }
 document-features = { workspace = true }
 
 thiserror = { workspace = true }
+logos = { workspace = true, optional = true }
 fancy-regex = { workspace = true, features = ["unicode"] }
 log = { workspace = true }
 num-traits = { workspace = true }

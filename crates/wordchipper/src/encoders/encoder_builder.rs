@@ -119,3 +119,77 @@ impl<T: TokenType> TokenEncoderBuilder<T> {
         enc
     }
 }
+
+#[cfg(all(test, feature = "logos"))]
+mod tests {
+    use super::*;
+    use crate::{
+        VocabIndex,
+        alloc::sync::Arc,
+        pretrained::openai::OA_CL100K_BASE_PATTERN,
+        regex::RegexWrapper,
+        spanning::{LexerTextSpanner, SpanLexer, TextSpanningConfig},
+        vocab::utility::testing::{build_test_shift_byte_vocab, build_test_vocab},
+    };
+
+    /// Build two encoders from the same BPE data but different spanners
+    /// (regex vs logos auto-discovered) and verify they produce identical tokens.
+    #[test]
+    fn test_logos_vs_regex_encode_identical() {
+        type T = u32;
+
+        let config: TextSpanningConfig<T> =
+            TextSpanningConfig::from_pattern(OA_CL100K_BASE_PATTERN);
+        let mut vocab: UnifiedTokenVocab<T> =
+            build_test_vocab(build_test_shift_byte_vocab(10), config);
+        let hi = vocab.max_token().unwrap() + 1;
+        vocab.special_vocab_mut().add_str_word("<|HI|>", hi);
+
+        // Logos encoder: built via the normal path (auto-discovers logos DFA).
+        let logos_enc = TokenEncoderBuilder::new(vocab.clone())
+            .with_parallel(false)
+            .build();
+
+        // Regex encoder: manually construct a regex-only spanner.
+        let regex_lexer: Arc<dyn SpanLexer> =
+            Arc::new(RegexWrapper::from(vocab.spanning().pattern().clone()));
+        let special_lexer: Option<Arc<dyn SpanLexer>> = vocab
+            .spanning()
+            .specials()
+            .special_pattern()
+            .map(|p| Arc::new(RegexWrapper::from(p)) as Arc<dyn SpanLexer>);
+        let regex_spanner = Arc::new(LexerTextSpanner::new(regex_lexer, special_lexer));
+        let regex_enc: Arc<dyn crate::TokenEncoder<T>> =
+            Arc::new(crate::encoders::span_encoders::TokenSpanEncoder::<T>::new(
+                regex_spanner,
+                vocab.clone(),
+                Arc::new(|| {
+                    Box::new(
+                        crate::encoders::span_encoders::IncrementalSweepSpanEncoder::<T>::default(),
+                    )
+                }),
+            ));
+
+        let samples = [
+            "hello world",
+            "hello san francisco",
+            "it's not the heat, it's the salt",
+            "<|HI|>hello<|HI|>",
+            "  multiple   spaces  ",
+            "line1\nline2\r\nline3",
+            "123 + 456 = 789",
+            "caf\u{00e9} na\u{00ef}ve \u{4f60}\u{597d}",
+            "Geburtstag 2024: Alles Gute!",
+            "$$$!!!...---",
+            "",
+            " ",
+            "a",
+        ];
+
+        for text in &samples {
+            let regex_tokens = regex_enc.try_encode(text).unwrap();
+            let logos_tokens = logos_enc.try_encode(text).unwrap();
+            assert_eq!(regex_tokens, logos_tokens, "Token mismatch for: {text:?}");
+        }
+    }
+}

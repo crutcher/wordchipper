@@ -43,7 +43,7 @@ impl EncDecEngine<u32> for TokenizersEngine {
         batch: &[&str],
     ) -> Result<Vec<Vec<u32>>, BoxError> {
         if self.use_batch {
-            let batch = batch.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+            let batch = batch.to_vec();
             let br = self.inner.encode_batch(batch, true).unwrap();
             Ok(br
                 .iter()
