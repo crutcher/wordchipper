@@ -6,9 +6,8 @@ use cfg_if::cfg_if;
 
 use crate::{
     TokenType,
-    VocabIndex,
     alloc::sync::Arc,
-    regex::{RegexPattern, RegexWrapper, alternate_choice_regex_pattern},
+    regex::{RegexPattern, RegexWrapper},
     spanning::{LexerTextSpanner, SpanLexer, TextSpanner, TextSpanningConfig},
 };
 
@@ -99,6 +98,8 @@ impl<T: TokenType> TextSpannerBuilder<T> {
                 if #[cfg(feature = "std")] {
                     Arc::new(crate::concurrency::PoolToy::new(re, max_pool))
                 } else {
+                    let _ = max_pool;
+
                     Arc::new(re)
                 }
             }
@@ -108,20 +109,11 @@ impl<T: TokenType> TextSpannerBuilder<T> {
             let pattern = self.config().pattern().clone();
             maybe_pool(pattern, self.max_pool)
         };
-        let special_lexer: Option<Arc<dyn SpanLexer>> = if self.config.specials().is_empty() {
-            None
-        } else {
-            let specials = self
-                .config
-                .specials()
-                .span_pairs()
-                .map(|(span, _)| String::from_utf8(span.clone()).unwrap())
-                .collect::<Vec<_>>();
-
-            let pattern = alternate_choice_regex_pattern(&specials);
-
-            Some(maybe_pool(pattern, self.max_pool))
-        };
+        let special_lexer: Option<Arc<dyn SpanLexer>> = self
+            .config
+            .specials()
+            .special_pattern()
+            .map(|pattern| maybe_pool(pattern, self.max_pool));
 
         Arc::new(LexerTextSpanner::new(word_lexer, special_lexer))
     }

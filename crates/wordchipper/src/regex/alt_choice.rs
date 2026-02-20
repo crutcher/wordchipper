@@ -1,7 +1,7 @@
 //! Exact Match Union Patterns
 
 use crate::{
-    alloc::{format, vec::Vec},
+    alloc::{format, string::ToString, vec::Vec},
     regex::regex_pattern::RegexPattern,
 };
 
@@ -10,14 +10,14 @@ use crate::{
 /// This will always be a [`RegexPattern::Basic`] variant.
 ///
 /// ## Arguments
-/// * `alts` - A slice of string-like alternatives to union.
+/// * `alts` - A slice of alternatives to union.
 ///
 /// ## Returns
 /// A new `RegexWrapperPattern::Basic` containing the union pattern.
 pub fn alternate_choice_regex_pattern<S: AsRef<str>>(alts: &[S]) -> RegexPattern {
     let parts = alts
         .iter()
-        .map(|s| fancy_regex::escape(s.as_ref()))
+        .map(|s| fancy_regex::escape(s.as_ref()).to_string())
         .collect::<Vec<_>>();
 
     // turns out, 'fancy_regex' is ... faster?
