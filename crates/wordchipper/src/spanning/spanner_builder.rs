@@ -115,9 +115,7 @@ impl<T: TokenType> TextSpannerBuilder<T> {
             #[cfg(feature = "logos")]
             {
                 crate::spanning::logos_lexer::lookup_word_lexer(self.config().pattern())
-                    .unwrap_or_else(|| {
-                        maybe_pool(self.config().pattern().clone(), self.max_pool)
-                    })
+                    .unwrap_or_else(|| maybe_pool(self.config().pattern().clone(), self.max_pool))
             }
             #[cfg(not(feature = "logos"))]
             {

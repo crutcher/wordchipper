@@ -443,7 +443,7 @@ impl SpanLexer for O200kLexer {
 /// Returns `Some(lexer)` when the pattern matches a pattern for which
 /// a compile-time DFA lexer exists, `None` otherwise.
 pub(crate) fn lookup_word_lexer(
-    pattern: &crate::regex::RegexPattern,
+    pattern: &crate::regex::RegexPattern
 ) -> Option<crate::alloc::sync::Arc<dyn SpanLexer>> {
     use crate::{
         alloc::sync::Arc,
