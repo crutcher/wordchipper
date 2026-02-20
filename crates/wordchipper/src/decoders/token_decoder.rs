@@ -26,7 +26,7 @@ pub trait TokenDecoder<T: TokenType>: Send + Sync {
     fn try_decode_to_bytes(
         &self,
         tokens: &[T],
-    ) -> crate::errors::Result<DecodeResult<Vec<u8>>>;
+    ) -> crate::errors::WCResult<DecodeResult<Vec<u8>>>;
 
     /// Decodes a batch of tokens.
     ///
@@ -38,11 +38,11 @@ pub trait TokenDecoder<T: TokenType>: Send + Sync {
     fn try_decode_batch_to_bytes(
         &self,
         batch: &[&[T]],
-    ) -> crate::errors::Result<BatchDecodeResult<Vec<u8>>> {
+    ) -> crate::errors::WCResult<BatchDecodeResult<Vec<u8>>> {
         batch
             .iter()
             .map(|tokens| self.try_decode_to_bytes(tokens))
-            .collect::<crate::errors::Result<Vec<_>>>()
+            .collect::<crate::errors::WCResult<Vec<_>>>()
             .map(BatchDecodeResult::from)
     }
 
@@ -58,7 +58,7 @@ pub trait TokenDecoder<T: TokenType>: Send + Sync {
     fn try_decode_to_string(
         &self,
         tokens: &[T],
-    ) -> crate::errors::Result<DecodeResult<String>> {
+    ) -> crate::errors::WCResult<DecodeResult<String>> {
         self.try_decode_to_bytes(tokens)
             .map(|res| res.convert(string_from_utf8_lossy))
     }
@@ -75,11 +75,11 @@ pub trait TokenDecoder<T: TokenType>: Send + Sync {
     fn try_decode_batch_to_strings(
         &self,
         batch: &[&[T]],
-    ) -> crate::errors::Result<BatchDecodeResult<String>> {
+    ) -> crate::errors::WCResult<BatchDecodeResult<String>> {
         batch
             .iter()
             .map(|tokens| self.try_decode_to_string(tokens))
-            .collect::<crate::errors::Result<Vec<_>>>()
+            .collect::<crate::errors::WCResult<Vec<_>>>()
             .map(BatchDecodeResult::from)
     }
 }

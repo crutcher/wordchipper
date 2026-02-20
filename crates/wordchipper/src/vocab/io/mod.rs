@@ -18,7 +18,8 @@
 //!     },
 //! };
 //!
-//! fn example() -> wordchipper::Result<(Arc<dyn TokenEncoder<u32>>, Arc<dyn TokenDecoder<u32>>)> {
+//! fn example() -> wordchipper::WCResult<(Arc<dyn TokenEncoder<u32>>, Arc<dyn TokenDecoder<u32>>)>
+//! {
 //!     let vocab: UnifiedTokenVocab<u32> = load_base64_unified_vocab_path(
 //!         "vocab.tiktoken",
 //!         TextSpanningConfig::from_pattern(OA_O200K_BASE_PATTERN),

@@ -84,7 +84,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     pub fn from_span_vocab(
         span_config: TextSpanningConfig<T>,
         span_vocab: SpanMapVocab<T>,
-    ) -> crate::errors::Result<Self> {
+    ) -> crate::errors::WCResult<Self> {
         let pair_vocab = span_vocab.to_pair_vocab();
         Self::new(span_config, span_vocab, pair_vocab)
     }
@@ -100,7 +100,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     pub fn from_pair_vocab(
         span_config: TextSpanningConfig<T>,
         pair_vocab: PairMapVocab<T>,
-    ) -> crate::errors::Result<Self> {
+    ) -> crate::errors::WCResult<Self> {
         let word_vocab = pair_vocab.span_pairs().collect::<SpanTokenMap<T>>().into();
         Self::from_span_vocab(span_config, word_vocab)
     }
@@ -118,7 +118,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
         span_config: TextSpanningConfig<T>,
         span_vocab: SpanMapVocab<T>,
         pair_vocab: PairMapVocab<T>,
-    ) -> crate::errors::Result<Self> {
+    ) -> crate::errors::WCResult<Self> {
         if span_vocab.byte_vocab() != pair_vocab.byte_vocab() {
             return Err(WordchipperError::VocabConflict(
                 "span vocab and pair vocab have different byte vocabularies".into(),
@@ -186,7 +186,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     /// Create a copy of this [`UnifiedTokenVocab`] with a different [`TokenType`].
     ///
     /// This will fail if the maximum token index for the new token type is exceeded.
-    pub fn to_token_type<G: TokenType>(&self) -> crate::errors::Result<UnifiedTokenVocab<G>> {
+    pub fn to_token_type<G: TokenType>(&self) -> crate::errors::WCResult<UnifiedTokenVocab<G>> {
         Ok(UnifiedTokenVocab::<G> {
             spanning: self.spanning.to_token_type::<G>()?,
             span_vocab: self.span_vocab.to_token_type::<G>()?,

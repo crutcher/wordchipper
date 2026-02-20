@@ -54,7 +54,7 @@ pub fn byte_map_from_span_map<T: TokenType>(span_map: &SpanTokenMap<T>) -> ByteT
 pub fn try_validate_span_map<T>(
     byte_vocab: &ByteMapVocab<T>,
     span_map: &SpanTokenMap<T>,
-) -> crate::errors::Result<()>
+) -> crate::errors::WCResult<()>
 where
     T: TokenType,
 {
@@ -140,7 +140,7 @@ impl<T: TokenType> SpanMapVocab<T> {
     pub fn new(
         byte_vocab: ByteMapVocab<T>,
         mut span_map: SpanTokenMap<T>,
-    ) -> crate::errors::Result<Self> {
+    ) -> crate::errors::WCResult<Self> {
         try_validate_span_map(&byte_vocab, &span_map)?;
 
         span_map.extend(byte_vocab.span_pairs());
@@ -154,7 +154,7 @@ impl<T: TokenType> SpanMapVocab<T> {
     }
 
     /// Convert to a different token type.
-    pub fn to_token_type<G: TokenType>(&self) -> crate::errors::Result<SpanMapVocab<G>> {
+    pub fn to_token_type<G: TokenType>(&self) -> crate::errors::WCResult<SpanMapVocab<G>> {
         if let Some(max) = self.max_token() {
             try_vocab_size::<G>(max.to_usize().unwrap())?;
         }

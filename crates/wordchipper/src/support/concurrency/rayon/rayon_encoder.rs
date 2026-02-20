@@ -53,17 +53,17 @@ where
         &self,
         text: &str,
         tokens: &mut Vec<T>,
-    ) -> crate::errors::Result<()> {
+    ) -> crate::errors::WCResult<()> {
         self.inner.try_encode_append(text, tokens)
     }
 
     fn try_encode_batch(
         &self,
         batch: &[&str],
-    ) -> crate::errors::Result<Vec<Vec<T>>> {
+    ) -> crate::errors::WCResult<Vec<Vec<T>>> {
         use rayon::prelude::*;
 
-        let results: Vec<crate::errors::Result<Vec<T>>> = batch
+        let results: Vec<crate::errors::WCResult<Vec<T>>> = batch
             .par_iter()
             .map(|text| self.inner.try_encode(text))
             .collect();

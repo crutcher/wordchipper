@@ -53,7 +53,7 @@ impl<T: TokenType> SpecialVocab<T> {
     }
 
     /// Convert to a different token type.
-    pub fn to_token_type<G: TokenType>(&self) -> crate::errors::Result<SpecialVocab<G>> {
+    pub fn to_token_type<G: TokenType>(&self) -> crate::errors::WCResult<SpecialVocab<G>> {
         if let Some(max) = self.max_token() {
             try_vocab_size::<G>(max.to_usize().unwrap())?;
         }

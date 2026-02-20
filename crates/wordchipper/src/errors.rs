@@ -49,4 +49,4 @@ pub enum WordchipperError {
 }
 
 /// Result type for wordchipper operations.
-pub type Result<T> = core::result::Result<T, WordchipperError>;
+pub type WCResult<T> = core::result::Result<T, WordchipperError>;

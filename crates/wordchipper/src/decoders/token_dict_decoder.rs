@@ -89,7 +89,7 @@ impl<T: TokenType> TokenDecoder<T> for TokenDictDecoder<T> {
     fn try_decode_to_bytes(
         &self,
         tokens: &[T],
-    ) -> crate::errors::Result<DecodeResult<Vec<u8>>> {
+    ) -> crate::errors::WCResult<DecodeResult<Vec<u8>>> {
         let capacity = self.predicted_byte_buffer_size(tokens);
         let mut value = Vec::with_capacity(capacity);
 

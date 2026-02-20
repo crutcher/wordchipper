@@ -54,7 +54,7 @@ impl<T: TokenType> TokenEncoder<T> for TokenSpanEncoder<T> {
         &self,
         text: &str,
         tokens: &mut Vec<T>,
-    ) -> crate::errors::Result<()> {
+    ) -> crate::errors::WCResult<()> {
         let mut se = (self.se_builder)();
 
         self.spanner.for_each_split_span(text, &mut |span_ref| {

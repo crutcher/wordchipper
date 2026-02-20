@@ -73,7 +73,7 @@
 //!     disk_cache::WordchipperDiskCache,
 //! };
 //!
-//! fn example() -> wordchipper::Result<(
+//! fn example() -> wordchipper::WCResult<(
 //!         Arc<dyn TokenEncoder<u32>>,
 //!         Arc<dyn TokenDecoder<u32>>
 //! )> {

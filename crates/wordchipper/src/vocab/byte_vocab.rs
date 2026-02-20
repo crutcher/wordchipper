@@ -107,7 +107,7 @@ impl<T: TokenType> ByteMapVocab<T> {
     }
 
     /// Convert to a different token type.
-    pub fn to_token_type<G: TokenType>(&self) -> crate::errors::Result<ByteMapVocab<G>> {
+    pub fn to_token_type<G: TokenType>(&self) -> crate::errors::WCResult<ByteMapVocab<G>> {
         Ok(ByteMapVocab::<G>::from_byte_to_token(
             &self
                 .byte_tokens

@@ -23,7 +23,7 @@ use crate::{
 pub fn try_validate_pair_map<T: TokenType>(
     byte_vocab: &ByteMapVocab<T>,
     pairs: &PairTokenMap<T>,
-) -> crate::errors::Result<()> {
+) -> crate::errors::WCResult<()> {
     let pair_targets: WCHashSet<T> = pairs.values().copied().collect();
 
     for t in &pair_targets {
@@ -82,7 +82,7 @@ impl<T: TokenType> PairMapVocab<T> {
     pub fn new(
         byte_vocab: ByteMapVocab<T>,
         mut pairs: PairTokenMap<T>,
-    ) -> crate::errors::Result<Self> {
+    ) -> crate::errors::WCResult<Self> {
         try_validate_pair_map(&byte_vocab, &pairs)?;
         pairs.shrink_to_fit();
         Ok(Self {
@@ -92,7 +92,7 @@ impl<T: TokenType> PairMapVocab<T> {
     }
 
     /// Convert to a different token type.
-    pub fn to_token_type<G: TokenType>(&self) -> crate::errors::Result<PairMapVocab<G>> {
+    pub fn to_token_type<G: TokenType>(&self) -> crate::errors::WCResult<PairMapVocab<G>> {
         try_vocab_size::<G>(self.max_token().unwrap().to_usize().unwrap())?;
 
         PairMapVocab::<G>::new(

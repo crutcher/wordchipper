@@ -55,7 +55,7 @@ where
     }
 
     /// Try to unwrap the result, returning an error if the decoding is incomplete.
-    pub fn try_result(self) -> crate::errors::Result<V> {
+    pub fn try_result(self) -> crate::errors::WCResult<V> {
         if let Some(remaining) = self.remaining
             && remaining > 0
         {
@@ -124,7 +124,7 @@ where
     }
 
     /// Try to unwrap the results, returning an error if any decoding is incomplete.
-    pub fn try_results(self) -> crate::errors::Result<Vec<V>> {
+    pub fn try_results(self) -> crate::errors::WCResult<Vec<V>> {
         self.results.into_iter().map(|r| r.try_result()).collect()
     }
 

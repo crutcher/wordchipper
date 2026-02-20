@@ -24,7 +24,7 @@ use crate::{
 pub fn load_base64_unified_vocab_path<T: TokenType>(
     path: impl AsRef<Path>,
     spanning: TextSpanningConfig<T>,
-) -> crate::errors::Result<UnifiedTokenVocab<T>> {
+) -> crate::errors::WCResult<UnifiedTokenVocab<T>> {
     let reader = BufReader::new(File::open(path)?);
     read_base64_unified_vocab(reader, spanning)
 }
@@ -38,7 +38,7 @@ pub fn load_base64_unified_vocab_path<T: TokenType>(
 pub fn read_base64_unified_vocab<T: TokenType, R: BufRead>(
     reader: R,
     spanning: TextSpanningConfig<T>,
-) -> crate::errors::Result<UnifiedTokenVocab<T>> {
+) -> crate::errors::WCResult<UnifiedTokenVocab<T>> {
     UnifiedTokenVocab::from_span_vocab(spanning, read_base64_span_map(reader)?.into())
 }
 
@@ -51,7 +51,7 @@ pub fn read_base64_unified_vocab<T: TokenType, R: BufRead>(
 ///
 /// # Arguments
 /// * `path` - the path to the vocabulary file.
-pub fn load_base64_span_vocab_path<T, P>(path: P) -> crate::errors::Result<SpanMapVocab<T>>
+pub fn load_base64_span_vocab_path<T, P>(path: P) -> crate::errors::WCResult<SpanMapVocab<T>>
 where
     T: TokenType,
     P: AsRef<Path>,
@@ -68,7 +68,7 @@ where
 ///
 /// # Arguments
 /// * `path` - the path to the vocabulary file.
-pub fn load_base64_span_map_path<T, P>(path: P) -> crate::errors::Result<SpanTokenMap<T>>
+pub fn load_base64_span_map_path<T, P>(path: P) -> crate::errors::WCResult<SpanTokenMap<T>>
 where
     T: TokenType,
     P: AsRef<Path>,
@@ -87,7 +87,7 @@ where
 /// # Arguments
 /// * `span_map` - the vocabulary to extend.
 /// * `reader` - the line reader.
-pub fn read_base64_span_map<T, R>(reader: R) -> crate::errors::Result<SpanTokenMap<T>>
+pub fn read_base64_span_map<T, R>(reader: R) -> crate::errors::WCResult<SpanTokenMap<T>>
 where
     T: TokenType,
     R: BufRead,
@@ -130,7 +130,7 @@ where
 pub fn save_base64_span_map_path<T: TokenType, P: AsRef<Path>>(
     span_map: &SpanTokenMap<T>,
     path: P,
-) -> crate::errors::Result<()> {
+) -> crate::errors::WCResult<()> {
     let mut writer = BufWriter::new(File::create(path)?);
     write_base64_span_map(span_map, &mut writer)
 }
@@ -148,7 +148,7 @@ pub fn save_base64_span_map_path<T: TokenType, P: AsRef<Path>>(
 pub fn write_base64_span_map<T, W>(
     span_map: &SpanTokenMap<T>,
     writer: &mut W,
-) -> crate::errors::Result<()>
+) -> crate::errors::WCResult<()>
 where
     T: TokenType,
     W: Write,

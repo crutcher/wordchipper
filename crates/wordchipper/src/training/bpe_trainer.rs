@@ -240,7 +240,7 @@ where
     fn train_basic_pairs<T>(
         self,
         byte_vocab: ByteMapVocab<T>,
-    ) -> crate::errors::Result<TrainResults<T>>
+    ) -> crate::errors::WCResult<TrainResults<T>>
     where
         T: TokenType,
         C: CountType,
@@ -402,7 +402,7 @@ where
     pub fn train<T>(
         self,
         byte_vocab: ByteMapVocab<T>,
-    ) -> crate::errors::Result<UnifiedTokenVocab<T>>
+    ) -> crate::errors::WCResult<UnifiedTokenVocab<T>>
     where
         T: TokenType,
         C: CountType,

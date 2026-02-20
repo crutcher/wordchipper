@@ -5,7 +5,7 @@ use crate::{errors::WordchipperError, types::TokenType};
 pub const U8_SIZE: usize = u8::MAX as usize + 1;
 
 /// Validates and returns the vocabulary size, ensuring it's at least the size of the u8 space.
-pub fn try_vocab_size<T: TokenType>(vocab_size: usize) -> crate::errors::Result<usize> {
+pub fn try_vocab_size<T: TokenType>(vocab_size: usize) -> crate::errors::WCResult<usize> {
     if T::from_usize(vocab_size - 1).is_none() {
         Err(WordchipperError::VocabSizeOverflow { size: vocab_size })
     } else if vocab_size < U8_SIZE {

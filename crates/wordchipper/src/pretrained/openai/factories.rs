@@ -104,7 +104,7 @@ impl OATokenizer {
     pub fn load_vocab<T: TokenType>(
         &self,
         loader: &mut dyn ResourceLoader,
-    ) -> crate::errors::Result<UnifiedTokenVocab<T>> {
+    ) -> crate::errors::WCResult<UnifiedTokenVocab<T>> {
         self.factory().load_vocab(loader)
     }
 
@@ -112,7 +112,7 @@ impl OATokenizer {
     pub fn load_path<T: TokenType>(
         &self,
         path: impl AsRef<Path>,
-    ) -> crate::errors::Result<UnifiedTokenVocab<T>> {
+    ) -> crate::errors::WCResult<UnifiedTokenVocab<T>> {
         self.factory().load_vocab_path(path)
     }
 
@@ -120,7 +120,7 @@ impl OATokenizer {
     pub fn read_vocab<T: TokenType, R: BufRead>(
         &self,
         reader: R,
-    ) -> crate::errors::Result<UnifiedTokenVocab<T>> {
+    ) -> crate::errors::WCResult<UnifiedTokenVocab<T>> {
         self.factory().read_vocab(reader)
     }
 }
