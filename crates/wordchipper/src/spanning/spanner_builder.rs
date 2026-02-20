@@ -8,7 +8,7 @@ use crate::{
     TokenType,
     alloc::sync::Arc,
     regex::{RegexPattern, RegexWrapper},
-    spanning::{LexerTextSpanner, SpanLexer, TextSpanner, TextSpanningConfig},
+    spanning::{LexerTextSpanner, TextSpanner, TextSpanningConfig, lexer_spanner::SpanLexer},
 };
 
 /// Builder for [`TextSpanner`]s.
