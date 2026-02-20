@@ -77,8 +77,9 @@ pub struct UnifiedTokenVocab<T: TokenType> {
     word_lexer: Option<Arc<dyn SpanLexer>>,
 }
 
-// Manual PartialEq: Arc<dyn SpanLexer> isn't PartialEq,
-// and the word lexer is an optimization, not a semantic distinction.
+/// Manual `PartialEq`: `Arc<dyn SpanLexer>` isn't `PartialEq`.
+/// The word lexer is an optimization, not a semantic distinction,
+/// so two vocabs that differ only in lexer override compare as equal.
 impl<T: TokenType> PartialEq for UnifiedTokenVocab<T> {
     fn eq(
         &self,

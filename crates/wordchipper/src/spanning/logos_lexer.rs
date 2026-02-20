@@ -24,8 +24,7 @@ use crate::spanning::{SpanLexer, SpanRef};
 /// | `\s*[\r\n]`                       | Newline        |
 /// | `\s+(?!\S)` / `\s`               | Whitespace     |
 #[derive(Logos, Debug, PartialEq, Clone)]
-#[allow(missing_docs)]
-pub enum Cl100kToken {
+enum Cl100kToken {
     #[regex(r"'[sStTdDmM]|'[rR][eE]|'[vV][eE]|'[lL][lL]")]
     Contraction,
 
@@ -74,8 +73,7 @@ pub enum Cl100kToken {
 /// | `\s*[\r\n]+`                                         | Newline        |
 /// | `\s+`                                                | Whitespace     |
 #[derive(Logos, Debug, PartialEq, Clone)]
-#[allow(missing_docs)]
-pub enum O200kToken {
+enum O200kToken {
     // Both word patterns merged via alternation into a single regex.
     // The two overlap on \p{Modifier_Letter}/\p{Other_Letter}/\p{Mark}
     // characters (e.g. CJK), so logos requires a single DFA pattern.
@@ -182,19 +180,6 @@ fn contraction_split(bytes: &[u8]) -> Option<usize> {
         }
     }
     None
-}
-
-// ---------------------------------------------------------------------------
-// Variant dispatch
-// ---------------------------------------------------------------------------
-
-/// Which logos DFA to use for word scanning.
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub enum LogosVariant {
-    /// `cl100k_base` pattern (GPT-4, GPT-3.5).
-    Cl100k,
-    /// `o200k_base` pattern (GPT-4o).
-    O200k,
 }
 
 /// Iterate classified logos tokens and emit Word/Gap spans with
@@ -390,79 +375,79 @@ fn for_each_logos_word(
 }
 
 // ---------------------------------------------------------------------------
-// LogosLexer
+// Lexer types
 // ---------------------------------------------------------------------------
 
-/// A [`SpanLexer`] using a compile-time logos DFA.
+/// A [`SpanLexer`] for the `cl100k_base` pattern (GPT-4, GPT-3.5).
 ///
-/// Supports cl100k and o200k patterns with full Unicode matching.
-/// Special token handling is provided by [`LexerTextSpanner`] composition,
-/// not by this type directly.
+/// Uses a compile-time logos DFA for word scanning.
+/// Special token handling is provided by [`LexerTextSpanner`](super::LexerTextSpanner)
+/// composition, not by this type directly.
 #[derive(Clone, Debug)]
-pub struct LogosLexer {
-    variant: LogosVariant,
-}
+pub struct Cl100kLexer;
 
-impl LogosLexer {
-    /// Create a cl100k logos lexer.
-    pub fn cl100k() -> Self {
-        Self {
-            variant: LogosVariant::Cl100k,
-        }
-    }
+/// A [`SpanLexer`] for the `o200k_base` pattern (GPT-4o).
+///
+/// Uses a compile-time logos DFA for word scanning.
+/// Special token handling is provided by [`LexerTextSpanner`](super::LexerTextSpanner)
+/// composition, not by this type directly.
+#[derive(Clone, Debug)]
+pub struct O200kLexer;
 
-    /// Create an o200k logos lexer.
-    pub fn o200k() -> Self {
-        Self {
-            variant: LogosVariant::O200k,
-        }
-    }
-}
-
-impl SpanLexer for LogosLexer {
+impl SpanLexer for Cl100kLexer {
     fn for_each_word(
         &self,
         text: &str,
         offset: usize,
         f: &mut dyn FnMut(SpanRef) -> bool,
     ) -> (bool, usize) {
-        match self.variant {
-            LogosVariant::Cl100k => for_each_logos_word(
-                Cl100kToken::lexer(text).spanned().map(|(res, range)| {
-                    let kind = match res {
-                        Ok(tok) => tok.span_kind(),
-                        Err(()) => SpanKind::Gap,
-                    };
-                    (kind, range)
-                }),
-                text.as_bytes(),
-                offset,
-                f,
-            ),
-            LogosVariant::O200k => for_each_logos_word(
-                O200kToken::lexer(text).spanned().map(|(res, range)| {
-                    let kind = match res {
-                        Ok(tok) => tok.span_kind(),
-                        Err(()) => SpanKind::Gap,
-                    };
-                    (kind, range)
-                }),
-                text.as_bytes(),
-                offset,
-                f,
-            ),
-        }
+        for_each_logos_word(
+            Cl100kToken::lexer(text).spanned().map(|(res, range)| {
+                let kind = match res {
+                    Ok(tok) => tok.span_kind(),
+                    Err(()) => SpanKind::Gap,
+                };
+                (kind, range)
+            }),
+            text.as_bytes(),
+            offset,
+            f,
+        )
+    }
+}
+
+impl SpanLexer for O200kLexer {
+    fn for_each_word(
+        &self,
+        text: &str,
+        offset: usize,
+        f: &mut dyn FnMut(SpanRef) -> bool,
+    ) -> (bool, usize) {
+        for_each_logos_word(
+            O200kToken::lexer(text).spanned().map(|(res, range)| {
+                let kind = match res {
+                    Ok(tok) => tok.span_kind(),
+                    Err(()) => SpanKind::Gap,
+                };
+                (kind, range)
+            }),
+            text.as_bytes(),
+            offset,
+            f,
+        )
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::alloc::{string::ToString, sync::Arc, vec, vec::Vec};
-    use crate::spanning::{LexerTextSpanner, TextSpanner};
+    use crate::{
+        alloc::{string::ToString, sync::Arc, vec, vec::Vec},
+        spanning::{LexerTextSpanner, TextSpanner},
+    };
 
     /// Build a `TextSpanner` from a logos lexer with no specials.
-    fn spanner(lexer: LogosLexer) -> LexerTextSpanner {
+    fn spanner(lexer: impl SpanLexer + 'static) -> LexerTextSpanner {
         LexerTextSpanner::new(Arc::new(lexer), None)
     }
 
@@ -472,7 +457,7 @@ mod tests {
 
     #[test]
     fn test_logos_basic_splitting() {
-        let s = spanner(LogosLexer::cl100k());
+        let s = spanner(Cl100kLexer);
         let text = "hello world";
         let spans = s.split_spans(text);
 
@@ -487,7 +472,7 @@ mod tests {
             "<|NORP|>".to_string(),
         ]);
         let s = LexerTextSpanner::new(
-            Arc::new(LogosLexer::cl100k()),
+            Arc::new(Cl100kLexer),
             Some(Arc::new(special_pattern.compile().unwrap()) as Arc<dyn SpanLexer>),
         );
 
@@ -508,7 +493,7 @@ mod tests {
 
     #[test]
     fn test_logos_digits() {
-        let s = spanner(LogosLexer::cl100k());
+        let s = spanner(Cl100kLexer);
         let text = "abc 123 4567";
         let spans = s.split_spans(text);
 
@@ -527,7 +512,7 @@ mod tests {
 
     #[test]
     fn test_logos_contractions() {
-        let s = spanner(LogosLexer::cl100k());
+        let s = spanner(Cl100kLexer);
         let text = "don't I'll she's";
         let spans = s.split_spans(text);
 
@@ -548,14 +533,14 @@ mod tests {
 
     #[test]
     fn test_logos_empty() {
-        let s = spanner(LogosLexer::cl100k());
+        let s = spanner(Cl100kLexer);
         let spans = s.split_spans("");
         assert!(spans.is_empty());
     }
 
     #[test]
     fn test_logos_whitespace_only() {
-        let s = spanner(LogosLexer::cl100k());
+        let s = spanner(Cl100kLexer);
         let text = "   ";
         let spans = s.split_spans(text);
 
@@ -573,7 +558,7 @@ mod tests {
         let config: TextSpanningConfig<u32> =
             TextSpanningConfig::from_pattern(OA_CL100K_BASE_PATTERN);
         let regex_spanner = TextSpannerBuilder::new(config).build();
-        let logos_spanner = spanner(LogosLexer::cl100k());
+        let logos_spanner = spanner(Cl100kLexer);
 
         let cases = [
             "Hello world",
@@ -609,7 +594,7 @@ mod tests {
         let config: TextSpanningConfig<u32> =
             TextSpanningConfig::from_pattern(OA_CL100K_BASE_PATTERN);
         let regex_spanner = TextSpannerBuilder::new(config).build();
-        let logos_spanner = spanner(LogosLexer::cl100k());
+        let logos_spanner = spanner(Cl100kLexer);
 
         let cases = [
             "the Civil War\u{2014}in which",
@@ -657,7 +642,7 @@ mod tests {
         let config: TextSpanningConfig<u32> =
             TextSpanningConfig::from_pattern(OA_CL100K_BASE_PATTERN);
         let regex_spanner = TextSpannerBuilder::new(config).build();
-        let logos_spanner = spanner(LogosLexer::cl100k());
+        let logos_spanner = spanner(Cl100kLexer);
 
         let cases = [
             "'The items we buy are important",
@@ -705,7 +690,7 @@ mod tests {
 
     #[test]
     fn test_o200k_contractions_attached() {
-        let s = spanner(LogosLexer::o200k());
+        let s = spanner(O200kLexer);
         let text = "don't I'll she's";
         let spans = s.split_spans(text);
 
@@ -740,7 +725,7 @@ mod tests {
         let config: TextSpanningConfig<u32> =
             TextSpanningConfig::from_pattern(OA_O200K_BASE_PATTERN);
         let regex_spanner = TextSpannerBuilder::new(config).build();
-        let logos_spanner = spanner(LogosLexer::o200k());
+        let logos_spanner = spanner(O200kLexer);
 
         let cases = [
             "Hello world",
@@ -777,7 +762,7 @@ mod tests {
         let config: TextSpanningConfig<u32> =
             TextSpanningConfig::from_pattern(OA_O200K_BASE_PATTERN);
         let regex_spanner = TextSpannerBuilder::new(config).build();
-        let logos_spanner = spanner(LogosLexer::o200k());
+        let logos_spanner = spanner(O200kLexer);
 
         let cases = [
             "the Civil War\u{2014}in which",
@@ -895,7 +880,7 @@ mod tests {
         let cl100k_config: TextSpanningConfig<u32> =
             TextSpanningConfig::from_pattern(OA_CL100K_BASE_PATTERN);
         let cl100k_regex = TextSpannerBuilder::new(cl100k_config).build();
-        let cl100k_logos = spanner(LogosLexer::cl100k());
+        let cl100k_logos = spanner(Cl100kLexer);
         run_benchmark(
             "cl100k_base",
             cl100k_regex.as_ref(),
@@ -909,7 +894,7 @@ mod tests {
         let o200k_config: TextSpanningConfig<u32> =
             TextSpanningConfig::from_pattern(OA_O200K_BASE_PATTERN);
         let o200k_regex = TextSpannerBuilder::new(o200k_config).build();
-        let o200k_logos = spanner(LogosLexer::o200k());
+        let o200k_logos = spanner(O200kLexer);
         run_benchmark(
             "o200k_base",
             o200k_regex.as_ref(),

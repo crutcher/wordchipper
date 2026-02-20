@@ -120,14 +120,14 @@ impl<T: TokenType> TokenEncoderBuilder<T> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "logos"))]
 mod tests {
     use super::*;
     use crate::{
         VocabIndex,
         alloc::sync::Arc,
         pretrained::openai::OA_CL100K_BASE_PATTERN,
-        spanning::{LogosLexer, TextSpanningConfig},
+        spanning::{Cl100kLexer, TextSpanningConfig},
         vocab::utility::testing::{build_test_shift_byte_vocab, build_test_vocab},
     };
 
@@ -155,7 +155,7 @@ mod tests {
             regex_vocab.pair_vocab().clone(),
         )
         .unwrap();
-        logos_vocab.set_word_lexer(Arc::new(LogosLexer::cl100k()));
+        logos_vocab.set_word_lexer(Arc::new(Cl100kLexer));
 
         let regex_enc = TokenEncoderBuilder::new(regex_vocab)
             .with_parallel(false)

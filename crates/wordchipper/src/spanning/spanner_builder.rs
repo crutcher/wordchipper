@@ -23,8 +23,9 @@ pub struct TextSpannerBuilder<T: TokenType> {
     max_pool: Option<NonZeroUsize>,
 }
 
-// Manual PartialEq: Arc<dyn SpanLexer> isn't PartialEq,
-// and the word lexer is an optimization, not a semantic distinction.
+/// Manual `PartialEq`: `Arc<dyn SpanLexer>` isn't `PartialEq`.
+/// The word lexer is an optimization, not a semantic distinction,
+/// so two builders that differ only in lexer override compare as equal.
 impl<T: TokenType> PartialEq for TextSpannerBuilder<T> {
     fn eq(
         &self,

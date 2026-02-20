@@ -200,10 +200,9 @@ fn main() -> Result<(), BoxError> {
     // When the model uses logos, also add a regex-forced engine for comparison.
     if vocab.word_lexer().is_some() {
         use wordchipper::spanning::TextSpanningConfig;
-        let regex_spanning = TextSpanningConfig::<Rank>::from_pattern(
-            args.model.model().factory().pattern(),
-        )
-        .with_specials(vocab.spanning().specials().clone());
+        let regex_spanning =
+            TextSpanningConfig::<Rank>::from_pattern(args.model.model().factory().pattern())
+                .with_specials(vocab.spanning().specials().clone());
         let regex_vocab = UnifiedTokenVocab::<Rank>::new(
             regex_spanning,
             vocab.span_vocab().clone(),

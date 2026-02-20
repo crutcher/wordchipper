@@ -118,6 +118,9 @@ where
 /// scanner. The word lexer handles segmentation within text segments;
 /// the special lexer finds special tokens that split the input into
 /// those segments.
+///
+/// The word lexer is pluggable (e.g. regex-based or logos DFA). The special
+/// lexer is always regex-based, built from the special token patterns.
 #[derive(Clone)]
 pub struct LexerTextSpanner {
     word_lexer: Arc<dyn SpanLexer>,

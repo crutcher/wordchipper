@@ -1,9 +1,9 @@
 //! # `OpenAI` Pretrained Vocabulary Loaders
 
-use std::{io::BufRead, path::Path};
+use std::{io::BufRead, path::Path, sync::Arc};
 
-use std::sync::Arc;
-
+#[cfg(feature = "download")]
+use crate::resources::ResourceLoader;
 use crate::{
     pretrained::openai::{
         OA_CL100K_BASE_PATTERN,
@@ -26,8 +26,8 @@ use crate::{
         },
     },
     regex::RegexPattern,
-    resources::{ConstKeyedResource, ResourceLoader},
-    spanning::{LogosLexer, SpanLexer, TextSpanningConfig},
+    resources::ConstKeyedResource,
+    spanning::{SpanLexer, TextSpanningConfig},
     types::TokenType,
     vocab::{UnifiedTokenVocab, utility::factories::ConstVocabularyFactory},
 };
@@ -126,15 +126,25 @@ impl OATokenizer {
     }
 }
 
-/// Logos DFA word lexer factory for cl100k patterns.
+#[cfg(feature = "logos")]
 fn logos_cl100k_lexer() -> Arc<dyn SpanLexer> {
-    Arc::new(LogosLexer::cl100k())
+    Arc::new(crate::spanning::Cl100kLexer)
 }
 
-/// Logos DFA word lexer factory for o200k patterns.
+#[cfg(feature = "logos")]
 fn logos_o200k_lexer() -> Arc<dyn SpanLexer> {
-    Arc::new(LogosLexer::o200k())
+    Arc::new(crate::spanning::O200kLexer)
 }
+
+#[cfg(feature = "logos")]
+const CL100K_WORD_LEXER: Option<fn() -> Arc<dyn SpanLexer>> = Some(logos_cl100k_lexer);
+#[cfg(not(feature = "logos"))]
+const CL100K_WORD_LEXER: Option<fn() -> Arc<dyn SpanLexer>> = None;
+
+#[cfg(feature = "logos")]
+const O200K_WORD_LEXER: Option<fn() -> Arc<dyn SpanLexer>> = Some(logos_o200k_lexer);
+#[cfg(not(feature = "logos"))]
+const O200K_WORD_LEXER: Option<fn() -> Arc<dyn SpanLexer>> = None;
 
 /// Shared download context key.
 const OA_KEY: &str = "openai";
@@ -181,7 +191,7 @@ pub const OA_CL100K_BASE_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabulary
     },
     pattern: OA_CL100K_BASE_PATTERN,
     special_builder: &oa_cl100k_edit_special_tokens,
-    word_lexer_factory: Some(logos_cl100k_lexer),
+    word_lexer_factory: CL100K_WORD_LEXER,
 };
 
 /// The "`o200k_base`" tokenizer.
@@ -193,7 +203,7 @@ pub const OA_O200K_BASE_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabularyF
     },
     pattern: OA_O200K_BASE_PATTERN,
     special_builder: &oa_o200k_base_special_tokens,
-    word_lexer_factory: Some(logos_o200k_lexer),
+    word_lexer_factory: O200K_WORD_LEXER,
 };
 
 /// The "`o200k_harmony`" tokenizer.
@@ -202,7 +212,7 @@ pub const OA_O200K_HARMONY_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabula
     resource: OA_O200K_BASE_VOCAB_FACTORY.resource,
     pattern: OA_O200K_BASE_VOCAB_FACTORY.pattern,
     special_builder: &oa_o200k_harmony_special_tokens,
-    word_lexer_factory: Some(logos_o200k_lexer),
+    word_lexer_factory: O200K_WORD_LEXER,
 };
 
 #[cfg(test)]
