@@ -458,11 +458,7 @@ pub fn verify_encode(
         let hi_a = (div + window).min(actual_tokens.len());
         let hi_e = (div + window).min(expected_tokens.len());
 
-        // Truncate source preview at a char boundary.
-        let preview = match source.get(..500) {
-            Some(s) => s,
-            None => source,
-        };
+        let preview = &source[..source.floor_char_boundary(500)];
 
         return Err(format!(
             "ENCODER MISMATCH: {actual_name} != {expected_name}\n\
