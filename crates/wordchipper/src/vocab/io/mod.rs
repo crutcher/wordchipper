@@ -34,6 +34,11 @@
 //! ```
 
 mod base64_vocab;
+#[cfg(feature = "datagym")]
+mod datagym_vocab;
 
 #[doc(inline)]
 pub use base64_vocab::*;
+#[cfg(feature = "datagym")]
+#[doc(inline)]
+pub use datagym_vocab::*;

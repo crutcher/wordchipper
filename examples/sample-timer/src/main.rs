@@ -22,7 +22,7 @@ use wordchipper::{
     TokenType,
     UnifiedTokenVocab,
     disk_cache::WordchipperDiskCache,
-    pretrained::openai::OATokenizer,
+    get_model,
     support::{
         slices::{inner_slice_view, inner_str_view},
         timers::timeit,
@@ -101,6 +101,10 @@ pub struct Args {
 
 #[derive(ValueEnum, Clone, Copy, Debug)]
 pub enum ModelSelector {
+    /// Select "`openai/gpt2`" model.
+    #[value(name = "openai/gpt2")]
+    OpenaiGpt2,
+
     /// Select "`openai/r50k_base`" model.
     #[value(name = "openai/r50k_base")]
     OpenaiR50kBase,
@@ -136,35 +140,28 @@ impl Display for ModelSelector {
 }
 
 impl ModelSelector {
-    pub fn model(&self) -> OATokenizer {
-        use ModelSelector::*;
-        use OATokenizer::*;
-        match self {
-            OpenaiR50kBase => R50kBase,
-            OpenaiP50kBase => P50kBase,
-            OpenaiP50kEdit => P50kEdit,
-            OpenaiCl100kBase => Cl100kBase,
-            OpenaiO200kBase => O200kBase,
-            OpenaiO200kHarmony => O200kHarmony,
-        }
+    pub fn model(&self) -> String {
+        self.to_string()
     }
 
     pub fn load_vocab<T: TokenType>(
         &self,
         disk_cache: &mut WordchipperDiskCache,
     ) -> Result<UnifiedTokenVocab<T>, BoxError> {
-        Ok(self.model().load_vocab(disk_cache)?)
+        Ok(get_model(self.model().as_str(), disk_cache)
+            .expect("failed to load model")
+            .to_token_type()?)
     }
 
     pub fn load_tiktoken_bpe(&self) -> Result<(String, Arc<CoreBPE>), BoxError> {
-        tiktoken_support::load_tiktoken_bpe(self.model())
+        tiktoken_support::load_tiktoken_bpe(*self)
     }
 
     #[cfg(feature = "tokenizers")]
     pub fn load_tokenizers_tokenizer(
         &self
     ) -> Result<(String, Arc<tokenizers::tokenizer::Tokenizer>), BoxError> {
-        load_tokenizers_tok(self.model())
+        load_tokenizers_tok(*self)
     }
 }
 

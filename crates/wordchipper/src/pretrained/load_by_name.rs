@@ -5,6 +5,7 @@ use crate::{
     alloc::{string::String, vec::Vec},
     pretrained::openai::OATokenizer,
     support::resources::ResourceLoader,
+    vocab::io::load_gpt2_vocab,
 };
 
 /// A hook that can be used to load pretrained models.
@@ -17,6 +18,11 @@ pub struct ConstPretrainedHook {
 }
 
 const PRETRAINED_HOOKS: &[ConstPretrainedHook] = &[
+    #[cfg(feature = "datagym")]
+    ConstPretrainedHook {
+        aliases: &["openai/gpt2", "gpt2"],
+        load: |_, loader| load_gpt2_vocab(loader),
+    },
     ConstPretrainedHook {
         aliases: &["openai/r50k_base", "r50k_base"],
         load: |_, loader| OATokenizer::R50kBase.load_vocab(loader),
