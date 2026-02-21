@@ -20,8 +20,20 @@ fn main() {
 
 static CORPUS: &str = include_str!("data/corpus.txt");
 
-fn bench_text() -> String {
+fn diverse_text() -> String {
     CORPUS.repeat(10)
+}
+
+fn english_text() -> String {
+    let paragraph = "The quick brown fox jumps over the lazy dog. \
+        It's a beautiful day, and I'll be taking my 3 dogs for a walk. \
+        Don't forget: the temperature is 72 degrees! \
+        We've been waiting since 10:30am.\n\
+        \n\
+        In 2024, artificial intelligence continued to advance rapidly. \
+        Large language models like GPT-4 and Claude demonstrated remarkable capabilities. \
+        The researchers couldn't believe the results they'd achieved.\n";
+    paragraph.repeat(100)
 }
 
 struct WcFixture {
@@ -65,148 +77,290 @@ static HF_O200K: LazyLock<Arc<Tokenizer>> = LazyLock::new(|| {
     Arc::new(Tokenizer::from_pretrained("Xenova/gpt-4o", None).unwrap())
 });
 
-// -- wordchipper --
-
-mod wordchipper_enc {
+mod english {
     use super::*;
 
-    #[divan::bench]
-    fn cl100k(bencher: Bencher) {
-        let text = bench_text();
-        let encoder = &WC_CL100K.encoder;
-        bencher
-            .counter(BytesCount::new(text.len()))
-            .bench(|| encoder.try_encode(black_box(&text)).unwrap());
+    mod wordchipper_enc {
+        use super::*;
+
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            let text = english_text();
+            let encoder = &WC_CL100K.encoder;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| encoder.try_encode(black_box(&text)).unwrap());
+        }
+
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            let text = english_text();
+            let encoder = &WC_O200K.encoder;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| encoder.try_encode(black_box(&text)).unwrap());
+        }
     }
 
-    #[divan::bench]
-    fn o200k(bencher: Bencher) {
-        let text = bench_text();
-        let encoder = &WC_O200K.encoder;
-        bencher
-            .counter(BytesCount::new(text.len()))
-            .bench(|| encoder.try_encode(black_box(&text)).unwrap());
+    mod wordchipper_dec {
+        use super::*;
+
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            let text = english_text();
+            let tokens = WC_CL100K.encoder.try_encode(&text).unwrap();
+            let decoder = &WC_CL100K.decoder;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| decoder.try_decode_to_string(black_box(&tokens)).unwrap());
+        }
+
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            let text = english_text();
+            let tokens = WC_O200K.encoder.try_encode(&text).unwrap();
+            let decoder = &WC_O200K.decoder;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| decoder.try_decode_to_string(black_box(&tokens)).unwrap());
+        }
+    }
+
+    mod tiktoken_enc {
+        use super::*;
+
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            let text = english_text();
+            let bpe = &TT_CL100K.bpe;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| bpe.encode_with_special_tokens(black_box(&text)));
+        }
+
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            let text = english_text();
+            let bpe = &TT_O200K.bpe;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| bpe.encode_with_special_tokens(black_box(&text)));
+        }
+    }
+
+    mod tiktoken_dec {
+        use super::*;
+
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            let text = english_text();
+            let bpe = &TT_CL100K.bpe;
+            let tokens = bpe.encode_with_special_tokens(&text);
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| bpe.decode(black_box(tokens.clone())).unwrap());
+        }
+
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            let text = english_text();
+            let bpe = &TT_O200K.bpe;
+            let tokens = bpe.encode_with_special_tokens(&text);
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| bpe.decode(black_box(tokens.clone())).unwrap());
+        }
+    }
+
+    mod tokenizers_enc {
+        use super::*;
+
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            let text = english_text();
+            let tok = &*HF_CL100K;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| tok.encode(black_box(text.as_str()), true).unwrap());
+        }
+
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            let text = english_text();
+            let tok = &*HF_O200K;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| tok.encode(black_box(text.as_str()), true).unwrap());
+        }
+    }
+
+    mod tokenizers_dec {
+        use super::*;
+
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            let text = english_text();
+            let tok = &*HF_CL100K;
+            let ids = tok.encode(text.as_str(), true).unwrap();
+            let token_ids = ids.get_ids();
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| tok.decode(black_box(token_ids), false).unwrap());
+        }
+
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            let text = english_text();
+            let tok = &*HF_O200K;
+            let ids = tok.encode(text.as_str(), true).unwrap();
+            let token_ids = ids.get_ids();
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| tok.decode(black_box(token_ids), false).unwrap());
+        }
     }
 }
 
-mod wordchipper_dec {
+mod diverse {
     use super::*;
 
-    #[divan::bench]
-    fn cl100k(bencher: Bencher) {
-        let text = bench_text();
-        let tokens = WC_CL100K.encoder.try_encode(&text).unwrap();
-        let decoder = &WC_CL100K.decoder;
-        bencher
-            .counter(BytesCount::new(text.len()))
-            .bench(|| decoder.try_decode_to_string(black_box(&tokens)).unwrap());
+    mod wordchipper_enc {
+        use super::*;
+
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            let text = diverse_text();
+            let encoder = &WC_CL100K.encoder;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| encoder.try_encode(black_box(&text)).unwrap());
+        }
+
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            let text = diverse_text();
+            let encoder = &WC_O200K.encoder;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| encoder.try_encode(black_box(&text)).unwrap());
+        }
     }
 
-    #[divan::bench]
-    fn o200k(bencher: Bencher) {
-        let text = bench_text();
-        let tokens = WC_O200K.encoder.try_encode(&text).unwrap();
-        let decoder = &WC_O200K.decoder;
-        bencher
-            .counter(BytesCount::new(text.len()))
-            .bench(|| decoder.try_decode_to_string(black_box(&tokens)).unwrap());
-    }
-}
+    mod wordchipper_dec {
+        use super::*;
 
-// -- tiktoken-rs --
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            let text = diverse_text();
+            let tokens = WC_CL100K.encoder.try_encode(&text).unwrap();
+            let decoder = &WC_CL100K.decoder;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| decoder.try_decode_to_string(black_box(&tokens)).unwrap());
+        }
 
-mod tiktoken_enc {
-    use super::*;
-
-    #[divan::bench]
-    fn cl100k(bencher: Bencher) {
-        let text = bench_text();
-        let bpe = &TT_CL100K.bpe;
-        bencher
-            .counter(BytesCount::new(text.len()))
-            .bench(|| bpe.encode_with_special_tokens(black_box(&text)));
-    }
-
-    #[divan::bench]
-    fn o200k(bencher: Bencher) {
-        let text = bench_text();
-        let bpe = &TT_O200K.bpe;
-        bencher
-            .counter(BytesCount::new(text.len()))
-            .bench(|| bpe.encode_with_special_tokens(black_box(&text)));
-    }
-}
-
-mod tiktoken_dec {
-    use super::*;
-
-    #[divan::bench]
-    fn cl100k(bencher: Bencher) {
-        let text = bench_text();
-        let bpe = &TT_CL100K.bpe;
-        let tokens = bpe.encode_with_special_tokens(&text);
-        bencher
-            .counter(BytesCount::new(text.len()))
-            .bench(|| bpe.decode(black_box(tokens.clone())).unwrap());
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            let text = diverse_text();
+            let tokens = WC_O200K.encoder.try_encode(&text).unwrap();
+            let decoder = &WC_O200K.decoder;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| decoder.try_decode_to_string(black_box(&tokens)).unwrap());
+        }
     }
 
-    #[divan::bench]
-    fn o200k(bencher: Bencher) {
-        let text = bench_text();
-        let bpe = &TT_O200K.bpe;
-        let tokens = bpe.encode_with_special_tokens(&text);
-        bencher
-            .counter(BytesCount::new(text.len()))
-            .bench(|| bpe.decode(black_box(tokens.clone())).unwrap());
-    }
-}
+    mod tiktoken_enc {
+        use super::*;
 
-// -- HuggingFace tokenizers --
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            let text = diverse_text();
+            let bpe = &TT_CL100K.bpe;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| bpe.encode_with_special_tokens(black_box(&text)));
+        }
 
-mod tokenizers_enc {
-    use super::*;
-
-    #[divan::bench]
-    fn cl100k(bencher: Bencher) {
-        let text = bench_text();
-        let tok = &*HF_CL100K;
-        bencher
-            .counter(BytesCount::new(text.len()))
-            .bench(|| tok.encode(black_box(text.as_str()), true).unwrap());
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            let text = diverse_text();
+            let bpe = &TT_O200K.bpe;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| bpe.encode_with_special_tokens(black_box(&text)));
+        }
     }
 
-    #[divan::bench]
-    fn o200k(bencher: Bencher) {
-        let text = bench_text();
-        let tok = &*HF_O200K;
-        bencher
-            .counter(BytesCount::new(text.len()))
-            .bench(|| tok.encode(black_box(text.as_str()), true).unwrap());
+    mod tiktoken_dec {
+        use super::*;
+
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            let text = diverse_text();
+            let bpe = &TT_CL100K.bpe;
+            let tokens = bpe.encode_with_special_tokens(&text);
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| bpe.decode(black_box(tokens.clone())).unwrap());
+        }
+
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            let text = diverse_text();
+            let bpe = &TT_O200K.bpe;
+            let tokens = bpe.encode_with_special_tokens(&text);
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| bpe.decode(black_box(tokens.clone())).unwrap());
+        }
     }
-}
 
-mod tokenizers_dec {
-    use super::*;
+    mod tokenizers_enc {
+        use super::*;
 
-    #[divan::bench]
-    fn cl100k(bencher: Bencher) {
-        let text = bench_text();
-        let tok = &*HF_CL100K;
-        let ids = tok.encode(text.as_str(), true).unwrap();
-        let token_ids = ids.get_ids();
-        bencher
-            .counter(BytesCount::new(text.len()))
-            .bench(|| tok.decode(black_box(token_ids), false).unwrap());
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            let text = diverse_text();
+            let tok = &*HF_CL100K;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| tok.encode(black_box(text.as_str()), true).unwrap());
+        }
+
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            let text = diverse_text();
+            let tok = &*HF_O200K;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| tok.encode(black_box(text.as_str()), true).unwrap());
+        }
     }
 
-    #[divan::bench]
-    fn o200k(bencher: Bencher) {
-        let text = bench_text();
-        let tok = &*HF_O200K;
-        let ids = tok.encode(text.as_str(), true).unwrap();
-        let token_ids = ids.get_ids();
-        bencher
-            .counter(BytesCount::new(text.len()))
-            .bench(|| tok.decode(black_box(token_ids), false).unwrap());
+    mod tokenizers_dec {
+        use super::*;
+
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            let text = diverse_text();
+            let tok = &*HF_CL100K;
+            let ids = tok.encode(text.as_str(), true).unwrap();
+            let token_ids = ids.get_ids();
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| tok.decode(black_box(token_ids), false).unwrap());
+        }
+
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            let text = diverse_text();
+            let tok = &*HF_O200K;
+            let ids = tok.encode(text.as_str(), true).unwrap();
+            let token_ids = ids.get_ids();
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| tok.decode(black_box(token_ids), false).unwrap());
+        }
     }
 }

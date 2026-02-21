@@ -21,8 +21,20 @@ fn main() {
 
 static CORPUS: &str = include_str!("data/corpus.txt");
 
-fn bench_text() -> String {
+fn diverse_text() -> String {
     CORPUS.repeat(10)
+}
+
+fn english_text() -> String {
+    let paragraph = "The quick brown fox jumps over the lazy dog. \
+        It's a beautiful day, and I'll be taking my 3 dogs for a walk. \
+        Don't forget: the temperature is 72 degrees! \
+        We've been waiting since 10:30am.\n\
+        \n\
+        In 2024, artificial intelligence continued to advance rapidly. \
+        Large language models like GPT-4 and Claude demonstrated remarkable capabilities. \
+        The researchers couldn't believe the results they'd achieved.\n";
+    paragraph.repeat(100)
 }
 
 fn build_regex_only_spanner(pattern: impl Into<wordchipper::support::regex::RegexPattern>) -> Arc<dyn TextSpanner> {
@@ -35,38 +47,82 @@ fn build_default_spanner(pattern: impl Into<wordchipper::support::regex::RegexPa
     TextSpannerBuilder::new(config).with_parallel(false).build()
 }
 
-#[divan::bench]
-fn cl100k_regex(bencher: Bencher) {
-    let text = bench_text();
-    let spanner = build_regex_only_spanner(OA_CL100K_BASE_PATTERN);
-    bencher
-        .counter(BytesCount::new(text.len()))
-        .bench(|| spanner.split_spans(black_box(&text)));
+mod english {
+    use super::*;
+
+    #[divan::bench]
+    fn cl100k_regex(bencher: Bencher) {
+        let text = english_text();
+        let spanner = build_regex_only_spanner(OA_CL100K_BASE_PATTERN);
+        bencher
+            .counter(BytesCount::new(text.len()))
+            .bench(|| spanner.split_spans(black_box(&text)));
+    }
+
+    #[divan::bench]
+    fn cl100k_default(bencher: Bencher) {
+        let text = english_text();
+        let spanner = build_default_spanner(OA_CL100K_BASE_PATTERN);
+        bencher
+            .counter(BytesCount::new(text.len()))
+            .bench(|| spanner.split_spans(black_box(&text)));
+    }
+
+    #[divan::bench]
+    fn o200k_regex(bencher: Bencher) {
+        let text = english_text();
+        let spanner = build_regex_only_spanner(OA_O200K_BASE_PATTERN);
+        bencher
+            .counter(BytesCount::new(text.len()))
+            .bench(|| spanner.split_spans(black_box(&text)));
+    }
+
+    #[divan::bench]
+    fn o200k_default(bencher: Bencher) {
+        let text = english_text();
+        let spanner = build_default_spanner(OA_O200K_BASE_PATTERN);
+        bencher
+            .counter(BytesCount::new(text.len()))
+            .bench(|| spanner.split_spans(black_box(&text)));
+    }
 }
 
-#[divan::bench]
-fn cl100k_default(bencher: Bencher) {
-    let text = bench_text();
-    let spanner = build_default_spanner(OA_CL100K_BASE_PATTERN);
-    bencher
-        .counter(BytesCount::new(text.len()))
-        .bench(|| spanner.split_spans(black_box(&text)));
-}
+mod diverse {
+    use super::*;
 
-#[divan::bench]
-fn o200k_regex(bencher: Bencher) {
-    let text = bench_text();
-    let spanner = build_regex_only_spanner(OA_O200K_BASE_PATTERN);
-    bencher
-        .counter(BytesCount::new(text.len()))
-        .bench(|| spanner.split_spans(black_box(&text)));
-}
+    #[divan::bench]
+    fn cl100k_regex(bencher: Bencher) {
+        let text = diverse_text();
+        let spanner = build_regex_only_spanner(OA_CL100K_BASE_PATTERN);
+        bencher
+            .counter(BytesCount::new(text.len()))
+            .bench(|| spanner.split_spans(black_box(&text)));
+    }
 
-#[divan::bench]
-fn o200k_default(bencher: Bencher) {
-    let text = bench_text();
-    let spanner = build_default_spanner(OA_O200K_BASE_PATTERN);
-    bencher
-        .counter(BytesCount::new(text.len()))
-        .bench(|| spanner.split_spans(black_box(&text)));
+    #[divan::bench]
+    fn cl100k_default(bencher: Bencher) {
+        let text = diverse_text();
+        let spanner = build_default_spanner(OA_CL100K_BASE_PATTERN);
+        bencher
+            .counter(BytesCount::new(text.len()))
+            .bench(|| spanner.split_spans(black_box(&text)));
+    }
+
+    #[divan::bench]
+    fn o200k_regex(bencher: Bencher) {
+        let text = diverse_text();
+        let spanner = build_regex_only_spanner(OA_O200K_BASE_PATTERN);
+        bencher
+            .counter(BytesCount::new(text.len()))
+            .bench(|| spanner.split_spans(black_box(&text)));
+    }
+
+    #[divan::bench]
+    fn o200k_default(bencher: Bencher) {
+        let text = diverse_text();
+        let spanner = build_default_spanner(OA_O200K_BASE_PATTERN);
+        bencher
+            .counter(BytesCount::new(text.len()))
+            .bench(|| spanner.split_spans(black_box(&text)));
+    }
 }
