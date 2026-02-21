@@ -1,0 +1,134 @@
+The quick brown fox jumps over the lazy dog. It's a beautiful day, and I'll be taking my 3 dogs for a walk. Don't forget: the temperature is 72 degrees! We've been waiting since 10:30am.
+
+In 2024, artificial intelligence continued to advance rapidly. Large language models like GPT-4 and Claude demonstrated remarkable capabilities. The researchers couldn't believe the results they'd achieved. "This is unprecedented," said Dr. Smith-Jones, who had been working on the project for 15+ years.
+
+Tokenization is the process of breaking text into smaller units called tokens. For byte-pair encoding (BPE), the algorithm starts with individual bytes and iteratively merges the most frequent adjacent pairs. The vocabulary size determines the granularity: larger vocabularies produce fewer tokens per text but require more memory.
+
+Consider the following edge cases for tokenizers:
+  - Multiple   spaces   between   words
+  - Tabs		between		fields
+  - Mixed	 whitespace	  patterns
+  - ALLCAPS SENTENCES WITH NO LOWERCASE
+  - camelCaseIdentifiers and snake_case_names
+  - URLs like https://example.com/path?query=value&other=123#fragment
+  - Email addresses: user@domain.co.uk, first.last+tag@subdomain.example.org
+  - File paths: /usr/local/bin/program, C:\Users\Documents\file.txt
+  - Numbers: 3.14159, -273.15, 1,000,000, 0xFF, 0b1010, 1e-10, 42nd
+  - Currency: $19.99, EUR 1,234.56, JPY 150
+  - Dates: 2024-01-15, 01/15/2024, January 15th 2024
+  - Times: 14:30:00Z, 2:30 PM EST, T14:30:00+05:30
+
+Mathematical notation and formulas appear frequently in technical text:
+f(x) = ax^2 + bx + c, where a != 0
+The quadratic formula gives x = (-b +/- sqrt(b^2 - 4ac)) / (2a)
+Integration: int_0^inf e^(-x^2) dx = sqrt(pi)/2
+Set theory: A = {x in R : x > 0}, |A union B| <= |A| + |B|
+
+def merge_tokens(pairs: list[tuple[int, int]], vocab: dict) -> dict:
+    """Merge the most frequent byte pair in the vocabulary."""
+    most_frequent = max(pairs, key=pairs.get)
+    new_token = len(vocab)
+    vocab[most_frequent] = new_token
+    # Update all sequences containing this pair
+    for seq_id, sequence in enumerate(sequences):
+        i = 0
+        while i < len(sequence) - 1:
+            if (sequence[i], sequence[i + 1]) == most_frequent:
+                sequence[i] = new_token
+                del sequence[i + 1]
+            else:
+                i += 1
+    return vocab
+
+fn encode_span(text: &str, vocab: &HashMap<Vec<u8>, u32>) -> Vec<u32> {
+    let mut tokens: Vec<u32> = text.bytes().map(|b| b as u32).collect();
+    loop {
+        let best_pair = tokens.windows(2)
+            .filter_map(|w| vocab.get(&[w[0] as u8, w[1] as u8]).map(|&t| (w[0], w[1], t)))
+            .min_by_key(|&(a, b, _)| vocab[&[a as u8, b as u8]]);
+        match best_pair {
+            Some((a, b, merged)) => { /* merge */ }
+            None => break,
+        }
+    }
+    tokens
+}
+
+{"model": "gpt-4o", "messages": [{"role": "system", "content": "You are a helpful assistant."}, {"role": "user", "content": "What is the capital of France?"}], "temperature": 0.7, "max_tokens": 150, "top_p": 1.0, "frequency_penalty": 0.0, "presence_penalty": 0.0}
+
+<html><head><title>Example Page</title></head><body><div class="container"><h1>Hello, World!</h1><p>This is a <strong>test</strong> of HTML tokenization with &amp; entities &lt;tags&gt; and "quotes".</p><ul><li>Item 1</li><li>Item 2</li><li>Item 3</li></ul></div></body></html>
+
+Contraction stress test: I'm, you're, he's, she's, it's, we're, they're, I've, you've, we've, they've, I'll, you'll, he'll, she'll, we'll, they'll, I'd, you'd, he'd, she'd, we'd, they'd, isn't, aren't, wasn't, weren't, hasn't, haven't, hadn't, doesn't, don't, didn't, won't, wouldn't, shan't, shouldn't, can't, couldn't, mustn't, needn't, let's, that's, who's, what's, where's, when's, why's, how's, there's, here's, it'd, there'd, who'd, what'd.
+
+Repeated patterns: abcabcabcabc, 123123123123, aaabbbccc, xyzxyzxyzxyz
+Alternating: aBcDeFgHiJkLmNoPqRsTuVwXyZ, 1a2b3c4d5e6f7g8h9i0j
+
+Unicode Latin extended:
+French: Les Etats-Unis d'Amerique sont un pays d'Amerique du Nord. La Revolution francaise a commence en 1789. C'est la vie! Ou est la bibliotheque? Je ne sais pas. L'enfant mange une pomme.
+German: Die Osterreichische Nationalbibliothek befindet sich in Wien. Konnen Sie mir bitte helfen? Das ist sehr schon! Ubrigens, der Zurich-See ist wunderschon. Grusse aus Munchen!
+Spanish: El nino jugo en el jardin manana. La senorita pidio un cafe con leche. Feliz cumpleanos! Que tal? Como estas? Muy bien, gracias.
+Portuguese: A informacao esta disponivel em portugues. Sao Paulo e a maior cidade do Brasil. Obrigado pela atencao!
+
+CJK text samples:
+Chinese (Simplified): 人工智能是计算机科学的一个分支，它企图了解智能的实质，并生产出一种新的能以人类智能相似的方式做出反应的智能机器。自然语言处理是人工智能的重要研究方向之一。分词是中文自然语言处理的基础任务。
+Chinese (Traditional): 機器學習是人工智慧的一個分支。透過演算法和統計模型，電腦系統可以從資料中學習並做出預測或決策。深度學習是機器學習的一個子領域。
+Japanese: 自然言語処理（しぜんげんごしょり）は、人間が日常的に使っている言語をコンピュータに処理させる技術です。形態素解析、構文解析、意味解析などの基本技術があります。東京タワーは日本の有名な観光地です。
+Korean: 인공지능 기술이 빠르게 발전하고 있습니다. 자연어 처리는 컴퓨터가 인간의 언어를 이해하고 생성하는 기술입니다. 한국어 형태소 분석은 중요한 전처리 과정입니다.
+
+Arabic and Hebrew:
+Arabic: الذكاء الاصطناعي هو فرع من علوم الكمبيوتر يهدف إلى إنشاء أنظمة قادرة على أداء مهام تتطلب الذكاء البشري
+Hebrew: בינה מלאכותית היא ענף של מדעי המחשב העוסק ביצירת מערכות חכמות
+
+Thai: ปัญญาประดิษฐ์เป็นสาขาหนึ่งของวิทยาการคอมพิวเตอร์ที่มุ่งเน้นการสร้างระบบที่สามารถเรียนรู้และตัดสินใจได้
+
+Emoji sequences: Hello 👋 World 🌍! The 🚀 launch was 💯 amazing 🎉🎊! I ❤️ programming 💻. Weather: ☀️🌤️⛅🌥️☁️🌧️⛈️🌩️. Flags: 🇺🇸🇬🇧🇫🇷🇩🇪🇯🇵🇰🇷🇨🇳. Family: 👨‍👩‍👧‍👦 Office: 👩‍💻👨‍💻 Food: 🍕🍔🌮🍣🍜
+
+Special characters and symbols:
+Arrows: -> => <- <= <-> <=> >> << |> <|
+Brackets: () [] {} <> (()) [[]] {{}}
+Operators: + - * / % ** // += -= *= /= == != >= <= && || !
+Punctuation: ... --- *** ___ ### @@@ $$$ %%% ^^^ &&& |||
+Typography: "curly quotes" 'single quotes' (parenthetical) [bracketed] {braced}
+Math symbols: pi, theta, sigma, delta, epsilon, alpha, beta, gamma
+
+Line ending variations:
+Unix line ending
+Windows line ending
+Mixed endings in one block
+	Tab-indented line
+    Space-indented line (4 spaces)
+        Double-indented (8 spaces)
+
+Empty lines above and below:
+
+
+  Whitespace-only line above
+	Tab-only line above
+
+Long unbroken strings: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Repeated word: the the the the the the the the the the the the the the the the the the the the
+Mixed numbers and text: I have 42 apples, 3.14 pies, and $1,000.00 in my account (ref #A-12345-B).
+
+Base64-like: SGVsbG8gV29ybGQhIFRoaXMgaXMgYSB0ZXN0IG9mIGJhc2U2NCBlbmNvZGluZy4=
+Hex-like: 0x48656c6c6f20576f726c6421 0xDEADBEEF 0xCAFEBABE ff00ff 7f7f7f
+UUID-like: 550e8400-e29b-41d4-a716-446655440000, a1b2c3d4-e5f6-7890-abcd-ef1234567890
+
+Version strings: v1.0.0, v2.3.4-beta.1, v10.20.30+build.456, >=1.0.0 <2.0.0, ~=3.4, ^0.1.0
+
+Markdown formatting: **bold**, *italic*, ~~strikethrough~~, `code`, [link](url), ![image](src), > blockquote, - list item, 1. numbered item, ### heading, --- separator, ```code block```, | table | row |
+
+Log-like entries:
+2024-01-15T14:30:00.123Z INFO  [main] Application started successfully
+2024-01-15T14:30:01.456Z DEBUG [worker-3] Processing batch 42/100 (items: 1024)
+2024-01-15T14:30:02.789Z WARN  [db-pool] Connection pool utilization at 85% (17/20)
+2024-01-15T14:30:03.012Z ERROR [api-handler] Request failed: status=503, latency=2.34s, path=/api/v2/tokens
+
+Stack trace format:
+thread 'main' panicked at 'index out of bounds: the len is 10 but the index is 15', src/main.rs:42:5
+   0: std::panicking::begin_panic
+   1: wordchipper::encoder::encode_span
+             at ./src/encoder.rs:156:9
+   2: wordchipper::tokenizer::Tokenizer::try_encode
+             at ./src/tokenizer.rs:78:9
+   3: main
+             at ./examples/bench.rs:23:5
