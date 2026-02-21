@@ -1,0 +1,110 @@
+The quick brown fox jumps over the lazy dog. It's a beautiful day, and I'll be taking my 3 dogs for a walk. Don't forget: the temperature is 72 degrees! We've been waiting since 10:30am.
+
+In 2024, artificial intelligence continued to advance rapidly. Large language models like GPT-4 and Claude demonstrated remarkable capabilities. The researchers couldn't believe the results they'd achieved. "This is unprecedented," said Dr. Smith-Jones, who had been working on the project for 15+ years.
+
+Tokenization is the process of breaking text into smaller units called tokens. For byte-pair encoding (BPE), the algorithm starts with individual bytes and iteratively merges the most frequent adjacent pairs. The vocabulary size determines the granularity: larger vocabularies produce fewer tokens per text but require more memory.
+
+Consider the following edge cases for tokenizers:
+  - Multiple   spaces   between   words
+  - Tabs		between		fields
+  - ALLCAPS SENTENCES WITH NO LOWERCASE
+  - camelCaseIdentifiers and snake_case_names
+  - Numbers: 3.14159, -273.15, 1,000,000, 0xFF, 0b1010, 1e-10, 42nd
+  - Currency: $19.99, EUR 1,234.56, JPY 150
+  - Dates: 2024-01-15, 01/15/2024, January 15th 2024
+  - Times: 14:30:00Z, 2:30 PM EST
+
+Mathematical notation and formulas appear frequently in technical text:
+f(x) = ax^2 + bx + c, where a != 0
+The quadratic formula gives x = (-b +/- sqrt(b^2 - 4ac)) / (2a)
+Integration: int_0^inf e^(-x^2) dx = sqrt(pi)/2
+
+Contraction stress test: I'm, you're, he's, she's, it's, we're, they're, I've, you've, we've, they've, I'll, you'll, he'll, she'll, we'll, they'll, I'd, you'd, he'd, she'd, we'd, they'd, isn't, aren't, wasn't, weren't, hasn't, haven't, hadn't, doesn't, don't, didn't, won't, wouldn't, shan't, shouldn't, can't, couldn't, mustn't, needn't, let's, that's, who's, what's, where's, when's, why's, how's, there's, here's.
+
+def merge_tokens(pairs: list[tuple[int, int]], vocab: dict) -> dict:
+    """Merge the most frequent byte pair in the vocabulary."""
+    most_frequent = max(pairs, key=pairs.get)
+    new_token = len(vocab)
+    vocab[most_frequent] = new_token
+    # Update all sequences containing this pair
+    for seq_id, sequence in enumerate(sequences):
+        i = 0
+        while i < len(sequence) - 1:
+            if (sequence[i], sequence[i + 1]) == most_frequent:
+                sequence[i] = new_token
+                del sequence[i + 1]
+            else:
+                i += 1
+    return vocab
+
+fn encode_span(text: &str, vocab: &HashMap<Vec<u8>, u32>) -> Vec<u32> {
+    let mut tokens: Vec<u32> = text.bytes().map(|b| b as u32).collect();
+    loop {
+        let best_pair = tokens.windows(2)
+            .filter_map(|w| vocab.get(&[w[0] as u8, w[1] as u8]).map(|&t| (w[0], w[1], t)))
+            .min_by_key(|&(a, b, _)| vocab[&[a as u8, b as u8]]);
+        match best_pair {
+            Some((a, b, merged)) => { /* merge */ }
+            None => break,
+        }
+    }
+    tokens
+}
+
+{"model": "gpt-4o", "messages": [{"role": "system", "content": "You are a helpful assistant."}, {"role": "user", "content": "What is the capital of France?"}], "temperature": 0.7, "max_tokens": 150, "top_p": 1.0, "frequency_penalty": 0.0, "presence_penalty": 0.0}
+
+Special characters and symbols:
+Arrows: -> => <- <= <-> <=> >> << |> <|
+Brackets: () [] {} <> (()) [[]] {{}}
+Operators: + - * / % ** // += -= *= /= == != >= <= && || !
+Punctuation: ... --- *** ___ ### @@@ $$$ %%% ^^^ &&& |||
+Typography: "curly quotes" 'single quotes' (parenthetical) [bracketed] {braced}
+
+Line ending variations:
+Unix line ending
+Windows line ending
+Mixed endings in one block
+	Tab-indented line
+    Space-indented line (4 spaces)
+        Double-indented (8 spaces)
+
+Repeated patterns: abcabcabcabc, 123123123123, aaabbbccc, xyzxyzxyzxyz
+Alternating: aBcDeFgHiJkLmNoPqRsTuVwXyZ, 1a2b3c4d5e6f7g8h9i0j
+
+Long unbroken strings: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Repeated word: the the the the the the the the the the the the the the the the the the the the
+Mixed numbers and text: I have 42 apples, 3.14 pies, and $1,000.00 in my account (ref #A-12345-B).
+
+Base64-like: SGVsbG8gV29ybGQhIFRoaXMgaXMgYSB0ZXN0IG9mIGJhc2U2NCBlbmNvZGluZy4=
+Hex-like: 0x48656c6c6f20576f726c6421 0xDEADBEEF 0xCAFEBABE ff00ff 7f7f7f
+UUID-like: 550e8400-e29b-41d4-a716-446655440000, a1b2c3d4-e5f6-7890-abcd-ef1234567890
+
+Version strings: v1.0.0, v2.3.4-beta.1, v10.20.30+build.456, >=1.0.0 <2.0.0, ~=3.4, ^0.1.0
+
+Markdown formatting: **bold**, *italic*, ~~strikethrough~~, `code`, [link](url), ![image](src), > blockquote, - list item, 1. numbered item, ### heading, --- separator
+
+Log-like entries:
+2024-01-15T14:30:00.123Z INFO  [main] Application started successfully
+2024-01-15T14:30:01.456Z DEBUG [worker-3] Processing batch 42/100 (items: 1024)
+2024-01-15T14:30:02.789Z WARN  [db-pool] Connection pool utilization at 85% (17/20)
+2024-01-15T14:30:03.012Z ERROR [api-handler] Request failed: status=503, latency=2.34s, path=/api/v2/tokens
+
+Stack trace format:
+thread 'main' panicked at 'index out of bounds: the len is 10 but the index is 15', src/main.rs:42:5
+   0: std::panicking::begin_panic
+   1: wordchipper::encoder::encode_span
+             at ./src/encoder.rs:156:9
+   2: wordchipper::tokenizer::Tokenizer::try_encode
+             at ./src/tokenizer.rs:78:9
+   3: main
+             at ./examples/bench.rs:23:5
+
+The Internet of Things represents a fundamental shift in how we interact with technology. Smart devices in our homes, offices, and cities collect vast amounts of data, enabling new applications in healthcare, transportation, and energy management. However, these benefits come with significant privacy and security challenges that must be addressed.
+
+Machine learning algorithms have transformed the field of natural language processing. From simple bag-of-words models to sophisticated transformer architectures, the ability of computers to understand and generate human language has improved dramatically. Applications range from machine translation and sentiment analysis to question answering and text summarization.
+
+The development of quantum computing poses both opportunities and threats to modern cryptography. While quantum computers could break many existing encryption schemes, they also enable new forms of secure communication through quantum key distribution. Researchers are actively developing post-quantum cryptographic algorithms to ensure data security in the quantum era.
+
+Cloud computing has revolutionized how businesses deploy and scale their applications. Container orchestration platforms like Kubernetes manage complex distributed systems, while serverless architectures allow developers to focus on business logic without worrying about infrastructure. The shift from monolithic to microservices architectures has enabled greater flexibility and faster deployment cycles.
+
+Open source software has become the backbone of modern technology infrastructure. Projects like Linux, PostgreSQL, and TensorFlow have demonstrated that collaborative development can produce software that rivals or exceeds proprietary alternatives. The open source model has also influenced how organizations approach knowledge sharing and community building.
