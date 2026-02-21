@@ -20,6 +20,10 @@ fn main() {
 
 static CORPUS: &str = include_str!("data/corpus.txt");
 
+fn bench_text() -> String {
+    CORPUS.repeat(10)
+}
+
 struct WcFixture {
     encoder: Arc<dyn TokenEncoder<u32>>,
     decoder: Arc<dyn TokenDecoder<u32>>,
@@ -68,7 +72,7 @@ mod wordchipper_enc {
 
     #[divan::bench]
     fn cl100k(bencher: Bencher) {
-        let text = CORPUS.to_string();
+        let text = bench_text();
         let encoder = &WC_CL100K.encoder;
         bencher
             .counter(BytesCount::new(text.len()))
@@ -77,7 +81,7 @@ mod wordchipper_enc {
 
     #[divan::bench]
     fn o200k(bencher: Bencher) {
-        let text = CORPUS.to_string();
+        let text = bench_text();
         let encoder = &WC_O200K.encoder;
         bencher
             .counter(BytesCount::new(text.len()))
@@ -90,7 +94,7 @@ mod wordchipper_dec {
 
     #[divan::bench]
     fn cl100k(bencher: Bencher) {
-        let text = CORPUS.to_string();
+        let text = bench_text();
         let tokens = WC_CL100K.encoder.try_encode(&text).unwrap();
         let decoder = &WC_CL100K.decoder;
         bencher
@@ -100,7 +104,7 @@ mod wordchipper_dec {
 
     #[divan::bench]
     fn o200k(bencher: Bencher) {
-        let text = CORPUS.to_string();
+        let text = bench_text();
         let tokens = WC_O200K.encoder.try_encode(&text).unwrap();
         let decoder = &WC_O200K.decoder;
         bencher
@@ -116,7 +120,7 @@ mod tiktoken_enc {
 
     #[divan::bench]
     fn cl100k(bencher: Bencher) {
-        let text = CORPUS.to_string();
+        let text = bench_text();
         let bpe = &TT_CL100K.bpe;
         bencher
             .counter(BytesCount::new(text.len()))
@@ -125,7 +129,7 @@ mod tiktoken_enc {
 
     #[divan::bench]
     fn o200k(bencher: Bencher) {
-        let text = CORPUS.to_string();
+        let text = bench_text();
         let bpe = &TT_O200K.bpe;
         bencher
             .counter(BytesCount::new(text.len()))
@@ -138,7 +142,7 @@ mod tiktoken_dec {
 
     #[divan::bench]
     fn cl100k(bencher: Bencher) {
-        let text = CORPUS.to_string();
+        let text = bench_text();
         let bpe = &TT_CL100K.bpe;
         let tokens = bpe.encode_with_special_tokens(&text);
         bencher
@@ -148,7 +152,7 @@ mod tiktoken_dec {
 
     #[divan::bench]
     fn o200k(bencher: Bencher) {
-        let text = CORPUS.to_string();
+        let text = bench_text();
         let bpe = &TT_O200K.bpe;
         let tokens = bpe.encode_with_special_tokens(&text);
         bencher
@@ -164,7 +168,7 @@ mod tokenizers_enc {
 
     #[divan::bench]
     fn cl100k(bencher: Bencher) {
-        let text = CORPUS.to_string();
+        let text = bench_text();
         let tok = &*HF_CL100K;
         bencher
             .counter(BytesCount::new(text.len()))
@@ -173,7 +177,7 @@ mod tokenizers_enc {
 
     #[divan::bench]
     fn o200k(bencher: Bencher) {
-        let text = CORPUS.to_string();
+        let text = bench_text();
         let tok = &*HF_O200K;
         bencher
             .counter(BytesCount::new(text.len()))
@@ -186,7 +190,7 @@ mod tokenizers_dec {
 
     #[divan::bench]
     fn cl100k(bencher: Bencher) {
-        let text = CORPUS.to_string();
+        let text = bench_text();
         let tok = &*HF_CL100K;
         let ids = tok.encode(text.as_str(), true).unwrap();
         let token_ids = ids.get_ids();
@@ -197,7 +201,7 @@ mod tokenizers_dec {
 
     #[divan::bench]
     fn o200k(bencher: Bencher) {
-        let text = CORPUS.to_string();
+        let text = bench_text();
         let tok = &*HF_O200K;
         let ids = tok.encode(text.as_str(), true).unwrap();
         let token_ids = ids.get_ids();

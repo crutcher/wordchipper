@@ -21,6 +21,10 @@ fn main() {
 
 static CORPUS: &str = include_str!("data/corpus.txt");
 
+fn bench_text() -> String {
+    CORPUS.repeat(10)
+}
+
 fn build_regex_only_spanner(pattern: impl Into<wordchipper::support::regex::RegexPattern>) -> Arc<dyn TextSpanner> {
     let lexer: Arc<dyn SpanLexer> = Arc::new(RegexWrapper::from(pattern.into()));
     Arc::new(LexerTextSpanner::new(lexer, None))
@@ -33,7 +37,7 @@ fn build_default_spanner(pattern: impl Into<wordchipper::support::regex::RegexPa
 
 #[divan::bench]
 fn cl100k_regex(bencher: Bencher) {
-    let text = CORPUS.to_string();
+    let text = bench_text();
     let spanner = build_regex_only_spanner(OA_CL100K_BASE_PATTERN);
     bencher
         .counter(BytesCount::new(text.len()))
@@ -42,7 +46,7 @@ fn cl100k_regex(bencher: Bencher) {
 
 #[divan::bench]
 fn cl100k_default(bencher: Bencher) {
-    let text = CORPUS.to_string();
+    let text = bench_text();
     let spanner = build_default_spanner(OA_CL100K_BASE_PATTERN);
     bencher
         .counter(BytesCount::new(text.len()))
@@ -51,7 +55,7 @@ fn cl100k_default(bencher: Bencher) {
 
 #[divan::bench]
 fn o200k_regex(bencher: Bencher) {
-    let text = CORPUS.to_string();
+    let text = bench_text();
     let spanner = build_regex_only_spanner(OA_O200K_BASE_PATTERN);
     bencher
         .counter(BytesCount::new(text.len()))
@@ -60,7 +64,7 @@ fn o200k_regex(bencher: Bencher) {
 
 #[divan::bench]
 fn o200k_default(bencher: Bencher) {
-    let text = CORPUS.to_string();
+    let text = bench_text();
     let spanner = build_default_spanner(OA_O200K_BASE_PATTERN);
     bencher
         .counter(BytesCount::new(text.len()))
