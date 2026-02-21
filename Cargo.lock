@@ -3478,6 +3478,7 @@ dependencies = [
  "num-traits",
  "rayon",
  "regex",
+ "serde_json",
  "serial_test",
  "strum",
  "strum_macros",

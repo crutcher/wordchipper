@@ -24,6 +24,7 @@ workspace = true
 default = [
     "ahash",
     "client",
+    "datagym",
     "logos",
     "rayon",
 ]
@@ -50,6 +51,16 @@ training = [
     "std",
 ]
 
+datagym = [
+    "json",
+    "download",
+    "std",
+]
+
+json = [
+    "dep:serde_json",
+    "std",
+]
 
 ## The "std" feature enables the use of the `std` library;
 ## and the "`no_std`" feature enables deps needed when "std" is not enabled.
@@ -137,8 +148,12 @@ strum_macros = { workspace = true, optional = true }
 # "no_std" feature deps:
 hashbrown = { workspace = true, optional = true }
 
+# hash variants.
 ahash = { workspace = true, optional = true }
 foldhash = { workspace = true, optional = true }
+
+# "json" deps:
+serde_json = { workspace = true, optional = true }
 
 # "download" feature deps:
 wordchipper-disk-cache = { version = "0.7.3", path = "../wordchipper-disk-cache", optional = true }

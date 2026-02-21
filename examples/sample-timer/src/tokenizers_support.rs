@@ -1,9 +1,11 @@
 use std::sync::Arc;
 
 use tokenizers::{Encoding, tokenizer::Tokenizer};
-use wordchipper::pretrained::openai::OATokenizer;
 
-use crate::engines::{BoxError, EncDecEngine};
+use crate::{
+    ModelSelector,
+    engines::{BoxError, EncDecEngine},
+};
 
 /// [`EncDecEngine`] implementation for [`Tokenizer`].
 pub struct TokenizersEngine {
@@ -69,14 +71,16 @@ impl EncDecEngine<u32> for TokenizersEngine {
     }
 }
 
-pub fn load_tokenizers_tok(model: OATokenizer) -> Result<(String, Arc<Tokenizer>), BoxError> {
-    use OATokenizer::*;
+pub fn load_tokenizers_tok(model: ModelSelector) -> Result<(String, Arc<Tokenizer>), BoxError> {
+    use ModelSelector::*;
+
     let source = match model {
-        R50kBase => "Xenova/gpt-3",
-        P50kBase | P50kEdit => "Xenova/text-davinci-002",
-        Cl100kBase => "Xenova/text-embedding-ada-002",
-        O200kBase | O200kHarmony => "Xenova/gpt-4o",
-        _ => return Err(format!("unsupported model: {:?}", model).into()),
+        OpenaiGpt2 => "Xenova/gpt2",
+        OpenaiR50kBase => "Xenova/gpt-3",
+        OpenaiP50kBase | OpenaiP50kEdit => "Xenova/text-davinci-002",
+        OpenaiCl100kBase => "Xenova/text-embedding-ada-002",
+        OpenaiO200kBase | OpenaiO200kHarmony => "Xenova/gpt-4o",
+        // _ => return Err(format!("unsupported model: {:?}", model).into()),
     };
 
     let tok = Tokenizer::from_pretrained(source, None).map_err(|e| -> BoxError {
