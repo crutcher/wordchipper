@@ -7,7 +7,7 @@ use crate::{
     alloc::{boxed::Box, sync::Arc},
     encoders::{
         TokenEncoder,
-        span_encoders::{IncrementalSweepSpanEncoder, TokenSpanEncoder},
+        span_encoders::{MergeHeapSpanEncoder, TokenSpanEncoder},
     },
     spanning::TextSpannerBuilder,
     vocab::UnifiedTokenVocab,
@@ -108,7 +108,7 @@ impl<T: TokenType> TokenEncoderBuilder<T> {
         let mut enc: Arc<dyn TokenEncoder<T>> = Arc::new(TokenSpanEncoder::<T>::new(
             spanner,
             self.vocab().clone(),
-            Arc::new(|| Box::new(IncrementalSweepSpanEncoder::<T>::default())),
+            Arc::new(|| Box::new(MergeHeapSpanEncoder::<T>::default())),
         ));
 
         #[cfg(feature = "rayon")]

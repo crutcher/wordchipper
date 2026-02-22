@@ -1,22 +1,37 @@
 //! # Merge Heap based [`SpanEncoder`].
 //!
-//! Maintains a heap of the best available merges from the pair vocab,
-//! iterates until no more merges remain.
+//! Uses a min-heap with lazy deletion and a doubly-linked list for O(m log n)
+//! BPE merging, where m is the number of merges and n is the initial token count.
+
+use core::cmp::Reverse;
 
 use crate::{
     TokenType,
-    alloc::vec::Vec,
+    alloc::{collections::BinaryHeap, vec::Vec},
     encoders::span_encoders::span_encoder::SpanEncoder,
     vocab::UnifiedTokenVocab,
 };
 
-/// A [`SpanEncoder`] using a merge heap algorithm.
+/// A heap entry: (merge_rank, position, generation_at_push_time).
 ///
-/// This encoder builds and maintains a best-merge heap of potential merges,
-/// to avoid secondary lookups in the pair vocab.
+/// Wrapped in [`Reverse`] so the [`BinaryHeap`] acts as a min-heap by rank,
+/// with ties broken by position (leftmost first).
+type HeapEntry<T> = Reverse<(T, usize, u32)>;
+
+/// A [`SpanEncoder`] using a true min-heap algorithm.
+///
+/// Uses a [`BinaryHeap`] to find the lowest-rank merge in O(log n) and a
+/// doubly-linked list (via index arrays) for O(1) token removal. Stale heap
+/// entries are detected via per-position generation counters.
+///
+/// Working buffers are reused across calls to avoid repeated allocation.
 #[derive(Default, Debug, Clone)]
 pub struct MergeHeapSpanEncoder<T: TokenType> {
-    pair_ranks: Vec<T>,
+    work_tokens: Vec<T>,
+    next: Vec<usize>,
+    prev: Vec<usize>,
+    generation: Vec<u32>,
+    heap: BinaryHeap<HeapEntry<T>>,
 }
 
 impl<T: TokenType> SpanEncoder<T> for MergeHeapSpanEncoder<T> {
@@ -26,63 +41,100 @@ impl<T: TokenType> SpanEncoder<T> for MergeHeapSpanEncoder<T> {
         span: &[u8],
         tokens: &mut Vec<T>,
     ) {
-        // We reuse the output buffer as our working memory.
-        // - `start` is the first index of the working memory buffer.
-        let start = tokens.len();
+        // 1. Build initial byte-level tokens into our working buffer.
+        self.work_tokens.clear();
+        vocab.byte_vocab().append_tokens(span, &mut self.work_tokens);
 
-        // Define CURRENT as `tokens[start..]`.
-        // - CURRENT[i] := tokens[start + i]
-        vocab.byte_vocab().append_tokens(span, tokens);
+        let n = self.work_tokens.len();
+        if n <= 1 {
+            tokens.extend_from_slice(&self.work_tokens);
+            return;
+        }
 
-        let pr_for_tokens = {
-            |tok: &[T], a: usize, b: usize| {
-                vocab
-                    .lookup_pair(&(tok[start + a], tok[start + b]))
-                    .unwrap_or(T::max_value())
+        // 2. Initialize linked-list arrays and generation counters.
+        // We use n as the sentinel for "no neighbor".
+        let sentinel = n;
+
+        self.next.clear();
+        self.next.extend(1..=n); // next[i] = i+1; next[n-1] = n (sentinel)
+
+        self.prev.clear();
+        self.prev.reserve(n);
+        if n > 0 {
+            self.prev.push(sentinel); // prev[0] = sentinel
+        }
+        self.prev.extend(0..n - 1); // prev[i] = i-1 for i > 0
+
+        self.generation.clear();
+        self.generation.resize(n, 0);
+
+        // 3. Seed the heap with all adjacent pairs.
+        self.heap.clear();
+        let mut pos = 0;
+        while self.next[pos] != sentinel {
+            let j = self.next[pos];
+            if let Some(rank) = vocab.lookup_pair(&(self.work_tokens[pos], self.work_tokens[j])) {
+                self.heap.push(Reverse((rank, pos, 0)));
             }
-        };
+            pos = j;
+        }
 
-        // We keep the following property:
-        // - pair_ranks[i] = pairs.get(&(CURRENT[i], CURRENT[i + 1]))
-        // - pair_ranks.len() = CURRENT.len() - 1 = end - start - 1
-        self.pair_ranks.clear();
-        self.pair_ranks
-            .extend((0..(tokens.len() - start - 1)).map(|i| pr_for_tokens(tokens, i, i + 1)));
+        // 4. Merge loop.
+        while let Some(Reverse((rank, i, entry_gen))) = self.heap.pop() {
+            // Skip stale entries.
+            if entry_gen != self.generation[i] {
+                continue;
+            }
+            let j = self.next[i];
+            if j == sentinel {
+                continue;
+            }
 
-        while let Some((new_token, i)) = self
-            .pair_ranks
-            .iter()
-            .enumerate()
-            .filter_map(|(i, &new_token)| {
-                if new_token != T::max_value() {
-                    Some((new_token, i))
-                } else {
-                    None
+            // Merge: replace token at i with the merged token, remove j.
+            self.work_tokens[i] = rank;
+
+            // Remove j from linked list.
+            let k = self.next[j];
+            self.next[i] = k;
+            if k != sentinel {
+                self.prev[k] = i;
+            }
+            // Mark j as removed by pointing to sentinel.
+            self.next[j] = sentinel;
+
+            // Bump generation at i to invalidate any old heap entries for i.
+            self.generation[i] = self.generation[i].wrapping_add(1);
+
+            // Recompute pair (prev[i], i) if prev[i] exists.
+            let p = self.prev[i];
+            if p != sentinel {
+                self.generation[p] = self.generation[p].wrapping_add(1);
+                if let Some(new_rank) =
+                    vocab.lookup_pair(&(self.work_tokens[p], self.work_tokens[i]))
+                {
+                    self.heap.push(Reverse((new_rank, p, self.generation[p])));
                 }
-            })
-            .min()
-        {
-            // At this point, i selects CURRENT[i], PAIR_RANKS[i] such that:
-            // - PAIR_RANKS[i] != max_value
-            // - PAIR_RANKS[i] is smallest
-
-            // Set CURRENT[i] to the new target rank.
-            tokens[start + i] = new_token;
-
-            if i > 0 {
-                // If there is a preceding token, recompute PAIR_RANKS[i-1].
-                self.pair_ranks[i - 1] = pr_for_tokens(tokens, i - 1, i);
             }
 
-            if i + 2 < tokens.len() - start {
-                // If this pair rank exists,
-                // it will become PAIR_RANKS[i] following the remove below.
-                self.pair_ranks[i + 1] = pr_for_tokens(tokens, i, i + 2);
+            // Recompute pair (i, next[i]) if next[i] exists.
+            if k != sentinel {
+                if let Some(new_rank) =
+                    vocab.lookup_pair(&(self.work_tokens[i], self.work_tokens[k]))
+                {
+                    self.heap.push(Reverse((new_rank, i, self.generation[i])));
+                }
             }
+        }
 
-            // Drop PAIR_RANKS[i] and CURRENT[i+1].
-            self.pair_ranks.remove(i);
-            tokens.remove(start + i + 1);
+        // 5. Collect live tokens by walking the linked list.
+        let mut pos = 0;
+        loop {
+            tokens.push(self.work_tokens[pos]);
+            let nxt = self.next[pos];
+            if nxt == sentinel {
+                break;
+            }
+            pos = nxt;
         }
     }
 }
