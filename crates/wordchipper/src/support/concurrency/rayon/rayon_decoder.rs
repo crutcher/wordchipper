@@ -78,6 +78,7 @@ where
 mod tests {
     use super::*;
     use crate::{
+        TokenDecoderBuilder,
         UnifiedTokenVocab,
         decoders::utility::testing::common_decoder_unit_test,
         pretrained::openai::OA_CL100K_BASE_PATTERN,
@@ -89,12 +90,15 @@ mod tests {
     fn test_rayon_decoder() {
         type T = u16;
 
-        let vocab: UnifiedTokenVocab<T> = build_test_vocab(
+        let vocab: Arc<UnifiedTokenVocab<T>> = build_test_vocab(
             build_test_shift_byte_vocab(10),
             TextSpanningConfig::from_pattern(OA_CL100K_BASE_PATTERN),
-        );
+        )
+        .into();
 
-        let inner = vocab.to_decoder_builder().with_parallel(false).init();
+        let inner = TokenDecoderBuilder::new((&vocab).clone())
+            .with_parallel(false)
+            .build();
         let decoder = ParallelRayonDecoder::new(inner);
 
         common_decoder_unit_test(vocab, &decoder);

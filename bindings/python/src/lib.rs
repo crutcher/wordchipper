@@ -6,7 +6,9 @@ use pyo3::{
 };
 use wordchipper::{
     TokenDecoder,
+    TokenDecoderBuilder,
     TokenEncoder,
+    TokenEncoderBuilder,
     UnifiedTokenVocab,
     VocabIndex,
     WCError,
@@ -27,7 +29,7 @@ fn to_pyerr(err: WCError) -> PyErr {
 
 #[pyclass]
 struct Tokenizer {
-    vocab: UnifiedTokenVocab<u32>,
+    vocab: Arc<UnifiedTokenVocab<u32>>,
     encoder: Arc<dyn TokenEncoder<u32>>,
     decoder: Arc<dyn TokenDecoder<u32>>,
 }
@@ -37,10 +39,11 @@ impl Tokenizer {
     #[staticmethod]
     fn from_pretrained(name: &str) -> PyResult<Self> {
         let mut disk_cache = WordchipperDiskCache::default();
-        let vocab: UnifiedTokenVocab<u32> =
-            wordchipper::get_model(name, &mut disk_cache).map_err(to_pyerr)?;
-        let encoder = vocab.to_default_encoder();
-        let decoder = vocab.to_default_decoder();
+        let vocab: Arc<UnifiedTokenVocab<u32>> = wordchipper::get_model(name, &mut disk_cache)
+            .map_err(to_pyerr)?
+            .into();
+        let encoder = TokenEncoderBuilder::default(vocab.clone());
+        let decoder = TokenDecoderBuilder::default(vocab.clone());
 
         Ok(Tokenizer {
             vocab,

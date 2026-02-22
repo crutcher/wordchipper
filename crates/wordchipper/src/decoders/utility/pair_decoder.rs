@@ -109,6 +109,7 @@ impl<T: TokenType> TokenDecoder<T> for PairExpansionDecoder<T> {
 mod tests {
     use super::*;
     use crate::{
+        alloc::sync::Arc,
         decoders::utility::testing::common_decoder_unit_test,
         pretrained::openai::OA_CL100K_BASE_PATTERN,
         spanning::TextSpanningConfig,
@@ -122,10 +123,11 @@ mod tests {
     fn test_pair_decoder() {
         type T = u16;
 
-        let vocab: UnifiedTokenVocab<T> = build_test_vocab(
+        let vocab: Arc<UnifiedTokenVocab<T>> = build_test_vocab(
             build_test_shift_byte_vocab(10),
             TextSpanningConfig::from_pattern(OA_CL100K_BASE_PATTERN),
-        );
+        )
+        .into();
 
         let decoder = PairExpansionDecoder::from_pair_vocab(&vocab.pair_vocab());
 

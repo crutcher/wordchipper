@@ -19,6 +19,8 @@ use similar::TextDiff;
 use tiktoken_rs::{CoreBPE, Rank};
 use tiktoken_support::TiktokenRsEngine;
 use wordchipper::{
+    TokenDecoderBuilder,
+    TokenEncoderBuilder,
     TokenType,
     UnifiedTokenVocab,
     disk_cache::WordchipperDiskCache,
@@ -182,9 +184,10 @@ fn main() -> Result<(), BoxError> {
 
     let mut disk_cache = WordchipperDiskCache::default();
     // println!("Loading wordchipper...");
-    let vocab: UnifiedTokenVocab<Rank> =
+    let vocab: Arc<UnifiedTokenVocab<Rank>> =
         wordchipper::get_model(args.model.to_string().as_str(), &mut disk_cache)?
-            .to_token_type()?;
+            .to_token_type()?
+            .into();
 
     // TODO: complete batch-observer inversion of control for additional tokenizer wrappers.
 
@@ -192,8 +195,8 @@ fn main() -> Result<(), BoxError> {
 
     let wc_engine = Arc::new(WordchipperEngine::<Rank>::new(
         args.model.to_string(),
-        vocab.to_default_encoder(),
-        vocab.to_default_decoder(),
+        TokenEncoderBuilder::default(vocab.clone()),
+        TokenDecoderBuilder::default(vocab.clone()),
     ));
     candidate_engines.push(wc_engine.clone());
 

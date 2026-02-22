@@ -2,16 +2,12 @@
 
 use crate::{
     Pair,
-    TokenDecoder,
-    TokenDecoderBuilder,
-    TokenEncoder,
-    TokenEncoderBuilder,
     TokenType,
     WCError,
     WCHashSet,
     WCResult,
-    alloc::{sync::Arc, vec::Vec},
-    spanning::{TextSpanner, TextSpannerBuilder, TextSpanningConfig},
+    alloc::vec::Vec,
+    spanning::TextSpanningConfig,
     support::strings::string_from_utf8_lossy,
     vocab::{
         ByteMapVocab,
@@ -40,13 +36,13 @@ use crate::{
 ///
 /// # Typical Usage
 ///
-/// Pre-trained vocabulary loaders return `UnifiedTokenVocab<T>`, which can be:
+/// Pre-trained vocabulary loaders return `UnifiedTokenVocab<T>`, which can be
+/// accessed via `Arc<UnifiedTokenVocab<T>>`.
+/// :
 ///
 /// - Converted to different token types via [`to_token_type`](Self::to_token_type)
-/// - Used to build default encoders/decoders via [`to_default_encoder`](Self::to_default_encoder)
-///   and [`to_default_decoder`](Self::to_default_decoder)
-/// - Configured with [`TokenEncoderBuilder`] and
-///   [`TokenDecoderBuilder`] for custom runtime behavior
+/// - Configured with [`crate::TokenEncoderBuilder`] and
+///   [`crate::TokenDecoderBuilder`] for custom runtime behavior
 ///   (parallelism, tokenization strategies, etc.)
 ///
 /// # Example
@@ -56,10 +52,10 @@ use crate::{
 /// let vocab: UnifiedTokenVocab<u32> = load_pretrained_vocab()?;
 ///
 /// // Create a default encoder
-/// let encoder = vocab.to_default_encoder();
+/// let encoder = TokenEncoderBuilder::default(vocab.clone());
 ///
 /// // Or configure with custom options
-/// let encoder = vocab.to_encoder_builder()
+/// let encoder = TokenEncoderBuilder::new(vocab.clone())
 ///     .parallel(true)
 ///     .build();
 /// ```
@@ -150,40 +146,6 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
             span_vocab,
             pair_vocab,
         })
-    }
-
-    /// Get a [`TextSpannerBuilder`] for this [`UnifiedTokenVocab`].
-    pub fn to_spanner_builder(&self) -> TextSpannerBuilder<T> {
-        TextSpannerBuilder::from_vocab(self)
-    }
-
-    /// Get the default [`TextSpanner`] for this [`UnifiedTokenVocab`].
-    pub fn to_default_spanner(&self) -> Arc<dyn TextSpanner> {
-        self.to_spanner_builder().build()
-    }
-
-    /// Get a [`TokenEncoderBuilder`] for this [`UnifiedTokenVocab`].
-    pub fn to_encoder_builder(&self) -> TokenEncoderBuilder<T> {
-        TokenEncoderBuilder::new(self.clone())
-    }
-
-    /// Get a default [`TokenEncoder`] for this [`UnifiedTokenVocab`].
-    ///
-    /// This is a simple wrapper around [`TokenEncoderBuilder::default`].
-    pub fn to_default_encoder(&self) -> Arc<dyn TokenEncoder<T>> {
-        TokenEncoderBuilder::default(self.clone())
-    }
-
-    /// Get a [`TokenDecoderBuilder`] for this [`UnifiedTokenVocab`].
-    pub fn to_decoder_builder(&self) -> TokenDecoderBuilder<T> {
-        TokenDecoderBuilder::new(self.clone())
-    }
-
-    /// Get a default [`TokenDecoder`] for this [`UnifiedTokenVocab`].
-    ///
-    /// This is a simple wrapper around [`TokenDecoderBuilder::default`].
-    pub fn to_default_decoder(&self) -> Arc<dyn TokenDecoder<T>> {
-        TokenDecoderBuilder::default(self.clone())
     }
 
     /// Create a copy of this [`UnifiedTokenVocab`] with a different [`TokenType`].

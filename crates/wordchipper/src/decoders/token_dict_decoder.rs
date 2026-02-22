@@ -3,7 +3,7 @@
 use crate::{
     TokenType,
     WCResult,
-    alloc::vec::Vec,
+    alloc::{sync::Arc, vec::Vec},
     decoders::{DecodeResult, TokenDecoder},
     vocab::{DEFAULT_BYTE_PER_TOKEN_RATIO, TokenSpanMap, UnifiedTokenVocab},
 };
@@ -32,8 +32,8 @@ impl<T: TokenType> TokenDictDecoder<T> {
     ///
     /// ## Arguments
     /// * `unified_vocab` - The unified token vocabulary to build the decoder from.
-    pub fn from_unified_vocab(unified_vocab: UnifiedTokenVocab<T>) -> Self {
-        Self::new(unified_vocab.unified_dictionary())
+    pub fn from_vocab(vocab: Arc<UnifiedTokenVocab<T>>) -> Self {
+        Self::new(vocab.unified_dictionary())
     }
 
     /// Creates a new Decoder.
@@ -111,6 +111,7 @@ impl<T: TokenType> TokenDecoder<T> for TokenDictDecoder<T> {
 mod tests {
     use super::*;
     use crate::{
+        alloc::sync::Arc,
         decoders::utility::testing::common_decoder_unit_test,
         pretrained::openai::OA_CL100K_BASE_PATTERN,
         spanning::TextSpanningConfig,
@@ -124,13 +125,14 @@ mod tests {
     fn test_dictionary_decoder() {
         type T = u16;
 
-        let vocab: UnifiedTokenVocab<T> = build_test_vocab(
+        let vocab: Arc<UnifiedTokenVocab<T>> = build_test_vocab(
             build_test_shift_byte_vocab(10),
             TextSpanningConfig::from_pattern(OA_CL100K_BASE_PATTERN),
-        );
+        )
+        .into();
 
         let decoder =
-            TokenDictDecoder::from_unified_vocab(vocab.clone()).with_expected_bytes_per_token(7.5);
+            TokenDictDecoder::from_vocab(vocab.clone()).with_expected_bytes_per_token(7.5);
 
         assert_eq!(decoder.expected_bytes_per_token(), 7.5);
 

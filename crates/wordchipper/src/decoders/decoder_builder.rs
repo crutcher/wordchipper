@@ -10,19 +10,19 @@ use crate::{
 /// Builder for production [`TokenDecoder`]s.
 #[derive(Clone, PartialEq)]
 pub struct TokenDecoderBuilder<T: TokenType> {
-    vocab: UnifiedTokenVocab<T>,
+    vocab: Arc<UnifiedTokenVocab<T>>,
 
     parallel: bool,
 }
 
 impl<T: TokenType> TokenDecoderBuilder<T> {
     /// Build a [`TokenDecoder`] with the default configuration.
-    pub fn default(vocab: UnifiedTokenVocab<T>) -> Arc<dyn TokenDecoder<T>> {
-        Self::new(vocab).init()
+    pub fn default(vocab: Arc<UnifiedTokenVocab<T>>) -> Arc<dyn TokenDecoder<T>> {
+        Self::new(vocab).build()
     }
 
     /// Create a new `TokenDecoderBuilder`.
-    pub fn new(vocab: UnifiedTokenVocab<T>) -> Self {
+    pub fn new(vocab: Arc<UnifiedTokenVocab<T>>) -> Self {
         Self {
             vocab,
             parallel: true,
@@ -44,14 +44,15 @@ impl<T: TokenType> TokenDecoderBuilder<T> {
     }
 
     /// Build a `TokenDecoder` from the builder's state.
-    pub fn init(self) -> Arc<dyn TokenDecoder<T>> {
+    pub fn build(&self) -> Arc<dyn TokenDecoder<T>> {
         #[allow(unused_mut)]
         let mut dec: Arc<dyn TokenDecoder<T>> =
-            Arc::new(SlabIndexDecoder::from_unified_vocab(self.vocab));
+            Arc::new(SlabIndexDecoder::from_vocab(self.vocab.clone()));
 
         #[cfg(feature = "rayon")]
         if self.parallel {
-            dec = Arc::new(crate::support::concurrency::rayon::ParallelRayonDecoder::new(dec));
+            use crate::support::concurrency::rayon::ParallelRayonDecoder;
+            dec = Arc::new(ParallelRayonDecoder::new(dec));
         }
 
         dec

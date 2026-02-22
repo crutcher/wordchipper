@@ -12,7 +12,7 @@
 //! available to download, cache, and load the vocabulary.
 //!
 //! Most users will want to use the [`get_model`] function, which will
-//! return a [`UnifiedTokenVocab<u32>`](`crate::UnifiedTokenVocab`)
+//! return a [`Arc<UnifiedTokenVocab<u32>>`](`crate::UnifiedTokenVocab`)
 //! containing the vocabulary and spanning configuration.
 //!
 //! There is also a [`list_models`] function which lists the available
@@ -22,24 +22,22 @@
 //! use std::sync::Arc;
 //!
 //! use wordchipper::{
-//!     TokenDecoder,
-//!     TokenEncoder,
+//!     Tokenizer,
+//!     TokenizerBuilder,
 //!     UnifiedTokenVocab,
 //!     disk_cache::WordchipperDiskCache,
 //!     get_model,
 //! };
 //!
-//! fn example() -> wordchipper::WCResult<(Arc<dyn TokenEncoder<u32>>, Arc<dyn TokenDecoder<u32>>)>
-//! {
+//! fn example() -> wordchipper::WCResult< Arc<Tokenizer<u32>> > {
 //!     let mut disk_cache = WordchipperDiskCache::default();
-//!     let vocab: UnifiedTokenVocab<u32> = get_model("openai/o200k_harmony", &mut disk_cache)?;
+//!     let vocab: Arc<UnifiedTokenVocab<u32>> =
+//!         get_model("openai/o200k_harmony", &mut disk_cache)?.into();
 //!
-//!     let encoder: Arc<dyn TokenEncoder<u32>> = vocab.to_default_encoder();
-//!     let decoder: Arc<dyn TokenDecoder<u32>> = vocab.to_default_decoder();
+//!     let tokenizer = TokenizerBuilder::default(vocab);
 //!
-//!     Ok((encoder, decoder))
+//!     Ok(tokenizer)
 //! }
-//! ```
 
 #[cfg(feature = "download")]
 mod load_by_name;

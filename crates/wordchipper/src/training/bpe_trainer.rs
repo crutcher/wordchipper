@@ -416,6 +416,7 @@ where
 #[cfg(test)]
 mod tests {
     use core::cmp::Ordering;
+    use std::sync::Arc;
 
     use compact_str::CompactString;
 
@@ -466,12 +467,12 @@ mod tests {
 
         let byte_vocab: ByteMapVocab<T> = Default::default();
 
-        let vocab: UnifiedTokenVocab<T> = trainer.train(byte_vocab.clone()).unwrap();
+        let vocab: Arc<UnifiedTokenVocab<T>> = trainer.train(byte_vocab.clone()).unwrap().into();
 
         let encoder = TokenEncoderBuilder::<T>::new(vocab.clone()).build();
         static_is_send_sync_check(&encoder);
 
-        let decoder = TokenDictDecoder::from_unified_vocab(vocab);
+        let decoder = TokenDictDecoder::from_vocab(vocab);
         static_is_send_sync_check(&decoder);
 
         for sample in samples {

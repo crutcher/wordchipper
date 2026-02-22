@@ -15,7 +15,7 @@ where
     T: TokenType,
 {
     /// The reference vocabulary.
-    vocab: UnifiedTokenVocab<T>,
+    vocab: Arc<UnifiedTokenVocab<T>>,
 
     /// Text Spanner.
     spanner: Arc<dyn TextSpanner>,
@@ -27,7 +27,7 @@ impl<T: TokenType> TokenSpanEncoder<T> {
     /// Create a new encoder.
     pub fn new(
         spanner: Arc<dyn TextSpanner>,
-        vocab: UnifiedTokenVocab<T>,
+        vocab: Arc<UnifiedTokenVocab<T>>,
         se_builder: Arc<dyn Fn() -> Box<dyn SpanEncoder<T>> + Send + Sync>,
     ) -> Self {
         Self {

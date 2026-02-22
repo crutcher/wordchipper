@@ -34,11 +34,12 @@
 //! use std::sync::Arc;
 //!
 //! use wordchipper::{
-//!     decoders::TokenDictDecoder,
-//!     encoders::TokenEncoderBuilder,
+//!     TokenDecoderBuilder,
+//!     TokenEncoderBuilder,
+//!     UnifiedTokenVocab,
 //!     pretrained::openai::OA_CL100K_BASE_PATTERN,
 //!     training::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions},
-//!     vocab::{ByteMapVocab, UnifiedTokenVocab, io::save_base64_span_map_path},
+//!     vocab::{ByteMapVocab, io::save_base64_span_map_path},
 //! };
 //!
 //! fn example<I, S>(
@@ -70,8 +71,10 @@
 //!
 //!     let byte_vocab: ByteMapVocab<T> = Default::default();
 //!
-//!     let vocab: UnifiedTokenVocab<T> =
-//!         trainer.train(byte_vocab.clone()).expect("training failed");
+//!     let vocab: Arc<UnifiedTokenVocab<T>> = trainer
+//!         .train(byte_vocab.clone())
+//!         .expect("training failed")
+//!         .into();
 //!
 //!     if let Some(path) = vocab_save_path {
 //!         save_base64_span_map_path(&vocab.span_vocab().span_map(), &path)
@@ -79,8 +82,8 @@
 //!         println!("- tiktoken vocab: {path:?}");
 //!     }
 //!
-//!     let encoder = vocab.to_default_encoder();
-//!     let decoder = vocab.to_default_decoder();
+//!     let encoder = TokenEncoderBuilder::default(vocab.clone());
+//!     let decoder = TokenDecoderBuilder::default(vocab.clone());
 //! }
 //! ```
 

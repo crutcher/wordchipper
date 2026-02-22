@@ -29,7 +29,7 @@ pub fn common_encoder_test_vocab<T: TokenType>() -> UnifiedTokenVocab<T> {
 
 /// Common [`TokenEncoder`] tests.
 pub fn common_encoder_tests<T: TokenType, E: TokenEncoder<T>>(
-    vocab: UnifiedTokenVocab<T>,
+    vocab: Arc<UnifiedTokenVocab<T>>,
     encoder: E,
 ) {
     static_is_send_sync_check(&encoder);
@@ -44,7 +44,7 @@ pub fn common_encoder_tests<T: TokenType, E: TokenEncoder<T>>(
         "it's not the heat, it's the salt",
     ];
 
-    let decoder = TokenDictDecoder::from_unified_vocab(vocab.clone());
+    let decoder = TokenDictDecoder::from_vocab(vocab.clone());
     static_is_send_sync_check(&decoder);
 
     let token_batch = encoder.try_encode_batch(&samples).unwrap();

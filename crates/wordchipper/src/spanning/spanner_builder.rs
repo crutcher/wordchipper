@@ -4,6 +4,7 @@ use core::num::NonZeroUsize;
 
 use crate::{
     TokenType,
+    UnifiedTokenVocab,
     alloc::sync::Arc,
     spanning::{
         TextSpanner,
@@ -22,10 +23,15 @@ pub struct TextSpannerBuilder<T: TokenType> {
 }
 
 impl<T: TokenType> TextSpannerBuilder<T> {
+    /// Build a new `Arc<dyn TextSpanner>` with defaults.
+    pub fn default(vocab: &UnifiedTokenVocab<T>) -> Arc<dyn TextSpanner> {
+        Self::from_vocab(vocab).build()
+    }
+
     /// Create a new [`TextSpannerBuilder`].
     ///
     /// Clones out the spanning configuration from the provided vocabulary.
-    pub fn from_vocab(vocab: &crate::vocab::UnifiedTokenVocab<T>) -> Self {
+    pub fn from_vocab(vocab: &UnifiedTokenVocab<T>) -> Self {
         Self::new(vocab.spanning().clone())
     }
 

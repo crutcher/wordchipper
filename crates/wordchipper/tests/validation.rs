@@ -1,9 +1,14 @@
 #![allow(missing_docs)]
 #![cfg(feature = "client")]
 
+use std::sync::Arc;
+
 use tiktoken_rs::CoreBPE;
 use tokenizers::Tokenizer;
 use wordchipper::{
+    TokenDecoder,
+    TokenEncoder,
+    TokenizerBuilder,
     UnifiedTokenVocab,
     disk_cache::WordchipperDiskCache,
     pretrained::openai::OATokenizer,
@@ -27,15 +32,18 @@ const SAMPLES: &[&str] = &[
     "mixed: hello\u{00a0}world\u{2003}wide",
 ];
 
-fn roundtrip_validation(model: OATokenizer) {
+fn load_model(model: OATokenizer) -> Arc<wordchipper::Tokenizer<u32>> {
     let mut disk_cache = WordchipperDiskCache::default();
-    let vocab: UnifiedTokenVocab<u32> = model.load_vocab(&mut disk_cache).unwrap();
-    let encoder = vocab.to_default_encoder();
-    let decoder = vocab.to_default_decoder();
+    let vocab: Arc<UnifiedTokenVocab<u32>> = model.load_vocab(&mut disk_cache).unwrap().into();
+    TokenizerBuilder::default(vocab)
+}
+
+fn roundtrip_validation(model: OATokenizer) {
+    let tokenizer = load_model(model);
 
     for text in SAMPLES {
-        let tokens = encoder.try_encode(text).unwrap();
-        let decoded = decoder.try_decode_to_string(&tokens).unwrap();
+        let tokens = tokenizer.try_encode(text).unwrap();
+        let decoded = tokenizer.try_decode_to_string(&tokens).unwrap();
         assert_eq!(
             &decoded.value, text,
             "Roundtrip mismatch for {model:?}: {text:?}"
@@ -47,12 +55,10 @@ fn tiktoken_validation(
     model: OATokenizer,
     tiktoken_bpe: &CoreBPE,
 ) {
-    let mut disk_cache = WordchipperDiskCache::default();
-    let vocab: UnifiedTokenVocab<u32> = model.load_vocab(&mut disk_cache).unwrap();
-    let encoder = vocab.to_default_encoder();
+    let tokenizer = load_model(model);
 
     for text in SAMPLES {
-        let wc_tokens = encoder.try_encode(text).unwrap();
+        let wc_tokens = tokenizer.try_encode(text).unwrap();
         let tt_tokens: Vec<u32> = tiktoken_bpe
             .encode_with_special_tokens(text)
             .into_iter()
@@ -70,12 +76,10 @@ fn tokenizers_validation(
     model: OATokenizer,
     hf_tok: &Tokenizer,
 ) {
-    let mut disk_cache = WordchipperDiskCache::default();
-    let vocab: UnifiedTokenVocab<u32> = model.load_vocab(&mut disk_cache).unwrap();
-    let encoder = vocab.to_default_encoder();
+    let tokenizer = load_model(model);
 
     for text in SAMPLES {
-        let wc_tokens = encoder.try_encode(text).unwrap();
+        let wc_tokens = tokenizer.try_encode(text).unwrap();
         let hf_encoding = hf_tok.encode(*text, true).unwrap();
         let hf_tokens: Vec<u32> = hf_encoding.get_ids().to_vec();
 

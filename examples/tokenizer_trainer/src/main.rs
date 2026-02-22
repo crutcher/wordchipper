@@ -1,9 +1,10 @@
-use std::{collections::HashSet, time::Duration};
+use std::{collections::HashSet, sync::Arc, time::Duration};
 
 use arrow::array::{Array, StringArray};
 use clap::Parser;
 use similar::{ChangeTag, TextDiff};
 use wordchipper::{
+    TokenizerBuilder,
     UnifiedTokenVocab,
     VocabIndex,
     pretrained::openai::OA_O200K_BASE_PATTERN,
@@ -114,7 +115,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let byte_vocab: ByteMapVocab<T> = Default::default();
 
     println!("- train");
-    let vocab: UnifiedTokenVocab<T> = trainer.train(byte_vocab.clone()).expect("training failed");
+    let vocab: Arc<UnifiedTokenVocab<T>> = trainer
+        .train(byte_vocab.clone())
+        .expect("training failed")
+        .into();
 
     let training_duration = std::time::Instant::now().duration_since(t0);
     println!("- training_duration: {:.2?}", training_duration);
@@ -126,8 +130,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     if args.time_encode_decode {
-        let encoder = vocab.to_default_encoder();
-        let decoder = vocab.to_default_decoder();
+        let tokenizer = TokenizerBuilder::default(vocab.clone());
 
         let mut samples = Vec::new();
         {
@@ -171,8 +174,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut total_token_count = 0;
         let batch_times_ns = sample_batches.iter().map(|batch| {
             let t0 = std::time::Instant::now();
-            let token_batch: Vec<Vec<T>> =
-                encoder.try_encode_batch(&inner_str_view(batch)).unwrap();
+            let token_batch: Vec<Vec<T>> = tokenizer
+                .encoder()
+                .try_encode_batch(&inner_str_view(batch))
+                .unwrap();
             let t1 = std::time::Instant::now();
 
             total_token_count += token_batch.iter().map(|tokens| tokens.len()).sum::<usize>();
@@ -219,7 +224,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .zip(token_batches.iter())
                 .map(|(sample, batch)| {
                     let t0 = std::time::Instant::now();
-                    let decoded_sample = decoder
+                    let decoded_sample = tokenizer
+                        .decoder()
                         .try_decode_batch_to_strings(&inner_slice_view(batch))
                         .unwrap()
                         .unwrap();

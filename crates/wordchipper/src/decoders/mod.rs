@@ -8,7 +8,7 @@
 //! use wordchipper::{TokenDecoder, TokenDecoderBuilder, TokenType, UnifiedTokenVocab};
 //!
 //! fn example<T: TokenType>(
-//!     vocab: UnifiedTokenVocab<T>,
+//!     vocab: Arc<UnifiedTokenVocab<T>>,
 //!     batch: &[Vec<T>],
 //! ) -> Vec<String> {
 //!     let decoder = TokenDecoderBuilder::default(vocab);

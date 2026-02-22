@@ -16,18 +16,18 @@ use crate::{
 /// Builder for production [`TokenEncoder`]s.
 #[derive(Clone, PartialEq)]
 pub struct TokenEncoderBuilder<T: TokenType> {
-    vocab: UnifiedTokenVocab<T>,
+    vocab: Arc<UnifiedTokenVocab<T>>,
     spanner_builder: TextSpannerBuilder<T>,
 }
 
 impl<T: TokenType> TokenEncoderBuilder<T> {
     /// Build a [`TokenEncoder`] with the default configuration.
-    pub fn default(vocab: UnifiedTokenVocab<T>) -> Arc<dyn TokenEncoder<T>> {
+    pub fn default(vocab: Arc<UnifiedTokenVocab<T>>) -> Arc<dyn TokenEncoder<T>> {
         Self::new(vocab).build()
     }
 
     /// Create a new builder for the vocab.
-    pub fn new(vocab: UnifiedTokenVocab<T>) -> Self {
+    pub fn new(vocab: Arc<UnifiedTokenVocab<T>>) -> Self {
         let spanner_builder = TextSpannerBuilder::from_vocab(&vocab);
         Self {
             vocab,
@@ -36,7 +36,7 @@ impl<T: TokenType> TokenEncoderBuilder<T> {
     }
 
     /// Get the underlying [`UnifiedTokenVocab`].
-    pub fn vocab(&self) -> &UnifiedTokenVocab<T> {
+    pub fn vocab(&self) -> &Arc<UnifiedTokenVocab<T>> {
         &self.vocab
     }
 
@@ -147,6 +147,8 @@ mod tests {
             build_test_vocab(build_test_shift_byte_vocab(10), config);
         let hi = vocab.max_token().unwrap() + 1;
         vocab.special_vocab_mut().add_str_word("<|HI|>", hi);
+
+        let vocab = Arc::new(vocab);
 
         // Logos encoder: built via the normal path (auto-discovers logos DFA).
         let logos_enc = TokenEncoderBuilder::new(vocab.clone())

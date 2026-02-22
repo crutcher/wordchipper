@@ -2,7 +2,9 @@
 
 use crate::{
     TokenDecoder,
+    TokenDecoderBuilder,
     TokenEncoder,
+    TokenEncoderBuilder,
     TokenType,
     UnifiedTokenVocab,
     WCResult,
@@ -10,6 +12,64 @@ use crate::{
     decoders::{BatchDecodeResult, DecodeResult},
     spanning::TextSpanner,
 };
+
+/// Builder for [`Tokenizer`]s.
+pub struct TokenizerBuilder<T: TokenType> {
+    vocab: Arc<UnifiedTokenVocab<T>>,
+    encoder: TokenEncoderBuilder<T>,
+    decoder: TokenDecoderBuilder<T>,
+}
+
+impl<T: TokenType> TokenizerBuilder<T> {
+    /// Create a new builder with the default configuration.
+    pub fn default(vocab: Arc<UnifiedTokenVocab<T>>) -> Arc<Tokenizer<T>> {
+        Self::new(vocab).build()
+    }
+
+    /// Create a new builder.
+    pub fn new(vocab: Arc<UnifiedTokenVocab<T>>) -> Self {
+        Self {
+            vocab: vocab.clone(),
+            encoder: TokenEncoderBuilder::new(vocab.clone()),
+            decoder: TokenDecoderBuilder::new(vocab),
+        }
+    }
+
+    /// Get the underlying vocabulary.
+    pub fn vocab(&self) -> &Arc<UnifiedTokenVocab<T>> {
+        &self.vocab
+    }
+
+    /// Get the encoder builder.
+    pub fn encoder(&self) -> &TokenEncoderBuilder<T> {
+        &self.encoder
+    }
+
+    /// Get the decoder builder.
+    pub fn decoder(&self) -> &TokenDecoderBuilder<T> {
+        &self.decoder
+    }
+
+    /// Get the encoder builder for mutable access.
+    pub fn encoder_mut(&mut self) -> &mut TokenEncoderBuilder<T> {
+        &mut self.encoder
+    }
+
+    /// Get the decoder builder for mutable access.
+    pub fn decoder_mut(&mut self) -> &mut TokenDecoderBuilder<T> {
+        &mut self.decoder
+    }
+
+    /// Build the tokenizer.
+    pub fn build(&self) -> Arc<Tokenizer<T>> {
+        Tokenizer::new(
+            self.vocab.clone(),
+            self.encoder.build(),
+            self.decoder.build(),
+        )
+        .into()
+    }
+}
 
 /// Unified Tokenizer.
 ///

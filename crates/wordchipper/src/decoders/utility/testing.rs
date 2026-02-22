@@ -3,7 +3,7 @@
 use crate::{
     TokenEncoderBuilder,
     TokenType,
-    alloc::{vec, vec::Vec},
+    alloc::{sync::Arc, vec, vec::Vec},
     decoders::TokenDecoder,
     support::{strings::string_from_utf8_lossy, traits::static_is_send_sync_check},
     vocab::{UnifiedTokenVocab, VocabIndex},
@@ -11,7 +11,7 @@ use crate::{
 
 /// Common Unittest for TokenDecoder implementations.
 pub fn common_decoder_unit_test<T: TokenType, D: TokenDecoder<T>>(
-    vocab: UnifiedTokenVocab<T>,
+    vocab: Arc<UnifiedTokenVocab<T>>,
     decoder: &D,
 ) {
     static_is_send_sync_check(decoder);
