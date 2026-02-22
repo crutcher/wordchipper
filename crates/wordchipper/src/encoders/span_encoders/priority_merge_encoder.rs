@@ -25,12 +25,21 @@ struct Node<T> {
 ///
 /// Ordered by (rank, `left_idx`) so the lowest-rank, leftmost pair is popped first.
 /// `left_tok` and `right_tok` are stored for O(1) stale-entry detection.
-#[derive(Eq, PartialEq)]
+#[derive(Eq)]
 struct MergeEntry<T: Ord> {
     rank: T,
     left_idx: u32,
     left_tok: T,
     right_tok: T,
+}
+
+impl<T: Ord> PartialEq for MergeEntry<T> {
+    fn eq(
+        &self,
+        other: &Self,
+    ) -> bool {
+        self.rank == other.rank && self.left_idx == other.left_idx
+    }
 }
 
 impl<T: Ord> Ord for MergeEntry<T> {
