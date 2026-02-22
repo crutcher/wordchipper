@@ -71,19 +71,18 @@ Corpus: `english.txt` (~7 KB) and `multilingual.txt` (~9 KB), repeated 10x.
 
 ### Parallel Batch Encoding (median MB/s)
 
-Corpus: 1024 samples from fineweb-edu shard 0 (~4.2 MB batch).
+Corpus: 1024 samples from fineweb-edu shard 0 (~4.2 MB batch). All engines use rayon `par_iter()`.
 
-| Encoder           | cl100k   | o200k    |
-| ----------------- | -------- | -------- |
-| incremental_sweep | 1,366    | 1,175    |
-| merge_heap        | 1,093    | 1,195    |
-| priority_merge    | 961      | 906      |
-| tiktoken-rs       | 14       | 14       |
-| HF tokenizers     | 6        | 6        |
+| Encoder           | cl100k | o200k |
+| ----------------- | ------ | ----- |
+| incremental_sweep | 1,432  | 1,294 |
+| merge_heap        | 1,464  | 1,384 |
+| priority_merge    | 950    | 919   |
+| tiktoken-rs       | 160    | 146   |
+| HF tokenizers     | 10     | 9     |
 
-With rayon parallelism on real-world English text, all three wordchipper variants saturate the CPU
-at ~1 GB/s. The O(n log n) advantage of `priority_merge` is more visible in single-string mode on
-diverse/multilingual text where spans are longer.
+All engines parallelized with rayon. Wordchipper variants are ~8-9x faster than tiktoken-rs
+in parallel batch mode on English text.
 
 ### Single-String Encoding: `priority_merge` advantage
 

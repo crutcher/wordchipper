@@ -222,56 +222,62 @@ mod priority_merge {
 
 mod tiktoken {
     use super::*;
+    use rayon::prelude::*;
 
     #[divan::bench]
     fn cl100k(bencher: Bencher) {
         let bpe = &*TT_CL100K;
+        let strs = BATCH.strs();
         bencher
             .counter(BytesCount::new(BATCH.total_bytes))
             .bench(|| {
-                for s in &BATCH.samples {
-                    black_box(bpe.encode_with_special_tokens(s));
-                }
+                strs.par_iter()
+                    .map(|s| bpe.encode_with_special_tokens(s))
+                    .collect::<Vec<_>>()
             });
     }
 
     #[divan::bench]
     fn o200k(bencher: Bencher) {
         let bpe = &*TT_O200K;
+        let strs = BATCH.strs();
         bencher
             .counter(BytesCount::new(BATCH.total_bytes))
             .bench(|| {
-                for s in &BATCH.samples {
-                    black_box(bpe.encode_with_special_tokens(s));
-                }
+                strs.par_iter()
+                    .map(|s| bpe.encode_with_special_tokens(s))
+                    .collect::<Vec<_>>()
             });
     }
 }
 
 mod tokenizers {
     use super::*;
+    use rayon::prelude::*;
 
     #[divan::bench]
     fn cl100k(bencher: Bencher) {
         let tok = &*HF_CL100K;
+        let strs = BATCH.strs();
         bencher
             .counter(BytesCount::new(BATCH.total_bytes))
             .bench(|| {
-                for s in &BATCH.samples {
-                    black_box(tok.encode(s.as_str(), true).unwrap());
-                }
+                strs.par_iter()
+                    .map(|s| tok.encode(*s, true).unwrap())
+                    .collect::<Vec<_>>()
             });
     }
 
     #[divan::bench]
     fn o200k(bencher: Bencher) {
         let tok = &*HF_O200K;
+        let strs = BATCH.strs();
         bencher
             .counter(BytesCount::new(BATCH.total_bytes))
             .bench(|| {
-                for s in &BATCH.samples {
-                    black_box(tok.encode(s.as_str(), true).unwrap());
-                }
+                strs.par_iter()
+                    .map(|s| tok.encode(*s, true).unwrap())
+                    .collect::<Vec<_>>()
             });
     }
 }

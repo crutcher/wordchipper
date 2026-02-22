@@ -15,6 +15,7 @@ wordchipper-data = { path = "../wordchipper-data" }
 
 arrow = { workspace = true }
 divan = { workspace = true }
+rayon = { workspace = true }
 tiktoken-rs = { workspace = true }
 tokenizers = { workspace = true, features = ["http"] }
 
