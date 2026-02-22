@@ -7,10 +7,17 @@ use tiktoken_rs::CoreBPE;
 use tokenizers::Tokenizer;
 use wordchipper::{
     TokenEncoder,
-    TokenEncoderBuilder,
     UnifiedTokenVocab,
     disk_cache::WordchipperDiskCache,
+    encoders::span_encoders::{
+        IncrementalSweepSpanEncoder,
+        MergeHeapSpanEncoder,
+        PriorityMergeSpanEncoder,
+        SpanEncoder,
+        TokenSpanEncoder,
+    },
     pretrained::openai::OATokenizer,
+    spanning::TextSpannerBuilder,
 };
 
 #[global_allocator]
@@ -31,21 +38,64 @@ fn english_text() -> String {
     ENGLISH_CORPUS.repeat(10)
 }
 
-fn load_wc_encoder(model: OATokenizer) -> Arc<dyn TokenEncoder<u32>> {
+fn load_wc_variant(
+    model: OATokenizer,
+    se_builder: Arc<dyn Fn() -> Box<dyn SpanEncoder<u32>> + Send + Sync>,
+) -> Arc<dyn TokenEncoder<u32>> {
     let mut disk_cache = WordchipperDiskCache::default();
-    let vocab: UnifiedTokenVocab<u32> = model.load_vocab(&mut disk_cache).unwrap();
-    TokenEncoderBuilder::default(vocab.into())
+    let vocab: Arc<UnifiedTokenVocab<u32>> =
+        model.load_vocab::<u32>(&mut disk_cache).unwrap().into();
+    let spanner = TextSpannerBuilder::from_vocab(&vocab)
+        .with_parallel(false)
+        .build();
+    Arc::new(TokenSpanEncoder::<u32>::new(spanner, vocab, se_builder))
 }
+
+// IncrementalSweep
+static WC_SWEEP_CL100K: LazyLock<Arc<dyn TokenEncoder<u32>>> = LazyLock::new(|| {
+    load_wc_variant(
+        OATokenizer::Cl100kBase,
+        Arc::new(|| Box::new(IncrementalSweepSpanEncoder::<u32>::default())),
+    )
+});
+static WC_SWEEP_O200K: LazyLock<Arc<dyn TokenEncoder<u32>>> = LazyLock::new(|| {
+    load_wc_variant(
+        OATokenizer::O200kBase,
+        Arc::new(|| Box::new(IncrementalSweepSpanEncoder::<u32>::default())),
+    )
+});
+
+// MergeHeap
+static WC_HEAP_CL100K: LazyLock<Arc<dyn TokenEncoder<u32>>> = LazyLock::new(|| {
+    load_wc_variant(
+        OATokenizer::Cl100kBase,
+        Arc::new(|| Box::new(MergeHeapSpanEncoder::<u32>::default())),
+    )
+});
+static WC_HEAP_O200K: LazyLock<Arc<dyn TokenEncoder<u32>>> = LazyLock::new(|| {
+    load_wc_variant(
+        OATokenizer::O200kBase,
+        Arc::new(|| Box::new(MergeHeapSpanEncoder::<u32>::default())),
+    )
+});
+
+// PriorityMerge
+static WC_PMERGE_CL100K: LazyLock<Arc<dyn TokenEncoder<u32>>> = LazyLock::new(|| {
+    load_wc_variant(
+        OATokenizer::Cl100kBase,
+        Arc::new(|| Box::new(PriorityMergeSpanEncoder::<u32>::default())),
+    )
+});
+static WC_PMERGE_O200K: LazyLock<Arc<dyn TokenEncoder<u32>>> = LazyLock::new(|| {
+    load_wc_variant(
+        OATokenizer::O200kBase,
+        Arc::new(|| Box::new(PriorityMergeSpanEncoder::<u32>::default())),
+    )
+});
 
 struct TiktokenFixture {
     bpe: Arc<CoreBPE>,
 }
-
-static WC_CL100K: LazyLock<Arc<dyn TokenEncoder<u32>>> =
-    LazyLock::new(|| load_wc_encoder(OATokenizer::Cl100kBase));
-
-static WC_O200K: LazyLock<Arc<dyn TokenEncoder<u32>>> =
-    LazyLock::new(|| load_wc_encoder(OATokenizer::O200kBase));
 
 static TT_CL100K: LazyLock<TiktokenFixture> = LazyLock::new(|| TiktokenFixture {
     bpe: Arc::new(tiktoken_rs::cl100k_base().unwrap()),
@@ -65,13 +115,13 @@ static HF_O200K: LazyLock<Arc<Tokenizer>> =
 mod english {
     use super::*;
 
-    mod wordchipper {
+    mod incremental_sweep {
         use super::*;
 
         #[divan::bench]
         fn cl100k(bencher: Bencher) {
             let text = english_text();
-            let encoder = &*WC_CL100K;
+            let encoder = &*WC_SWEEP_CL100K;
             bencher
                 .counter(BytesCount::new(text.len()))
                 .bench(|| encoder.try_encode(black_box(&text)).unwrap());
@@ -80,7 +130,51 @@ mod english {
         #[divan::bench]
         fn o200k(bencher: Bencher) {
             let text = english_text();
-            let encoder = &*WC_O200K;
+            let encoder = &*WC_SWEEP_O200K;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| encoder.try_encode(black_box(&text)).unwrap());
+        }
+    }
+
+    mod merge_heap {
+        use super::*;
+
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            let text = english_text();
+            let encoder = &*WC_HEAP_CL100K;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| encoder.try_encode(black_box(&text)).unwrap());
+        }
+
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            let text = english_text();
+            let encoder = &*WC_HEAP_O200K;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| encoder.try_encode(black_box(&text)).unwrap());
+        }
+    }
+
+    mod priority_merge {
+        use super::*;
+
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            let text = english_text();
+            let encoder = &*WC_PMERGE_CL100K;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| encoder.try_encode(black_box(&text)).unwrap());
+        }
+
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            let text = english_text();
+            let encoder = &*WC_PMERGE_O200K;
             bencher
                 .counter(BytesCount::new(text.len()))
                 .bench(|| encoder.try_encode(black_box(&text)).unwrap());
@@ -135,13 +229,13 @@ mod english {
 mod diverse {
     use super::*;
 
-    mod wordchipper {
+    mod incremental_sweep {
         use super::*;
 
         #[divan::bench]
         fn cl100k(bencher: Bencher) {
             let text = diverse_text();
-            let encoder = &*WC_CL100K;
+            let encoder = &*WC_SWEEP_CL100K;
             bencher
                 .counter(BytesCount::new(text.len()))
                 .bench(|| encoder.try_encode(black_box(&text)).unwrap());
@@ -150,7 +244,51 @@ mod diverse {
         #[divan::bench]
         fn o200k(bencher: Bencher) {
             let text = diverse_text();
-            let encoder = &*WC_O200K;
+            let encoder = &*WC_SWEEP_O200K;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| encoder.try_encode(black_box(&text)).unwrap());
+        }
+    }
+
+    mod merge_heap {
+        use super::*;
+
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            let text = diverse_text();
+            let encoder = &*WC_HEAP_CL100K;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| encoder.try_encode(black_box(&text)).unwrap());
+        }
+
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            let text = diverse_text();
+            let encoder = &*WC_HEAP_O200K;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| encoder.try_encode(black_box(&text)).unwrap());
+        }
+    }
+
+    mod priority_merge {
+        use super::*;
+
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            let text = diverse_text();
+            let encoder = &*WC_PMERGE_CL100K;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| encoder.try_encode(black_box(&text)).unwrap());
+        }
+
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            let text = diverse_text();
+            let encoder = &*WC_PMERGE_O200K;
             bencher
                 .counter(BytesCount::new(text.len()))
                 .bench(|| encoder.try_encode(black_box(&text)).unwrap());

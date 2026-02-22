@@ -1,7 +1,7 @@
 use crate::{TokenType, UnifiedTokenVocab, alloc::vec::Vec, spanning::SpanRef};
 
 /// A trait for encoding text spans into tokens.
-pub trait SpanEncoder<T: TokenType> {
+pub trait SpanEncoder<T: TokenType>: Send {
     /// Encodes a single [`SpanRef`]".
     ///
     /// ## Arguments

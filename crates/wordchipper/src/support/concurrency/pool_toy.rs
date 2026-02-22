@@ -21,14 +21,14 @@ use crate::support::concurrency::threads::{resolve_max_pool, unstable_current_th
 /// for example, `regex_pool`, `cache_pool`, etc.
 pub struct PoolToy<T>
 where
-    T: Clone + Send,
+    T: Send,
 {
     pool: Vec<T>,
 }
 
 impl<T> Deref for PoolToy<T>
 where
-    T: Clone + Send,
+    T: Send,
 {
     type Target = T;
 
@@ -39,7 +39,7 @@ where
 
 impl<T> AsRef<T> for PoolToy<T>
 where
-    T: Clone + Send,
+    T: Send,
 {
     fn as_ref(&self) -> &T {
         self.get()
@@ -63,7 +63,12 @@ where
 
         Self::from_pool(vec![item; max_pool])
     }
+}
 
+impl<T> PoolToy<T>
+where
+    T: Send,
+{
     /// Create a new thread-local pool with the given vector of items.
     pub fn from_pool(pool: Vec<T>) -> Self {
         assert!(!pool.is_empty());
@@ -100,7 +105,7 @@ where
 
 impl<T> Debug for PoolToy<T>
 where
-    T: Clone + Send + Debug,
+    T: Send + Debug,
 {
     fn fmt(
         &self,

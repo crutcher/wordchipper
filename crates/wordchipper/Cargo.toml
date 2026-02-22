@@ -156,23 +156,7 @@ tracing = { workspace = true, optional = true }
 
 [dev-dependencies]
 compact_str = { workspace = true }
-divan = { workspace = true }
 tempdir = { workspace = true }
 tiktoken-rs = { workspace = true }
 tokenizers = { workspace = true, features = ["http"] }
 serial_test = { workspace = true }
-
-
-[[bench]]
-name = "spanning"
-harness = false
-
-[[bench]]
-name = "encoding"
-harness = false
-required-features = ["client"]
-
-[[bench]]
-name = "decoding"
-harness = false
-required-features = ["client"]

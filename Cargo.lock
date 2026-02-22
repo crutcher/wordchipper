@@ -3517,7 +3517,6 @@ dependencies = [
  "cfg-if",
  "compact_str",
  "dary_heap",
- "divan",
  "document-features",
  "fancy-regex",
  "foldhash",
@@ -3536,6 +3535,19 @@ dependencies = [
  "tokenizers",
  "tracing",
  "wordchipper-disk-cache",
+]
+
+[[package]]
+name = "wordchipper-bench"
+version = "0.0.0"
+dependencies = [
+ "arrow",
+ "divan",
+ "rayon",
+ "tiktoken-rs",
+ "tokenizers",
+ "wordchipper",
+ "wordchipper-data",
 ]
 
 [[package]]
