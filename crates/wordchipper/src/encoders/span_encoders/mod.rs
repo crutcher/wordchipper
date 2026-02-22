@@ -4,6 +4,7 @@ mod incremental_sweep_encoder;
 mod merge_heap_encoder;
 mod priority_merge_encoder;
 mod span_encoder;
+mod span_encoder_selector;
 mod token_span_encoder;
 
 #[doc(inline)]
