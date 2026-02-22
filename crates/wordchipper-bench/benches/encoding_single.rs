@@ -6,18 +6,8 @@ use divan::{Bencher, black_box, counter::BytesCount};
 use tiktoken_rs::CoreBPE;
 use tokenizers::Tokenizer;
 use wordchipper::{
-    TokenEncoder,
-    UnifiedTokenVocab,
-    disk_cache::WordchipperDiskCache,
-    encoders::span_encoders::{
-        IncrementalSweepSpanEncoder,
-        MergeHeapSpanEncoder,
-        PriorityMergeSpanEncoder,
-        SpanEncoder,
-        TokenSpanEncoder,
-    },
+    TokenEncoder, encoders::token_span_encoder::SpanEncoderSelector,
     pretrained::openai::OATokenizer,
-    spanning::TextSpannerBuilder,
 };
 
 #[global_allocator]
@@ -40,58 +30,36 @@ fn english_text() -> String {
 
 fn load_wc_variant(
     model: OATokenizer,
-    se_builder: Arc<dyn Fn() -> Box<dyn SpanEncoder<u32>> + Send + Sync>,
+    selector: SpanEncoderSelector,
 ) -> Arc<dyn TokenEncoder<u32>> {
-    let mut disk_cache = WordchipperDiskCache::default();
-    let vocab: Arc<UnifiedTokenVocab<u32>> =
-        model.load_vocab::<u32>(&mut disk_cache).unwrap().into();
-    let spanner = TextSpannerBuilder::from_vocab(&vocab)
+    wordchipper_bench::encoder_builder(model, selector)
         .with_parallel(false)
-        .build();
-    Arc::new(TokenSpanEncoder::<u32>::new(spanner, vocab, se_builder))
+        .build()
 }
 
-// IncrementalSweep
-static WC_SWEEP_CL100K: LazyLock<Arc<dyn TokenEncoder<u32>>> = LazyLock::new(|| {
-    load_wc_variant(
-        OATokenizer::Cl100kBase,
-        Arc::new(|| Box::new(IncrementalSweepSpanEncoder::<u32>::default())),
-    )
-});
-static WC_SWEEP_O200K: LazyLock<Arc<dyn TokenEncoder<u32>>> = LazyLock::new(|| {
-    load_wc_variant(
-        OATokenizer::O200kBase,
-        Arc::new(|| Box::new(IncrementalSweepSpanEncoder::<u32>::default())),
-    )
-});
+// BufferSwee
+static WC_BSWEEP_CL100K: LazyLock<Arc<dyn TokenEncoder<u32>>> =
+    LazyLock::new(|| load_wc_variant(OATokenizer::Cl100kBase, SpanEncoderSelector::BufferSweep));
+static WC_BSWEEP_O200K: LazyLock<Arc<dyn TokenEncoder<u32>>> =
+    LazyLock::new(|| load_wc_variant(OATokenizer::O200kBase, SpanEncoderSelector::BufferSweep));
+
+// TailSweep
+static WC_TSWEEP_CL100K: LazyLock<Arc<dyn TokenEncoder<u32>>> =
+    LazyLock::new(|| load_wc_variant(OATokenizer::Cl100kBase, SpanEncoderSelector::TailSweep));
+static WC_TSWEEP_O200K: LazyLock<Arc<dyn TokenEncoder<u32>>> =
+    LazyLock::new(|| load_wc_variant(OATokenizer::O200kBase, SpanEncoderSelector::TailSweep));
 
 // MergeHeap
-static WC_HEAP_CL100K: LazyLock<Arc<dyn TokenEncoder<u32>>> = LazyLock::new(|| {
-    load_wc_variant(
-        OATokenizer::Cl100kBase,
-        Arc::new(|| Box::new(MergeHeapSpanEncoder::<u32>::default())),
-    )
-});
-static WC_HEAP_O200K: LazyLock<Arc<dyn TokenEncoder<u32>>> = LazyLock::new(|| {
-    load_wc_variant(
-        OATokenizer::O200kBase,
-        Arc::new(|| Box::new(MergeHeapSpanEncoder::<u32>::default())),
-    )
-});
+static WC_HEAP_CL100K: LazyLock<Arc<dyn TokenEncoder<u32>>> =
+    LazyLock::new(|| load_wc_variant(OATokenizer::Cl100kBase, SpanEncoderSelector::MergeHeap));
+static WC_HEAP_O200K: LazyLock<Arc<dyn TokenEncoder<u32>>> =
+    LazyLock::new(|| load_wc_variant(OATokenizer::O200kBase, SpanEncoderSelector::MergeHeap));
 
 // PriorityMerge
-static WC_PMERGE_CL100K: LazyLock<Arc<dyn TokenEncoder<u32>>> = LazyLock::new(|| {
-    load_wc_variant(
-        OATokenizer::Cl100kBase,
-        Arc::new(|| Box::new(PriorityMergeSpanEncoder::<u32>::default())),
-    )
-});
-static WC_PMERGE_O200K: LazyLock<Arc<dyn TokenEncoder<u32>>> = LazyLock::new(|| {
-    load_wc_variant(
-        OATokenizer::O200kBase,
-        Arc::new(|| Box::new(PriorityMergeSpanEncoder::<u32>::default())),
-    )
-});
+static WC_PMERGE_CL100K: LazyLock<Arc<dyn TokenEncoder<u32>>> =
+    LazyLock::new(|| load_wc_variant(OATokenizer::Cl100kBase, SpanEncoderSelector::PriorityMerge));
+static WC_PMERGE_O200K: LazyLock<Arc<dyn TokenEncoder<u32>>> =
+    LazyLock::new(|| load_wc_variant(OATokenizer::O200kBase, SpanEncoderSelector::PriorityMerge));
 
 struct TiktokenFixture {
     bpe: Arc<CoreBPE>,
@@ -115,13 +83,13 @@ static HF_O200K: LazyLock<Arc<Tokenizer>> =
 mod english {
     use super::*;
 
-    mod incremental_sweep {
+    mod buffer_sweep {
         use super::*;
 
         #[divan::bench]
         fn cl100k(bencher: Bencher) {
             let text = english_text();
-            let encoder = &*WC_SWEEP_CL100K;
+            let encoder = &*WC_BSWEEP_CL100K;
             bencher
                 .counter(BytesCount::new(text.len()))
                 .bench(|| encoder.try_encode(black_box(&text)).unwrap());
@@ -130,7 +98,29 @@ mod english {
         #[divan::bench]
         fn o200k(bencher: Bencher) {
             let text = english_text();
-            let encoder = &*WC_SWEEP_O200K;
+            let encoder = &*WC_BSWEEP_O200K;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| encoder.try_encode(black_box(&text)).unwrap());
+        }
+    }
+
+    mod tail_sweep {
+        use super::*;
+
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            let text = english_text();
+            let encoder = &*WC_TSWEEP_CL100K;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| encoder.try_encode(black_box(&text)).unwrap());
+        }
+
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            let text = english_text();
+            let encoder = &*WC_TSWEEP_O200K;
             bencher
                 .counter(BytesCount::new(text.len()))
                 .bench(|| encoder.try_encode(black_box(&text)).unwrap());
@@ -229,13 +219,13 @@ mod english {
 mod diverse {
     use super::*;
 
-    mod incremental_sweep {
+    mod buffer_sweep {
         use super::*;
 
         #[divan::bench]
         fn cl100k(bencher: Bencher) {
             let text = diverse_text();
-            let encoder = &*WC_SWEEP_CL100K;
+            let encoder = &*WC_BSWEEP_CL100K;
             bencher
                 .counter(BytesCount::new(text.len()))
                 .bench(|| encoder.try_encode(black_box(&text)).unwrap());
@@ -244,7 +234,29 @@ mod diverse {
         #[divan::bench]
         fn o200k(bencher: Bencher) {
             let text = diverse_text();
-            let encoder = &*WC_SWEEP_O200K;
+            let encoder = &*WC_BSWEEP_O200K;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| encoder.try_encode(black_box(&text)).unwrap());
+        }
+    }
+
+    mod tail_sweep {
+        use super::*;
+
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            let text = diverse_text();
+            let encoder = &*WC_TSWEEP_CL100K;
+            bencher
+                .counter(BytesCount::new(text.len()))
+                .bench(|| encoder.try_encode(black_box(&text)).unwrap());
+        }
+
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            let text = diverse_text();
+            let encoder = &*WC_TSWEEP_O200K;
             bencher
                 .counter(BytesCount::new(text.len()))
                 .bench(|| encoder.try_encode(black_box(&text)).unwrap());

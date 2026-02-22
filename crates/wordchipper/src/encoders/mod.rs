@@ -17,10 +17,10 @@
 //! ```
 
 mod encoder_builder;
-pub mod span_encoders;
 #[cfg(any(test, feature = "testing"))]
 pub mod testing;
 mod token_encoder;
+pub mod token_span_encoder;
 
 #[doc(inline)]
 pub use encoder_builder::*;

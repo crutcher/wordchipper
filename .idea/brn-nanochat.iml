@@ -18,6 +18,8 @@
       <sourceFolder url="file://$MODULE_DIR$/bindings/python/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/crates/wordchipper/benches" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/crates/wordchipper/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/wordchipper-bench/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/wordchipper-bench/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/crates/nanochat/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/crates/wordchipper/target" />

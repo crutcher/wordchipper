@@ -1,25 +1,25 @@
-//! # Incremental merge-sweep [`SpanEncoder`].
-//!
-//! Incrementally re-scans for the best available merge,
-//! iterates until no more merges remain.
+//! # Tail Buffer Incremental Sweep [`SpanEncoder`].
 
 use crate::{
     TokenType,
     alloc::vec::Vec,
-    encoders::span_encoders::span_encoder::SpanEncoder,
+    encoders::token_span_encoder::SpanEncoder,
     vocab::UnifiedTokenVocab,
 };
 
 /// A [`SpanEncoder`] which incrementally scans for merges.
 ///
-/// This encoder incrementally re-scans for the best available merge,
-/// iterates until no more merges remain.
+/// This encoder uses the token buffer tail as working memory.
+///
+/// It fills working memory with the direct byte-token translations;
+/// and then iteratively sweeps the buffer to apply the best
+/// available merge until no more merges remain.
 #[derive(Default, Debug, Clone)]
-pub struct IncrementalSweepSpanEncoder<T: TokenType> {
+pub struct TailSweepSpanEncoder<T: TokenType> {
     marker: core::marker::PhantomData<T>,
 }
 
-impl<T: TokenType> SpanEncoder<T> for IncrementalSweepSpanEncoder<T> {
+impl<T: TokenType> SpanEncoder<T> for TailSweepSpanEncoder<T> {
     fn encode_append_compound_span(
         &mut self,
         vocab: &UnifiedTokenVocab<T>,
@@ -61,20 +61,20 @@ mod tests {
     use super::*;
     use crate::{
         TokenType,
-        alloc::{boxed::Box, sync::Arc},
+        alloc::sync::Arc,
         encoders::{
-            span_encoders::TokenSpanEncoder,
             testing::{common_encoder_test_vocab, common_encoder_tests},
+            token_span_encoder::{SpanEncoderSelector, TokenSpanEncoder},
         },
         spanning::TextSpannerBuilder,
     };
 
     fn test_encoder<T: TokenType>() {
         let vocab: Arc<UnifiedTokenVocab<T>> = common_encoder_test_vocab().into();
-        let encoder = TokenSpanEncoder::<T>::new(
+        let encoder = TokenSpanEncoder::<T>::new_with_selector(
             TextSpannerBuilder::default(&vocab),
             vocab.clone(),
-            Arc::new(|| Box::new(IncrementalSweepSpanEncoder::<T>::default())),
+            SpanEncoderSelector::TailSweep,
         );
         common_encoder_tests(vocab, encoder)
     }

@@ -8,18 +8,8 @@ use divan::{Bencher, black_box, counter::BytesCount};
 use tiktoken_rs::CoreBPE;
 use wordchipper::{
     TokenEncoder,
-    UnifiedTokenVocab,
-    disk_cache::WordchipperDiskCache,
-    encoders::span_encoders::{
-        IncrementalSweepSpanEncoder,
-        MergeHeapSpanEncoder,
-        PriorityMergeSpanEncoder,
-        SpanEncoder,
-        TokenSpanEncoder,
-    },
+    encoders::token_span_encoder::SpanEncoderSelector,
     pretrained::openai::OATokenizer,
-    spanning::TextSpannerBuilder,
-    support::concurrency::rayon::ParallelRayonEncoder,
 };
 use wordchipper_data::dataset::DatasetCacheConfig;
 
@@ -44,20 +34,13 @@ impl Batch {
 }
 
 fn load_batch() -> Batch {
-    let data_dir = std::env::var("WORDCHIPPER_BENCH_DATA")
-        .unwrap_or_else(|_| "/tmp/wordchipper-bench-data".to_string());
-
-    let cache = DatasetCacheConfig::default()
-        .with_cache_dir(data_dir.clone())
+    let mut cache = DatasetCacheConfig::default()
         .init()
-        .unwrap_or_else(|e| panic!("Failed to init dataset cache at {data_dir}: {e}"));
+        .expect("failed to initialize dataset cache");
 
-    let reader = cache.read_cached_batches(0).unwrap_or_else(|e| {
-        panic!(
-            "Failed to read shard 0 from {data_dir}. \
-                 Download it first with sample-timer or set WORDCHIPPER_BENCH_DATA: {e}"
-        )
-    });
+    let reader = cache
+        .read_batches(0, true)
+        .expect("failed to read dataset batches");
 
     let mut samples = Vec::with_capacity(BATCH_SIZE);
     for batch in reader {
@@ -92,56 +75,32 @@ static BATCH: LazyLock<Batch> = LazyLock::new(load_batch);
 
 fn load_wc_variant(
     model: OATokenizer,
-    se_builder: Arc<dyn Fn() -> Box<dyn SpanEncoder<u32>> + Send + Sync>,
+    selector: SpanEncoderSelector,
 ) -> Arc<dyn TokenEncoder<u32>> {
-    let mut disk_cache = WordchipperDiskCache::default();
-    let vocab: Arc<UnifiedTokenVocab<u32>> =
-        model.load_vocab::<u32>(&mut disk_cache).unwrap().into();
-    let spanner = TextSpannerBuilder::from_vocab(&vocab).build();
-    let inner: Arc<dyn TokenEncoder<u32>> =
-        Arc::new(TokenSpanEncoder::<u32>::new(spanner, vocab, se_builder));
-    Arc::new(ParallelRayonEncoder::new(inner))
+    wordchipper_bench::encoder_builder(model, selector)
+        .with_parallel(true)
+        .build()
 }
 
-// cl100k variants
-static WC_SWEEP_CL100K: LazyLock<Arc<dyn TokenEncoder<u32>>> = LazyLock::new(|| {
-    load_wc_variant(
-        OATokenizer::Cl100kBase,
-        Arc::new(|| Box::new(IncrementalSweepSpanEncoder::<u32>::default())),
-    )
-});
-static WC_HEAP_CL100K: LazyLock<Arc<dyn TokenEncoder<u32>>> = LazyLock::new(|| {
-    load_wc_variant(
-        OATokenizer::Cl100kBase,
-        Arc::new(|| Box::new(MergeHeapSpanEncoder::<u32>::default())),
-    )
-});
-static WC_PMERGE_CL100K: LazyLock<Arc<dyn TokenEncoder<u32>>> = LazyLock::new(|| {
-    load_wc_variant(
-        OATokenizer::Cl100kBase,
-        Arc::new(|| Box::new(PriorityMergeSpanEncoder::<u32>::default())),
-    )
-});
+// cl100k span_encoders
+static WC_BSWEEP_CL100K: LazyLock<Arc<dyn TokenEncoder<u32>>> =
+    LazyLock::new(|| load_wc_variant(OATokenizer::Cl100kBase, SpanEncoderSelector::BufferSweep));
+static WC_TSWEEP_CL100K: LazyLock<Arc<dyn TokenEncoder<u32>>> =
+    LazyLock::new(|| load_wc_variant(OATokenizer::Cl100kBase, SpanEncoderSelector::TailSweep));
+static WC_HEAP_CL100K: LazyLock<Arc<dyn TokenEncoder<u32>>> =
+    LazyLock::new(|| load_wc_variant(OATokenizer::Cl100kBase, SpanEncoderSelector::MergeHeap));
+static WC_PMERGE_CL100K: LazyLock<Arc<dyn TokenEncoder<u32>>> =
+    LazyLock::new(|| load_wc_variant(OATokenizer::Cl100kBase, SpanEncoderSelector::PriorityMerge));
 
-// o200k variants
-static WC_SWEEP_O200K: LazyLock<Arc<dyn TokenEncoder<u32>>> = LazyLock::new(|| {
-    load_wc_variant(
-        OATokenizer::O200kBase,
-        Arc::new(|| Box::new(IncrementalSweepSpanEncoder::<u32>::default())),
-    )
-});
-static WC_HEAP_O200K: LazyLock<Arc<dyn TokenEncoder<u32>>> = LazyLock::new(|| {
-    load_wc_variant(
-        OATokenizer::O200kBase,
-        Arc::new(|| Box::new(MergeHeapSpanEncoder::<u32>::default())),
-    )
-});
-static WC_PMERGE_O200K: LazyLock<Arc<dyn TokenEncoder<u32>>> = LazyLock::new(|| {
-    load_wc_variant(
-        OATokenizer::O200kBase,
-        Arc::new(|| Box::new(PriorityMergeSpanEncoder::<u32>::default())),
-    )
-});
+// o200k span_encoders
+static WC_BSWEEP_O200K: LazyLock<Arc<dyn TokenEncoder<u32>>> =
+    LazyLock::new(|| load_wc_variant(OATokenizer::O200kBase, SpanEncoderSelector::BufferSweep));
+static WC_TSWEEP_O200K: LazyLock<Arc<dyn TokenEncoder<u32>>> =
+    LazyLock::new(|| load_wc_variant(OATokenizer::O200kBase, SpanEncoderSelector::TailSweep));
+static WC_HEAP_O200K: LazyLock<Arc<dyn TokenEncoder<u32>>> =
+    LazyLock::new(|| load_wc_variant(OATokenizer::O200kBase, SpanEncoderSelector::MergeHeap));
+static WC_PMERGE_O200K: LazyLock<Arc<dyn TokenEncoder<u32>>> =
+    LazyLock::new(|| load_wc_variant(OATokenizer::O200kBase, SpanEncoderSelector::PriorityMerge));
 
 static TT_CL100K: LazyLock<Arc<CoreBPE>> =
     LazyLock::new(|| Arc::new(tiktoken_rs::cl100k_base().unwrap()));
@@ -154,13 +113,13 @@ static HF_CL100K: LazyLock<Arc<Tokenizer>> = LazyLock::new(|| {
 static HF_O200K: LazyLock<Arc<Tokenizer>> =
     LazyLock::new(|| Arc::new(Tokenizer::from_pretrained("Xenova/gpt-4o", None).unwrap()));
 
-mod incremental_sweep {
+mod buffer_sweep {
     use super::*;
 
     #[divan::bench]
     fn cl100k(bencher: Bencher) {
         let strs = BATCH.strs();
-        let encoder = &*WC_SWEEP_CL100K;
+        let encoder = &*WC_BSWEEP_CL100K;
         bencher
             .counter(BytesCount::new(BATCH.total_bytes))
             .bench(|| encoder.try_encode_batch(black_box(&strs)).unwrap());
@@ -169,7 +128,29 @@ mod incremental_sweep {
     #[divan::bench]
     fn o200k(bencher: Bencher) {
         let strs = BATCH.strs();
-        let encoder = &*WC_SWEEP_O200K;
+        let encoder = &*WC_BSWEEP_O200K;
+        bencher
+            .counter(BytesCount::new(BATCH.total_bytes))
+            .bench(|| encoder.try_encode_batch(black_box(&strs)).unwrap());
+    }
+}
+
+mod tail_sweep {
+    use super::*;
+
+    #[divan::bench]
+    fn cl100k(bencher: Bencher) {
+        let strs = BATCH.strs();
+        let encoder = &*WC_TSWEEP_CL100K;
+        bencher
+            .counter(BytesCount::new(BATCH.total_bytes))
+            .bench(|| encoder.try_encode_batch(black_box(&strs)).unwrap());
+    }
+
+    #[divan::bench]
+    fn o200k(bencher: Bencher) {
+        let strs = BATCH.strs();
+        let encoder = &*WC_TSWEEP_O200K;
         bencher
             .counter(BytesCount::new(BATCH.total_bytes))
             .bench(|| encoder.try_encode_batch(black_box(&strs)).unwrap());

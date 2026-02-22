@@ -1,7 +1,7 @@
 //! # Priority-merge [`SpanEncoder`].
 //!
 //! Uses a binary min-heap over a doubly-linked list for O(n log n) BPE merging,
-//! replacing the O(n^2) linear-scan approach in [`super::IncrementalSweepSpanEncoder`].
+//! replacing the O(n^2) linear-scan approach in [`super::TailSweepSpanEncoder`].
 
 use alloc::collections::BinaryHeap;
 use core::cmp::Reverse;
@@ -9,7 +9,7 @@ use core::cmp::Reverse;
 use crate::{
     TokenType,
     alloc::vec::Vec,
-    encoders::span_encoders::span_encoder::SpanEncoder,
+    encoders::token_span_encoder::SpanEncoder,
     vocab::UnifiedTokenVocab,
 };
 
@@ -206,20 +206,20 @@ mod tests {
     use super::*;
     use crate::{
         TokenType,
-        alloc::{boxed::Box, sync::Arc},
+        alloc::sync::Arc,
         encoders::{
-            span_encoders::TokenSpanEncoder,
             testing::{common_encoder_test_vocab, common_encoder_tests},
+            token_span_encoder::{SpanEncoderSelector, TokenSpanEncoder},
         },
         spanning::TextSpannerBuilder,
     };
 
     fn test_encoder<T: TokenType>() {
         let vocab: Arc<UnifiedTokenVocab<T>> = common_encoder_test_vocab().into();
-        let encoder = TokenSpanEncoder::<T>::new(
+        let encoder = TokenSpanEncoder::<T>::new_with_selector(
             TextSpannerBuilder::default(&vocab),
             vocab.clone(),
-            Arc::new(|| Box::new(PriorityMergeSpanEncoder::<T>::default())),
+            SpanEncoderSelector::PriorityMerge,
         );
         common_encoder_tests(vocab, encoder)
     }

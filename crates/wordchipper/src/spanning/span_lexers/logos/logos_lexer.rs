@@ -61,7 +61,7 @@ enum Cl100kToken {
 /// Logos token for the `o200k_base` pattern.
 ///
 /// Key difference from cl100k: contractions are attached to the preceding word,
-/// and two word variants (uppercase-leading vs lowercase-ending) are merged
+/// and two word `span_encoders` (uppercase-leading vs lowercase-ending) are merged
 /// into a single `Word` variant because logos requires unambiguous DFA states.
 ///
 /// | Regex branch                                         | Logos variant  |

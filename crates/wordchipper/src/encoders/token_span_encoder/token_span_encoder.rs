@@ -4,7 +4,7 @@ use crate::{
     UnifiedTokenVocab,
     WCResult,
     alloc::{boxed::Box, sync::Arc, vec::Vec},
-    encoders::span_encoders::SpanEncoder,
+    encoders::token_span_encoder::{SpanEncoder, SpanEncoderSelector},
     spanning::TextSpanner,
     vocab::SpecialVocab,
 };
@@ -28,8 +28,25 @@ where
 }
 
 impl<T: TokenType> TokenSpanEncoder<T> {
-    /// Create a new encoder.
+    /// Create a new encoder using the default [`SpanEncoderSelector`].
     pub fn new(
+        spanner: Arc<dyn TextSpanner>,
+        vocab: Arc<UnifiedTokenVocab<T>>,
+    ) -> Self {
+        Self::new_with_selector(spanner, vocab, SpanEncoderSelector::Default)
+    }
+
+    /// Create a new encoder using the selected [`SpanEncoder`].
+    pub fn new_with_selector(
+        spanner: Arc<dyn TextSpanner>,
+        vocab: Arc<UnifiedTokenVocab<T>>,
+        selector: SpanEncoderSelector,
+    ) -> Self {
+        Self::new_with_builder(spanner, vocab, selector.span_encoder_builder())
+    }
+
+    /// Create a new encoder.
+    pub fn new_with_builder(
         spanner: Arc<dyn TextSpanner>,
         vocab: Arc<UnifiedTokenVocab<T>>,
         se_builder: Arc<dyn Fn() -> Box<dyn SpanEncoder<T>> + Send + Sync>,

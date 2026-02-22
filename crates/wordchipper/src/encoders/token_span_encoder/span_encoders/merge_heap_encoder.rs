@@ -6,7 +6,7 @@
 use crate::{
     TokenType,
     alloc::vec::Vec,
-    encoders::span_encoders::span_encoder::SpanEncoder,
+    encoders::token_span_encoder::span_encoders::span_encoder::SpanEncoder,
     vocab::UnifiedTokenVocab,
 };
 
@@ -92,20 +92,20 @@ mod tests {
     use super::*;
     use crate::{
         TokenType,
-        alloc::{boxed::Box, sync::Arc},
+        alloc::sync::Arc,
         encoders::{
-            span_encoders::TokenSpanEncoder,
             testing::{common_encoder_test_vocab, common_encoder_tests},
+            token_span_encoder::{SpanEncoderSelector, TokenSpanEncoder},
         },
         spanning::TextSpannerBuilder,
     };
 
     fn test_encoder<T: TokenType>() {
         let vocab: Arc<UnifiedTokenVocab<T>> = common_encoder_test_vocab().into();
-        let encoder = TokenSpanEncoder::<T>::new(
+        let encoder = TokenSpanEncoder::<T>::new_with_selector(
             TextSpannerBuilder::default(&vocab),
             vocab.clone(),
-            Arc::new(|| Box::new(MergeHeapSpanEncoder::<T>::default())),
+            SpanEncoderSelector::MergeHeap,
         );
         common_encoder_tests(vocab.into(), encoder)
     }

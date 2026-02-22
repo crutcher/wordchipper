@@ -4,10 +4,10 @@ use core::num::NonZeroUsize;
 
 use crate::{
     TokenType,
-    alloc::{boxed::Box, sync::Arc},
+    alloc::sync::Arc,
     encoders::{
         TokenEncoder,
-        span_encoders::{IncrementalSweepSpanEncoder, TokenSpanEncoder},
+        token_span_encoder::{SpanEncoderSelector, TokenSpanEncoder},
     },
     spanning::TextSpannerBuilder,
     vocab::UnifiedTokenVocab,
@@ -17,7 +17,10 @@ use crate::{
 #[derive(Clone, PartialEq)]
 pub struct TokenEncoderBuilder<T: TokenType> {
     vocab: Arc<UnifiedTokenVocab<T>>,
+
     spanner_builder: TextSpannerBuilder<T>,
+
+    span_encoder: SpanEncoderSelector,
 }
 
 impl<T: TokenType> TokenEncoderBuilder<T> {
@@ -31,6 +34,7 @@ impl<T: TokenType> TokenEncoderBuilder<T> {
         let spanner_builder = TextSpannerBuilder::from_vocab(&vocab);
         Self {
             vocab,
+            span_encoder: Default::default(),
             spanner_builder,
         }
     }
@@ -48,6 +52,28 @@ impl<T: TokenType> TokenEncoderBuilder<T> {
     /// Get the underlying [`TextSpannerBuilder`] for mutable access.
     pub fn spanner_builder_mut(&mut self) -> &mut TextSpannerBuilder<T> {
         &mut self.spanner_builder
+    }
+
+    /// Get the configured [`SpanEncoderSelector`].
+    pub fn span_encoder(&self) -> SpanEncoderSelector {
+        self.span_encoder
+    }
+
+    /// Set the configured [`SpanEncoderSelector`].
+    pub fn set_span_encoder(
+        &mut self,
+        span_encoder: SpanEncoderSelector,
+    ) {
+        self.span_encoder = span_encoder;
+    }
+
+    /// Set the configured [`SpanEncoderSelector`] and return the builder.
+    pub fn with_span_encoder(
+        mut self,
+        span_encoder: SpanEncoderSelector,
+    ) -> Self {
+        self.set_span_encoder(span_encoder);
+        self
     }
 
     /// Get whether the decoder should use parallel decoding.
@@ -105,10 +131,10 @@ impl<T: TokenType> TokenEncoderBuilder<T> {
         let spanner = self.spanner_builder().build();
 
         #[allow(unused_mut)]
-        let mut enc: Arc<dyn TokenEncoder<T>> = Arc::new(TokenSpanEncoder::<T>::new(
+        let mut enc: Arc<dyn TokenEncoder<T>> = Arc::new(TokenSpanEncoder::<T>::new_with_selector(
             spanner,
             self.vocab().clone(),
-            Arc::new(|| Box::new(IncrementalSweepSpanEncoder::<T>::default())),
+            self.span_encoder(),
         ));
 
         #[cfg(feature = "rayon")]
@@ -164,15 +190,11 @@ mod tests {
             .special_pattern()
             .map(|p| Arc::new(RegexWrapper::from(p)) as Arc<dyn SpanLexer>);
         let regex_spanner = Arc::new(LexerTextSpanner::new(regex_lexer, special_lexer));
-        let regex_enc: Arc<dyn crate::TokenEncoder<T>> =
-            Arc::new(crate::encoders::span_encoders::TokenSpanEncoder::<T>::new(
+        let regex_enc: Arc<dyn TokenEncoder<T>> =
+            Arc::new(TokenSpanEncoder::<T>::new_with_selector(
                 regex_spanner,
                 vocab.clone(),
-                Arc::new(|| {
-                    Box::new(
-                        crate::encoders::span_encoders::IncrementalSweepSpanEncoder::<T>::default(),
-                    )
-                }),
+                SpanEncoderSelector::TailSweep,
             ));
 
         let samples = [
