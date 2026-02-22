@@ -78,6 +78,7 @@ where
 mod tests {
     use super::*;
     use crate::{
+        TokenDecoderBuilder,
         UnifiedTokenVocab,
         decoders::utility::testing::common_decoder_unit_test,
         pretrained::openai::OA_CL100K_BASE_PATTERN,
@@ -98,7 +99,9 @@ mod tests {
         )
         .into();
 
-        let inner = vocab.to_decoder_builder().with_parallel(false).build();
+        let inner = TokenDecoderBuilder::new(vocab.to_vocab().clone())
+            .with_parallel(false)
+            .build();
         let decoder = ParallelRayonDecoder::new(inner);
 
         common_decoder_unit_test(vocab, &decoder);

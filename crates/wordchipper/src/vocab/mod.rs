@@ -23,12 +23,8 @@
 //! which can be converted between [`crate::TokenType`]s via [`UnifiedTokenVocab::to_token_type`].
 //!
 //! Default [`crate::TokenEncoder`] and [`crate::TokenDecoder`] implementations
-//! can be constructed directly using [`SharedVocabSource::to_default_encoder`]
-//! and [`SharedVocabSource::to_default_decoder`].
-//! [`SharedVocabSource::to_encoder_builder`] and
-//! [`SharedVocabSource::to_decoder_builder`] return [`crate::TokenEncoderBuilder`] and
-//! [`crate::TokenDecoderBuilder`] instances, which can be further configured
-//! with additional options.
+//! can be constructed directly using [`crate::TokenEncoderBuilder::default`]
+//! and [`crate::TokenDecoderBuilder::default`].
 //!
 //! ## Loading and Saving Models
 //!

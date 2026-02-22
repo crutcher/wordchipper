@@ -278,38 +278,23 @@ pub trait SharedVocabSource<T: TokenType> {
     /// Get the underlying [`UnifiedTokenVocab`] for this source.
     fn to_vocab(&self) -> &Arc<UnifiedTokenVocab<T>>;
 
-    /// Get a [`TextSpannerBuilder`] for this [`UnifiedTokenVocab`].
-    fn to_spanner_builder(&self) -> TextSpannerBuilder<T> {
-        TextSpannerBuilder::from_vocab(self.to_vocab())
-    }
-
     /// Get the default [`TextSpanner`] for this [`UnifiedTokenVocab`].
     fn to_default_spanner(&self) -> Arc<dyn TextSpanner> {
-        self.to_spanner_builder().build()
-    }
-
-    /// Get a [`TokenEncoderBuilder`] for this [`UnifiedTokenVocab`].
-    fn to_encoder_builder(&self) -> TokenEncoderBuilder<T> {
-        TokenEncoderBuilder::new(self.to_vocab().clone())
+        TextSpannerBuilder::default(self.to_vocab())
     }
 
     /// Get a default [`TokenEncoder`] for this [`UnifiedTokenVocab`].
     ///
     /// This is a simple wrapper around [`TokenEncoderBuilder::default`].
     fn to_default_encoder(&self) -> Arc<dyn TokenEncoder<T>> {
-        self.to_encoder_builder().build()
-    }
-
-    /// Build a [`TokenDecoderBuilder`] for this [`UnifiedTokenVocab`].
-    fn to_decoder_builder(&self) -> TokenDecoderBuilder<T> {
-        TokenDecoderBuilder::new(self.to_vocab().clone())
+        TokenEncoderBuilder::default(self.to_vocab().clone())
     }
 
     /// Get a default [`TokenDecoder`] for this [`UnifiedTokenVocab`].
     ///
     /// This is a simple wrapper around [`TokenDecoderBuilder::default`].
     fn to_default_decoder(&self) -> Arc<dyn TokenDecoder<T>> {
-        self.to_decoder_builder().build()
+        TokenDecoderBuilder::default(self.to_vocab().clone())
     }
 }
 
