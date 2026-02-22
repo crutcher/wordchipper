@@ -63,10 +63,11 @@
 //!     Tokenizer,
 //!     TokenizerBuilder,
 //!     UnifiedTokenVocab,
+//!     WCResult,
 //!     disk_cache::WordchipperDiskCache,
 //! };
 //!
-//! fn example() -> wordchipper::WCResult<(Arc<Tokenizer<u32>>) {
+//! fn example() -> WCResult< Arc<Tokenizer<u32>> > {
 //!     let mut disk_cache = WordchipperDiskCache::default();
 //!     let vocab: Arc<UnifiedTokenVocab<u32>> =
 //!         get_model("openai/o200k_harmony", &mut disk_cache)?.into();
