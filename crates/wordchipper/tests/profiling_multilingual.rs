@@ -3,8 +3,7 @@
 //! Profiling investigation for issue #173:
 //! Why is multilingual text disproportionately slower for wordchipper encoding?
 
-use std::sync::Arc;
-use std::time::Instant;
+use std::{sync::Arc, time::Instant};
 
 use wordchipper::{
     TokenEncoder,
@@ -89,7 +88,12 @@ fn time_encoding(
     (start.elapsed() / iterations as u32, token_count)
 }
 
-fn run_profile(model: OATokenizer, model_name: &str, text: &str, corpus_name: &str) {
+fn run_profile(
+    model: OATokenizer,
+    model_name: &str,
+    text: &str,
+    corpus_name: &str,
+) {
     let mut disk_cache = WordchipperDiskCache::default();
     let vocab: Arc<UnifiedTokenVocab<u32>> = model.load_vocab(&mut disk_cache).unwrap().into();
 
@@ -145,17 +149,39 @@ fn run_profile(model: OATokenizer, model_name: &str, text: &str, corpus_name: &s
     };
 
     println!("=== {model_name} / {corpus_name} ===");
-    println!("  Input: {} bytes, {} tokens ({:.2} bytes/token)", bytes, token_count, bytes_per_token);
-    println!("  Spans: {} total, {} vocab hits ({:.1}%), {} compound",
-        stats.total_spans, stats.vocab_hits, vocab_hit_pct, stats.compound_spans);
-    println!("  Compound: avg {:.1} bytes, max {} bytes, {:.1}% of input bytes",
-        avg_compound, stats.max_compound_bytes,
-        100.0 * stats.total_compound_bytes as f64 / stats.total_bytes as f64);
-    println!("  Spanning: {:.2} ms ({:.1} MB/s)", span_time.as_secs_f64() * 1000.0, span_mbps);
-    println!("  Encoding: {:.2} ms ({:.1} MB/s)", encode_time.as_secs_f64() * 1000.0, encode_mbps);
-    println!("  BPE only: {:.2} ms ({:.1} MB/s)", bpe_time.as_secs_f64() * 1000.0, bpe_mbps);
-    println!("  BPE fraction: {:.1}% of total encode time",
-        100.0 * bpe_time.as_secs_f64() / encode_time.as_secs_f64());
+    println!(
+        "  Input: {} bytes, {} tokens ({:.2} bytes/token)",
+        bytes, token_count, bytes_per_token
+    );
+    println!(
+        "  Spans: {} total, {} vocab hits ({:.1}%), {} compound",
+        stats.total_spans, stats.vocab_hits, vocab_hit_pct, stats.compound_spans
+    );
+    println!(
+        "  Compound: avg {:.1} bytes, max {} bytes, {:.1}% of input bytes",
+        avg_compound,
+        stats.max_compound_bytes,
+        100.0 * stats.total_compound_bytes as f64 / stats.total_bytes as f64
+    );
+    println!(
+        "  Spanning: {:.2} ms ({:.1} MB/s)",
+        span_time.as_secs_f64() * 1000.0,
+        span_mbps
+    );
+    println!(
+        "  Encoding: {:.2} ms ({:.1} MB/s)",
+        encode_time.as_secs_f64() * 1000.0,
+        encode_mbps
+    );
+    println!(
+        "  BPE only: {:.2} ms ({:.1} MB/s)",
+        bpe_time.as_secs_f64() * 1000.0,
+        bpe_mbps
+    );
+    println!(
+        "  BPE fraction: {:.1}% of total encode time",
+        100.0 * bpe_time.as_secs_f64() / encode_time.as_secs_f64()
+    );
     println!();
 }
 
@@ -243,10 +269,21 @@ fn analyze_bpe_cost(
 
     println!("  [{model_name}/{corpus_name}] BPE detail:");
     println!("    Compound spans: {n}");
-    println!("    Byte lengths: avg={:.1}, p50={}, p90={}, p99={}, max={}",
-        total_bytes as f64 / n as f64, p50_len, p90_len, p99_len, max_len);
-    println!("    Merge iters:  avg={:.1}, p50={}, p90={}, max={}",
-        total_merges as f64 / n as f64, p50_merges, p90_merges, max_merges);
+    println!(
+        "    Byte lengths: avg={:.1}, p50={}, p90={}, p99={}, max={}",
+        total_bytes as f64 / n as f64,
+        p50_len,
+        p90_len,
+        p99_len,
+        max_len
+    );
+    println!(
+        "    Merge iters:  avg={:.1}, p50={}, p90={}, max={}",
+        total_merges as f64 / n as f64,
+        p50_merges,
+        p90_merges,
+        max_merges
+    );
     println!("    Total merge iterations: {total_merges}");
     println!("    Est. total pair lookups: {total_pair_lookups}");
 
@@ -265,7 +302,9 @@ fn analyze_bpe_cost(
         };
         buckets[bucket] += 1;
     }
-    let labels = ["1-2", "3-4", "5-8", "9-16", "17-32", "33-64", "65-128", "129+"];
+    let labels = [
+        "1-2", "3-4", "5-8", "9-16", "17-32", "33-64", "65-128", "129+",
+    ];
     print!("    Length distribution: ");
     for (label, count) in labels.iter().zip(buckets.iter()) {
         if *count > 0 {

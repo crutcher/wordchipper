@@ -12,7 +12,7 @@ use crate::{
     vocab::UnifiedTokenVocab,
 };
 
-/// A heap entry: (merge_rank, position, generation_at_push_time).
+/// A heap entry: (`merge_rank`, position, `generation_at_push_time`).
 ///
 /// Wrapped in [`Reverse`] so the [`BinaryHeap`] acts as a min-heap by rank,
 /// with ties broken by position (leftmost first).
@@ -43,7 +43,9 @@ impl<T: TokenType> SpanEncoder<T> for MergeHeapSpanEncoder<T> {
     ) {
         // 1. Build initial byte-level tokens into our working buffer.
         self.work_tokens.clear();
-        vocab.byte_vocab().append_tokens(span, &mut self.work_tokens);
+        vocab
+            .byte_vocab()
+            .append_tokens(span, &mut self.work_tokens);
 
         let n = self.work_tokens.len();
         if n <= 1 {
@@ -117,12 +119,11 @@ impl<T: TokenType> SpanEncoder<T> for MergeHeapSpanEncoder<T> {
             }
 
             // Recompute pair (i, next[i]) if next[i] exists.
-            if k != sentinel {
-                if let Some(new_rank) =
+            if k != sentinel
+                && let Some(new_rank) =
                     vocab.lookup_pair(&(self.work_tokens[i], self.work_tokens[k]))
-                {
-                    self.heap.push(Reverse((new_rank, i, self.generation[i])));
-                }
+            {
+                self.heap.push(Reverse((new_rank, i, self.generation[i])));
             }
         }
 
