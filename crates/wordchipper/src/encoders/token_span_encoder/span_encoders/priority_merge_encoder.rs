@@ -13,12 +13,14 @@ use crate::{
     vocab::UnifiedTokenVocab,
 };
 
-const NONE: u32 = u32::MAX;
+type IndexType = u16;
+
+const NONE: IndexType = IndexType::MAX;
 
 struct Node<T> {
     token: T,
-    prev: u32,
-    next: u32,
+    prev: IndexType,
+    next: IndexType,
 }
 
 /// Heap entry representing a potential merge.
@@ -28,7 +30,7 @@ struct Node<T> {
 #[derive(Eq)]
 struct MergeEntry<T: Ord> {
     rank: T,
-    left_idx: u32,
+    left_idx: IndexType,
     left_tok: T,
     right_tok: T,
 }
@@ -118,8 +120,12 @@ impl<T: TokenType> SpanEncoder<T> for PriorityMergeSpanEncoder<T> {
         for (i, &byte) in span.iter().enumerate() {
             self.nodes.push(Node {
                 token: byte_vocab.get_token(byte),
-                prev: if i == 0 { NONE } else { (i - 1) as u32 },
-                next: if i + 1 < n { (i + 1) as u32 } else { NONE },
+                prev: if i == 0 { NONE } else { (i - 1) as IndexType },
+                next: if i + 1 < n {
+                    (i + 1) as IndexType
+                } else {
+                    NONE
+                },
             });
         }
 
@@ -131,7 +137,7 @@ impl<T: TokenType> SpanEncoder<T> for PriorityMergeSpanEncoder<T> {
             if let Some(rank) = vocab.lookup_pair(&(left_tok, right_tok)) {
                 self.heap.push(Reverse(MergeEntry {
                     rank,
-                    left_idx: i as u32,
+                    left_idx: i as IndexType,
                     left_tok,
                     right_tok,
                 }));
@@ -143,11 +149,11 @@ impl<T: TokenType> SpanEncoder<T> for PriorityMergeSpanEncoder<T> {
             let li = entry.left_idx as usize;
 
             // Validate: left node still active with expected right neighbor.
-            let ri_u32 = self.nodes[li].next;
-            if ri_u32 == NONE {
+            let ri_idx = self.nodes[li].next;
+            if ri_idx == NONE {
                 continue;
             }
-            let ri = ri_u32 as usize;
+            let ri = ri_idx as usize;
 
             // Bidirectional adjacency + token freshness.
             if self.nodes[ri].prev != entry.left_idx
@@ -193,7 +199,7 @@ impl<T: TokenType> SpanEncoder<T> for PriorityMergeSpanEncoder<T> {
         }
 
         // Collect final tokens by walking the linked list.
-        let mut idx = 0u32;
+        let mut idx: IndexType = 0;
         while idx != NONE {
             tokens.push(self.nodes[idx as usize].token);
             idx = self.nodes[idx as usize].next;
