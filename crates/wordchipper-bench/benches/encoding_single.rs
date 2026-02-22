@@ -6,7 +6,8 @@ use divan::{Bencher, black_box, counter::BytesCount};
 use tiktoken_rs::CoreBPE;
 use tokenizers::Tokenizer;
 use wordchipper::{
-    TokenEncoder, encoders::token_span_encoder::SpanEncoderSelector,
+    TokenEncoder,
+    encoders::token_span_encoder::SpanEncoderSelector,
     pretrained::openai::OATokenizer,
 };
 
