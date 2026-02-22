@@ -7,6 +7,7 @@ use tiktoken_rs::CoreBPE;
 use tokenizers::Tokenizer;
 use wordchipper::{
     TokenEncoder,
+    TokenEncoderBuilder,
     UnifiedTokenVocab,
     disk_cache::WordchipperDiskCache,
     pretrained::openai::OATokenizer,
@@ -33,7 +34,7 @@ fn english_text() -> String {
 fn load_wc_encoder(model: OATokenizer) -> Arc<dyn TokenEncoder<u32>> {
     let mut disk_cache = WordchipperDiskCache::default();
     let vocab: UnifiedTokenVocab<u32> = model.load_vocab(&mut disk_cache).unwrap();
-    vocab.to_default_encoder()
+    TokenEncoderBuilder::default(vocab.into())
 }
 
 struct TiktokenFixture {

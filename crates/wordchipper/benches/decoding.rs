@@ -3,11 +3,12 @@
 use std::sync::{Arc, LazyLock};
 
 use divan::{Bencher, black_box, counter::BytesCount};
-use tiktoken_rs::CoreBPE;
+use tiktoken_rs::{CoreBPE, Rank};
 use tokenizers::Tokenizer;
 use wordchipper::{
     TokenDecoder,
     TokenEncoder,
+    TokenizerBuilder,
     UnifiedTokenVocab,
     disk_cache::WordchipperDiskCache,
     pretrained::openai::OATokenizer,
@@ -32,17 +33,15 @@ fn english_text() -> String {
 }
 
 struct WcFixture {
-    encoder: Arc<dyn TokenEncoder<u32>>,
-    decoder: Arc<dyn TokenDecoder<u32>>,
+    tokenizer: Arc<wordchipper::Tokenizer<Rank>>,
 }
 
 impl WcFixture {
     fn load(model: OATokenizer) -> Self {
         let mut disk_cache = WordchipperDiskCache::default();
-        let vocab: UnifiedTokenVocab<u32> = model.load_vocab(&mut disk_cache).unwrap();
-        let encoder = vocab.to_default_encoder();
-        let decoder = vocab.to_default_decoder();
-        Self { encoder, decoder }
+        let vocab: Arc<UnifiedTokenVocab<u32>> = model.load_vocab(&mut disk_cache).unwrap().into();
+        let tokenizer = TokenizerBuilder::default(vocab);
+        Self { tokenizer }
     }
 }
 
@@ -78,21 +77,25 @@ mod english {
         #[divan::bench]
         fn cl100k(bencher: Bencher) {
             let text = english_text();
-            let tokens = WC_CL100K.encoder.try_encode(&text).unwrap();
-            let decoder = &WC_CL100K.decoder;
-            bencher
-                .counter(BytesCount::new(text.len()))
-                .bench(|| decoder.try_decode_to_string(black_box(&tokens)).unwrap());
+            let tokens = WC_CL100K.tokenizer.try_encode(&text).unwrap();
+            bencher.counter(BytesCount::new(text.len())).bench(|| {
+                WC_CL100K
+                    .tokenizer
+                    .try_decode_to_string(black_box(&tokens))
+                    .unwrap()
+            });
         }
 
         #[divan::bench]
         fn o200k(bencher: Bencher) {
             let text = english_text();
-            let tokens = WC_O200K.encoder.try_encode(&text).unwrap();
-            let decoder = &WC_O200K.decoder;
-            bencher
-                .counter(BytesCount::new(text.len()))
-                .bench(|| decoder.try_decode_to_string(black_box(&tokens)).unwrap());
+            let tokens = WC_O200K.tokenizer.try_encode(&text).unwrap();
+            bencher.counter(BytesCount::new(text.len())).bench(|| {
+                WC_O200K
+                    .tokenizer
+                    .try_decode_to_string(black_box(&tokens))
+                    .unwrap()
+            });
         }
     }
 
@@ -156,8 +159,8 @@ mod diverse {
         #[divan::bench]
         fn cl100k(bencher: Bencher) {
             let text = diverse_text();
-            let tokens = WC_CL100K.encoder.try_encode(&text).unwrap();
-            let decoder = &WC_CL100K.decoder;
+            let tokens = WC_CL100K.tokenizer.try_encode(&text).unwrap();
+            let decoder = &WC_CL100K.tokenizer.decoder();
             bencher
                 .counter(BytesCount::new(text.len()))
                 .bench(|| decoder.try_decode_to_string(black_box(&tokens)).unwrap());
@@ -166,8 +169,8 @@ mod diverse {
         #[divan::bench]
         fn o200k(bencher: Bencher) {
             let text = diverse_text();
-            let tokens = WC_O200K.encoder.try_encode(&text).unwrap();
-            let decoder = &WC_O200K.decoder;
+            let tokens = WC_O200K.tokenizer.try_encode(&text).unwrap();
+            let decoder = &WC_O200K.tokenizer.decoder();
             bencher
                 .counter(BytesCount::new(text.len()))
                 .bench(|| decoder.try_decode_to_string(black_box(&tokens)).unwrap());
