@@ -11,10 +11,10 @@ use wordchipper::{
     pretrained::openai::OATokenizer,
 };
 
-/// The huggingface/tokenizers model to use for cl100k_base.
+/// The huggingface/tokenizers model to use for `cl100k_base`.
 pub const HF_CL100K: &str = "Xenova/text-embedding-ada-002";
 
-/// The huggingface/tokenizers model to use for o200k_base.
+/// The huggingface/tokenizers model to use for `o200k_base`.
 pub const HF_O200K: &str = "Xenova/gpt-4o";
 
 pub const DISK_CACHE: LazyLock<Arc<Mutex<WordchipperDiskCache>>> =
