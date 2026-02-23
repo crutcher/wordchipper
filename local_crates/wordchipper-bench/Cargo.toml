@@ -10,7 +10,7 @@ publish = false
 workspace = true
 
 [dependencies]
-wordchipper = { path = "../wordchipper", features = ["default"] }
+wordchipper = { path = "../../crates/wordchipper", features = ["default"] }
 wordchipper-data = { path = "../wordchipper-data" }
 
 arrow = { workspace = true }

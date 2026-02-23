@@ -68,7 +68,7 @@ feature flags that imply `std`.
 
 ### Unpublished Crates
 
-- [wordchipper-data](crates/wordchipper-data)
+- [wordchipper-data](local_crates/wordchipper-data)
 
 ### Tools
 
