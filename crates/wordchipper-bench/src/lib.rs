@@ -17,6 +17,8 @@ pub const HF_CL100K: &str = "Xenova/text-embedding-ada-002";
 /// The huggingface/tokenizers model to use for `o200k_base`.
 pub const HF_O200K: &str = "Xenova/gpt-4o";
 
+/// The shared disk cache for benchmarks.
+#[allow(clippy::declare_interior_mutable_const)]
 pub const DISK_CACHE: LazyLock<Arc<Mutex<WordchipperDiskCache>>> =
     LazyLock::new(|| Arc::new(Mutex::new(WordchipperDiskCache::default())));
 
