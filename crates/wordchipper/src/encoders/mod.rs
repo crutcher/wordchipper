@@ -17,6 +17,7 @@
 //! ```
 
 mod encoder_builder;
+mod encoder_options;
 #[cfg(any(test, feature = "testing"))]
 pub mod testing;
 mod token_encoder;
@@ -24,5 +25,7 @@ pub mod token_span_encoder;
 
 #[doc(inline)]
 pub use encoder_builder::*;
+#[doc(inline)]
+pub use encoder_options::*;
 #[doc(inline)]
 pub use token_encoder::*;
