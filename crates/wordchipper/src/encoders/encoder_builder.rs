@@ -14,7 +14,7 @@ use crate::{
 /// Options for configuring a [`TokenEncoderBuilder`].
 // TODO: serialize/deserialize?
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct TokenEncoderBuilderOptions {
+pub struct EncoderOptions {
     /// The [`SpanEncoderSelector`] to use.
     ///
     /// When `None`, an appropriate default will be used for the concurrency.
@@ -36,7 +36,7 @@ pub struct TokenEncoderBuilderOptions {
     pub concurrent: bool,
 }
 
-impl Default for TokenEncoderBuilderOptions {
+impl Default for EncoderOptions {
     fn default() -> Self {
         Self {
             span_encoder: None,
@@ -47,7 +47,7 @@ impl Default for TokenEncoderBuilderOptions {
     }
 }
 
-impl TokenEncoderBuilderOptions {
+impl EncoderOptions {
     /// Gets the effective span encoder selector.
     ///
     /// Will return any explict setting,
@@ -207,7 +207,7 @@ impl TokenEncoderBuilderOptions {
 /// See [`is_concurrent`](Self::is_concurrent) for more information on concurrent encoding.
 #[derive(Clone, PartialEq)]
 pub struct TokenEncoderBuilder<T: TokenType> {
-    options: TokenEncoderBuilderOptions,
+    options: EncoderOptions,
     vocab: Arc<UnifiedTokenVocab<T>>,
 }
 
@@ -225,13 +225,13 @@ impl<T: TokenType> TokenEncoderBuilder<T> {
     /// Create a new builder for the vocab with the given options.
     pub fn new_with_options(
         vocab: Arc<UnifiedTokenVocab<T>>,
-        options: TokenEncoderBuilderOptions,
+        options: EncoderOptions,
     ) -> Self {
         Self { vocab, options }
     }
 
-    /// Get the configured [`TokenEncoderBuilderOptions`].
-    pub fn options(&self) -> TokenEncoderBuilderOptions {
+    /// Get the configured [`EncoderOptions`].
+    pub fn options(&self) -> EncoderOptions {
         self.options
     }
 
