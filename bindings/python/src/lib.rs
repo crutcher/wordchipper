@@ -6,9 +6,9 @@ use pyo3::{
 };
 use wordchipper::{
     TokenDecoder,
-    TokenDecoderOptions,
     TokenEncoder,
-    TokenEncoderOptions,
+    Tokenizer as _Tokenizer,
+    TokenizerOptions,
     UnifiedTokenVocab,
     VocabIndex,
     WCError,
@@ -29,9 +29,7 @@ fn to_pyerr(err: WCError) -> PyErr {
 
 #[pyclass]
 struct Tokenizer {
-    vocab: Arc<UnifiedTokenVocab<u32>>,
-    encoder: Arc<dyn TokenEncoder<u32>>,
-    decoder: Arc<dyn TokenDecoder<u32>>,
+    inner: Arc<_Tokenizer<u32>>,
 }
 
 #[pymethods]
@@ -43,21 +41,16 @@ impl Tokenizer {
             .map_err(to_pyerr)?
             .into();
 
-        let encoder = TokenEncoderOptions::default().build(vocab.clone());
-        let decoder = TokenDecoderOptions::default().build(vocab.clone());
+        let inner = TokenizerOptions::default().build(vocab.clone());
 
-        Ok(Tokenizer {
-            vocab,
-            encoder,
-            decoder,
-        })
+        Ok(Tokenizer { inner })
     }
 
     fn encode(
         &self,
         text: &str,
     ) -> PyResult<Vec<u32>> {
-        self.encoder.try_encode(text).map_err(to_pyerr)
+        self.inner.try_encode(text).map_err(to_pyerr)
     }
 
     fn encode_batch(
@@ -65,14 +58,14 @@ impl Tokenizer {
         texts: Vec<String>,
     ) -> PyResult<Vec<Vec<u32>>> {
         let refs = inner_str_view(&texts);
-        self.encoder.try_encode_batch(&refs).map_err(to_pyerr)
+        self.inner.try_encode_batch(&refs).map_err(to_pyerr)
     }
 
     fn decode(
         &self,
         tokens: Vec<u32>,
     ) -> PyResult<String> {
-        self.decoder
+        self.inner
             .try_decode_to_string(&tokens)
             .map_err(to_pyerr)?
             .try_result()
@@ -84,7 +77,7 @@ impl Tokenizer {
         batch: Vec<Vec<u32>>,
     ) -> PyResult<Vec<String>> {
         let refs = inner_slice_view(&batch);
-        self.decoder
+        self.inner
             .try_decode_batch_to_strings(&refs)
             .map_err(to_pyerr)?
             .try_results()
@@ -93,33 +86,35 @@ impl Tokenizer {
 
     #[getter]
     fn vocab_size(&self) -> usize {
-        self.vocab.len()
+        self.inner.vocab().len()
     }
 
     #[getter]
     fn max_token(&self) -> Option<u32> {
-        self.vocab.max_token()
+        self.inner.vocab().max_token()
     }
 
     fn token_to_id(
         &self,
         token: &str,
     ) -> Option<u32> {
-        self.vocab.lookup_token(token.as_bytes())
+        self.inner.vocab().lookup_token(token.as_bytes())
     }
 
     fn id_to_token(
         &self,
         id: u32,
     ) -> Option<String> {
-        self.vocab
+        self.inner
+            .vocab()
             .unified_dictionary()
             .get(&id)
             .map(|bytes| string_from_utf8_lossy(bytes.clone()))
     }
 
     fn get_special_tokens(&self) -> Vec<(String, u32)> {
-        self.vocab
+        self.inner
+            .vocab()
             .special_vocab()
             .span_map()
             .iter()
@@ -136,7 +131,8 @@ impl Tokenizer {
         &self,
         path: &str,
     ) -> PyResult<()> {
-        save_base64_span_map_path(self.vocab.span_vocab().span_map(), path).map_err(to_pyerr)
+        save_base64_span_map_path(self.inner.vocab().span_vocab().span_map(), path)
+            .map_err(to_pyerr)
     }
 }
 
