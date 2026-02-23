@@ -22,7 +22,7 @@ workspace = true
 
 [features]
 default = [
-    "ahash",
+    "foldhash",
     "client",
     "logos",
     "rayon",

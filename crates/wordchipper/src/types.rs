@@ -48,6 +48,16 @@ cfg_if::cfg_if! {
         /// Type Alias for hash maps in this crate.
         pub type WCHashMap<K, V> = ahash::AHashMap<K, V>;
 
+        /// Create a new empty hash map.
+        pub fn hash_map_new<K, V>() -> WCHashMap<K, V> {
+            WCHashMap::new()
+        }
+
+        /// Create a new hash map with the given capacity.
+        pub fn hash_map_with_capacity<K, V>(capacity: usize) -> WCHashMap<K, V> {
+            WCHashMap::with_capacity(capacity)
+        }
+
         /// Iterator over hash map entries.
         ///
         /// Note: `ahash::AHashMap` is a specialization of `std::collections::HashMap`.
@@ -59,6 +69,16 @@ cfg_if::cfg_if! {
     } else if #[cfg(feature = "foldhash")] {
         /// Type Alias for hash maps in this crate.
         pub type WCHashMap<K, V> = foldhash::HashMap<K, V>;
+
+        /// Create a new empty hash map.
+        pub fn hash_map_new<K, V>() -> WCHashMap<K, V> {
+            foldhash::HashMapExt::new()
+        }
+
+        /// Create a new hash map with the given capacity.
+        pub fn hash_map_with_capacity<K, V>(capacity: usize) -> WCHashMap<K, V> {
+            foldhash::HashMapExt::with_capacity(capacity)
+        }
 
         /// Iterator over hash map entries.
         ///
@@ -72,6 +92,16 @@ cfg_if::cfg_if! {
         /// Type Alias for hash maps in this crate.
         pub type WCHashMap<K, V> = std::collections::HashMap<K, V>;
 
+        /// Create a new empty hash map.
+        pub fn hash_map_new<K, V>() -> WCHashMap<K, V> {
+            WCHashMap::new()
+        }
+
+        /// Create a new hash map with the given capacity.
+        pub fn hash_map_with_capacity<K, V>(capacity: usize) -> WCHashMap<K, V> {
+            WCHashMap::with_capacity(capacity)
+        }
+
         /// Iterator over hash map entries.
         pub type WCHashIter<'a, K, V> = std::collections::hash_map::Iter<'a, K, V>;
 
@@ -81,6 +111,16 @@ cfg_if::cfg_if! {
     } else if #[cfg(feature = "no_std")] {
         /// Type Alias for hash maps in this crate.
         pub type WCHashMap<K, V> = hashbrown::HashMap<K, V>;
+
+        /// Create a new empty hash map.
+        pub fn hash_map_new<K, V>() -> WCHashMap<K, V> {
+            WCHashMap::new()
+        }
+
+        /// Create a new hash map with the given capacity.
+        pub fn hash_map_with_capacity<K, V>(capacity: usize) -> WCHashMap<K, V> {
+            WCHashMap::with_capacity(capacity)
+        }
 
         /// Iterator over hash map entries.
         pub type WCHashIter<'a, K, V> = hashbrown::hash_map::Iter<'a, K, V>;
