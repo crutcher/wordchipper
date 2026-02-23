@@ -7,6 +7,7 @@ use dary_heap::OctonaryHeap;
 
 use crate::{
     WCResult,
+    hash_map_with_capacity,
     support::regex::RegexPattern,
     training::{
         CountType,
@@ -19,7 +20,7 @@ use crate::{
             TokenSpanBuf,
         },
     },
-    types::{Pair, TokenType, WCHashMap, WCHashSet},
+    types::{Pair, TokenType, WCHashSet},
     vocab::{
         ByteMapVocab,
         PairMapVocab,
@@ -256,7 +257,7 @@ where
             .compile()
             .map_err(|e| crate::WCError::External(e.to_string()))?;
 
-        let mut pairs: PairTokenMap<T> = WCHashMap::with_capacity(num_merges);
+        let mut pairs: PairTokenMap<T> = hash_map_with_capacity(num_merges);
 
         let (mut words, word_counts): (Vec<TokenSpanBuf<T>>, Vec<C>) = self
             .span_counter
@@ -324,7 +325,7 @@ where
             // Record merge
             pairs.insert(job.pair, new_token);
 
-            let mut new_token_pair_map: PairIndexMap<T> = WCHashMap::with_capacity(16);
+            let mut new_token_pair_map: PairIndexMap<T> = hash_map_with_capacity(16);
 
             // Merge this pair in all words where it occurs
             for &word_idx in &job.word_indices {

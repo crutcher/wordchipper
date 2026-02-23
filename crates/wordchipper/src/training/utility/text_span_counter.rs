@@ -3,11 +3,15 @@
 use core::fmt::Debug;
 
 use crate::{
+    hash_map_with_capacity,
     support::regex::RegexWrapper,
     training::{CountType, StringChunkType, utility::TokenSpanBuf},
     types::{TokenType, WCHashMap},
     vocab::ByteMapVocab,
 };
+
+/// Expected average word length in characters.
+pub const EXPECTED_WORD_LENGTH: usize = 5;
 
 /// Options for [`TextSpanCounter`].
 #[derive(Debug, Clone)]
@@ -65,7 +69,7 @@ where
         Self {
             options,
             regex,
-            word_counts: WCHashMap::with_capacity(100_000),
+            word_counts: hash_map_with_capacity(100_000),
         }
     }
 
@@ -119,6 +123,7 @@ where
 mod tests {
     use super::*;
     use crate::{
+        hash_map_new,
         support::regex::RegexPattern,
         training::{CountType, StringChunkType, utility::token_span_buffer::TokenSpanBuf},
         vocab::ByteMapVocab,
@@ -183,7 +188,7 @@ mod tests {
         let mut counts = counts.into_iter().collect::<Vec<_>>();
         counts.sort();
 
-        let mut expected = WCHashMap::new();
+        let mut expected = hash_map_new();
         expected.insert(TokenSpanBuf::from_string("Hello", &byte_vocab), 1);
         expected.insert(TokenSpanBuf::from_string("Foo", &byte_vocab), 1);
         expected.insert(TokenSpanBuf::from_string("bar", &byte_vocab), 1);
@@ -194,6 +199,3 @@ mod tests {
         assert_eq!(counts, expected);
     }
 }
-
-/// Expected average word length in characters.
-pub const EXPECTED_WORD_LENGTH: usize = 5;

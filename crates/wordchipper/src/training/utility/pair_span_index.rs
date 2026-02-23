@@ -1,6 +1,7 @@
 //! # `PairIndex` Builder
 
 use crate::{
+    hash_map_with_capacity,
     training::{CountType, utility::TokenSpanBuf},
     types::{Pair, TokenType, WCHashMap, WCHashSet},
 };
@@ -37,8 +38,8 @@ impl<T: TokenType, C: CountType> PairSpanIndex<T, C> {
         let size_hint = spans.len() / 1000;
 
         let mut pair_index = PairSpanIndex {
-            pair_counts: PairCountMap::with_capacity(size_hint),
-            pair_index: PairIndexMap::with_capacity(size_hint),
+            pair_counts: hash_map_with_capacity(size_hint),
+            pair_index: hash_map_with_capacity(size_hint),
         };
 
         let zero = C::zero();
