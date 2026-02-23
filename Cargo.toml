@@ -30,7 +30,7 @@ doc_markdown = "deny"
 
 [workspace.dependencies]
 ahash = "0.8.10"
-foldhash = "0.2.0"
+foldhash = { version = "0.2.0", default-features = false }
 arrow = "57.2"
 base64 = "0.22.1"
 cfg-if = "1.0.4"

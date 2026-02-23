@@ -4,6 +4,8 @@
 use std::path::PathBuf;
 
 #[cfg(feature = "std")]
+use crate::prelude::*;
+#[cfg(feature = "std")]
 use crate::support::resources::KeyedResource;
 
 /// A trait for loading resources.

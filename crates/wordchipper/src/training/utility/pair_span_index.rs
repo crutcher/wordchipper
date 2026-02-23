@@ -62,7 +62,11 @@ impl<T: TokenType, C: CountType> PairSpanIndex<T, C> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{training::utility::token_span_buffer::TokenSpanBuf, vocab::ByteMapVocab};
+    use crate::{
+        prelude::*,
+        training::utility::token_span_buffer::TokenSpanBuf,
+        vocab::ByteMapVocab,
+    };
 
     #[test]
     fn test_pair_index_serial_token_u32_count_usize() {

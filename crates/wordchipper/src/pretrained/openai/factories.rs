@@ -7,6 +7,7 @@ use crate::support::resources::ResourceLoader;
 use crate::{
     TokenType,
     WCResult,
+    prelude::*,
     pretrained::openai::{
         OA_CL100K_BASE_PATTERN,
         OA_O200K_BASE_PATTERN,

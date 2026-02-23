@@ -66,7 +66,7 @@ mod tests {
     use serial_test::serial;
 
     use super::*;
-    use crate::types::WCHashMap;
+    use crate::{prelude::*, types::WCHashMap};
 
     #[test]
     #[serial]

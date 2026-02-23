@@ -108,7 +108,7 @@ cfg_if::cfg_if! {
         /// Type Alias for hash sets in this crate.
         pub type WCHashSet<V> = std::collections::HashSet<V>;
 
-    } else if #[cfg(feature = "no_std")] {
+    } else {
         /// Type Alias for hash maps in this crate.
         pub type WCHashMap<K, V> = hashbrown::HashMap<K, V>;
 
@@ -127,12 +127,6 @@ cfg_if::cfg_if! {
 
         /// Type Alias for hash sets in this crate.
         pub type WCHashSet<V> = hashbrown::HashSet<V>;
-
-    } else {
-        /// This error exists to give users more direct feedback
-        /// on the feature configuration over the other compilation
-        /// errors they would encounter from lacking the types.
-        compile_error!("not(\"std\") requires \"no_std\" feature");
     }
 }
 

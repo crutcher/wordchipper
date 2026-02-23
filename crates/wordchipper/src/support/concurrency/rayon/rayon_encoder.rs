@@ -5,6 +5,7 @@ use crate::{
     WCResult,
     alloc::sync::Arc,
     encoders::TokenEncoder,
+    prelude::*,
     spanning::TextSpanner,
     vocab::SpecialVocab,
 };
