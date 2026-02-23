@@ -43,7 +43,9 @@ fn build_default_spanner(
     pattern: impl Into<wordchipper::support::regex::RegexPattern>
 ) -> Arc<dyn TextSpanner> {
     let config: TextSpanningConfig<u32> = TextSpanningConfig::from_pattern(pattern);
-    TextSpannerBuilder::new(config).with_parallel(false).build()
+    TextSpannerBuilder::new(config)
+        .with_concurrent(false)
+        .build()
 }
 
 mod english {

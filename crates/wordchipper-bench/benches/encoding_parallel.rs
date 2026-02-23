@@ -78,10 +78,12 @@ mod wordchipper {
         bencher: Bencher,
         oatok: OATokenizer,
         selector: SpanEncoderSelector,
+        accelerated: bool,
     ) {
         let strs = BATCH.strs();
 
         let encoder = wordchipper_bench::encoder_builder::<u32>(oatok, selector)
+            .with_accelerated_lexers(accelerated)
             .with_parallel(true)
             .build();
 
@@ -99,6 +101,7 @@ mod wordchipper {
                 bencher,
                 OATokenizer::Cl100kBase,
                 SpanEncoderSelector::BufferSweep,
+                false,
             )
         }
 
@@ -108,6 +111,27 @@ mod wordchipper {
                 bencher,
                 OATokenizer::O200kBase,
                 SpanEncoderSelector::BufferSweep,
+                false,
+            )
+        }
+
+        #[divan::bench]
+        fn cl100k_fast(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OATokenizer::Cl100kBase,
+                SpanEncoderSelector::BufferSweep,
+                true,
+            )
+        }
+
+        #[divan::bench]
+        fn o200k_fast(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OATokenizer::O200kBase,
+                SpanEncoderSelector::BufferSweep,
+                true,
             )
         }
     }
@@ -121,6 +145,7 @@ mod wordchipper {
                 bencher,
                 OATokenizer::Cl100kBase,
                 SpanEncoderSelector::TailSweep,
+                false,
             )
         }
 
@@ -130,6 +155,27 @@ mod wordchipper {
                 bencher,
                 OATokenizer::O200kBase,
                 SpanEncoderSelector::TailSweep,
+                false,
+            )
+        }
+
+        #[divan::bench]
+        fn cl100k_fast(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OATokenizer::Cl100kBase,
+                SpanEncoderSelector::TailSweep,
+                true,
+            )
+        }
+
+        #[divan::bench]
+        fn o200k_fast(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OATokenizer::O200kBase,
+                SpanEncoderSelector::TailSweep,
+                true,
             )
         }
     }
@@ -143,6 +189,7 @@ mod wordchipper {
                 bencher,
                 OATokenizer::Cl100kBase,
                 SpanEncoderSelector::MergeHeap,
+                false,
             )
         }
 
@@ -152,6 +199,27 @@ mod wordchipper {
                 bencher,
                 OATokenizer::O200kBase,
                 SpanEncoderSelector::MergeHeap,
+                false,
+            )
+        }
+
+        #[divan::bench]
+        fn cl100k_fast(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OATokenizer::Cl100kBase,
+                SpanEncoderSelector::MergeHeap,
+                true,
+            )
+        }
+
+        #[divan::bench]
+        fn o200k_fast(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OATokenizer::O200kBase,
+                SpanEncoderSelector::MergeHeap,
+                true,
             )
         }
     }
@@ -165,6 +233,7 @@ mod wordchipper {
                 bencher,
                 OATokenizer::Cl100kBase,
                 SpanEncoderSelector::PriorityMerge,
+                false,
             )
         }
 
@@ -174,6 +243,27 @@ mod wordchipper {
                 bencher,
                 OATokenizer::O200kBase,
                 SpanEncoderSelector::PriorityMerge,
+                false,
+            )
+        }
+
+        #[divan::bench]
+        fn cl100k_fast(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OATokenizer::Cl100kBase,
+                SpanEncoderSelector::PriorityMerge,
+                true,
+            )
+        }
+
+        #[divan::bench]
+        fn o200k_fast(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OATokenizer::O200kBase,
+                SpanEncoderSelector::PriorityMerge,
+                true,
             )
         }
     }
