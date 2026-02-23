@@ -8,7 +8,7 @@ use crate::{
     UnifiedTokenVocab,
     alloc::sync::Arc,
     encoders::token_span_encoder::{SpanEncoderSelector, TokenSpanEncoder},
-    spanning::TextSpannerBuilder,
+    spanners::TextSpannerBuilder,
 };
 
 /// Options for configuring a [`TokenEncoder`].
@@ -24,7 +24,7 @@ pub struct TokenEncoderOptions {
     ///
     /// When enabled, and an accelerated lexer can be
     /// found for a given regex pattern; the regex accelerator
-    /// will be used for spanning.
+    /// will be used for spanners.
     pub accelerated_lexers: bool,
 
     /// Should the encoder be threaded?
@@ -91,7 +91,7 @@ impl TokenEncoderOptions {
     ///
     /// When enabled, and an accelerated lexer can be
     /// found for a given regex pattern; the regex accelerator
-    /// will be used for spanning.
+    /// will be used for spanners.
     pub fn accelerated_lexers(&self) -> bool {
         self.accelerated_lexers
     }
@@ -100,7 +100,7 @@ impl TokenEncoderOptions {
     ///
     /// When enabled, and an accelerated lexer can be
     /// found for a given regex pattern; the regex accelerator
-    /// will be used for spanning.
+    /// will be used for spanners.
     pub fn set_accelerated_lexers(
         &mut self,
         accelerated_lexers: bool,
@@ -112,7 +112,7 @@ impl TokenEncoderOptions {
     ///
     /// When enabled, and an accelerated lexer can be
     /// found for a given regex pattern; the regex accelerator
-    /// will be used for spanning.
+    /// will be used for spanners.
     pub fn with_accelerated_lexers(
         mut self,
         accelerated_lexers: bool,

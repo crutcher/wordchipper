@@ -28,7 +28,7 @@ use crate::{
             oa_r50k_base_special_tokens,
         },
     },
-    spanning::TextSpanningConfig,
+    spanners::TextSpanningConfig,
     support::{regex::RegexPattern, resources::ConstKeyedResource},
     vocab::{UnifiedTokenVocab, utility::factories::ConstVocabularyFactory},
 };
@@ -94,7 +94,7 @@ impl OATokenizer {
         self.factory().special_tokens()
     }
 
-    /// Get the tokenizer spanning config.
+    /// Get the tokenizer spanners config.
     pub fn spanning_config<T: TokenType>(&self) -> TextSpanningConfig<T> {
         self.factory().spanning_config()
     }

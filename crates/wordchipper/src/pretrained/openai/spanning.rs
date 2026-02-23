@@ -9,7 +9,7 @@ use crate::{
         OA_R50K_BASE_PATTERN,
         specials,
     },
-    spanning::TextSpanningConfig,
+    spanners::TextSpanningConfig,
 };
 /// Get the [`TextSpanningConfig`] for the "`r50k_base`" pretrained vocabulary.
 pub fn oa_r50k_base_spanning_config<T: TokenType>() -> TextSpanningConfig<T> {

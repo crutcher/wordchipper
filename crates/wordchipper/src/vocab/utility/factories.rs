@@ -16,7 +16,7 @@ use crate::vocab::UnifiedTokenVocab;
 use crate::{
     TokenType,
     alloc::{string::String, vec::Vec},
-    spanning::TextSpanningConfig,
+    spanners::TextSpanningConfig,
     support::{
         regex::{ConstRegexPattern, RegexPattern},
         resources::ConstKeyedResource,
@@ -52,7 +52,7 @@ impl ConstVocabularyFactory {
             .collect()
     }
 
-    /// Load the spanning config for this tokenizer.
+    /// Load the spanners config for this tokenizer.
     pub fn spanning_config<T: TokenType>(&self) -> TextSpanningConfig<T> {
         TextSpanningConfig::from_pattern(self.pattern()).with_special_words(self.special_tokens())
     }

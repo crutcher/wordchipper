@@ -5,7 +5,7 @@ use std::sync::Arc;
 use divan::{Bencher, black_box, counter::BytesCount};
 use wordchipper::{
     pretrained::openai::{OA_CL100K_BASE_PATTERN, OA_O200K_BASE_PATTERN},
-    spanning::{
+    spanners::{
         TextSpanner,
         TextSpannerBuilder,
         TextSpanningConfig,

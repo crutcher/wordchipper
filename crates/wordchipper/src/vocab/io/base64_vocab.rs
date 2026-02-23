@@ -13,7 +13,7 @@ use crate::{
     WCError,
     WCResult,
     prelude::*,
-    spanning::TextSpanningConfig,
+    spanners::TextSpanningConfig,
     vocab::{SpanMapVocab, UnifiedTokenVocab, vocab_types::SpanTokenMap},
 };
 

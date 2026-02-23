@@ -7,7 +7,7 @@ use crate::{
     alloc::sync::Arc,
     decoders::{BatchDecodeResult, DecodeResult},
     prelude::*,
-    spanning::TextSpanner,
+    spanners::TextSpanner,
 };
 
 /// Unified Tokenizer.

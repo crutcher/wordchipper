@@ -10,7 +10,7 @@
 //!     TokenizerOptions,
 //!     UnifiedTokenVocab,
 //!     pretrained::openai::OA_O200K_BASE_PATTERN,
-//!     spanning::TextSpanningConfig,
+//!     spanners::TextSpanningConfig,
 //!     vocab::io::load_base64_unified_vocab_path,
 //! };
 //!

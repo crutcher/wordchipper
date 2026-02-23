@@ -5,7 +5,7 @@ use crate::{
     WCResult,
     alloc::{boxed::Box, sync::Arc, vec::Vec},
     encoders::token_span_encoder::{SpanEncoder, SpanEncoderSelector},
-    spanning::TextSpanner,
+    spanners::TextSpanner,
     vocab::SpecialVocab,
 };
 

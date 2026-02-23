@@ -1,7 +1,7 @@
 //! # Text Spanner Configuration
 use crate::{TokenType, WCResult, support::regex::RegexPattern, vocab::SpecialVocab};
 
-/// Description of text spanning configuration.
+/// Description of text spanners configuration.
 ///
 /// ## Style Hints
 ///

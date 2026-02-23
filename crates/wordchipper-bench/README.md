@@ -6,7 +6,7 @@ and HuggingFace tokenizers.
 ## Benchmarks
 
 | Bench               | What it measures                              |
-| ------------------- | --------------------------------------------- |
+|---------------------|-----------------------------------------------|
 | `encoding_single`   | Single-string encoding (no parallelism)       |
 | `encoding_parallel` | Batch encoding via rayon (`try_encode_batch`) |
 | `decoding_single`   | Single-string decoding                        |
@@ -31,7 +31,7 @@ cargo bench -p wordchipper-bench
 cargo bench -p wordchipper-bench --bench encoding_single
 cargo bench -p wordchipper-bench --bench encoding_parallel
 cargo bench -p wordchipper-bench --bench decoding_single
-cargo bench -p wordchipper-bench --bench spanning
+cargo bench -p wordchipper-bench --bench spanners
 
 # Filter by name
 cargo bench -p wordchipper-bench --bench encoding_single -- diverse
