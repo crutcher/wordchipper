@@ -29,8 +29,8 @@ pub fn encoder_builder<T: TokenType>(
     model: OATokenizer,
     selector: SpanEncoderSelector,
 ) -> TokenEncoderBuilder<T> {
-    let cache = &*DISK_CACHE;
-    let mut guard = cache.lock().unwrap();
+    let binding = DISK_CACHE;
+    let mut guard = binding.lock().unwrap();
     let disk_cache = &mut *guard;
 
     let vocab: Arc<UnifiedTokenVocab<T>> = model.load_vocab::<T>(disk_cache).unwrap().into();
