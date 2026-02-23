@@ -8,6 +8,7 @@ use dary_heap::OctonaryHeap;
 use crate::{
     WCResult,
     hash_map_with_capacity,
+    prelude::*,
     support::regex::RegexPattern,
     training::{
         CountType,
@@ -424,6 +425,7 @@ mod tests {
     use crate::{
         decoders::{TokenDecoder, TokenDictDecoder},
         encoders::TokenEncoderBuilder,
+        prelude::*,
         pretrained::openai::OA_CL100K_BASE_PATTERN,
         support::traits::static_is_send_sync_check,
         training::{BinaryPairVocabTrainerOptions, bpe_trainer::MergeJob},

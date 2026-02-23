@@ -46,6 +46,19 @@ $ for m in openai/{r50k_base,p50k_base,p50k_edit,cl100k_base,o200k_base,o200k_ha
    --dataset-dir $DATASET_DIR --shards 0 --model $m; done
 ```
 
+## `no_std` Support
+
+The core tokenization pipeline (spanning, encoding, decoding, vocabulary lookup) works in `no_std`
+environments. This is CI-verified against `wasm32-unknown-unknown` and `thumbv7m-none-eabi` targets.
+
+```toml
+[dependencies]
+wordchipper = { version = "0.7", default-features = false }
+```
+
+Features that require `std` (training, file I/O, download, rayon parallelism) are behind
+feature flags that imply `std`.
+
 ## Components
 
 ### Published Crates

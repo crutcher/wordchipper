@@ -5,6 +5,7 @@ use crate::{
     WCResult,
     alloc::sync::Arc,
     decoders::{BatchDecodeResult, DecodeResult, TokenDecoder},
+    prelude::*,
 };
 
 /// Batch-Level Parallel Decoder Wrapper.

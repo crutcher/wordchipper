@@ -51,46 +51,29 @@ training = [
 ]
 
 
-## The "std" feature enables the use of the `std` library;
-## and the "`no_std`" feature enables deps needed when "std" is not enabled.
-## (Negative feature deps are not stable yet.)
-##
-## Note: I am unsure if this is complete. It is tested CI, but I'm unsure
-## if I've fully covered it; and I haven't worked out a ``no_std`` deploy test yet.
+## The "std" feature enables the use of the `std` library.
+## Without "std", the crate uses hashbrown for HashMap/HashSet.
 std = [
     "thiserror/std",
     "dep:base64",
     "dep:strum",
     "dep:strum_macros",
     "fancy-regex/default",
+    "foldhash?/std",
     "log/std",
     "num-traits/std",
     "regex/default",
 ]
-## See [std].
-no_std = [
-    "hashbrown/alloc"
-]
 
-## This swaps all HashMap/HashSet implementations for ``ahash``; which is a performance
-## win on many/(most?) modern CPUs.
-##
-## If both "ahash" and "foldhash" are enabled, then "ahash" will win.
-##
-## This is done by the ``types::WCHash{*}`` type alias machinery.
-## See also the ``hashbrown`` dep used by ``no_std``.
+## Swaps HashMap/HashSet to ``ahash`` for faster hashing on most modern CPUs.
+## If both "ahash" and "foldhash" are enabled, "ahash" wins.
 ahash = [
     "dep:ahash",
     "std",
 ]
 
-## This swaps all HashMap/HashSet implementations for ``ahash``; which is a performance
-## win on many/(most?) modern CPUs.
-##
-## If both "ahash" and "foldhash" are enabled, then "ahash" will win.
-##
-## This is done by the ``types::WCHash{*}`` type alias machinery.
-## See also the ``hashbrown`` dep used by ``no_std``.
+## Swaps HashMap/HashSet to ``foldhash`` for faster hashing on most modern CPUs.
+## If both "ahash" and "foldhash" are enabled, "ahash" wins.
 foldhash = [
     "dep:foldhash",
     "std",
@@ -134,8 +117,8 @@ base64 = { workspace = true, optional = true }
 strum = { workspace = true, optional = true }
 strum_macros = { workspace = true, optional = true }
 
-# "no_std" feature deps:
-hashbrown = { workspace = true, optional = true }
+# Provides HashMap/HashSet in no_std mode (non-optional so `default-features = false` just works).
+hashbrown = { workspace = true, features = ["alloc"] }
 
 ahash = { workspace = true, optional = true }
 foldhash = { workspace = true, optional = true }

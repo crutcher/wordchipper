@@ -3,6 +3,7 @@
 use core::hash::Hash;
 
 use crate::{
+    prelude::*,
     types::{Pair, TokenType},
     vocab::ByteMapVocab,
 };

@@ -1,5 +1,5 @@
+#![no_std]
 #![warn(missing_docs, unused)]
-#![cfg_attr(not(feature = "std"), no_std)]
 //! # `wordchipper` LLM Tokenizer Suite
 //!
 //! This is a high-performance LLM tokenizer suite.
@@ -83,7 +83,26 @@
 //! ## Crate Features
 #![doc = document_features::document_features!()]
 
+#[cfg(feature = "std")]
+extern crate std;
+
+#[cfg_attr(feature = "std", macro_use)]
 extern crate alloc;
+
+/// Re-exports of common `alloc` types that are normally in the std prelude.
+///
+/// Modules that use `Vec`, `String`, `Box`, or `ToString` should add:
+/// ```ignore
+/// use crate::prelude::*;
+/// ```
+#[allow(unused_imports)]
+pub(crate) mod prelude {
+    pub use alloc::{
+        boxed::Box,
+        string::{String, ToString},
+        vec::Vec,
+    };
+}
 
 #[cfg(feature = "training")]
 pub mod training;

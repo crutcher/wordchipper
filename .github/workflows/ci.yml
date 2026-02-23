@@ -31,6 +31,7 @@ jobs:
           rustup toolchain install stable --profile minimal
           rustup toolchain install nightly --profile minimal
           rustup component add rustfmt --toolchain nightly
+          rustup target add wasm32-unknown-unknown thumbv7m-none-eabi
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -54,7 +55,13 @@ jobs:
         run: cargo test -p wordchipper --no-default-features --features client,foldhash
 
       - name: Test no-std
-        run: cargo test -p wordchipper --no-default-features --features no_std --tests
+        run: cargo test -p wordchipper --no-default-features --tests
+
+      - name: Check no-std (wasm32)
+        run: cargo check -p wordchipper --target wasm32-unknown-unknown --no-default-features
+
+      - name: Check no-std (thumbv7m-none-eabi)
+        run: cargo check -p wordchipper --target thumbv7m-none-eabi --no-default-features
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v6

@@ -124,6 +124,7 @@ mod tests {
     use super::*;
     use crate::{
         hash_map_new,
+        prelude::*,
         support::regex::RegexPattern,
         training::{CountType, StringChunkType, utility::token_span_buffer::TokenSpanBuf},
         vocab::ByteMapVocab,

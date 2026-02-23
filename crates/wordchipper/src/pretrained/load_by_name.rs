@@ -2,7 +2,7 @@ use crate::{
     UnifiedTokenVocab,
     WCError,
     WCResult,
-    alloc::{string::String, vec::Vec},
+    prelude::*,
     pretrained::openai::OATokenizer,
     support::resources::ResourceLoader,
 };
