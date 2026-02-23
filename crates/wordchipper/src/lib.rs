@@ -54,20 +54,20 @@
 //! pretrained models.
 //!
 //! See [`disk_cache::WordchipperDiskCache`] for details on the disk cache.
-#![cfg_attr(feature = "std", doc = "```rust,no_run")]
-#![cfg_attr(not(feature = "std"), doc = "```rust,ignore")]
+//!
+//! ```rust,no_run
 //! use std::sync::Arc;
 //!
 //! use wordchipper::{
-//!     get_model,
 //!     Tokenizer,
 //!     TokenizerOptions,
 //!     UnifiedTokenVocab,
 //!     WCResult,
 //!     disk_cache::WordchipperDiskCache,
+//!     get_model,
 //! };
 //!
-//! fn example() -> WCResult< Arc<Tokenizer<u32>> > {
+//! fn example() -> WCResult<Arc<Tokenizer<u32>>> {
 //!     let mut disk_cache = WordchipperDiskCache::default();
 //!     let vocab: Arc<UnifiedTokenVocab<u32>> =
 //!         get_model("openai/o200k_harmony", &mut disk_cache)?.into();
@@ -75,7 +75,7 @@
 //!     Ok(TokenizerOptions::default().build(vocab))
 //! }
 //! ```
-//! 
+//!
 //! ## Training Models
 //!
 //! Training models is supported via the [`training`] module.

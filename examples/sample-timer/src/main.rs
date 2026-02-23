@@ -33,15 +33,16 @@ use wordchipper::{
 use wordchipper_data::dataset::{DatasetCache, DatasetCacheConfig};
 use wordchipper_support::WordchipperEngine;
 
-use crate::tokenizers_support::{TokenizersEngine, load_tokenizers_tok};
-
 mod engines;
 
 mod batch_stats;
 mod tiktoken_support;
+mod wordchipper_support;
+
 #[cfg(feature = "tokenizers")]
 mod tokenizers_support;
-mod wordchipper_support;
+#[cfg(feature = "tokenizers")]
+use tokenizers_support::{TokenizersEngine, load_tokenizers_tok};
 
 /// Wordchipper Encode/Decode Side-by-Side Benchmarks.
 #[derive(Parser, Debug)]
