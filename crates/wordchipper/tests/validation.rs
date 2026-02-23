@@ -8,7 +8,7 @@ use tokenizers::Tokenizer;
 use wordchipper::{
     TokenDecoder,
     TokenEncoder,
-    TokenizerBuilder,
+    TokenizerOptions,
     UnifiedTokenVocab,
     disk_cache::WordchipperDiskCache,
     pretrained::openai::OATokenizer,
@@ -35,7 +35,7 @@ const SAMPLES: &[&str] = &[
 fn load_model(model: OATokenizer) -> Arc<wordchipper::Tokenizer<u32>> {
     let mut disk_cache = WordchipperDiskCache::default();
     let vocab: Arc<UnifiedTokenVocab<u32>> = model.load_vocab(&mut disk_cache).unwrap().into();
-    TokenizerBuilder::default(vocab)
+    TokenizerOptions::default().build(vocab)
 }
 
 fn roundtrip_validation(model: OATokenizer) {

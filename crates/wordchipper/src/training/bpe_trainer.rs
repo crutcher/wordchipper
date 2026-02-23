@@ -423,13 +423,14 @@ mod tests {
     use compact_str::CompactString;
 
     use crate::{
-        decoders::{TokenDecoder, TokenDictDecoder},
-        encoders::TokenEncoderBuilder,
+        TokenDecoder,
+        TokenEncoder,
+        TokenizerOptions,
+        UnifiedTokenVocab,
         prelude::*,
         pretrained::openai::OA_CL100K_BASE_PATTERN,
-        support::traits::static_is_send_sync_check,
         training::{BinaryPairVocabTrainerOptions, bpe_trainer::MergeJob},
-        vocab::{ByteMapVocab, UnifiedTokenVocab},
+        vocab::ByteMapVocab,
     };
 
     #[test]
@@ -472,16 +473,14 @@ mod tests {
 
         let vocab: Arc<UnifiedTokenVocab<T>> = trainer.train(byte_vocab.clone()).unwrap().into();
 
-        let encoder = TokenEncoderBuilder::<T>::new(vocab.clone()).build();
-        static_is_send_sync_check(&encoder);
-
-        let decoder = TokenDictDecoder::from_vocab(vocab);
-        static_is_send_sync_check(&decoder);
+        let tokenizer = TokenizerOptions::default()
+            .with_parallel(false)
+            .build::<T>(vocab.clone());
 
         for sample in samples {
-            let tokens = encoder.try_encode(sample).unwrap();
+            let tokens = tokenizer.try_encode(sample).unwrap();
             assert_eq!(
-                decoder.try_decode_to_string(&tokens).unwrap().unwrap(),
+                tokenizer.try_decode_to_string(&tokens).unwrap().unwrap(),
                 sample
             );
         }

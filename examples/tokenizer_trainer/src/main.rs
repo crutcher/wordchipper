@@ -4,7 +4,7 @@ use arrow::array::{Array, StringArray};
 use clap::Parser;
 use similar::{ChangeTag, TextDiff};
 use wordchipper::{
-    TokenizerBuilder,
+    TokenizerOptions,
     UnifiedTokenVocab,
     VocabIndex,
     pretrained::openai::OA_O200K_BASE_PATTERN,
@@ -130,7 +130,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     if args.time_encode_decode {
-        let tokenizer = TokenizerBuilder::default(vocab.clone());
+        let vocab1 = vocab.clone();
+        let tokenizer = TokenizerOptions::default().build(vocab1);
 
         let mut samples = Vec::new();
         {

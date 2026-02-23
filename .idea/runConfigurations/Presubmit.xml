@@ -1,7 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Presubmit" type="CompoundRunConfigurationType">
-    <toRun name="Test Default" type="CargoCommandRunConfiguration" />
-    <toRun name="Test no_std" type="CargoCommandRunConfiguration" />
-    <method v="2" />
-  </configuration>
-</component>

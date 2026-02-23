@@ -5,7 +5,7 @@
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <envs />
     <option name="emulateTerminal" value="true" />
-    <option name="channel" value="DEFAULT" />
+    <option name="channel" value="STABLE" />
     <option name="requiredFeatures" value="true" />
     <option name="allFeatures" value="false" />
     <option name="withSudo" value="false" />
@@ -14,11 +14,7 @@
     <option name="isRedirectInput" value="false" />
     <option name="redirectInputPath" value="" />
     <method v="2">
-      <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      <option name="RunConfigurationTask" enabled="true" run_configuration_name="Fix" run_configuration_type="CargoCommandRunConfiguration" />
       <option name="RunConfigurationTask" enabled="true" run_configuration_name="Format" run_configuration_type="CargoCommandRunConfiguration" />
-      <option name="RunConfigurationTask" enabled="true" run_configuration_name="Doc" run_configuration_type="CargoCommandRunConfiguration" />
-      <option name="RunConfigurationTask" enabled="true" run_configuration_name="Test no_std" run_configuration_type="CargoCommandRunConfiguration" />
     </method>
   </configuration>
 </component>

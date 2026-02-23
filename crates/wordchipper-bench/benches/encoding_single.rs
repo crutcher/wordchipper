@@ -2,10 +2,11 @@
 
 use divan::{Bencher, black_box, counter::BytesCount};
 use wordchipper::{
+    TokenEncoderOptions,
     encoders::token_span_encoder::SpanEncoderSelector,
     pretrained::openai::OATokenizer,
 };
-use wordchipper_bench::{HF_CL100K, HF_O200K, encoder_builder};
+use wordchipper_bench::{HF_CL100K, HF_O200K};
 
 #[global_allocator]
 static ALLOC: divan::AllocProfiler = divan::AllocProfiler::system();
@@ -32,11 +33,14 @@ pub fn bench_wc(
     selector: SpanEncoderSelector,
     accelerator: bool,
 ) {
-    let encoder = encoder_builder::<u32>(model, selector)
-        .with_accelerated_lexers(accelerator)
-        .with_parallel(false)
-        .with_concurrent(false)
-        .build();
+    let encoder = wordchipper_bench::load_encoder::<u32>(
+        model,
+        TokenEncoderOptions::default()
+            .with_accelerated_lexers(accelerator)
+            .with_span_encoder(selector)
+            .with_parallel(true)
+            .with_concurrent(false),
+    );
 
     bencher
         .counter(BytesCount::new(text.len()))

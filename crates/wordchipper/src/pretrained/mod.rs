@@ -22,9 +22,9 @@
 //! use std::sync::Arc;
 //!
 //! use wordchipper::{
-//!     Tokenizer,
-//!     TokenizerBuilder,
 //!     UnifiedTokenVocab,
+//!     Tokenizer,
+//!     TokenizerOptions,
 //!     disk_cache::WordchipperDiskCache,
 //!     get_model,
 //! };
@@ -34,7 +34,7 @@
 //!     let vocab: Arc<UnifiedTokenVocab<u32>> =
 //!         get_model("openai/o200k_harmony", &mut disk_cache)?.into();
 //!
-//!     let tokenizer = TokenizerBuilder::default(vocab);
+//!     let tokenizer = TokenizerOptions::default().build(vocab);
 //!
 //!     Ok(tokenizer)
 //! }

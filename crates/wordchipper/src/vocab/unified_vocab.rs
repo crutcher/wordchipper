@@ -37,13 +37,8 @@ use crate::{
 /// # Typical Usage
 ///
 /// Pre-trained vocabulary loaders return `UnifiedTokenVocab<T>`, which can be
-/// accessed via `Arc<UnifiedTokenVocab<T>>`.
-/// :
-///
+/// accessed via `Arc<UnifiedTokenVocab<T>>`:
 /// - Converted to different token types via [`to_token_type`](Self::to_token_type)
-/// - Configured with [`crate::TokenEncoderBuilder`] and
-///   [`crate::TokenDecoderBuilder`] for custom runtime behavior
-///   (parallelism, tokenization strategies, etc.)
 ///
 /// # Example
 ///

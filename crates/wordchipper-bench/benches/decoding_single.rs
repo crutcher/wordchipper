@@ -8,7 +8,7 @@ use tokenizers::Tokenizer;
 use wordchipper::{
     TokenDecoder,
     TokenEncoder,
-    TokenizerBuilder,
+    TokenizerOptions,
     UnifiedTokenVocab,
     disk_cache::WordchipperDiskCache,
     pretrained::openai::OATokenizer,
@@ -40,7 +40,7 @@ impl WcFixture {
     fn load(model: OATokenizer) -> Self {
         let mut disk_cache = WordchipperDiskCache::default();
         let vocab: Arc<UnifiedTokenVocab<u32>> = model.load_vocab(&mut disk_cache).unwrap().into();
-        let tokenizer = TokenizerBuilder::default(vocab);
+        let tokenizer = TokenizerOptions::default().build(vocab);
         Self { tokenizer }
     }
 }

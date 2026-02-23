@@ -1,18 +1,20 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Test no_std" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="buildProfileId" value="dev" />
-    <option name="command" value="test -p wordchipper --no-default-features --features no_std --tests" />
+    <option name="buildProfileId" value="test" />
+    <option name="command" value="test -p wordchipper --no-default-features --tests" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <envs />
     <option name="emulateTerminal" value="true" />
-    <option name="channel" value="DEFAULT" />
-    <option name="requiredFeatures" value="true" />
+    <option name="channel" value="STABLE" />
+    <option name="requiredFeatures" value="false" />
     <option name="allFeatures" value="false" />
     <option name="withSudo" value="false" />
     <option name="buildTarget" value="REMOTE" />
     <option name="backtrace" value="SHORT" />
     <option name="isRedirectInput" value="false" />
     <option name="redirectInputPath" value="" />
-    <method v="2" />
+    <method v="2">
+      <option name="RunConfigurationTask" enabled="false" run_configuration_name="Format" run_configuration_type="CargoCommandRunConfiguration" />
+    </method>
   </configuration>
 </component>

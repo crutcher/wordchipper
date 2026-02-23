@@ -78,7 +78,7 @@ where
 mod tests {
     use super::*;
     use crate::{
-        TokenEncoderBuilder,
+        TokenEncoderOptions,
         TokenType,
         UnifiedTokenVocab,
         encoders::{
@@ -89,9 +89,9 @@ mod tests {
 
     fn test_encoder<T: TokenType>() {
         let vocab: Arc<UnifiedTokenVocab<T>> = common_encoder_test_vocab::<T>().into();
-        let inner = TokenEncoderBuilder::new(vocab.clone())
+        let inner = TokenEncoderOptions::default()
             .with_parallel(false)
-            .build();
+            .build(vocab.clone());
         let encoder = ParallelRayonEncoder::new(inner);
 
         assert_eq!(encoder.special_vocab(), encoder.inner.special_vocab());

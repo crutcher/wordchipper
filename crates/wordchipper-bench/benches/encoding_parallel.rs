@@ -68,6 +68,7 @@ static BATCH: LazyLock<Batch> = LazyLock::new(load_batch);
 
 mod wordchipper {
     use ::wordchipper::{
+        TokenEncoderOptions,
         encoders::token_span_encoder::SpanEncoderSelector,
         pretrained::openai::OATokenizer,
     };
@@ -82,10 +83,13 @@ mod wordchipper {
     ) {
         let strs = BATCH.strs();
 
-        let encoder = wordchipper_bench::encoder_builder::<u32>(oatok, selector)
-            .with_accelerated_lexers(accelerated)
-            .with_parallel(true)
-            .build();
+        let encoder = wordchipper_bench::load_encoder::<u32>(
+            oatok,
+            TokenEncoderOptions::default()
+                .with_span_encoder(selector)
+                .with_accelerated_lexers(accelerated)
+                .with_parallel(true),
+        );
 
         bencher
             .counter(BytesCount::new(BATCH.total_bytes))
