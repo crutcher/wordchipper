@@ -1,16 +1,9 @@
 #![allow(missing_docs)]
 
-use std::sync::{Arc, LazyLock};
+use std::sync::LazyLock;
 
-use ::tokenizers::Tokenizer;
 use arrow::array::Array;
 use divan::{Bencher, black_box, counter::BytesCount};
-use tiktoken_rs::CoreBPE;
-use wordchipper::{
-    TokenEncoder,
-    encoders::token_span_encoder::SpanEncoderSelector,
-    pretrained::openai::OATokenizer,
-};
 use wordchipper_data::dataset::DatasetCacheConfig;
 
 #[global_allocator]
@@ -73,142 +66,129 @@ fn load_batch() -> Batch {
 
 static BATCH: LazyLock<Batch> = LazyLock::new(load_batch);
 
-fn load_wc_variant(
-    model: OATokenizer,
-    selector: SpanEncoderSelector,
-) -> Arc<dyn TokenEncoder<u32>> {
-    wordchipper_bench::encoder_builder(model, selector)
-        .with_parallel(true)
-        .build()
-}
+mod wordchipper {
+    use ::wordchipper::{
+        encoders::token_span_encoder::SpanEncoderSelector,
+        pretrained::openai::OATokenizer,
+    };
 
-// cl100k span_encoders
-static WC_BSWEEP_CL100K: LazyLock<Arc<dyn TokenEncoder<u32>>> =
-    LazyLock::new(|| load_wc_variant(OATokenizer::Cl100kBase, SpanEncoderSelector::BufferSweep));
-static WC_TSWEEP_CL100K: LazyLock<Arc<dyn TokenEncoder<u32>>> =
-    LazyLock::new(|| load_wc_variant(OATokenizer::Cl100kBase, SpanEncoderSelector::TailSweep));
-static WC_HEAP_CL100K: LazyLock<Arc<dyn TokenEncoder<u32>>> =
-    LazyLock::new(|| load_wc_variant(OATokenizer::Cl100kBase, SpanEncoderSelector::MergeHeap));
-static WC_PMERGE_CL100K: LazyLock<Arc<dyn TokenEncoder<u32>>> =
-    LazyLock::new(|| load_wc_variant(OATokenizer::Cl100kBase, SpanEncoderSelector::PriorityMerge));
-
-// o200k span_encoders
-static WC_BSWEEP_O200K: LazyLock<Arc<dyn TokenEncoder<u32>>> =
-    LazyLock::new(|| load_wc_variant(OATokenizer::O200kBase, SpanEncoderSelector::BufferSweep));
-static WC_TSWEEP_O200K: LazyLock<Arc<dyn TokenEncoder<u32>>> =
-    LazyLock::new(|| load_wc_variant(OATokenizer::O200kBase, SpanEncoderSelector::TailSweep));
-static WC_HEAP_O200K: LazyLock<Arc<dyn TokenEncoder<u32>>> =
-    LazyLock::new(|| load_wc_variant(OATokenizer::O200kBase, SpanEncoderSelector::MergeHeap));
-static WC_PMERGE_O200K: LazyLock<Arc<dyn TokenEncoder<u32>>> =
-    LazyLock::new(|| load_wc_variant(OATokenizer::O200kBase, SpanEncoderSelector::PriorityMerge));
-
-static TT_CL100K: LazyLock<Arc<CoreBPE>> =
-    LazyLock::new(|| Arc::new(tiktoken_rs::cl100k_base().unwrap()));
-static TT_O200K: LazyLock<Arc<CoreBPE>> =
-    LazyLock::new(|| Arc::new(tiktoken_rs::o200k_base().unwrap()));
-
-static HF_CL100K: LazyLock<Arc<Tokenizer>> = LazyLock::new(|| {
-    Arc::new(Tokenizer::from_pretrained("Xenova/text-embedding-ada-002", None).unwrap())
-});
-static HF_O200K: LazyLock<Arc<Tokenizer>> =
-    LazyLock::new(|| Arc::new(Tokenizer::from_pretrained("Xenova/gpt-4o", None).unwrap()));
-
-mod buffer_sweep {
     use super::*;
 
-    #[divan::bench]
-    fn cl100k(bencher: Bencher) {
+    fn bench_variant(
+        bencher: Bencher,
+        oatok: OATokenizer,
+        selector: SpanEncoderSelector,
+    ) {
         let strs = BATCH.strs();
-        let encoder = &*WC_BSWEEP_CL100K;
+
+        let encoder = wordchipper_bench::encoder_builder::<u32>(oatok, selector)
+            .with_parallel(true)
+            .build();
+
         bencher
             .counter(BytesCount::new(BATCH.total_bytes))
             .bench(|| encoder.try_encode_batch(black_box(&strs)).unwrap());
     }
 
-    #[divan::bench]
-    fn o200k(bencher: Bencher) {
-        let strs = BATCH.strs();
-        let encoder = &*WC_BSWEEP_O200K;
-        bencher
-            .counter(BytesCount::new(BATCH.total_bytes))
-            .bench(|| encoder.try_encode_batch(black_box(&strs)).unwrap());
-    }
-}
+    mod buffer_sweep {
+        use super::*;
 
-mod tail_sweep {
-    use super::*;
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OATokenizer::Cl100kBase,
+                SpanEncoderSelector::BufferSweep,
+            )
+        }
 
-    #[divan::bench]
-    fn cl100k(bencher: Bencher) {
-        let strs = BATCH.strs();
-        let encoder = &*WC_TSWEEP_CL100K;
-        bencher
-            .counter(BytesCount::new(BATCH.total_bytes))
-            .bench(|| encoder.try_encode_batch(black_box(&strs)).unwrap());
-    }
-
-    #[divan::bench]
-    fn o200k(bencher: Bencher) {
-        let strs = BATCH.strs();
-        let encoder = &*WC_TSWEEP_O200K;
-        bencher
-            .counter(BytesCount::new(BATCH.total_bytes))
-            .bench(|| encoder.try_encode_batch(black_box(&strs)).unwrap());
-    }
-}
-
-mod merge_heap {
-    use super::*;
-
-    #[divan::bench]
-    fn cl100k(bencher: Bencher) {
-        let strs = BATCH.strs();
-        let encoder = &*WC_HEAP_CL100K;
-        bencher
-            .counter(BytesCount::new(BATCH.total_bytes))
-            .bench(|| encoder.try_encode_batch(black_box(&strs)).unwrap());
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OATokenizer::O200kBase,
+                SpanEncoderSelector::BufferSweep,
+            )
+        }
     }
 
-    #[divan::bench]
-    fn o200k(bencher: Bencher) {
-        let strs = BATCH.strs();
-        let encoder = &*WC_HEAP_O200K;
-        bencher
-            .counter(BytesCount::new(BATCH.total_bytes))
-            .bench(|| encoder.try_encode_batch(black_box(&strs)).unwrap());
+    mod tail_sweep {
+        use super::*;
+
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OATokenizer::Cl100kBase,
+                SpanEncoderSelector::TailSweep,
+            )
+        }
+
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OATokenizer::O200kBase,
+                SpanEncoderSelector::TailSweep,
+            )
+        }
     }
-}
 
-mod priority_merge {
-    use super::*;
+    mod merge_heap {
+        use super::*;
 
-    #[divan::bench]
-    fn cl100k(bencher: Bencher) {
-        let strs = BATCH.strs();
-        let encoder = &*WC_PMERGE_CL100K;
-        bencher
-            .counter(BytesCount::new(BATCH.total_bytes))
-            .bench(|| encoder.try_encode_batch(black_box(&strs)).unwrap());
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OATokenizer::Cl100kBase,
+                SpanEncoderSelector::MergeHeap,
+            )
+        }
+
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OATokenizer::O200kBase,
+                SpanEncoderSelector::MergeHeap,
+            )
+        }
     }
 
-    #[divan::bench]
-    fn o200k(bencher: Bencher) {
-        let strs = BATCH.strs();
-        let encoder = &*WC_PMERGE_O200K;
-        bencher
-            .counter(BytesCount::new(BATCH.total_bytes))
-            .bench(|| encoder.try_encode_batch(black_box(&strs)).unwrap());
+    mod priority_merge {
+        use super::*;
+
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OATokenizer::Cl100kBase,
+                SpanEncoderSelector::PriorityMerge,
+            )
+        }
+
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OATokenizer::O200kBase,
+                SpanEncoderSelector::PriorityMerge,
+            )
+        }
     }
 }
 
 mod tiktoken {
     use rayon::prelude::*;
+    use tiktoken_rs::{CoreBPE, cl100k_base, o200k_base};
 
     use super::*;
 
-    #[divan::bench]
-    fn cl100k(bencher: Bencher) {
-        let bpe = &*TT_CL100K;
+    fn bench_variant(
+        bencher: Bencher,
+        bpe: &CoreBPE,
+    ) {
         let strs = BATCH.strs();
         bencher
             .counter(BytesCount::new(BATCH.total_bytes))
@@ -220,25 +200,26 @@ mod tiktoken {
     }
 
     #[divan::bench]
+    fn cl100k(bencher: Bencher) {
+        bench_variant(bencher, &cl100k_base().unwrap())
+    }
+
+    #[divan::bench]
     fn o200k(bencher: Bencher) {
-        let bpe = &*TT_O200K;
-        let strs = BATCH.strs();
-        bencher
-            .counter(BytesCount::new(BATCH.total_bytes))
-            .bench(|| {
-                strs.par_iter()
-                    .map(|s| bpe.encode_with_special_tokens(s))
-                    .collect::<Vec<_>>()
-            });
+        bench_variant(bencher, &o200k_base().unwrap())
     }
 }
 
 mod tokenizers {
+    use wordchipper_bench::{HF_CL100K, HF_O200K};
+
     use super::*;
 
-    #[divan::bench]
-    fn cl100k(bencher: Bencher) {
-        let tok = &*HF_CL100K;
+    fn bench_variant(
+        bencher: Bencher,
+        name: &str,
+    ) {
+        let tok = ::tokenizers::Tokenizer::from_pretrained(name, None).unwrap();
         let strs = BATCH.strs();
         bencher
             .counter(BytesCount::new(BATCH.total_bytes))
@@ -246,11 +227,12 @@ mod tokenizers {
     }
 
     #[divan::bench]
+    fn cl100k(bencher: Bencher) {
+        bench_variant(bencher, HF_CL100K)
+    }
+
+    #[divan::bench]
     fn o200k(bencher: Bencher) {
-        let tok = &*HF_O200K;
-        let strs = BATCH.strs();
-        bencher
-            .counter(BytesCount::new(BATCH.total_bytes))
-            .bench(|| tok.encode_batch(black_box(strs.clone()), true).unwrap());
+        bench_variant(bencher, HF_O200K)
     }
 }
