@@ -1,7 +1,5 @@
 //! # `TokenEncoder` Builder
 
-use core::num::NonZeroUsize;
-
 use crate::{
     TokenType,
     alloc::sync::Arc,
@@ -13,54 +11,49 @@ use crate::{
     vocab::UnifiedTokenVocab,
 };
 
-/// Builder for production [`TokenEncoder`]s.
-///
-/// The primary tuning knobs here are:
-/// * [`set_parallel`](Self::set_parallel) - whether to request a parallel encoder (if supported).
-/// * [`set_concurrent`](Self::set_concurrent) - whether to request a concurrent encoder (if supported).
-///
-/// See [`is_concurrent`](Self::is_concurrent) for more information on concurrent encoding.
-#[derive(Clone, PartialEq)]
-pub struct TokenEncoderBuilder<T: TokenType> {
-    vocab: Arc<UnifiedTokenVocab<T>>,
+/// Options for configuring a [`TokenEncoderBuilder`].
+// TODO: serialize/deserialize?
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct TokenEncoderBuilderOptions {
+    /// The [`UnifiedTokenVocab`] to use.
+    ///
+    /// When `None`, an appropriate default will be used for the concurrency.
+    pub span_encoder: Option<SpanEncoderSelector>,
 
-    spanner_builder: TextSpannerBuilder<T>,
+    /// Whether to use accelerated lexers.
+    ///
+    /// When enabled, and an accelerated lexer can be
+    /// found for a given regex pattern; the regex accelerator
+    /// will be used for spanning.
+    pub accelerated_lexers: bool,
 
-    span_encoder: Option<SpanEncoderSelector>,
+    /// Should the encoder be threaded?
+    pub parallel: bool,
 
-    parallel: bool,
-    concurrent: bool,
+    /// Should the encoder be concurrent?
+    ///
+    /// Concurrent encoders select defaults to be called concurrently.
+    pub concurrent: bool,
 }
 
-impl<T: TokenType> TokenEncoderBuilder<T> {
-    /// Build a [`TokenEncoder`] with the default configuration.
-    pub fn default(vocab: Arc<UnifiedTokenVocab<T>>) -> Arc<dyn TokenEncoder<T>> {
-        Self::new(vocab).build()
-    }
-
-    /// Create a new builder for the vocab.
-    pub fn new(vocab: Arc<UnifiedTokenVocab<T>>) -> Self {
-        let spanner_builder = TextSpannerBuilder::from_vocab(&vocab);
+impl Default for TokenEncoderBuilderOptions {
+    fn default() -> Self {
         Self {
-            vocab,
-            span_encoder: Default::default(),
-            spanner_builder,
+            span_encoder: None,
+            accelerated_lexers: true,
             parallel: false,
             concurrent: false,
         }
     }
+}
 
-    /// Get the underlying [`UnifiedTokenVocab`].
-    pub fn vocab(&self) -> &Arc<UnifiedTokenVocab<T>> {
-        &self.vocab
-    }
-
+impl TokenEncoderBuilderOptions {
     /// Gets the effective span encoder selector.
     ///
     /// Will return any explict setting,
     /// otherwise will select based upon parallel and concurrency settings.
     pub fn effective_span_encoder(&self) -> SpanEncoderSelector {
-        match self.span_encoder {
+        match self.span_encoder() {
             Some(selector) => selector,
             None if self.is_concurrent() => SpanEncoderSelector::ConcurrentDefault,
             _ => SpanEncoderSelector::SingleThreadDefault,
@@ -100,7 +93,7 @@ impl<T: TokenType> TokenEncoderBuilder<T> {
     /// found for a given regex pattern; the regex accelerator
     /// will be used for spanning.
     pub fn accelerated_lexers(&self) -> bool {
-        self.spanner_builder.accelerated_lexers()
+        self.accelerated_lexers
     }
 
     /// Set whether accelerated lexers should be enabled.
@@ -112,8 +105,7 @@ impl<T: TokenType> TokenEncoderBuilder<T> {
         &mut self,
         accelerated_lexers: bool,
     ) {
-        self.spanner_builder
-            .set_accelerated_lexers(accelerated_lexers);
+        self.accelerated_lexers = accelerated_lexers;
     }
 
     /// Set whether accelerated lexers should be enabled.
@@ -204,40 +196,200 @@ impl<T: TokenType> TokenEncoderBuilder<T> {
         self.set_concurrent(concurrent);
         self
     }
+}
 
-    /// Get the max parallel configured pool size.
-    ///
-    /// If none, will use system and environment defaults.
-    pub fn max_pool(&self) -> Option<NonZeroUsize> {
-        self.spanner_builder.max_pool()
+/// Builder for production [`TokenEncoder`]s.
+///
+/// The primary tuning knobs here are:
+/// * [`set_parallel`](Self::set_parallel) - whether to request a parallel encoder (if supported).
+/// * [`set_concurrent`](Self::set_concurrent) - whether to request a concurrent encoder (if supported).
+///
+/// See [`is_concurrent`](Self::is_concurrent) for more information on concurrent encoding.
+#[derive(Clone, PartialEq)]
+pub struct TokenEncoderBuilder<T: TokenType> {
+    options: TokenEncoderBuilderOptions,
+    vocab: Arc<UnifiedTokenVocab<T>>,
+}
+
+impl<T: TokenType> TokenEncoderBuilder<T> {
+    /// Build a [`TokenEncoder`] with the default configuration.
+    pub fn default(vocab: Arc<UnifiedTokenVocab<T>>) -> Arc<dyn TokenEncoder<T>> {
+        Self::new(vocab).build()
     }
 
-    /// Set the max parallel configured pool size.
-    ///
-    /// If none, will use system and environment defaults.
-    pub fn set_max_pool(
-        &mut self,
-        max_pool: NonZeroUsize,
-    ) {
-        self.spanner_builder.set_max_pool(max_pool);
+    /// Create a new builder for the vocab.
+    pub fn new(vocab: Arc<UnifiedTokenVocab<T>>) -> Self {
+        Self::new_with_options(vocab, Default::default())
     }
 
-    /// Set the max parallel configured pool size.
-    ///
-    /// If none, will use system and environment defaults.
-    pub fn with_max_pool(
-        mut self,
-        max_pool: NonZeroUsize,
+    /// Create a new builder for the vocab with the given options.
+    pub fn new_with_options(
+        vocab: Arc<UnifiedTokenVocab<T>>,
+        options: TokenEncoderBuilderOptions,
     ) -> Self {
-        self.set_max_pool(max_pool);
+        Self { vocab, options }
+    }
+
+    /// Get the configured [`TokenEncoderBuilderOptions`].
+    pub fn options(&self) -> TokenEncoderBuilderOptions {
+        self.options
+    }
+
+    /// Get the underlying [`UnifiedTokenVocab`].
+    pub fn vocab(&self) -> &Arc<UnifiedTokenVocab<T>> {
+        &self.vocab
+    }
+
+    /// Gets the effective span encoder selector.
+    ///
+    /// Will return any explict setting,
+    /// otherwise will select based upon parallel and concurrency settings.
+    pub fn effective_span_encoder(&self) -> SpanEncoderSelector {
+        self.options.effective_span_encoder()
+    }
+
+    /// Get the configured [`SpanEncoderSelector`].
+    pub fn span_encoder(&self) -> Option<SpanEncoderSelector> {
+        self.options.span_encoder()
+    }
+
+    /// Set the configured [`SpanEncoderSelector`].
+    pub fn set_span_encoder<E>(
+        &mut self,
+        span_encoder: E,
+    ) where
+        E: Into<Option<SpanEncoderSelector>>,
+    {
+        self.options.set_span_encoder(span_encoder);
+    }
+
+    /// Set the configured [`SpanEncoderSelector`] and return the builder.
+    pub fn with_span_encoder<E>(
+        mut self,
+        span_encoder: E,
+    ) -> Self
+    where
+        E: Into<Option<SpanEncoderSelector>>,
+    {
+        self.set_span_encoder(span_encoder);
+        self
+    }
+
+    /// Are accelerated lexers enabled?
+    ///
+    /// When enabled, and an accelerated lexer can be
+    /// found for a given regex pattern; the regex accelerator
+    /// will be used for spanning.
+    pub fn accelerated_lexers(&self) -> bool {
+        self.options.accelerated_lexers()
+    }
+
+    /// Set whether accelerated lexers should be enabled.
+    ///
+    /// When enabled, and an accelerated lexer can be
+    /// found for a given regex pattern; the regex accelerator
+    /// will be used for spanning.
+    pub fn set_accelerated_lexers(
+        &mut self,
+        accelerated_lexers: bool,
+    ) {
+        self.options.set_accelerated_lexers(accelerated_lexers);
+    }
+
+    /// Set whether accelerated lexers should be enabled.
+    ///
+    /// When enabled, and an accelerated lexer can be
+    /// found for a given regex pattern; the regex accelerator
+    /// will be used for spanning.
+    pub fn with_accelerated_lexers(
+        mut self,
+        accelerated_lexers: bool,
+    ) -> Self {
+        self.set_accelerated_lexers(accelerated_lexers);
+        self
+    }
+
+    /// Gets the configured parallelism value.
+    ///
+    /// Enabling parallelism will request a threaded encoder.
+    ///
+    /// See: [`is_concurrent`](Self::is_concurrent)
+    pub fn parallel(&self) -> bool {
+        self.options.parallel()
+    }
+
+    /// Sets the configured parallelism value.
+    ///
+    /// Enabling parallelism will request a threaded encoder.
+    ///
+    /// See: [`is_concurrent`](Self::is_concurrent)
+    pub fn set_parallel(
+        &mut self,
+        parallel: bool,
+    ) {
+        self.options.set_parallel(parallel);
+    }
+
+    /// Sets the configured parallelism value.
+    ///
+    /// Enabling parallelism will request a threaded encoder.
+    ///
+    /// See: [`is_concurrent`](Self::is_concurrent)
+    pub fn with_parallel(
+        mut self,
+        parallel: bool,
+    ) -> Self {
+        self.set_parallel(parallel);
+        self
+    }
+
+    /// Returns true if either parallel or concurrent is enabled.
+    pub fn is_concurrent(&self) -> bool {
+        self.options.is_concurrent()
+    }
+
+    /// Gets the configured concurrent value.
+    ///
+    /// Enabling concurrency will select an encoder which plays
+    /// well when used from multiple threads.
+    ///
+    /// See: [`is_concurrent`](Self::is_concurrent)
+    pub fn concurrent(&self) -> bool {
+        self.options.concurrent()
+    }
+
+    /// Sets the configured concurrent value.
+    ///
+    /// Enabling concurrency will select an encoder which plays
+    /// well when used from multiple threads.
+    ///
+    /// See: [`is_concurrent`](Self::is_concurrent)
+    pub fn set_concurrent(
+        &mut self,
+        concurrent: bool,
+    ) {
+        self.options.set_concurrent(concurrent);
+    }
+
+    /// Sets the configured concurrent value.
+    ///
+    /// Enabling concurrency will select a encoder which plays
+    /// well when used from multiple threads.
+    ///
+    /// See: [`is_concurrent`](Self::is_concurrent)
+    pub fn with_concurrent(
+        mut self,
+        concurrent: bool,
+    ) -> Self {
+        self.set_concurrent(concurrent);
         self
     }
 
     /// Build the configured `TokenEncoder`.
     pub fn build(&self) -> Arc<dyn TokenEncoder<T>> {
-        let spanner = self
-            .spanner_builder
+        let spanner = TextSpannerBuilder::from_vocab(self.vocab())
             .clone()
+            .with_accelerated_lexers(self.accelerated_lexers())
             .with_concurrent(self.is_concurrent())
             .build();
 
