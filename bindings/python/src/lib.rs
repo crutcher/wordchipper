@@ -41,7 +41,9 @@ impl Tokenizer {
             .map_err(to_pyerr)?
             .into();
 
-        let inner = TokenizerOptions::default().build(vocab.clone());
+        let inner = TokenizerOptions::default()
+            .with_parallel(true)
+            .build(vocab.clone());
 
         Ok(Tokenizer { inner })
     }
