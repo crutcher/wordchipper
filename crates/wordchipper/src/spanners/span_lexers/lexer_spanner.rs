@@ -2,7 +2,7 @@
 
 use crate::{
     alloc::sync::Arc,
-    spanning::{SpanRef, TextSpanner, span_lexers::SpanLexer},
+    spanners::{SpanRef, TextSpanner, span_lexers::SpanLexer},
     support::ranges::offset_range,
 };
 
@@ -83,7 +83,7 @@ mod tests {
         TokenType,
         alloc::{boxed::Box, vec, vec::Vec},
         pretrained::openai::OA_CL100K_BASE_PATTERN,
-        spanning::{SpanRef, TextSpanningConfig},
+        spanners::{SpanRef, TextSpanningConfig},
     };
 
     const _LEXER_SPANNER_BOX_CHECK: Option<Box<LexerTextSpanner>> = None;
@@ -100,7 +100,7 @@ mod tests {
 
     #[test]
     fn test_for_each_split_span() {
-        use crate::spanning::text_spanner::SpanRef::*;
+        use crate::spanners::text_spanner::SpanRef::*;
         type T = u32;
 
         let config: TextSpanningConfig<T> = TextSpanningConfig::from_pattern(r"\w+")

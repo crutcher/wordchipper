@@ -6,7 +6,7 @@ use crate::{
     TokenType,
     UnifiedTokenVocab,
     alloc::sync::Arc,
-    spanning::{
+    spanners::{
         TextSpanner,
         TextSpanningConfig,
         span_lexers::{LexerTextSpanner, SpanLexer, build_regex_lexer},
@@ -34,7 +34,7 @@ impl<T: TokenType> TextSpannerBuilder<T> {
 
     /// Create a new [`TextSpannerBuilder`].
     ///
-    /// Clones out the spanning configuration from the provided vocabulary.
+    /// Clones out the spanners configuration from the provided vocabulary.
     pub fn from_vocab(vocab: &UnifiedTokenVocab<T>) -> Self {
         Self::new(vocab.spanning().clone())
     }
@@ -58,7 +58,7 @@ impl<T: TokenType> TextSpannerBuilder<T> {
     ///
     /// When enabled, and an accelerated lexer can be
     /// found for a given regex pattern; the regex accelerator
-    /// will be used for spanning.
+    /// will be used for spanners.
     pub fn accelerated_lexers(&self) -> bool {
         self.accelerated_lexers
     }
@@ -67,7 +67,7 @@ impl<T: TokenType> TextSpannerBuilder<T> {
     ///
     /// When enabled, and an accelerated lexer can be
     /// found for a given regex pattern; the regex accelerator
-    /// will be used for spanning.
+    /// will be used for spanners.
     pub fn set_accelerated_lexers(
         &mut self,
         accelerated_lexers: bool,
@@ -79,7 +79,7 @@ impl<T: TokenType> TextSpannerBuilder<T> {
     ///
     /// When enabled, and an accelerated lexer can be
     /// found for a given regex pattern; the regex accelerator
-    /// will be used for spanning.
+    /// will be used for spanners.
     pub fn with_accelerated_lexers(
         mut self,
         accelerated_lexers: bool,

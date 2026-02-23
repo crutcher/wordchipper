@@ -6,7 +6,7 @@ use crate::{
     decoders::{TokenDecoder, TokenDictDecoder},
     encoders::TokenEncoder,
     pretrained::openai::OA_CL100K_BASE_PATTERN,
-    spanning::TextSpanningConfig,
+    spanners::TextSpanningConfig,
     support::{slices::inner_slice_view, traits::static_is_send_sync_check},
     vocab::{
         UnifiedTokenVocab,

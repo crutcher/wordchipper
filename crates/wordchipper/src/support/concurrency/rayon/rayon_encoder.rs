@@ -6,7 +6,7 @@ use crate::{
     alloc::sync::Arc,
     encoders::TokenEncoder,
     prelude::*,
-    spanning::TextSpanner,
+    spanners::TextSpanner,
     vocab::SpecialVocab,
 };
 

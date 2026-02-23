@@ -4,7 +4,7 @@ use core::num::NonZeroUsize;
 
 use crate::{
     alloc::sync::Arc,
-    spanning::span_lexers::SpanLexer,
+    spanners::span_lexers::SpanLexer,
     support::regex::{RegexPattern, RegexWrapper},
 };
 
@@ -39,7 +39,7 @@ pub fn build_regex_lexer(
 
     #[cfg(feature = "logos")]
     if accelerated {
-        use crate::spanning::span_lexers::logos::lookup_word_lexer;
+        use crate::spanners::span_lexers::logos::lookup_word_lexer;
         if let Some(lexer) = lookup_word_lexer(&pattern) {
             return lexer;
         }

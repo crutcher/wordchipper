@@ -97,7 +97,7 @@ mod tests {
             testing::{common_encoder_test_vocab, common_encoder_tests},
             token_span_encoder::{SpanEncoderSelector, TokenSpanEncoder},
         },
-        spanning::TextSpannerBuilder,
+        spanners::TextSpannerBuilder,
     };
 
     fn test_encoder<T: TokenType>() {

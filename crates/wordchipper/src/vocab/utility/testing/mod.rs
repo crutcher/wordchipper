@@ -3,7 +3,7 @@
 use crate::{
     TokenType,
     alloc::vec::Vec,
-    spanning::TextSpanningConfig,
+    spanners::TextSpanningConfig,
     vocab::{ByteMapVocab, SpanMapVocab, SpanTokenMap, UnifiedTokenVocab},
 };
 

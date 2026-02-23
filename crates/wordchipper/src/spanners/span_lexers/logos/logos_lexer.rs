@@ -7,7 +7,7 @@ use core::ops::Range;
 
 use logos::Logos;
 
-use crate::spanning::{SpanRef, span_lexers::SpanLexer};
+use crate::spanners::{SpanRef, span_lexers::SpanLexer};
 
 // ---------------------------------------------------------------------------
 // Cl100k token
@@ -465,7 +465,7 @@ mod tests {
     use super::*;
     use crate::{
         alloc::{string::ToString, sync::Arc, vec, vec::Vec},
-        spanning::{TextSpanner, span_lexers::LexerTextSpanner},
+        spanners::{TextSpanner, span_lexers::LexerTextSpanner},
     };
 
     /// Build a `TextSpanner` from a logos lexer with no specials.
@@ -574,7 +574,7 @@ mod tests {
     fn test_logos_cl100k_unicode() {
         use crate::{
             pretrained::openai::OA_CL100K_BASE_PATTERN,
-            spanning::{TextSpannerBuilder, TextSpanningConfig},
+            spanners::{TextSpannerBuilder, TextSpanningConfig},
         };
 
         let config: TextSpanningConfig<u32> =
@@ -610,7 +610,7 @@ mod tests {
     fn test_logos_cl100k_realworld() {
         use crate::{
             pretrained::openai::OA_CL100K_BASE_PATTERN,
-            spanning::{TextSpannerBuilder, TextSpanningConfig},
+            spanners::{TextSpannerBuilder, TextSpanningConfig},
         };
 
         let config: TextSpanningConfig<u32> =
@@ -658,7 +658,7 @@ mod tests {
     fn test_logos_cl100k_long_text() {
         use crate::{
             pretrained::openai::OA_CL100K_BASE_PATTERN,
-            spanning::{TextSpannerBuilder, TextSpanningConfig},
+            spanners::{TextSpannerBuilder, TextSpanningConfig},
         };
 
         let config: TextSpanningConfig<u32> =
@@ -741,7 +741,7 @@ mod tests {
     fn test_o200k_unicode() {
         use crate::{
             pretrained::openai::OA_O200K_BASE_PATTERN,
-            spanning::{TextSpannerBuilder, TextSpanningConfig},
+            spanners::{TextSpannerBuilder, TextSpanningConfig},
         };
 
         let config: TextSpanningConfig<u32> =
@@ -778,7 +778,7 @@ mod tests {
     fn test_o200k_realworld() {
         use crate::{
             pretrained::openai::OA_O200K_BASE_PATTERN,
-            spanning::{TextSpannerBuilder, TextSpanningConfig},
+            spanners::{TextSpannerBuilder, TextSpanningConfig},
         };
 
         let config: TextSpanningConfig<u32> =

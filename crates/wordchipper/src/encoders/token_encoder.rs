@@ -4,7 +4,7 @@ use crate::{
     TokenType,
     WCResult,
     alloc::{sync::Arc, vec::Vec},
-    spanning::TextSpanner,
+    spanners::TextSpanner,
     vocab::SpecialVocab,
 };
 

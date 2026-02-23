@@ -1,6 +1,6 @@
 //! # Text Segmentation
 //!
-//! This module exists to factor out text spanning scanning.
+//! This module exists to factor out text spanners scanning.
 //!
 //! [`TextSpanningConfig`] describes the declarative needs of a tokenizer:
 //! * `pattern` - the word/span split pattern.

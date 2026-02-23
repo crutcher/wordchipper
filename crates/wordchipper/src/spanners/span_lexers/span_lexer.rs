@@ -2,7 +2,7 @@
 
 use core::ops::Deref;
 
-use crate::{spanning::SpanRef, support::ranges::offset_range};
+use crate::{spanners::SpanRef, support::ranges::offset_range};
 
 /// Word-scanning plugin trait.
 ///

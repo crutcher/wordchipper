@@ -7,7 +7,7 @@ use crate::{
     WCHashSet,
     WCResult,
     alloc::vec::Vec,
-    spanning::TextSpanningConfig,
+    spanners::TextSpanningConfig,
     support::strings::string_from_utf8_lossy,
     vocab::{
         ByteMapVocab,
@@ -70,7 +70,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     /// Build a new [`UnifiedTokenVocab`] from a [`SpanMapVocab`].
     ///
     /// ## Arguments
-    /// * `span_config` - The spanning configuration.
+    /// * `span_config` - The spanners configuration.
     /// * `span_vocab` - The span map vocabulary.
     ///
     /// ## Returns
@@ -86,7 +86,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     /// Build a new [`UnifiedTokenVocab`] from a [`PairMapVocab`].
     ///
     /// ## Arguments
-    /// * `span_config` - The spanning configuration.
+    /// * `span_config` - The spanners configuration.
     /// * `pair_vocab` - The pair map vocabulary.
     ///
     /// ## Returns
@@ -102,7 +102,7 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
     /// Initialize a [`UnifiedTokenVocab`].
     ///
     /// ## Arguments
-    /// * `span_config` - The spanning configuration.
+    /// * `span_config` - The spanners configuration.
     /// * `word_vocab` - The span map vocabulary.
     /// * `pair_vocab` - The pair map vocabulary.
     ///
@@ -268,7 +268,7 @@ mod tests {
 
     use super::*;
     use crate::{
-        spanning::TextSpanningConfig,
+        spanners::TextSpanningConfig,
         vocab::{PairTokenMap, SpanMapVocab},
     };
 
