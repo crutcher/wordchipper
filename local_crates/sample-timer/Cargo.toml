@@ -25,7 +25,7 @@ tokenizers = [
 ]
 
 [dependencies]
-wordchipper-data = { path = "../../local_crates/wordchipper-data" }
+wordchipper-data = { path = "../wordchipper-data" }
 wordchipper = { path = "../../crates/wordchipper", features = ["default"] }
 
 arrow = { workspace = true }

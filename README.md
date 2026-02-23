@@ -72,8 +72,8 @@ feature flags that imply `std`.
 
 ### Tools
 
-- [sample-timer](examples/sample-timer) - wordchipper vs tiktoken side-by-side timer.
-- [tokenizer_trainer](examples/tokenizer_trainer) - training example.
+- [sample-timer](local_crates/sample-timer) - wordchipper vs tiktoken side-by-side timer.
+- [tokenizer_trainer](local_crates/tokenizer_trainer) - training example.
 
 ## Acknowledgements
 
