@@ -15,12 +15,12 @@ use crate::{
 // TODO: serialize/deserialize?
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct TokenEncoderBuilderOptions {
-    /// The [`UnifiedTokenVocab`] to use.
+    /// The [`SpanEncoderSelector`] to use.
     ///
     /// When `None`, an appropriate default will be used for the concurrency.
     pub span_encoder: Option<SpanEncoderSelector>,
 
-    /// Whether to use accelerated lexers.
+    /// Whether to use accelerated lexers, when available.
     ///
     /// When enabled, and an accelerated lexer can be
     /// found for a given regex pattern; the regex accelerator
