@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/brn-nanochat.iml" filepath="$PROJECT_DIR$/.idea/brn-nanochat.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/wordchipper.iml" filepath="$PROJECT_DIR$/.idea/wordchipper.iml" />
     </modules>
   </component>
 </project>
