@@ -30,9 +30,12 @@ pub fn bench_wc(
     text: &str,
     model: OATokenizer,
     selector: SpanEncoderSelector,
+    accelerator: bool,
 ) {
     let encoder = encoder_builder::<u32>(model, selector)
+        .with_accelerated_lexers(accelerator)
         .with_parallel(false)
+        .with_concurrent(false)
         .build();
 
     bencher
@@ -69,12 +72,35 @@ mod english {
         use super::*;
 
         #[divan::bench]
+        fn cl100k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &english_text(),
+                OATokenizer::Cl100kBase,
+                SpanEncoderSelector::BufferSweep,
+                true,
+            );
+        }
+
+        #[divan::bench]
+        fn o200k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &english_text(),
+                OATokenizer::O200kBase,
+                SpanEncoderSelector::BufferSweep,
+                true,
+            );
+        }
+
+        #[divan::bench]
         fn cl100k(bencher: Bencher) {
             bench_wc(
                 bencher,
                 &english_text(),
                 OATokenizer::Cl100kBase,
                 SpanEncoderSelector::BufferSweep,
+                false,
             );
         }
 
@@ -85,6 +111,7 @@ mod english {
                 &english_text(),
                 OATokenizer::O200kBase,
                 SpanEncoderSelector::BufferSweep,
+                false,
             );
         }
     }
@@ -99,6 +126,7 @@ mod english {
                 &english_text(),
                 OATokenizer::Cl100kBase,
                 SpanEncoderSelector::TailSweep,
+                false,
             );
         }
 
@@ -109,6 +137,29 @@ mod english {
                 &english_text(),
                 OATokenizer::O200kBase,
                 SpanEncoderSelector::TailSweep,
+                false,
+            );
+        }
+
+        #[divan::bench]
+        fn cl100k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &english_text(),
+                OATokenizer::Cl100kBase,
+                SpanEncoderSelector::TailSweep,
+                true,
+            );
+        }
+
+        #[divan::bench]
+        fn o200k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &english_text(),
+                OATokenizer::O200kBase,
+                SpanEncoderSelector::TailSweep,
+                true,
             );
         }
     }
@@ -123,6 +174,7 @@ mod english {
                 &english_text(),
                 OATokenizer::Cl100kBase,
                 SpanEncoderSelector::MergeHeap,
+                false,
             );
         }
 
@@ -133,6 +185,29 @@ mod english {
                 &english_text(),
                 OATokenizer::O200kBase,
                 SpanEncoderSelector::MergeHeap,
+                false,
+            );
+        }
+
+        #[divan::bench]
+        fn cl100k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &english_text(),
+                OATokenizer::Cl100kBase,
+                SpanEncoderSelector::MergeHeap,
+                true,
+            );
+        }
+
+        #[divan::bench]
+        fn o200k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &english_text(),
+                OATokenizer::O200kBase,
+                SpanEncoderSelector::MergeHeap,
+                true,
             );
         }
     }
@@ -147,6 +222,7 @@ mod english {
                 &english_text(),
                 OATokenizer::Cl100kBase,
                 SpanEncoderSelector::PriorityMerge,
+                false,
             );
         }
 
@@ -157,6 +233,29 @@ mod english {
                 &english_text(),
                 OATokenizer::O200kBase,
                 SpanEncoderSelector::PriorityMerge,
+                false,
+            );
+        }
+
+        #[divan::bench]
+        fn cl100k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &english_text(),
+                OATokenizer::Cl100kBase,
+                SpanEncoderSelector::PriorityMerge,
+                true,
+            );
+        }
+
+        #[divan::bench]
+        fn o200k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &english_text(),
+                OATokenizer::O200kBase,
+                SpanEncoderSelector::PriorityMerge,
+                true,
             );
         }
     }
@@ -211,6 +310,7 @@ mod diverse {
                 &diverse_text(),
                 OATokenizer::Cl100kBase,
                 SpanEncoderSelector::BufferSweep,
+                false,
             );
         }
 
@@ -221,6 +321,29 @@ mod diverse {
                 &diverse_text(),
                 OATokenizer::O200kBase,
                 SpanEncoderSelector::BufferSweep,
+                false,
+            );
+        }
+
+        #[divan::bench]
+        fn cl100k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &diverse_text(),
+                OATokenizer::Cl100kBase,
+                SpanEncoderSelector::BufferSweep,
+                true,
+            );
+        }
+
+        #[divan::bench]
+        fn o200k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &diverse_text(),
+                OATokenizer::O200kBase,
+                SpanEncoderSelector::BufferSweep,
+                true,
             );
         }
     }
@@ -235,6 +358,7 @@ mod diverse {
                 &diverse_text(),
                 OATokenizer::Cl100kBase,
                 SpanEncoderSelector::TailSweep,
+                false,
             );
         }
 
@@ -245,6 +369,29 @@ mod diverse {
                 &diverse_text(),
                 OATokenizer::O200kBase,
                 SpanEncoderSelector::TailSweep,
+                false,
+            );
+        }
+
+        #[divan::bench]
+        fn cl100k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &diverse_text(),
+                OATokenizer::Cl100kBase,
+                SpanEncoderSelector::TailSweep,
+                true,
+            );
+        }
+
+        #[divan::bench]
+        fn o200k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &diverse_text(),
+                OATokenizer::O200kBase,
+                SpanEncoderSelector::TailSweep,
+                true,
             );
         }
     }
@@ -260,6 +407,7 @@ mod diverse {
                 &diverse_text(),
                 OATokenizer::Cl100kBase,
                 SpanEncoderSelector::MergeHeap,
+                false,
             );
         }
 
@@ -270,6 +418,29 @@ mod diverse {
                 &diverse_text(),
                 OATokenizer::O200kBase,
                 SpanEncoderSelector::MergeHeap,
+                false,
+            );
+        }
+
+        #[divan::bench]
+        fn cl100k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &diverse_text(),
+                OATokenizer::Cl100kBase,
+                SpanEncoderSelector::MergeHeap,
+                true,
+            );
+        }
+
+        #[divan::bench]
+        fn o200k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &diverse_text(),
+                OATokenizer::O200kBase,
+                SpanEncoderSelector::MergeHeap,
+                true,
             );
         }
     }
@@ -284,6 +455,7 @@ mod diverse {
                 &diverse_text(),
                 OATokenizer::Cl100kBase,
                 SpanEncoderSelector::PriorityMerge,
+                false,
             );
         }
 
@@ -294,6 +466,29 @@ mod diverse {
                 &diverse_text(),
                 OATokenizer::O200kBase,
                 SpanEncoderSelector::PriorityMerge,
+                false,
+            );
+        }
+
+        #[divan::bench]
+        fn cl100k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &diverse_text(),
+                OATokenizer::Cl100kBase,
+                SpanEncoderSelector::PriorityMerge,
+                true,
+            );
+        }
+
+        #[divan::bench]
+        fn o200k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &diverse_text(),
+                OATokenizer::O200kBase,
+                SpanEncoderSelector::PriorityMerge,
+                true,
             );
         }
     }

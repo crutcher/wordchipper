@@ -29,14 +29,16 @@ impl SpanLexer for RegexWrapper {
 ///   `None` will use system/environment defaults.
 pub fn build_regex_lexer(
     pattern: RegexPattern,
+    accelerated: bool,
     concurrent: bool,
     max_pool: Option<NonZeroUsize>,
 ) -> Arc<dyn SpanLexer> {
+    let _ = accelerated;
     let _ = concurrent;
     let _ = max_pool;
 
     #[cfg(feature = "logos")]
-    {
+    if accelerated {
         use crate::spanning::span_lexers::logos::lookup_word_lexer;
         if let Some(lexer) = lookup_word_lexer(&pattern) {
             return lexer;

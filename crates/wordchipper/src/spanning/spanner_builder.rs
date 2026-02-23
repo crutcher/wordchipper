@@ -14,11 +14,15 @@ use crate::{
 };
 
 /// Builder for [`TextSpanner`]s.
+///
+/// The primary tuning knobs here are:
+/// * [`set_concurrent`](Self::set_concurrent) - whether to request a concurrency support.
 #[derive(Clone, PartialEq)]
 pub struct TextSpannerBuilder<T: TokenType> {
     config: TextSpanningConfig<T>,
 
-    parallel: bool,
+    accelerated_lexers: bool,
+    concurrent: bool,
     max_pool: Option<NonZeroUsize>,
 }
 
@@ -39,7 +43,8 @@ impl<T: TokenType> TextSpannerBuilder<T> {
     pub fn new(config: TextSpanningConfig<T>) -> Self {
         Self {
             config,
-            parallel: true,
+            accelerated_lexers: true,
+            concurrent: true,
             max_pool: None,
         }
     }
@@ -49,25 +54,68 @@ impl<T: TokenType> TextSpannerBuilder<T> {
         &self.config
     }
 
-    /// Get whether the decoder should use parallel decoding.
-    pub fn parallel(&self) -> bool {
-        self.parallel
+    /// Are accelerated lexers enabled?
+    ///
+    /// When enabled, and an accelerated lexer can be
+    /// found for a given regex pattern; the regex accelerator
+    /// will be used for spanning.
+    pub fn accelerated_lexers(&self) -> bool {
+        self.accelerated_lexers
     }
 
-    /// Set whether the decoder should use parallel decoding.
-    pub fn set_parallel(
+    /// Set whether accelerated lexers should be enabled.
+    ///
+    /// When enabled, and an accelerated lexer can be
+    /// found for a given regex pattern; the regex accelerator
+    /// will be used for spanning.
+    pub fn set_accelerated_lexers(
         &mut self,
-        parallel: bool,
+        accelerated_lexers: bool,
     ) {
-        self.parallel = parallel;
+        self.accelerated_lexers = accelerated_lexers;
+    }
+
+    /// Set whether accelerated lexers should be enabled.
+    ///
+    /// When enabled, and an accelerated lexer can be
+    /// found for a given regex pattern; the regex accelerator
+    /// will be used for spanning.
+    pub fn with_accelerated_lexers(
+        mut self,
+        accelerated_lexers: bool,
+    ) -> Self {
+        self.set_accelerated_lexers(accelerated_lexers);
+        self
+    }
+
+    /// Get whether the decoder should use parallel decoding.
+    ///
+    /// Enabling concurrency will select an encoder which plays
+    /// well when used from multiple threads.
+    pub fn concurrent(&self) -> bool {
+        self.concurrent
     }
 
     /// Set whether the decoder should use parallel decoding.
-    pub fn with_parallel(
+    ///
+    /// Enabling concurrency will select an encoder which plays
+    /// well when used from multiple threads.
+    pub fn set_concurrent(
+        &mut self,
+        concurrent: bool,
+    ) {
+        self.concurrent = concurrent;
+    }
+
+    /// Set whether the decoder should use parallel decoding.
+    ///
+    /// Enabling concurrency will select an encoder which plays
+    /// well when used from multiple threads.
+    pub fn with_concurrent(
         mut self,
-        parallel: bool,
+        concurrent: bool,
     ) -> Self {
-        self.set_parallel(parallel);
+        self.set_concurrent(concurrent);
         self
     }
 
@@ -103,14 +151,15 @@ impl<T: TokenType> TextSpannerBuilder<T> {
     pub fn build(&self) -> Arc<dyn TextSpanner> {
         let word_lexer: Arc<dyn SpanLexer> = build_regex_lexer(
             self.config().pattern().clone(),
-            self.parallel,
+            self.accelerated_lexers,
+            self.concurrent,
             self.max_pool,
         );
         let special_lexer: Option<Arc<dyn SpanLexer>> = self
             .config
             .specials()
             .special_pattern()
-            .map(|pattern| build_regex_lexer(pattern, self.parallel, self.max_pool));
+            .map(|pattern| build_regex_lexer(pattern, false, self.concurrent, self.max_pool));
 
         Arc::new(LexerTextSpanner::new(word_lexer, special_lexer))
     }
