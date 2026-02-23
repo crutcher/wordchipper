@@ -1,15 +1,12 @@
-use std::{
-    prelude::rust_2015::{String, Vec},
-    sync::Arc,
-};
-
 use crate::{
     TokenDecoder,
     TokenEncoder,
     TokenType,
     UnifiedTokenVocab,
     WCResult,
+    alloc::sync::Arc,
     decoders::{BatchDecodeResult, DecodeResult},
+    prelude::*,
     spanning::TextSpanner,
 };
 

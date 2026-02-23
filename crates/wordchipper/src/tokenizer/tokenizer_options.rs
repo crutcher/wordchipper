@@ -1,6 +1,11 @@
-use std::sync::Arc;
-
-use crate::{TokenDecoderOptions, TokenEncoderOptions, TokenType, Tokenizer, UnifiedTokenVocab};
+use crate::{
+    TokenDecoderOptions,
+    TokenEncoderOptions,
+    TokenType,
+    Tokenizer,
+    UnifiedTokenVocab,
+    alloc::sync::Arc,
+};
 
 /// Options for configuring a [`Tokenizer`].
 // TODO: serialize/deserialize?
