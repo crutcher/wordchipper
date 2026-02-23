@@ -28,14 +28,6 @@ where
 }
 
 impl<T: TokenType> TokenSpanEncoder<T> {
-    /// Create a new encoder using the default [`SpanEncoderSelector`].
-    pub fn new(
-        spanner: Arc<dyn TextSpanner>,
-        vocab: Arc<UnifiedTokenVocab<T>>,
-    ) -> Self {
-        Self::new_with_selector(spanner, vocab, SpanEncoderSelector::Default)
-    }
-
     /// Create a new encoder using the selected [`SpanEncoder`].
     pub fn new_with_selector(
         spanner: Arc<dyn TextSpanner>,

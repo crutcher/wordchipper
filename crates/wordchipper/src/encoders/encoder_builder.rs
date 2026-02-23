@@ -14,13 +14,21 @@ use crate::{
 };
 
 /// Builder for production [`TokenEncoder`]s.
+///
+/// The primary tuning knobs here are:
+/// * [`set_parallel`](Self::set_parallel) - whether to request a parallel encoder (if supported).
+/// * [`set_concurrent`](Self::set_concurrent) - whether to request a concurrent encoder (if supported).
+///
+/// See [`is_concurrent`](Self::is_concurrent) for more information on concurrent encoding.
 #[derive(Clone, PartialEq)]
 pub struct TokenEncoderBuilder<T: TokenType> {
     vocab: Arc<UnifiedTokenVocab<T>>,
 
     spanner_builder: TextSpannerBuilder<T>,
 
-    span_encoder: SpanEncoderSelector,
+    span_encoder: Option<SpanEncoderSelector>,
+    parallel: bool,
+    concurrent: bool,
 }
 
 impl<T: TokenType> TokenEncoderBuilder<T> {
@@ -36,6 +44,8 @@ impl<T: TokenType> TokenEncoderBuilder<T> {
             vocab,
             span_encoder: Default::default(),
             spanner_builder,
+            parallel: false,
+            concurrent: false,
         }
     }
 
@@ -54,47 +64,118 @@ impl<T: TokenType> TokenEncoderBuilder<T> {
         &mut self.spanner_builder
     }
 
+    /// Gets the effective span encoder selector.
+    ///
+    /// Will return any explict setting,
+    /// otherwise will select based upon parallel and concurrency settings.
+    pub fn effective_span_encoder(&self) -> SpanEncoderSelector {
+        match self.span_encoder {
+            Some(selector) => selector,
+            None if self.is_concurrent() => SpanEncoderSelector::ConcurrentDefault,
+            _ => SpanEncoderSelector::SingleThreadDefault,
+        }
+    }
+
     /// Get the configured [`SpanEncoderSelector`].
-    pub fn span_encoder(&self) -> SpanEncoderSelector {
+    pub fn span_encoder(&self) -> Option<SpanEncoderSelector> {
         self.span_encoder
     }
 
     /// Set the configured [`SpanEncoderSelector`].
-    pub fn set_span_encoder(
+    pub fn set_span_encoder<E>(
         &mut self,
-        span_encoder: SpanEncoderSelector,
-    ) {
-        self.span_encoder = span_encoder;
+        span_encoder: E,
+    ) where
+        E: Into<Option<SpanEncoderSelector>>,
+    {
+        self.span_encoder = span_encoder.into();
     }
 
     /// Set the configured [`SpanEncoderSelector`] and return the builder.
-    pub fn with_span_encoder(
+    pub fn with_span_encoder<E>(
         mut self,
-        span_encoder: SpanEncoderSelector,
-    ) -> Self {
+        span_encoder: E,
+    ) -> Self
+    where
+        E: Into<Option<SpanEncoderSelector>>,
+    {
         self.set_span_encoder(span_encoder);
         self
     }
 
-    /// Get whether the decoder should use parallel decoding.
+    /// Gets the configured parallelism value.
+    ///
+    /// Enabling parallelism will request a threaded encoder.
+    ///
+    /// See: [`is_concurrent`](Self::is_concurrent)
     pub fn parallel(&self) -> bool {
-        self.spanner_builder.parallel()
+        self.parallel
     }
 
-    /// Set whether the decoder should use parallel decoding.
+    /// Sets the configured parallelism value.
+    ///
+    /// Enabling parallelism will request a threaded encoder.
+    ///
+    /// See: [`is_concurrent`](Self::is_concurrent)
     pub fn set_parallel(
         &mut self,
         parallel: bool,
     ) {
-        self.spanner_builder_mut().set_parallel(parallel);
+        self.parallel = parallel;
     }
 
-    /// Set whether the decoder should use parallel decoding.
+    /// Sets the configured parallelism value.
+    ///
+    /// Enabling parallelism will request a threaded encoder.
+    ///
+    /// See: [`is_concurrent`](Self::is_concurrent)
     pub fn with_parallel(
         mut self,
         parallel: bool,
     ) -> Self {
         self.set_parallel(parallel);
+        self
+    }
+
+    /// Returns true if either parallel or concurrent is enabled.
+    pub fn is_concurrent(&self) -> bool {
+        self.concurrent || self.parallel
+    }
+
+    /// Gets the configured concurrent value.
+    ///
+    /// Enabling concurrency will select a decoder which plays
+    /// well when used from multiple threads.
+    ///
+    /// See: [`is_concurrent`](Self::is_concurrent)
+    pub fn concurrent(&self) -> bool {
+        self.concurrent
+    }
+
+    /// Sets the configured concurrent value.
+    ///
+    /// Enabling concurrency will select a decoder which plays
+    /// well when used from multiple threads.
+    ///
+    /// See: [`is_concurrent`](Self::is_concurrent)
+    pub fn set_concurrent(
+        &mut self,
+        concurrent: bool,
+    ) {
+        self.concurrent = concurrent;
+    }
+
+    /// Sets the configured concurrent value.
+    ///
+    /// Enabling concurrency will select a decoder which plays
+    /// well when used from multiple threads.
+    ///
+    /// See: [`is_concurrent`](Self::is_concurrent)
+    pub fn with_concurrent(
+        mut self,
+        concurrent: bool,
+    ) -> Self {
+        self.set_concurrent(concurrent);
         self
     }
 
@@ -134,7 +215,7 @@ impl<T: TokenType> TokenEncoderBuilder<T> {
         let mut enc: Arc<dyn TokenEncoder<T>> = Arc::new(TokenSpanEncoder::<T>::new_with_selector(
             spanner,
             self.vocab().clone(),
-            self.span_encoder(),
+            self.effective_span_encoder(),
         ));
 
         #[cfg(feature = "rayon")]

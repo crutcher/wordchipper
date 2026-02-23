@@ -27,19 +27,20 @@ use crate::{
 )]
 #[non_exhaustive]
 pub enum SpanEncoderSelector {
-    /// The canonical best Default encoder.
+    /// This is the canonical best concurrent encoder.
     ///
-    /// Users should, in general, prefer to use this encoder.
+    /// It is benchmarked to be the fastest and most efficient encoder for concurrent use.
     ///
-    /// As improved encoders are developed, this will remain the evergreen
-    /// label for "the good one". We expose this, rather than making
-    /// a particular encoder the marked default, so that serializations
-    /// of this policy into config files will convey "use the default",
-    /// rather than "use the default as of the time this config was saved".
+    /// This is currently an alias for: [`MergeHeap`](`Self::MergeHeap`)
+    #[default]
+    ConcurrentDefault,
+
+    /// This the canonical best single-threaded encoder.
+    ///
+    /// It is benchmarked to be the fastest and most efficient encoder for single-threaded use.
     ///
     /// This is currently an alias for: [`PriorityMerge`](`Self::PriorityMerge`)
-    #[default]
-    Default,
+    SingleThreadDefault,
 
     /// The canonical reference encoder, [`BufferSweepSpanEncoder`].
     ///
@@ -73,8 +74,10 @@ impl SpanEncoderSelector {
                 Arc::new(|| Box::new(BufferSweepSpanEncoder::<T>::default()))
             }
             TailSweep => Arc::new(|| Box::new(TailSweepSpanEncoder::<T>::default())),
-            MergeHeap => Arc::new(|| Box::new(MergeHeapSpanEncoder::<T>::default())),
-            Default | PriorityMerge => {
+            ConcurrentDefault | MergeHeap => {
+                Arc::new(|| Box::new(MergeHeapSpanEncoder::<T>::default()))
+            }
+            SingleThreadDefault | PriorityMerge => {
                 Arc::new(|| Box::new(PriorityMergeSpanEncoder::<T>::default()))
             }
         }
