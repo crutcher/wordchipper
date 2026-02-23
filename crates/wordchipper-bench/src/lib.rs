@@ -3,11 +3,11 @@
 use std::sync::{Arc, LazyLock, Mutex};
 
 use wordchipper::{
-    TokenEncoderBuilder,
+    TokenEncoder,
+    TokenEncoderOptions,
     TokenType,
     UnifiedTokenVocab,
     disk_cache::WordchipperDiskCache,
-    encoders::token_span_encoder::SpanEncoderSelector,
     pretrained::openai::OATokenizer,
 };
 
@@ -22,17 +22,18 @@ pub const HF_O200K: &str = "Xenova/gpt-4o";
 pub const DISK_CACHE: LazyLock<Arc<Mutex<WordchipperDiskCache>>> =
     LazyLock::new(|| Arc::new(Mutex::new(WordchipperDiskCache::default())));
 
-/// Returns a configured encoder builder for the given vocab and selector.
+/// Builds an `Arc<Tokenizer<T>>` for the target model and options.
 ///
-/// Uses the default disk cache to load the vocab.
-pub fn encoder_builder<T: TokenType>(
+/// Use the default disk cache to load the vocab.
+pub fn load_encoder<T: TokenType>(
     model: OATokenizer,
-    selector: SpanEncoderSelector,
-) -> TokenEncoderBuilder<T> {
+    options: TokenEncoderOptions,
+) -> Arc<dyn TokenEncoder<T>> {
     let binding = DISK_CACHE;
     let mut guard = binding.lock().unwrap();
     let disk_cache = &mut *guard;
 
     let vocab: Arc<UnifiedTokenVocab<T>> = model.load_vocab::<T>(disk_cache).unwrap().into();
-    TokenEncoderBuilder::new(vocab).with_span_encoder(selector)
+
+    options.build(vocab)
 }

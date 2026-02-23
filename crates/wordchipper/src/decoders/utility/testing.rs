@@ -1,7 +1,7 @@
 //! # Common Decoder Unit Tests
 
 use crate::{
-    TokenEncoderBuilder,
+    TokenEncoderOptions,
     TokenType,
     alloc::{sync::Arc, vec, vec::Vec},
     decoders::TokenDecoder,
@@ -22,9 +22,9 @@ pub fn common_decoder_unit_test<T: TokenType, D: TokenDecoder<T>>(
         "it's not the heat, it's the salt",
     ];
 
-    let encoder = TokenEncoderBuilder::<T>::new(vocab.clone())
+    let encoder = TokenEncoderOptions::default()
         .with_parallel(false)
-        .build();
+        .build(vocab.clone());
 
     let token_batch = encoder.try_encode_batch(&samples).unwrap();
     let decoded_strings = decoder

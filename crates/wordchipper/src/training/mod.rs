@@ -34,8 +34,8 @@
 //! use std::sync::Arc;
 //!
 //! use wordchipper::{
-//!     TokenDecoderBuilder,
-//!     TokenEncoderBuilder,
+//!     Tokenizer,
+//!     TokenizerOptions,
 //!     UnifiedTokenVocab,
 //!     pretrained::openai::OA_CL100K_BASE_PATTERN,
 //!     training::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions},
@@ -46,7 +46,8 @@
 //!     vocab_size: usize,
 //!     batches: I,
 //!     vocab_save_path: Option<String>,
-//! ) where
+//! ) -> Arc<Tokenizer<u32>>
+//! where
 //!     I: IntoIterator,
 //!     I::Item: AsRef<[S]>,
 //!     S: AsRef<str>,
@@ -82,8 +83,10 @@
 //!         println!("- tiktoken vocab: {path:?}");
 //!     }
 //!
-//!     let encoder = TokenEncoderBuilder::default(vocab.clone());
-//!     let decoder = TokenDecoderBuilder::default(vocab.clone());
+//!     let tokenizer: Arc<Tokenizer<u32>> =
+//!         TokenizerOptions::default().with_parallel(true).build(vocab);
+//!
+//!     tokenizer
 //! }
 //! ```
 

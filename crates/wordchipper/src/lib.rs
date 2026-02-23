@@ -61,7 +61,7 @@
 //! use wordchipper::{
 //!     get_model,
 //!     Tokenizer,
-//!     TokenizerBuilder,
+//!     TokenizerOptions,
 //!     UnifiedTokenVocab,
 //!     WCResult,
 //!     disk_cache::WordchipperDiskCache,
@@ -72,7 +72,7 @@
 //!     let vocab: Arc<UnifiedTokenVocab<u32>> =
 //!         get_model("openai/o200k_harmony", &mut disk_cache)?.into();
 //!
-//!     Ok(TokenizerBuilder::default(vocab.clone()))
+//!     Ok(TokenizerOptions::default().build(vocab))
 //! }
 //! ```
 //! 
@@ -121,9 +121,9 @@ mod tokenizer;
 mod types;
 
 #[doc(inline)]
-pub use decoders::{TokenDecoder, TokenDecoderBuilder};
+pub use decoders::{TokenDecoder, TokenDecoderOptions};
 #[doc(inline)]
-pub use encoders::{TokenEncoder, TokenEncoderBuilder};
+pub use encoders::{TokenEncoder, TokenEncoderOptions};
 #[doc(inline)]
 pub use errors::*;
 #[doc(inline)]

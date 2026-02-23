@@ -22,10 +22,6 @@
 //! Pre-trained vocabulary loaders return [`UnifiedTokenVocab<T>`] instances,
 //! which can be converted between [`crate::TokenType`]s via [`UnifiedTokenVocab::to_token_type`].
 //!
-//! Default [`crate::TokenEncoder`] and [`crate::TokenDecoder`] implementations
-//! can be constructed directly using [`crate::TokenEncoderBuilder::default`]
-//! and [`crate::TokenDecoderBuilder::default`].
-//!
 //! ## Loading and Saving Models
 //!
 //! Loading a pre-trained model requires reading in the vocabulary,

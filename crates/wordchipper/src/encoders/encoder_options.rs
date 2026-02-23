@@ -1,4 +1,6 @@
-//! Encoder Options
+//! Token Encoder Options
+//!
+//! Options for building a [`TokenEncoder`].
 
 use crate::{
     TokenEncoder,
@@ -12,7 +14,7 @@ use crate::{
 /// Options for configuring a [`TokenEncoder`].
 // TODO: serialize/deserialize?
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct EncoderOptions {
+pub struct TokenEncoderOptions {
     /// The [`SpanEncoderSelector`] to use.
     ///
     /// When `None`, an appropriate default will be used for the concurrency.
@@ -34,7 +36,7 @@ pub struct EncoderOptions {
     pub concurrent: bool,
 }
 
-impl Default for EncoderOptions {
+impl Default for TokenEncoderOptions {
     fn default() -> Self {
         Self {
             span_encoder: None,
@@ -45,7 +47,7 @@ impl Default for EncoderOptions {
     }
 }
 
-impl EncoderOptions {
+impl TokenEncoderOptions {
     /// Gets the effective span encoder selector.
     ///
     /// Will return any explict setting,
@@ -121,7 +123,7 @@ impl EncoderOptions {
 
     /// Gets the configured parallelism value.
     ///
-    /// Enabling parallelism will request a threaded encoder.
+    /// Enabling parallelism will request threaded implementations.
     ///
     /// See: [`is_concurrent`](Self::is_concurrent)
     pub fn parallel(&self) -> bool {
@@ -130,7 +132,7 @@ impl EncoderOptions {
 
     /// Sets the configured parallelism value.
     ///
-    /// Enabling parallelism will request a threaded encoder.
+    /// Enabling parallelism will request threaded implementations.
     ///
     /// See: [`is_concurrent`](Self::is_concurrent)
     pub fn set_parallel(
@@ -142,7 +144,7 @@ impl EncoderOptions {
 
     /// Sets the configured parallelism value.
     ///
-    /// Enabling parallelism will request a threaded encoder.
+    /// Enabling parallelism will request threaded implementations.
     ///
     /// See: [`is_concurrent`](Self::is_concurrent)
     pub fn with_parallel(
@@ -160,8 +162,8 @@ impl EncoderOptions {
 
     /// Gets the configured concurrent value.
     ///
-    /// Enabling concurrency will select an encoder which plays
-    /// well when used from multiple threads.
+    /// Enabling concurrency will select an encoder optimized for
+    /// concurrent thread access.
     ///
     /// See: [`is_concurrent`](Self::is_concurrent)
     pub fn concurrent(&self) -> bool {
@@ -170,8 +172,8 @@ impl EncoderOptions {
 
     /// Sets the configured concurrent value.
     ///
-    /// Enabling concurrency will select an encoder which plays
-    /// well when used from multiple threads.
+    /// Enabling concurrency will select an encoder optimized for
+    /// concurrent thread access.
     ///
     /// See: [`is_concurrent`](Self::is_concurrent)
     pub fn set_concurrent(
@@ -183,8 +185,8 @@ impl EncoderOptions {
 
     /// Sets the configured concurrent value.
     ///
-    /// Enabling concurrency will select a encoder which plays
-    /// well when used from multiple threads.
+    /// Enabling concurrency will select an encoder optimized for
+    /// concurrent thread access.
     ///
     /// See: [`is_concurrent`](Self::is_concurrent)
     pub fn with_concurrent(
