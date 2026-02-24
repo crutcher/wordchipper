@@ -9,7 +9,6 @@ use wordchipper::{
     TokenEncoder,
     Tokenizer as _Tokenizer,
     TokenizerOptions,
-    UnifiedTokenVocab,
     VocabIndex,
     WCError,
     disk_cache::WordchipperDiskCache,
@@ -41,9 +40,9 @@ impl Tokenizer {
     ) -> PyResult<Self> {
         py.detach(|| {
             let mut disk_cache = WordchipperDiskCache::default();
-            let vocab: Arc<UnifiedTokenVocab<u32>> = wordchipper::get_model(name, &mut disk_cache)
-                .map_err(to_pyerr)?
-                .into();
+
+            let (_descr, vocab) =
+                wordchipper::load_vocab(name, &mut disk_cache).map_err(to_pyerr)?;
 
             let inner = TokenizerOptions::default()
                 .with_parallel(true)
@@ -140,7 +139,7 @@ impl Tokenizer {
 
     #[staticmethod]
     fn available_models() -> Vec<String> {
-        wordchipper::list_models(false)
+        wordchipper::list_models()
     }
 
     fn save_base64_vocab(

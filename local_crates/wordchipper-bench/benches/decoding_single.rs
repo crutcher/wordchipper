@@ -11,7 +11,6 @@ use wordchipper::{
     TokenizerOptions,
     UnifiedTokenVocab,
     disk_cache::WordchipperDiskCache,
-    pretrained::openai::OATokenizer,
 };
 
 #[global_allocator]
@@ -37,10 +36,18 @@ struct WcFixture {
 }
 
 impl WcFixture {
-    fn load(model: OATokenizer) -> Self {
+    fn by_name(model: &str) -> Self {
         let mut disk_cache = WordchipperDiskCache::default();
-        let vocab: Arc<UnifiedTokenVocab<u32>> = model.load_vocab(&mut disk_cache).unwrap().into();
+        let (_desc, vocab) = wordchipper::load_vocab(model, &mut disk_cache).unwrap();
+        Self::from_vocab(vocab)
+    }
+
+    fn from_vocab(vocab: Arc<UnifiedTokenVocab<u32>>) -> Self {
         let tokenizer = TokenizerOptions::default().build(vocab);
+        Self::new(tokenizer)
+    }
+
+    fn new(tokenizer: Arc<wordchipper::Tokenizer<Rank>>) -> Self {
         Self { tokenizer }
     }
 }
@@ -49,9 +56,9 @@ struct TiktokenFixture {
     bpe: Arc<CoreBPE>,
 }
 
-static WC_CL100K: LazyLock<WcFixture> = LazyLock::new(|| WcFixture::load(OATokenizer::Cl100kBase));
+static WC_CL100K: LazyLock<WcFixture> = LazyLock::new(|| WcFixture::by_name("openai::cl100k_base"));
 
-static WC_O200K: LazyLock<WcFixture> = LazyLock::new(|| WcFixture::load(OATokenizer::O200kBase));
+static WC_O200K: LazyLock<WcFixture> = LazyLock::new(|| WcFixture::by_name("openai::o200k_base"));
 
 static TT_CL100K: LazyLock<TiktokenFixture> = LazyLock::new(|| TiktokenFixture {
     bpe: Arc::new(tiktoken_rs::cl100k_base().unwrap()),

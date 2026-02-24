@@ -185,10 +185,7 @@ fn main() -> Result<(), BoxError> {
 
     let mut disk_cache = WordchipperDiskCache::default();
     // println!("Loading wordchipper...");
-    let vocab: Arc<UnifiedTokenVocab<Rank>> =
-        wordchipper::get_model(args.model.to_string().as_str(), &mut disk_cache)?
-            .to_token_type()?
-            .into();
+    let (_desc, vocab) = wordchipper::load_vocab(args.model.to_string().as_str(), &mut disk_cache)?;
 
     // TODO: complete batch-observer inversion of control for additional tokenizer wrappers.
 

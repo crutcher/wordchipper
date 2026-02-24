@@ -5,6 +5,14 @@ use crate::alloc::string::String;
 /// Errors from wordchipper operations.
 #[derive(Debug, thiserror::Error)]
 pub enum WCError {
+    /// Resource not found.
+    #[error("{0}")]
+    ResourceNotFound(String),
+
+    /// The resource is a duplicate.
+    #[error("{0}")]
+    DuplicatedResource(String),
+
     /// Vocab size exceeds the capacity of the target token type.
     #[error("vocab size ({size}) exceeds token type capacity")]
     VocabSizeOverflow {

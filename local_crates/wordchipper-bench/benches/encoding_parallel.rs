@@ -67,24 +67,21 @@ fn load_batch() -> Batch {
 static BATCH: LazyLock<Batch> = LazyLock::new(load_batch);
 
 mod wordchipper {
-    use ::wordchipper::{
-        TokenEncoderOptions,
-        encoders::token_span_encoder::SpanEncoderSelector,
-        pretrained::openai::OATokenizer,
-    };
+    use ::wordchipper::{TokenEncoderOptions, encoders::token_span_encoder::SpanEncoderSelector};
+    use wordchipper_bench::{OA_CL100K_BASE, OA_O200K_BASE};
 
     use super::*;
 
     fn bench_variant(
         bencher: Bencher,
-        oatok: OATokenizer,
+        model: &str,
         selector: SpanEncoderSelector,
         accelerated: bool,
     ) {
         let strs = BATCH.strs();
 
         let encoder = wordchipper_bench::load_encoder::<u32>(
-            oatok,
+            model,
             TokenEncoderOptions::default()
                 .with_span_encoder(selector)
                 .with_accelerated_lexers(accelerated)
@@ -103,7 +100,7 @@ mod wordchipper {
         fn cl100k(bencher: Bencher) {
             bench_variant(
                 bencher,
-                OATokenizer::Cl100kBase,
+                OA_CL100K_BASE,
                 SpanEncoderSelector::BufferSweep,
                 false,
             )
@@ -113,7 +110,7 @@ mod wordchipper {
         fn o200k(bencher: Bencher) {
             bench_variant(
                 bencher,
-                OATokenizer::O200kBase,
+                OA_O200K_BASE,
                 SpanEncoderSelector::BufferSweep,
                 false,
             )
@@ -123,7 +120,7 @@ mod wordchipper {
         fn cl100k_fast(bencher: Bencher) {
             bench_variant(
                 bencher,
-                OATokenizer::Cl100kBase,
+                OA_CL100K_BASE,
                 SpanEncoderSelector::BufferSweep,
                 true,
             )
@@ -133,7 +130,7 @@ mod wordchipper {
         fn o200k_fast(bencher: Bencher) {
             bench_variant(
                 bencher,
-                OATokenizer::O200kBase,
+                OA_O200K_BASE,
                 SpanEncoderSelector::BufferSweep,
                 true,
             )
@@ -147,7 +144,7 @@ mod wordchipper {
         fn cl100k(bencher: Bencher) {
             bench_variant(
                 bencher,
-                OATokenizer::Cl100kBase,
+                OA_CL100K_BASE,
                 SpanEncoderSelector::TailSweep,
                 false,
             )
@@ -157,7 +154,7 @@ mod wordchipper {
         fn o200k(bencher: Bencher) {
             bench_variant(
                 bencher,
-                OATokenizer::O200kBase,
+                OA_O200K_BASE,
                 SpanEncoderSelector::TailSweep,
                 false,
             )
@@ -167,7 +164,7 @@ mod wordchipper {
         fn cl100k_fast(bencher: Bencher) {
             bench_variant(
                 bencher,
-                OATokenizer::Cl100kBase,
+                OA_CL100K_BASE,
                 SpanEncoderSelector::TailSweep,
                 true,
             )
@@ -175,12 +172,7 @@ mod wordchipper {
 
         #[divan::bench]
         fn o200k_fast(bencher: Bencher) {
-            bench_variant(
-                bencher,
-                OATokenizer::O200kBase,
-                SpanEncoderSelector::TailSweep,
-                true,
-            )
+            bench_variant(bencher, OA_O200K_BASE, SpanEncoderSelector::TailSweep, true)
         }
     }
 
@@ -191,7 +183,7 @@ mod wordchipper {
         fn cl100k(bencher: Bencher) {
             bench_variant(
                 bencher,
-                OATokenizer::Cl100kBase,
+                OA_CL100K_BASE,
                 SpanEncoderSelector::MergeHeap,
                 false,
             )
@@ -201,7 +193,7 @@ mod wordchipper {
         fn o200k(bencher: Bencher) {
             bench_variant(
                 bencher,
-                OATokenizer::O200kBase,
+                OA_O200K_BASE,
                 SpanEncoderSelector::MergeHeap,
                 false,
             )
@@ -211,7 +203,7 @@ mod wordchipper {
         fn cl100k_fast(bencher: Bencher) {
             bench_variant(
                 bencher,
-                OATokenizer::Cl100kBase,
+                OA_CL100K_BASE,
                 SpanEncoderSelector::MergeHeap,
                 true,
             )
@@ -219,12 +211,7 @@ mod wordchipper {
 
         #[divan::bench]
         fn o200k_fast(bencher: Bencher) {
-            bench_variant(
-                bencher,
-                OATokenizer::O200kBase,
-                SpanEncoderSelector::MergeHeap,
-                true,
-            )
+            bench_variant(bencher, OA_O200K_BASE, SpanEncoderSelector::MergeHeap, true)
         }
     }
 
@@ -235,7 +222,7 @@ mod wordchipper {
         fn cl100k(bencher: Bencher) {
             bench_variant(
                 bencher,
-                OATokenizer::Cl100kBase,
+                OA_CL100K_BASE,
                 SpanEncoderSelector::PriorityMerge,
                 false,
             )
@@ -245,7 +232,7 @@ mod wordchipper {
         fn o200k(bencher: Bencher) {
             bench_variant(
                 bencher,
-                OATokenizer::O200kBase,
+                OA_O200K_BASE,
                 SpanEncoderSelector::PriorityMerge,
                 false,
             )
@@ -255,7 +242,7 @@ mod wordchipper {
         fn cl100k_fast(bencher: Bencher) {
             bench_variant(
                 bencher,
-                OATokenizer::Cl100kBase,
+                OA_CL100K_BASE,
                 SpanEncoderSelector::PriorityMerge,
                 true,
             )
@@ -265,7 +252,7 @@ mod wordchipper {
         fn o200k_fast(bencher: Bencher) {
             bench_variant(
                 bencher,
-                OATokenizer::O200kBase,
+                OA_O200K_BASE,
                 SpanEncoderSelector::PriorityMerge,
                 true,
             )

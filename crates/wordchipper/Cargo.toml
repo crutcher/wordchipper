@@ -112,6 +112,9 @@ strum_macros = { workspace = true, optional = true }
 # Provides HashMap/HashSet in no_std mode (non-optional so `default-features = false` just works).
 hashbrown = { workspace = true, features = ["alloc"] }
 
+spin = { workspace = true }
+once_cell = { workspace = true, features = ["alloc"] }
+
 ahash = { workspace = true, optional = true }
 foldhash = { workspace = true, optional = true }
 

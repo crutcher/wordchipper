@@ -46,11 +46,13 @@ shellexpand = "3.1.0"
 strum = "0.27.0"
 strum_macros = "0.27.0"
 rayon = "1.11"
+spin = "0.9.8"
 
 foldhash = { version = "0.2.0", default-features = false }
 logos = { version = "0.16.1", default-features = false }
 log = { version = "0.4.20", default-features = false }
 num-traits = { version = "0.2.10", default-features = false }
+once_cell = { version = "1.21.0", default-features = false }
 regex = { version = "1.12.3", default-features = false }
 thiserror = { version = "2.0.10", default-features = false }
 tracing = { version = "0.1.40", default-features = false }

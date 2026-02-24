@@ -1,12 +1,8 @@
 #![allow(missing_docs)]
 
 use divan::{Bencher, black_box, counter::BytesCount};
-use wordchipper::{
-    TokenEncoderOptions,
-    encoders::token_span_encoder::SpanEncoderSelector,
-    pretrained::openai::OATokenizer,
-};
-use wordchipper_bench::{HF_CL100K, HF_O200K};
+use wordchipper::{TokenEncoderOptions, encoders::token_span_encoder::SpanEncoderSelector};
+use wordchipper_bench::{HF_CL100K, HF_O200K, OA_CL100K_BASE, OA_O200K_BASE};
 
 #[global_allocator]
 static ALLOC: divan::AllocProfiler = divan::AllocProfiler::system();
@@ -29,7 +25,7 @@ fn english_text() -> String {
 pub fn bench_wc(
     bencher: Bencher,
     text: &str,
-    model: OATokenizer,
+    model: &str,
     selector: SpanEncoderSelector,
     accelerator: bool,
 ) {
@@ -80,7 +76,7 @@ mod english {
             bench_wc(
                 bencher,
                 &english_text(),
-                OATokenizer::Cl100kBase,
+                OA_CL100K_BASE,
                 SpanEncoderSelector::BufferSweep,
                 true,
             );
@@ -91,7 +87,7 @@ mod english {
             bench_wc(
                 bencher,
                 &english_text(),
-                OATokenizer::O200kBase,
+                OA_O200K_BASE,
                 SpanEncoderSelector::BufferSweep,
                 true,
             );
@@ -102,7 +98,7 @@ mod english {
             bench_wc(
                 bencher,
                 &english_text(),
-                OATokenizer::Cl100kBase,
+                OA_CL100K_BASE,
                 SpanEncoderSelector::BufferSweep,
                 false,
             );
@@ -113,7 +109,7 @@ mod english {
             bench_wc(
                 bencher,
                 &english_text(),
-                OATokenizer::O200kBase,
+                OA_O200K_BASE,
                 SpanEncoderSelector::BufferSweep,
                 false,
             );
@@ -128,7 +124,7 @@ mod english {
             bench_wc(
                 bencher,
                 &english_text(),
-                OATokenizer::Cl100kBase,
+                OA_CL100K_BASE,
                 SpanEncoderSelector::TailSweep,
                 false,
             );
@@ -139,7 +135,7 @@ mod english {
             bench_wc(
                 bencher,
                 &english_text(),
-                OATokenizer::O200kBase,
+                OA_O200K_BASE,
                 SpanEncoderSelector::TailSweep,
                 false,
             );
@@ -150,7 +146,7 @@ mod english {
             bench_wc(
                 bencher,
                 &english_text(),
-                OATokenizer::Cl100kBase,
+                OA_CL100K_BASE,
                 SpanEncoderSelector::TailSweep,
                 true,
             );
@@ -161,7 +157,7 @@ mod english {
             bench_wc(
                 bencher,
                 &english_text(),
-                OATokenizer::O200kBase,
+                OA_O200K_BASE,
                 SpanEncoderSelector::TailSweep,
                 true,
             );
@@ -176,7 +172,7 @@ mod english {
             bench_wc(
                 bencher,
                 &english_text(),
-                OATokenizer::Cl100kBase,
+                OA_CL100K_BASE,
                 SpanEncoderSelector::MergeHeap,
                 false,
             );
@@ -187,7 +183,7 @@ mod english {
             bench_wc(
                 bencher,
                 &english_text(),
-                OATokenizer::O200kBase,
+                OA_O200K_BASE,
                 SpanEncoderSelector::MergeHeap,
                 false,
             );
@@ -198,7 +194,7 @@ mod english {
             bench_wc(
                 bencher,
                 &english_text(),
-                OATokenizer::Cl100kBase,
+                OA_CL100K_BASE,
                 SpanEncoderSelector::MergeHeap,
                 true,
             );
@@ -209,7 +205,7 @@ mod english {
             bench_wc(
                 bencher,
                 &english_text(),
-                OATokenizer::O200kBase,
+                OA_O200K_BASE,
                 SpanEncoderSelector::MergeHeap,
                 true,
             );
@@ -224,7 +220,7 @@ mod english {
             bench_wc(
                 bencher,
                 &english_text(),
-                OATokenizer::Cl100kBase,
+                OA_CL100K_BASE,
                 SpanEncoderSelector::PriorityMerge,
                 false,
             );
@@ -235,7 +231,7 @@ mod english {
             bench_wc(
                 bencher,
                 &english_text(),
-                OATokenizer::O200kBase,
+                OA_O200K_BASE,
                 SpanEncoderSelector::PriorityMerge,
                 false,
             );
@@ -246,7 +242,7 @@ mod english {
             bench_wc(
                 bencher,
                 &english_text(),
-                OATokenizer::Cl100kBase,
+                OA_CL100K_BASE,
                 SpanEncoderSelector::PriorityMerge,
                 true,
             );
@@ -257,7 +253,7 @@ mod english {
             bench_wc(
                 bencher,
                 &english_text(),
-                OATokenizer::O200kBase,
+                OA_O200K_BASE,
                 SpanEncoderSelector::PriorityMerge,
                 true,
             );
@@ -312,7 +308,7 @@ mod diverse {
             bench_wc(
                 bencher,
                 &diverse_text(),
-                OATokenizer::Cl100kBase,
+                OA_CL100K_BASE,
                 SpanEncoderSelector::BufferSweep,
                 false,
             );
@@ -323,7 +319,7 @@ mod diverse {
             bench_wc(
                 bencher,
                 &diverse_text(),
-                OATokenizer::O200kBase,
+                OA_O200K_BASE,
                 SpanEncoderSelector::BufferSweep,
                 false,
             );
@@ -334,7 +330,7 @@ mod diverse {
             bench_wc(
                 bencher,
                 &diverse_text(),
-                OATokenizer::Cl100kBase,
+                OA_CL100K_BASE,
                 SpanEncoderSelector::BufferSweep,
                 true,
             );
@@ -345,7 +341,7 @@ mod diverse {
             bench_wc(
                 bencher,
                 &diverse_text(),
-                OATokenizer::O200kBase,
+                OA_O200K_BASE,
                 SpanEncoderSelector::BufferSweep,
                 true,
             );
@@ -360,7 +356,7 @@ mod diverse {
             bench_wc(
                 bencher,
                 &diverse_text(),
-                OATokenizer::Cl100kBase,
+                OA_CL100K_BASE,
                 SpanEncoderSelector::TailSweep,
                 false,
             );
@@ -371,7 +367,7 @@ mod diverse {
             bench_wc(
                 bencher,
                 &diverse_text(),
-                OATokenizer::O200kBase,
+                OA_O200K_BASE,
                 SpanEncoderSelector::TailSweep,
                 false,
             );
@@ -382,7 +378,7 @@ mod diverse {
             bench_wc(
                 bencher,
                 &diverse_text(),
-                OATokenizer::Cl100kBase,
+                OA_CL100K_BASE,
                 SpanEncoderSelector::TailSweep,
                 true,
             );
@@ -393,7 +389,7 @@ mod diverse {
             bench_wc(
                 bencher,
                 &diverse_text(),
-                OATokenizer::O200kBase,
+                OA_O200K_BASE,
                 SpanEncoderSelector::TailSweep,
                 true,
             );
@@ -409,7 +405,7 @@ mod diverse {
             bench_wc(
                 bencher,
                 &diverse_text(),
-                OATokenizer::Cl100kBase,
+                OA_CL100K_BASE,
                 SpanEncoderSelector::MergeHeap,
                 false,
             );
@@ -420,7 +416,7 @@ mod diverse {
             bench_wc(
                 bencher,
                 &diverse_text(),
-                OATokenizer::O200kBase,
+                OA_O200K_BASE,
                 SpanEncoderSelector::MergeHeap,
                 false,
             );
@@ -431,7 +427,7 @@ mod diverse {
             bench_wc(
                 bencher,
                 &diverse_text(),
-                OATokenizer::Cl100kBase,
+                OA_CL100K_BASE,
                 SpanEncoderSelector::MergeHeap,
                 true,
             );
@@ -442,7 +438,7 @@ mod diverse {
             bench_wc(
                 bencher,
                 &diverse_text(),
-                OATokenizer::O200kBase,
+                OA_O200K_BASE,
                 SpanEncoderSelector::MergeHeap,
                 true,
             );
@@ -457,7 +453,7 @@ mod diverse {
             bench_wc(
                 bencher,
                 &diverse_text(),
-                OATokenizer::Cl100kBase,
+                OA_CL100K_BASE,
                 SpanEncoderSelector::PriorityMerge,
                 false,
             );
@@ -468,7 +464,7 @@ mod diverse {
             bench_wc(
                 bencher,
                 &diverse_text(),
-                OATokenizer::O200kBase,
+                OA_O200K_BASE,
                 SpanEncoderSelector::PriorityMerge,
                 false,
             );
@@ -479,7 +475,7 @@ mod diverse {
             bench_wc(
                 bencher,
                 &diverse_text(),
-                OATokenizer::Cl100kBase,
+                OA_CL100K_BASE,
                 SpanEncoderSelector::PriorityMerge,
                 true,
             );
@@ -490,7 +486,7 @@ mod diverse {
             bench_wc(
                 bencher,
                 &diverse_text(),
-                OATokenizer::O200kBase,
+                OA_O200K_BASE,
                 SpanEncoderSelector::PriorityMerge,
                 true,
             );

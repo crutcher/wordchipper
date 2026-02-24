@@ -46,11 +46,11 @@
 //! For a number of pretrained models, simplified constructors are
 //! available to download, cache, and load the vocabulary.
 //!
-//! Most users will want to use the [`get_model`] function, which will
+//! Most users will want to use the [`load_vocab`] function, which will
 //! return a [`UnifiedTokenVocab`] containing the vocabulary and
 //! spanners configuration.
 //!
-//! There is also a [`list_models`] function which lists the available
+//! There is also a [`list_vocabs`] function which lists the available
 //! pretrained models.
 //!
 //! See [`disk_cache::WordchipperDiskCache`] for details on the disk cache.
@@ -64,14 +64,12 @@
 //!     UnifiedTokenVocab,
 //!     WCResult,
 //!     disk_cache::WordchipperDiskCache,
-//!     get_model,
+//!     load_vocab,
 //! };
 //!
 //! fn example() -> WCResult<Arc<Tokenizer<u32>>> {
 //!     let mut disk_cache = WordchipperDiskCache::default();
-//!     let vocab: Arc<UnifiedTokenVocab<u32>> =
-//!         get_model("openai/o200k_harmony", &mut disk_cache)?.into();
-//!
+//!     let (_desc, vocab) = load_vocab("openai::o200k_harmony", &mut disk_cache)?;
 //!     Ok(TokenizerOptions::default().build(vocab))
 //! }
 //! ```
@@ -121,8 +119,7 @@ pub use encoders::{TokenEncoder, TokenEncoderOptions};
 #[doc(inline)]
 pub use errors::*;
 #[doc(inline)]
-#[cfg(feature = "download")]
-pub use pretrained::{get_model, list_models};
+pub use pretrained::{list_models, list_vocabs, load_vocab};
 #[doc(inline)]
 pub use tokenizer::*;
 #[doc(inline)]

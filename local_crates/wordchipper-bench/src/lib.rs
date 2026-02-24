@@ -1,6 +1,4 @@
-#![allow(missing_docs)]
-
-use std::sync::{Arc, LazyLock, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 
 use wordchipper::{
     TokenEncoder,
@@ -8,8 +6,13 @@ use wordchipper::{
     TokenType,
     UnifiedTokenVocab,
     disk_cache::WordchipperDiskCache,
-    pretrained::openai::OATokenizer,
+    load_vocab,
 };
+
+/// `OpenAI` "`cl100k_base`" vocab.
+pub const OA_CL100K_BASE: &str = "openai::cl100k_base";
+/// `OpenAI` "`o200k_base`" vocab.
+pub const OA_O200K_BASE: &str = "openai::o200k_base";
 
 /// The huggingface/tokenizers model to use for `cl100k_base`.
 pub const HF_CL100K: &str = "Xenova/text-embedding-ada-002";
@@ -18,22 +21,25 @@ pub const HF_CL100K: &str = "Xenova/text-embedding-ada-002";
 pub const HF_O200K: &str = "Xenova/gpt-4o";
 
 /// The shared disk cache for benchmarks.
-#[allow(clippy::declare_interior_mutable_const)]
-pub const DISK_CACHE: LazyLock<Arc<Mutex<WordchipperDiskCache>>> =
-    LazyLock::new(|| Arc::new(Mutex::new(WordchipperDiskCache::default())));
+static DISK_CACHE: OnceLock<Mutex<WordchipperDiskCache>> = OnceLock::new();
+
+fn get_disk_cache() -> &'static Mutex<WordchipperDiskCache> {
+    DISK_CACHE.get_or_init(|| Mutex::new(WordchipperDiskCache::default()))
+}
 
 /// Builds an `Arc<Tokenizer<T>>` for the target model and options.
 ///
 /// Use the default disk cache to load the vocab.
 pub fn load_encoder<T: TokenType>(
-    model: OATokenizer,
+    model: &str,
     options: TokenEncoderOptions,
 ) -> Arc<dyn TokenEncoder<T>> {
-    let binding = DISK_CACHE;
-    let mut guard = binding.lock().unwrap();
+    let mut guard = get_disk_cache().lock().unwrap();
     let disk_cache = &mut *guard;
 
-    let vocab: Arc<UnifiedTokenVocab<T>> = model.load_vocab::<T>(disk_cache).unwrap().into();
+    let (_desc, vocab) = load_vocab(model, disk_cache).unwrap();
+
+    let vocab: Arc<UnifiedTokenVocab<T>> = vocab.to_token_type::<T>().unwrap().into();
 
     options.build(vocab)
 }
