@@ -59,11 +59,11 @@ pub enum TokenRole {
 /// ```
 /// use wordchipper::spanners::span_lexers::logos::contraction_split;
 ///
-/// assert_eq!(contraction_split(b"'There"), Some(2));  // split after 'T
-/// assert_eq!(contraction_split(b"'llama"), Some(3));  // split after 'll
-/// assert_eq!(contraction_split(b"'t"), None);         // just 't, nothing after
-/// assert_eq!(contraction_split(b"'re"), None);        // just 're, nothing after
-/// assert_eq!(contraction_split(b"hello"), None);      // no apostrophe
+/// assert_eq!(contraction_split(b"'There"), Some(2)); // split after 'T
+/// assert_eq!(contraction_split(b"'llama"), Some(3)); // split after 'll
+/// assert_eq!(contraction_split(b"'t"), None); // just 't, nothing after
+/// assert_eq!(contraction_split(b"'re"), None); // just 're, nothing after
+/// assert_eq!(contraction_split(b"hello"), None); // no apostrophe
 /// ```
 pub fn contraction_split(bytes: &[u8]) -> Option<usize> {
     if bytes.len() < 3 || bytes[0] != b'\'' {
