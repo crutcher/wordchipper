@@ -98,7 +98,7 @@ cfg-if = { workspace = true }
 document-features = { workspace = true }
 
 thiserror = { workspace = true }
-logos = { workspace = true, optional = true }
+logos = { workspace = true, optional = true, features = ["export_derive"] }
 fancy-regex = { workspace = true, features = ["unicode"] }
 log = { workspace = true }
 num-traits = { workspace = true }
