@@ -80,4 +80,5 @@ similar = "2.7.0"
 tempdir = "0.3.7"
 tiktoken-rs = "0.9.1"
 tokenizers = "0.22.2"
+proptest = "1.10.0"
 

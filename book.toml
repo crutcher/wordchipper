@@ -1,0 +1,7 @@
+[book]
+title = "Wordchipper"
+authors = ["Crutcher Dunnavant"]
+src = "book/src"
+
+[build]
+build-dir = "book/book"
