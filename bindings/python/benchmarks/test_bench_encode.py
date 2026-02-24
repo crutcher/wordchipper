@@ -108,11 +108,13 @@ class TestBatchEncode:
         benchmark.group = f"batch/{model}"
         benchmark.extra_info["input_bytes"] = total_bytes
 
+        pool = ThreadPoolExecutor()
+
         def encode_batch_threaded(texts):
-            with ThreadPoolExecutor() as pool:
-                return list(pool.map(tok.encode, texts))
+            return list(pool.map(tok.encode, texts))
 
         benchmark(encode_batch_threaded, texts)
+        pool.shutdown(wait=False)
 
     def test_tiktoken(self, benchmark, model, fineweb_batch):
         import tiktoken
