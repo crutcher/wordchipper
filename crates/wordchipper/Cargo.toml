@@ -43,14 +43,6 @@ download = [
     "std",
 ]
 
-## The training feature enables the training code.
-training = [
-    "compact_str",
-    "dary_heap",
-    "std",
-]
-
-
 ## The "std" feature enables the use of the `std` library.
 ## Without "std", the crate uses hashbrown for HashMap/HashSet.
 std = [
@@ -129,16 +121,11 @@ wordchipper-disk-cache = { version = "0.7.3", path = "../wordchipper-disk-cache"
 # "rayon" feature deps:
 rayon = { workspace = true, optional = true }
 
-# "training" feature deps:
-compact_str = { workspace = true, optional = true }
-dary_heap = { workspace = true, optional = true }
-
 # "tracing" feature deps:
 tracing = { workspace = true, optional = true }
 
 
 [dev-dependencies]
-compact_str = { workspace = true }
 tempdir = { workspace = true }
 tiktoken-rs = { workspace = true }
 tokenizers = { workspace = true, features = ["http"] }

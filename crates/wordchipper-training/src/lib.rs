@@ -3,15 +3,13 @@
 //! Support for training token vocabularies.
 //!
 //! Training requires:
-//! * [`crate::vocab::ByteMapVocab`] - a choice of ``{ u8 -> T }` byte mappings.
+//! * [`wordchipper::vocab::ByteMapVocab`] - a choice of ``{ u8 -> T }` byte mappings.
 //!   * The default is ``T::from(u8)``.
-//! * [`crate::spanners::TextSpanningConfig`] - a text splitting config.
+//! * [`wordchipper::spanners::TextSpanningConfig`] - a text splitting config.
 //!   * This can be built from just a regex pattern.
 //!   * Special tokens can be overlaid on a pre-trained vocabulary.
 //!
 //! ## Training Example
-//!
-//! See `examples/tokenizer_trainer`.
 //!
 //! This is a code snippet overview of training.
 //!
@@ -38,9 +36,9 @@
 //!     TokenizerOptions,
 //!     UnifiedTokenVocab,
 //!     pretrained::openai::OA_CL100K_BASE_PATTERN,
-//!     training::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions},
 //!     vocab::{ByteMapVocab, io::save_base64_span_map_path},
 //! };
+//! use wordchipper_training::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions};
 //!
 //! fn example<I, S>(
 //!     vocab_size: usize,

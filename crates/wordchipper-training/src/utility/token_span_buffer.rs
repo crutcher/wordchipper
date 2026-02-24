@@ -2,11 +2,7 @@
 
 use core::hash::Hash;
 
-use crate::{
-    prelude::*,
-    types::{Pair, TokenType},
-    vocab::ByteMapVocab,
-};
+use wordchipper::{Pair, TokenType, vocab::ByteMapVocab};
 
 /// A mutable span of tokens (a chunk or "word").
 ///
@@ -176,7 +172,6 @@ impl<T: TokenType> TokenSpanBuf<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::vocab::ByteMapVocab;
 
     #[test]
     fn test_from_tokens() {
