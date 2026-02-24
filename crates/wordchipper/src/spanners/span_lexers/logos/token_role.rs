@@ -46,9 +46,13 @@ pub enum TokenRole {
 
 /// Check if a byte slice starts with a cl100k contraction pattern
 /// (`'s`, `'t`, `'d`, `'m`, `'re`, `'ve`, `'ll`, case-insensitive)
-/// followed by additional letters. Returns the split point
-/// (contraction length) if the contraction is a prefix of a longer
-/// word, or `None` if the input is just the contraction alone.
+/// followed by additional bytes. Returns the split point
+/// (contraction length) if there are trailing bytes after the
+/// contraction, or `None` if the input is just the contraction alone.
+///
+/// This function does not verify that trailing bytes are letters;
+/// callers are expected to only pass word/letter tokens (as the
+/// engine does via `TokenRole::Word`).
 ///
 /// This is useful when building cl100k-compatible lexers where logos
 /// longest-match picks `'The` as one Letters token, but the regex

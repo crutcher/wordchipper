@@ -273,7 +273,9 @@ mod tests {
     }
 
     /// Assert structural invariants on a span sequence over `text`:
-    /// contiguous, complete coverage, non-empty, UTF-8 aligned.
+    /// contiguous, complete coverage, UTF-8 aligned. Allows empty spans
+    /// because random role assignments can produce them (real-lexer tests
+    /// in cl100k/o200k use strict non-empty checks).
     fn assert_structural_invariants(
         spans: &[SpanRef],
         text: &str,
