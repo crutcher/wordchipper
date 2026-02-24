@@ -58,7 +58,6 @@ mod tests {
     use compact_str::CompactString;
 
     use super::*;
-    use crate::alloc::string::String;
 
     #[test]
     fn test_common_count_types() {

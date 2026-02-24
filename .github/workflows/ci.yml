@@ -48,11 +48,8 @@ jobs:
       - name: Test
         run: cargo test --workspace
 
-      - name: Extra Features Training
-        run: cargo test -p wordchipper --features training
-
-      - name: Test foldhash
-        run: cargo test -p wordchipper --no-default-features --features client,foldhash
+      - name: Test ahash
+        run: cargo test -p wordchipper --no-default-features --features client,ahash
 
       - name: Test no-std
         run: cargo test -p wordchipper --no-default-features --tests

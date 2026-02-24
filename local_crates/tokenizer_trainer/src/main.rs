@@ -9,10 +9,10 @@ use wordchipper::{
     VocabIndex,
     pretrained::openai::OA_O200K_BASE_PATTERN,
     support::slices::{inner_slice_view, inner_str_view},
-    training::BinaryPairVocabTrainerOptions,
     vocab::{ByteMapVocab, io::save_base64_span_map_path},
 };
 use wordchipper_data::dataset::DatasetCacheConfig;
+use wordchipper_training::BinaryPairVocabTrainerOptions;
 
 /// Example encoders trainer.
 #[derive(Parser, Debug)]

@@ -11,7 +11,8 @@ workspace = true
 
 [dependencies]
 wordchipper-data = { path = "../wordchipper-data" }
-wordchipper = { path = "../../crates/wordchipper", features = ["training"] }
+wordchipper = { path = "../../crates/wordchipper" }
+wordchipper-training = { path = "../../crates/wordchipper-training" }
 
 arrow = { workspace = true }
 clap = { workspace = true, features = ["derive"] }

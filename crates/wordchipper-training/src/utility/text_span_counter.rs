@@ -2,13 +2,15 @@
 
 use core::fmt::Debug;
 
-use crate::{
+use wordchipper::{
+    TokenType,
+    WCHashMap,
     hash_map_with_capacity,
     support::regex::RegexWrapper,
-    training::{CountType, StringChunkType, utility::TokenSpanBuf},
-    types::{TokenType, WCHashMap},
     vocab::ByteMapVocab,
 };
+
+use crate::{CountType, StringChunkType, utility::TokenSpanBuf};
 
 /// Expected average word length in characters.
 pub const EXPECTED_WORD_LENGTH: usize = 5;
@@ -121,14 +123,9 @@ where
 
 #[cfg(test)]
 mod tests {
+    use wordchipper::{WCHashMap, hash_map_new, support::regex::RegexPattern};
+
     use super::*;
-    use crate::{
-        hash_map_new,
-        prelude::*,
-        support::regex::RegexPattern,
-        training::{CountType, StringChunkType, utility::token_span_buffer::TokenSpanBuf},
-        vocab::ByteMapVocab,
-    };
 
     const PATTERN: &str = r"\w+";
 
