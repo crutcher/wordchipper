@@ -35,55 +35,70 @@ struct Tokenizer {
 #[pymethods]
 impl Tokenizer {
     #[staticmethod]
-    fn from_pretrained(name: &str) -> PyResult<Self> {
-        let mut disk_cache = WordchipperDiskCache::default();
-        let vocab: Arc<UnifiedTokenVocab<u32>> = wordchipper::get_model(name, &mut disk_cache)
-            .map_err(to_pyerr)?
-            .into();
+    fn from_pretrained(
+        py: Python,
+        name: &str,
+    ) -> PyResult<Self> {
+        py.detach(|| {
+            let mut disk_cache = WordchipperDiskCache::default();
+            let vocab: Arc<UnifiedTokenVocab<u32>> = wordchipper::get_model(name, &mut disk_cache)
+                .map_err(to_pyerr)?
+                .into();
 
-        let inner = TokenizerOptions::default()
-            .with_parallel(true)
-            .build(vocab.clone());
+            let inner = TokenizerOptions::default()
+                .with_parallel(true)
+                .build(vocab.clone());
 
-        Ok(Tokenizer { inner })
+            Ok(Tokenizer { inner })
+        })
     }
 
     fn encode(
         &self,
+        py: Python,
         text: &str,
     ) -> PyResult<Vec<u32>> {
-        self.inner.try_encode(text).map_err(to_pyerr)
+        py.detach(|| self.inner.try_encode(text).map_err(to_pyerr))
     }
 
     fn encode_batch(
         &self,
+        py: Python,
         texts: Vec<String>,
     ) -> PyResult<Vec<Vec<u32>>> {
-        let refs = inner_str_view(&texts);
-        self.inner.try_encode_batch(&refs).map_err(to_pyerr)
+        py.detach(|| {
+            let refs = inner_str_view(&texts);
+            self.inner.try_encode_batch(&refs).map_err(to_pyerr)
+        })
     }
 
     fn decode(
         &self,
+        py: Python,
         tokens: Vec<u32>,
     ) -> PyResult<String> {
-        self.inner
-            .try_decode_to_string(&tokens)
-            .map_err(to_pyerr)?
-            .try_result()
-            .map_err(to_pyerr)
+        py.detach(|| {
+            self.inner
+                .try_decode_to_string(&tokens)
+                .map_err(to_pyerr)?
+                .try_result()
+                .map_err(to_pyerr)
+        })
     }
 
     fn decode_batch(
         &self,
+        py: Python,
         batch: Vec<Vec<u32>>,
     ) -> PyResult<Vec<String>> {
-        let refs = inner_slice_view(&batch);
-        self.inner
-            .try_decode_batch_to_strings(&refs)
-            .map_err(to_pyerr)?
-            .try_results()
-            .map_err(to_pyerr)
+        py.detach(|| {
+            let refs = inner_slice_view(&batch);
+            self.inner
+                .try_decode_batch_to_strings(&refs)
+                .map_err(to_pyerr)?
+                .try_results()
+                .map_err(to_pyerr)
+        })
     }
 
     #[getter]
@@ -131,10 +146,13 @@ impl Tokenizer {
 
     fn save_base64_vocab(
         &self,
+        py: Python,
         path: &str,
     ) -> PyResult<()> {
-        save_base64_span_map_path(self.inner.vocab().span_vocab().span_map(), path)
-            .map_err(to_pyerr)
+        py.detach(|| {
+            save_base64_span_map_path(self.inner.vocab().span_vocab().span_map(), path)
+                .map_err(to_pyerr)
+        })
     }
 }
 
