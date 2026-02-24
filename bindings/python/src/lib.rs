@@ -35,17 +35,22 @@ struct Tokenizer {
 #[pymethods]
 impl Tokenizer {
     #[staticmethod]
-    fn from_pretrained(name: &str) -> PyResult<Self> {
-        let mut disk_cache = WordchipperDiskCache::default();
-        let vocab: Arc<UnifiedTokenVocab<u32>> = wordchipper::get_model(name, &mut disk_cache)
-            .map_err(to_pyerr)?
-            .into();
+    fn from_pretrained(
+        py: Python<'_>,
+        name: &str,
+    ) -> PyResult<Self> {
+        py.detach(|| {
+            let mut disk_cache = WordchipperDiskCache::default();
+            let vocab: Arc<UnifiedTokenVocab<u32>> = wordchipper::get_model(name, &mut disk_cache)
+                .map_err(to_pyerr)?
+                .into();
 
-        let inner = TokenizerOptions::default()
-            .with_parallel(true)
-            .build(vocab.clone());
+            let inner = TokenizerOptions::default()
+                .with_parallel(true)
+                .build(vocab.clone());
 
-        Ok(Tokenizer { inner })
+            Ok(Tokenizer { inner })
+        })
     }
 
     fn encode(
@@ -144,10 +149,13 @@ impl Tokenizer {
 
     fn save_base64_vocab(
         &self,
+        py: Python<'_>,
         path: &str,
     ) -> PyResult<()> {
-        save_base64_span_map_path(self.inner.vocab().span_vocab().span_map(), path)
-            .map_err(to_pyerr)
+        py.detach(|| {
+            save_base64_span_map_path(self.inner.vocab().span_vocab().span_map(), path)
+                .map_err(to_pyerr)
+        })
     }
 }
 
