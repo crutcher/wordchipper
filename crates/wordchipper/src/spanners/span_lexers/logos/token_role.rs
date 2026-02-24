@@ -185,4 +185,29 @@ mod tests {
         assert_eq!(contraction_split(b"'velvet"), Some(3));
         assert_eq!(contraction_split(b"'really"), Some(3));
     }
+
+    // -------------------------------------------------------------------
+    // proptest: contraction_split on arbitrary bytes
+    // -------------------------------------------------------------------
+
+    proptest::proptest! {
+        #![proptest_config(proptest::prelude::ProptestConfig::with_cases(2000))]
+
+        /// contraction_split must never panic on arbitrary byte input,
+        /// and when it returns Some(n), n must be a valid split point:
+        /// 0 < n < input.len().
+        #[test]
+        fn contraction_split_arbitrary_bytes(bytes in proptest::collection::vec(0..=255u8, 0..50)) {
+            let result = contraction_split(&bytes);
+            if let Some(n) = result {
+                proptest::prop_assert!(n > 0, "split at 0 is invalid");
+                proptest::prop_assert!(
+                    n < bytes.len(),
+                    "split at {} >= len {} leaves nothing after",
+                    n,
+                    bytes.len()
+                );
+            }
+        }
+    }
 }

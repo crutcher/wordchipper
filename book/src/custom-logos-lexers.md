@@ -6,7 +6,7 @@ example, uses alternations with Unicode property classes and lookaheads to segme
 into `["hello", " world"]`.
 
 Regex is correct but slow. Each match backtracks through Unicode property tables, and the engine
-runs single-threaded. The [logos](https://docs.rs/logos) crate takes a different approach: it
+runs single-threaded. The [logos](https://logos.maciej.codes/) crate takes a different approach: it
 compiles regex patterns into a deterministic finite automaton (DFA) at build time via a derive
 macro. No backtracking, no runtime regex compilation. For wordchipper's cl100k and o200k patterns,
 this gives **30-50x speedups** (700+ MB/s).

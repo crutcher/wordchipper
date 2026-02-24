@@ -423,5 +423,60 @@ mod tests {
                 prop_assert_eq!(spans[0].clone(), SpanRef::Gap(0..text.len()));
             }
         }
+
+        /// Early termination: stop after N spans, verify consumed is
+        /// a valid byte position and accepted spans are contiguous.
+        #[test]
+        fn early_termination(
+            text in "\\PC{1,80}",
+            chunks in proptest::collection::vec((1..4usize, 0..6u8), 1..15),
+            stop_after in 1..10usize,
+        ) {
+            let tokens = build_token_stream(&text, &chunks);
+            let mut accepted = Vec::new();
+            let (completed, consumed) = for_each_classified_span(
+                tokens.into_iter(),
+                &text,
+                0,
+                &mut |span| {
+                    accepted.push(span);
+                    accepted.len() < stop_after
+                },
+            );
+
+            if !completed {
+                // Callback rejected a span: it's the last one in accepted
+                prop_assert!(!accepted.is_empty());
+                prop_assert!(
+                    consumed <= text.len(),
+                    "consumed {} > text.len() {}",
+                    consumed,
+                    text.len()
+                );
+                // Accepted spans should be contiguous from offset 0
+                for i in 1..accepted.len() {
+                    prop_assert_eq!(
+                        accepted[i - 1].range().end,
+                        accepted[i].range().start,
+                        "gap between accepted spans {} and {}",
+                        i - 1,
+                        i
+                    );
+                }
+            }
+        }
+
+        /// Same input always produces the same output.
+        #[test]
+        fn deterministic(
+            text in "\\PC{0,80}",
+            chunks in proptest::collection::vec((1..4usize, 0..6u8), 1..15),
+        ) {
+            let tokens1 = build_token_stream(&text, &chunks);
+            let tokens2 = build_token_stream(&text, &chunks);
+            let spans1 = collect_spans(tokens1.into_iter(), &text, 0);
+            let spans2 = collect_spans(tokens2.into_iter(), &text, 0);
+            prop_assert_eq!(&spans1, &spans2);
+        }
     }
 }

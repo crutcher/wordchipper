@@ -218,6 +218,50 @@ mod tests {
     }
 
     // -------------------------------------------------------------------
+    // proptest: structural invariants on real lexer output
+    // -------------------------------------------------------------------
+
+    proptest::proptest! {
+        #![proptest_config(proptest::prelude::ProptestConfig::with_cases(2000))]
+
+        #[test]
+        fn structural_invariants(text in "\\PC{0,200}") {
+            let s = spanner(O200kLexer);
+            let spans = s.split_spans(&text);
+
+            if text.is_empty() {
+                proptest::prop_assert!(spans.is_empty());
+            } else {
+                proptest::prop_assert!(!spans.is_empty());
+                proptest::prop_assert_eq!(spans[0].range().start, 0);
+                proptest::prop_assert_eq!(spans.last().unwrap().range().end, text.len());
+
+                for i in 0..spans.len() {
+                    let r = spans[i].range();
+                    proptest::prop_assert!(
+                        r.start < r.end,
+                        "empty span at index {}: {:?}",
+                        i, r
+                    );
+                    proptest::prop_assert!(
+                        core::str::from_utf8(&text.as_bytes()[r.start..r.end]).is_ok(),
+                        "non-UTF-8 span at index {}: {:?}",
+                        i, r
+                    );
+                    if i + 1 < spans.len() {
+                        proptest::prop_assert_eq!(
+                            r.end,
+                            spans[i + 1].range().start,
+                            "gap between spans {} and {}",
+                            i, i + 1
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------
     // proptest oracle: regex vs logos equivalence
     // -------------------------------------------------------------------
 
