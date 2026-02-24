@@ -3594,7 +3594,6 @@ dependencies = [
  "dary_heap",
  "log",
  "num-traits",
- "tempdir",
  "tracing",
  "wordchipper",
 ]

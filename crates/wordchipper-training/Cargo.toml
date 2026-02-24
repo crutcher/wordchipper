@@ -8,8 +8,10 @@ edition.workspace = true
 license.workspace = true
 authors.workspace = true
 
+
 [lints]
 workspace = true
+
 
 [features]
 default = []
@@ -21,7 +23,6 @@ tracing = [
 ]
 
 
-
 [dependencies]
 log = { workspace = true }
 wordchipper = { version = "0.7.3", path = "../wordchipper", features = ["std"] }
@@ -31,7 +32,4 @@ num-traits = { workspace = true }
 
 # "tracing" feature deps:
 tracing = { workspace = true, optional = true }
-
-[dev-dependencies]
-tempdir = { workspace = true }
 
