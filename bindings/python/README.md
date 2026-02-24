@@ -61,3 +61,35 @@ pytest tests/ -v
 ```
 
 After making changes to `src/lib.rs`, rebuild with `maturin develop` before re-running tests.
+
+## Benchmarks
+
+Compares `wordchipper` against `tiktoken` and HuggingFace `tokenizers` for single
+and batch encoding on cl100k_base and o200k_base. Uses the same corpora and methodology
+as the Rust benchmarks in `wordchipper-bench`:
+
+- **Single-string**: `english.txt` / `multilingual.txt` repeated 10x
+- **Batch**: 1024 samples from fineweb-edu shard 0 (~4.2 MB)
+
+```bash
+# Install benchmark dependencies
+uv pip install pytest-benchmark tiktoken tokenizers pyarrow
+
+# Build in release mode for meaningful numbers
+maturin develop --release
+
+# Run all benchmarks
+pytest benchmarks/
+
+# Run only single-encode benchmarks
+pytest benchmarks/ -k "TestSingleEncode"
+
+# Run only batch-encode benchmarks
+pytest benchmarks/ -k "TestBatchEncode"
+
+# Run only decode benchmarks
+pytest benchmarks/ -k "TestSingleDecode"
+
+# Filter by model
+pytest benchmarks/ -k "cl100k_base"
+```
