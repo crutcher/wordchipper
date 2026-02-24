@@ -11,8 +11,6 @@
 //!
 //! ## Training Example
 //!
-//! See `examples/tokenizer_trainer`.
-//!
 //! This is a code snippet overview of training.
 //!
 //! Expect training to take ~1s/10MB of input; and to be slowed
@@ -38,9 +36,9 @@
 //!     TokenizerOptions,
 //!     UnifiedTokenVocab,
 //!     pretrained::openai::OA_CL100K_BASE_PATTERN,
-//!     training::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions},
 //!     vocab::{ByteMapVocab, io::save_base64_span_map_path},
 //! };
+//! use wordchipper_training::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions};
 //!
 //! fn example<I, S>(
 //!     vocab_size: usize,
