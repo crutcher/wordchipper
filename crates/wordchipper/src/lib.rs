@@ -76,10 +76,6 @@
 //! }
 //! ```
 //!
-//! ## Training Models
-//!
-//! Training models is supported via the [`training`] module.
-//!
 //! ## Crate Features
 #![doc = document_features::document_features!()]
 
@@ -104,8 +100,6 @@ pub(crate) mod prelude {
     };
 }
 
-#[cfg(feature = "training")]
-pub mod training;
 #[cfg(feature = "download")]
 #[doc(inline)]
 pub use wordchipper_disk_cache as disk_cache;

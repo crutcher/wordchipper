@@ -3,9 +3,9 @@
 //! Support for training token vocabularies.
 //!
 //! Training requires:
-//! * [`crate::vocab::ByteMapVocab`] - a choice of ``{ u8 -> T }` byte mappings.
+//! * [`wordchipper::vocab::ByteMapVocab`] - a choice of ``{ u8 -> T }` byte mappings.
 //!   * The default is ``T::from(u8)``.
-//! * [`crate::spanners::TextSpanningConfig`] - a text splitting config.
+//! * [`wordchipper::spanners::TextSpanningConfig`] - a text splitting config.
 //!   * This can be built from just a regex pattern.
 //!   * Special tokens can be overlaid on a pre-trained vocabulary.
 //!

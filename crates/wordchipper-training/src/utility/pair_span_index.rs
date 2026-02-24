@@ -1,10 +1,8 @@
 //! # `PairIndex` Builder
 
-use crate::{
-    hash_map_with_capacity,
-    training::{CountType, utility::TokenSpanBuf},
-    types::{Pair, TokenType, WCHashMap, WCHashSet},
-};
+use wordchipper::{Pair, TokenType, WCHashMap, WCHashSet, hash_map_with_capacity};
+
+use crate::{CountType, utility::TokenSpanBuf};
 
 /// A map from [`Pair`] to its occurrence count.
 pub type PairCountMap<T, C> = WCHashMap<Pair<T>, C>;
@@ -61,12 +59,9 @@ impl<T: TokenType, C: CountType> PairSpanIndex<T, C> {
 
 #[cfg(test)]
 mod tests {
+    use wordchipper::vocab::ByteMapVocab;
+
     use super::*;
-    use crate::{
-        prelude::*,
-        training::utility::token_span_buffer::TokenSpanBuf,
-        vocab::ByteMapVocab,
-    };
 
     #[test]
     fn test_pair_index_serial_token_u32_count_usize() {

@@ -2880,6 +2880,7 @@ dependencies = [
  "similar",
  "wordchipper",
  "wordchipper-data",
+ "wordchipper-training",
 ]
 
 [[package]]
@@ -3515,8 +3516,6 @@ dependencies = [
  "ahash",
  "base64 0.22.1",
  "cfg-if",
- "compact_str",
- "dary_heap",
  "document-features",
  "fancy-regex",
  "foldhash",
@@ -3584,6 +3583,19 @@ version = "0.7.3"
 dependencies = [
  "pyo3",
  "strum",
+ "wordchipper",
+]
+
+[[package]]
+name = "wordchipper-training"
+version = "0.7.3"
+dependencies = [
+ "compact_str",
+ "dary_heap",
+ "log",
+ "num-traits",
+ "tempdir",
+ "tracing",
  "wordchipper",
 ]
 

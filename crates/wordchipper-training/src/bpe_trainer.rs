@@ -4,32 +4,28 @@ use core::cmp::Ordering;
 
 use compact_str::CompactString;
 use dary_heap::OctonaryHeap;
-
-use crate::{
+use wordchipper::{
+    Pair,
+    TokenType,
+    UnifiedTokenVocab,
+    VocabIndex,
+    WCError,
+    WCHashSet,
     WCResult,
     hash_map_with_capacity,
-    prelude::*,
     support::regex::RegexPattern,
-    training::{
-        CountType,
-        StringChunkType,
-        utility::{
-            PairIndexMap,
-            PairSpanIndex,
-            TextSpanCounter,
-            TextSpanCounterOptions,
-            TokenSpanBuf,
-        },
-    },
-    types::{Pair, TokenType, WCHashSet},
     vocab::{
         ByteMapVocab,
         PairMapVocab,
         PairTokenMap,
-        UnifiedTokenVocab,
-        VocabIndex,
         utility::validators::{U8_SIZE, expect_vocab_size},
     },
+};
+
+use crate::{
+    CountType,
+    StringChunkType,
+    utility::{PairIndexMap, PairSpanIndex, TextSpanCounter, TextSpanCounterOptions, TokenSpanBuf},
 };
 
 /// Options for [`BinaryPairVocabTrainer`].
@@ -256,7 +252,7 @@ where
         self.options
             .pattern
             .compile()
-            .map_err(|e| crate::WCError::External(e.to_string()))?;
+            .map_err(|e| WCError::External(e.to_string()))?;
 
         let mut pairs: PairTokenMap<T> = hash_map_with_capacity(num_merges);
 
@@ -421,17 +417,16 @@ mod tests {
     use std::sync::Arc;
 
     use compact_str::CompactString;
-
-    use crate::{
+    use wordchipper::{
         TokenDecoder,
         TokenEncoder,
         TokenizerOptions,
         UnifiedTokenVocab,
-        prelude::*,
         pretrained::openai::OA_CL100K_BASE_PATTERN,
-        training::{BinaryPairVocabTrainerOptions, bpe_trainer::MergeJob},
         vocab::ByteMapVocab,
     };
+
+    use crate::{BinaryPairVocabTrainerOptions, bpe_trainer::MergeJob};
 
     #[test]
     fn test_tokenizer_options() {
