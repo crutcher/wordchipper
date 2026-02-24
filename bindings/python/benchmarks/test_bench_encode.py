@@ -98,6 +98,22 @@ class TestBatchEncode:
         benchmark.extra_info["input_bytes"] = total_bytes
         benchmark(tok.encode_batch, texts)
 
+    def test_wordchipper_threadpool(self, benchmark, model, fineweb_batch):
+        from concurrent.futures import ThreadPoolExecutor
+
+        import wordchipper
+
+        texts, total_bytes = fineweb_batch
+        tok = wordchipper.Tokenizer.from_pretrained(model)
+        benchmark.group = f"batch/{model}"
+        benchmark.extra_info["input_bytes"] = total_bytes
+
+        def encode_batch_threaded(texts):
+            with ThreadPoolExecutor() as pool:
+                return list(pool.map(tok.encode, texts))
+
+        benchmark(encode_batch_threaded, texts)
+
     def test_tiktoken(self, benchmark, model, fineweb_batch):
         import tiktoken
 

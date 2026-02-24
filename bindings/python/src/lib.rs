@@ -50,17 +50,25 @@ impl Tokenizer {
 
     fn encode(
         &self,
-        text: &str,
+        py: Python<'_>,
+        text: String,
     ) -> PyResult<Vec<u32>> {
-        self.inner.try_encode(text).map_err(to_pyerr)
+        let inner = self.inner.clone();
+        py.detach(move || inner.try_encode(&text))
+            .map_err(to_pyerr)
     }
 
     fn encode_batch(
         &self,
+        py: Python<'_>,
         texts: Vec<String>,
     ) -> PyResult<Vec<Vec<u32>>> {
-        let refs = inner_str_view(&texts);
-        self.inner.try_encode_batch(&refs).map_err(to_pyerr)
+        let inner = self.inner.clone();
+        py.detach(move || {
+            let refs = inner_str_view(&texts);
+            inner.try_encode_batch(&refs)
+        })
+        .map_err(to_pyerr)
     }
 
     fn decode(
