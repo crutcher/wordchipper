@@ -58,8 +58,7 @@ impl Tokenizer {
         py: Python<'_>,
         text: String,
     ) -> PyResult<Vec<u32>> {
-        let inner = self.inner.clone();
-        py.detach(move || inner.try_encode(&text)).map_err(to_pyerr)
+        py.detach(|| self.inner.try_encode(&text)).map_err(to_pyerr)
     }
 
     fn encode_batch(
@@ -67,10 +66,9 @@ impl Tokenizer {
         py: Python<'_>,
         texts: Vec<String>,
     ) -> PyResult<Vec<Vec<u32>>> {
-        let inner = self.inner.clone();
-        py.detach(move || {
+        py.detach(|| {
             let refs = inner_str_view(&texts);
-            inner.try_encode_batch(&refs)
+            self.inner.try_encode_batch(&refs)
         })
         .map_err(to_pyerr)
     }
@@ -80,9 +78,8 @@ impl Tokenizer {
         py: Python<'_>,
         tokens: Vec<u32>,
     ) -> PyResult<String> {
-        let inner = self.inner.clone();
-        py.detach(move || {
-            inner
+        py.detach(|| {
+            self.inner
                 .try_decode_to_string(&tokens)
                 .and_then(|r| r.try_result())
         })
@@ -94,10 +91,9 @@ impl Tokenizer {
         py: Python<'_>,
         batch: Vec<Vec<u32>>,
     ) -> PyResult<Vec<String>> {
-        let inner = self.inner.clone();
-        py.detach(move || {
+        py.detach(|| {
             let refs = inner_slice_view(&batch);
-            inner
+            self.inner
                 .try_decode_batch_to_strings(&refs)
                 .and_then(|r| r.try_results())
         })
