@@ -13,11 +13,16 @@ workspace = true
 wordchipper = { path = "../../crates/wordchipper", features = ["default"] }
 wordchipper-data = { path = "../wordchipper-data" }
 
+criterion = { workspace = true }
 arrow = { workspace = true }
 divan = { workspace = true }
 rayon = { workspace = true }
 tiktoken-rs = { workspace = true }
 tokenizers = { workspace = true, features = ["http"] }
+
+[[bench]]
+name = "crit"
+harness = false
 
 [[bench]]
 name = "spanning"

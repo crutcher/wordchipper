@@ -25,15 +25,21 @@ pub const DISK_CACHE: LazyLock<Arc<Mutex<WordchipperDiskCache>>> =
 /// Builds an `Arc<Tokenizer<T>>` for the target model and options.
 ///
 /// Use the default disk cache to load the vocab.
-pub fn load_encoder<T: TokenType>(
-    model: OATokenizer,
-    options: TokenEncoderOptions,
-) -> Arc<dyn TokenEncoder<T>> {
+pub fn load_vocab<T: TokenType>(model: OATokenizer) -> Arc<UnifiedTokenVocab<T>> {
     let binding = DISK_CACHE;
     let mut guard = binding.lock().unwrap();
     let disk_cache = &mut *guard;
 
     let vocab: Arc<UnifiedTokenVocab<T>> = model.load_vocab::<T>(disk_cache).unwrap().into();
 
-    options.build(vocab)
+    vocab
+}
+/// Builds an `Arc<Tokenizer<T>>` for the target model and options.
+///
+/// Use the default disk cache to load the vocab.
+pub fn load_encoder<T: TokenType>(
+    model: OATokenizer,
+    options: TokenEncoderOptions,
+) -> Arc<dyn TokenEncoder<T>> {
+    options.build(load_vocab::<T>(model))
 }
