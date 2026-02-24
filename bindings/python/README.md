@@ -79,14 +79,17 @@ uv pip install pytest-benchmark tiktoken tokenizers pyarrow
 maturin develop --release
 
 # Run all benchmarks
-pytest benchmarks/ --benchmark-group-by=group --benchmark-sort=mean
+pytest benchmarks/
 
 # Run only single-encode benchmarks
-pytest benchmarks/ -k "TestSingleEncode" --benchmark-group-by=group
+pytest benchmarks/ -k "TestSingleEncode"
 
 # Run only batch-encode benchmarks
-pytest benchmarks/ -k "TestBatchEncode" --benchmark-group-by=group
+pytest benchmarks/ -k "TestBatchEncode"
+
+# Run only decode benchmarks
+pytest benchmarks/ -k "TestSingleDecode"
 
 # Filter by model
-pytest benchmarks/ -k "cl100k_base" --benchmark-group-by=group
+pytest benchmarks/ -k "cl100k_base"
 ```

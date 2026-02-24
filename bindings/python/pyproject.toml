@@ -15,6 +15,9 @@ dynamic = ["version"]
 dev = ["pytest>=8"]
 bench = ["pytest>=8", "pytest-benchmark>=4", "tiktoken>=0.5", "tokenizers>=0.15", "pyarrow>=14"]
 
+[tool.pytest.ini_options]
+addopts = "--benchmark-columns=median --benchmark-sort=mean --benchmark-group-by=group"
+
 [tool.maturin]
 features = ["pyo3/extension-module"]
 python-source = "py_src"

@@ -8,7 +8,7 @@ Build the extension in release mode first for meaningful numbers:
     maturin develop --release
 
 Run with:
-    pytest benchmarks/ --benchmark-group-by=group --benchmark-sort=mean
+    pytest benchmarks/
 """
 
 import pytest
