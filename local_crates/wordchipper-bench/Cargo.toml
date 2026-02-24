@@ -13,7 +13,7 @@ workspace = true
 wordchipper = { path = "../../crates/wordchipper", features = ["default"] }
 wordchipper-data = { path = "../wordchipper-data" }
 
-criterion = { workspace = true }
+criterion = { workspace = true, features = ["csv_output"] }
 arrow = { workspace = true }
 divan = { workspace = true }
 rayon = { workspace = true }

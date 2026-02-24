@@ -674,6 +674,7 @@ dependencies = [
  "ciborium",
  "clap",
  "criterion-plot",
+ "csv",
  "itertools 0.13.0",
  "num-traits",
  "oorandom",
