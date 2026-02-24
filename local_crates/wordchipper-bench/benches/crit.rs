@@ -1,6 +1,6 @@
 use std::{hint::black_box, sync::LazyLock};
 
-use criterion::{Criterion, criterion_group, criterion_main};
+use criterion::{Criterion, Throughput, criterion_group, criterion_main};
 use wordchipper::pretrained::openai::OATokenizer;
 use wordchipper_data::dataset::DatasetCacheConfig;
 
@@ -8,12 +8,16 @@ const BATCH_SIZE: usize = 1024;
 
 struct Batch {
     samples: Vec<String>,
-    _total_bytes: usize,
+    total_bytes: usize,
 }
 
 impl Batch {
     fn strs(&self) -> Vec<&str> {
         self.samples.iter().map(|s| s.as_str()).collect()
+    }
+
+    fn total_bytes(&self) -> usize {
+        self.total_bytes
     }
 }
 
@@ -42,7 +46,7 @@ fn load_batch() -> Batch {
                 let total_bytes = samples.iter().map(|s| s.len()).sum();
                 return Batch {
                     samples,
-                    _total_bytes: total_bytes,
+                    total_bytes: total_bytes,
                 };
             }
         }
@@ -51,7 +55,7 @@ fn load_batch() -> Batch {
     let total_bytes = samples.iter().map(|s| s.len()).sum();
     Batch {
         samples,
-        _total_bytes: total_bytes,
+        total_bytes: total_bytes,
     }
 }
 
@@ -60,12 +64,14 @@ static BATCH: LazyLock<Batch> = LazyLock::new(load_batch);
 fn bench_encoders(c: &mut Criterion) {
     let strs = BATCH.strs();
 
-    for model in [OATokenizer::Cl100kBase, OATokenizer::O200kBase] {
-        let vocab = wordchipper_bench::load_vocab::<u32>(model);
+    for parallel in [false, true] {
+        for model in [OATokenizer::Cl100kBase, OATokenizer::O200kBase] {
+            let vocab = wordchipper_bench::load_vocab::<u32>(model);
 
-        for parallel in [false, true] {
-            let group_name = format!("vocab={}/par={}", model, parallel);
+            let group_name = format!("par={}/{}", parallel, model);
             let mut group = c.benchmark_group(&group_name);
+
+            group.throughput(Throughput::Bytes(BATCH.total_bytes() as u64));
 
             group.sample_size(10);
             group.nresamples(1001);
