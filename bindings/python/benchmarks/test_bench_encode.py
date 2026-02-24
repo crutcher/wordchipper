@@ -1,6 +1,6 @@
 """Python encode/encode_batch benchmarks: wordchipper vs tiktoken vs tokenizers.
 
-Matches the Rust benchmarks in wordchipper-bench:
+Matches encoding_single.rs and encoding_parallel.rs:
   - Single-string: english.txt / multilingual.txt repeated 10x
   - Batch: 1024 samples from fineweb-edu shard 0 (~4.2 MB)
 
