@@ -104,7 +104,6 @@ mod tests {
         let text = "hello world";
         let spans = s.split_spans(text);
 
-        // cl100k-like: " world" is one token (space grouped with letters).
         assert_eq!(spans, vec![SpanRef::Word(0..5), SpanRef::Word(5..11),]);
     }
 
@@ -351,7 +350,7 @@ mod tests {
         #![proptest_config(proptest::prelude::ProptestConfig::with_cases(2000))]
 
         #[test]
-        fn structural_invariants(text in "\\PC{0,200}") {
+        fn structural_invariants(text in "[\\PC\\n\\r\\t]{0,200}") {
             let s = spanner(R50kLexer);
             let spans = s.split_spans(&text);
 
