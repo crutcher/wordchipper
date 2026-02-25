@@ -1,32 +1,30 @@
 use std::sync::Arc;
 
-use wordchipper::{TokenDecoder, TokenEncoder, TokenType, spanners::TextSpanner};
+use wordchipper::{TokenDecoder, TokenEncoder, TokenType, Tokenizer, spanners::TextSpanner};
 
 use crate::engines::{BoxError, EncDecEngine};
 
 /// [`EncDecEngine`] implementation for [`TokenEncoder`] + [`TokenDecoder`].
 pub struct WordchipperEngine<T: TokenType> {
     name: String,
-    encoder: Arc<dyn TokenEncoder<T>>,
-    decoder: Arc<dyn TokenDecoder<T>>,
+    tokenizer: Arc<Tokenizer<T>>,
 }
 
 impl<T: TokenType> WordchipperEngine<T> {
     pub fn new(
         name: String,
-        encoder: Arc<dyn TokenEncoder<T>>,
-        decoder: Arc<dyn TokenDecoder<T>>,
+        tokenizer: Arc<Tokenizer<T>>,
     ) -> Self {
         let name = format!("wordchipper::{name}");
-        Self {
-            name,
-            encoder,
-            decoder,
-        }
+        Self { name, tokenizer }
     }
 
     pub fn spanner(&self) -> &Arc<dyn TextSpanner> {
-        self.encoder.spanner()
+        self.tokenizer.spanner()
+    }
+
+    pub fn tokenizer(&self) -> &Arc<Tokenizer<T>> {
+        &self.tokenizer
     }
 }
 
@@ -39,14 +37,14 @@ impl<T: TokenType> EncDecEngine<T> for WordchipperEngine<T> {
         &self,
         batch: &[&str],
     ) -> Result<Vec<Vec<T>>, BoxError> {
-        Ok(self.encoder.try_encode_batch(batch)?)
+        Ok(self.tokenizer.try_encode_batch(batch)?)
     }
 
     fn decode_batch(
         &self,
         batch: &[&[T]],
     ) -> Result<Vec<String>, BoxError> {
-        let decoded = self.decoder.try_decode_batch_to_strings(batch)?;
+        let decoded = self.tokenizer.try_decode_batch_to_strings(batch)?;
         Ok(decoded.unwrap())
     }
 }

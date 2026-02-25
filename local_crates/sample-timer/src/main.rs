@@ -19,9 +19,10 @@ use similar::TextDiff;
 use tiktoken_rs::{CoreBPE, Rank};
 use tiktoken_support::TiktokenRsEngine;
 use wordchipper::{
-    TokenDecoderOptions,
     TokenEncoderOptions,
     TokenType,
+    Tokenizer,
+    TokenizerOptions,
     UnifiedTokenVocab,
     disk_cache::WordchipperDiskCache,
     pretrained::openai::OATokenizer,
@@ -102,7 +103,7 @@ pub struct Args {
     pub respan_input_for_decode_check: bool,
 }
 
-#[derive(ValueEnum, Clone, Copy, Debug)]
+#[derive(ValueEnum, Clone, Copy, Debug, PartialEq)]
 pub enum ModelSelector {
     /// Select "`openai::gpt2`" model.
     #[value(name = "openai::gpt2")]
@@ -200,15 +201,36 @@ fn main() -> Result<(), BoxError> {
 
     let wc_engine = Arc::new(WordchipperEngine::<Rank>::new(
         args.model.to_string(),
-        TokenEncoderOptions::default()
-            .with_accelerated_lexers(true)
+        TokenizerOptions::default()
             .with_parallel(true)
-            .build(vocab.clone()),
-        TokenDecoderOptions::default()
-            .with_parallel(true)
-            .build(vocab.clone()),
+            .with_accelerated_lexers(false)
+            .build(vocab.clone())
+            .into(),
     ));
     candidate_engines.push(wc_engine.clone());
+
+    if [
+        ModelSelector::OpenaiCl100kBase,
+        ModelSelector::OpenaiO200kBase,
+        ModelSelector::OpenaiO200kHarmony,
+    ]
+    .contains(&args.model)
+    {
+        let encoder = TokenEncoderOptions::default()
+            .with_parallel(true)
+            .with_accelerated_lexers(true)
+            .build(vocab.clone());
+
+        candidate_engines.push(Arc::new(WordchipperEngine::<Rank>::new(
+            format!("{}/accel", args.model.to_string()),
+            Tokenizer::new(
+                vocab.clone(),
+                encoder,
+                wc_engine.tokenizer().decoder().clone(),
+            )
+            .into(),
+        )));
+    }
 
     if args.tiktoken {
         // println!("Loading tiktoken...");

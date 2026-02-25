@@ -19,6 +19,40 @@ pub struct TokenizerOptions {
 }
 
 impl TokenizerOptions {
+    /// Are accelerated lexers enabled?
+    ///
+    /// When enabled, and an accelerated lexer can be
+    /// found for a given regex pattern; the regex accelerator
+    /// will be used for spanners.
+    pub fn accelerated_lexers(&self) -> bool {
+        self.encoder.accelerated_lexers()
+    }
+
+    /// Set whether accelerated lexers should be enabled.
+    ///
+    /// When enabled, and an accelerated lexer can be
+    /// found for a given regex pattern; the regex accelerator
+    /// will be used for spanners.
+    pub fn set_accelerated_lexers(
+        &mut self,
+        accelerated_lexers: bool,
+    ) {
+        self.encoder.set_accelerated_lexers(accelerated_lexers);
+    }
+
+    /// Set whether accelerated lexers should be enabled.
+    ///
+    /// When enabled, and an accelerated lexer can be
+    /// found for a given regex pattern; the regex accelerator
+    /// will be used for spanners.
+    pub fn with_accelerated_lexers(
+        mut self,
+        accelerated_lexers: bool,
+    ) -> Self {
+        self.set_accelerated_lexers(accelerated_lexers);
+        self
+    }
+
     /// Gets the configured parallelism value.
     ///
     /// Returns true if either encoder or decoder are configured for parallelism.
