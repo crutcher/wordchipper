@@ -1,12 +1,12 @@
-use core::str::FromStr;
-use std::sync::Arc;
+use cfg_if::cfg_if;
 
 use crate::{
     UnifiedTokenVocab,
     WCError,
     WCResult,
+    alloc::{sync::Arc, vec::Vec},
     prelude::*,
-    pretrained::{VocabDescription, VocabProvider, openai::OATokenizer},
+    pretrained::{VocabDescription, VocabProvider},
     support::resources::ResourceLoader,
 };
 
@@ -23,6 +23,7 @@ impl VocabProvider for OpenaiVocabProvider {
     }
 
     fn list_vocabs(&self) -> Vec<VocabDescription> {
+        cfg_if! {if #[cfg(feature="std")] {
         vec![
             VocabDescription {
                 id: "p50k_base".to_string(),
@@ -55,6 +56,9 @@ impl VocabProvider for OpenaiVocabProvider {
                 description: "GPT-5 `o200k_harmony` vocabulary".to_string(),
             },
         ]
+        } else {
+            Default::default()
+        }}
     }
 
     fn load_vocab(
@@ -62,11 +66,18 @@ impl VocabProvider for OpenaiVocabProvider {
         name: &str,
         loader: &mut dyn ResourceLoader,
     ) -> WCResult<(VocabDescription, Arc<UnifiedTokenVocab<u32>>)> {
-        let descr = self.resolve_vocab(name)?;
+        let _ = loader;
+        let _descr = self.resolve_vocab(name)?;
 
-        if let Ok(oat) = OATokenizer::from_str(name) {
-            let vocab = oat.load_vocab(loader)?;
-            return Ok((descr, vocab.into()));
+        #[cfg(feature = "std")]
+        {
+            use core::str::FromStr;
+
+            use crate::pretrained::openai::OATokenizer;
+            if let Ok(oat) = OATokenizer::from_str(name) {
+                let vocab = oat.load_vocab(loader)?;
+                return Ok((_descr, vocab.into()));
+            }
         }
 
         Err(WCError::ResourceNotFound(name.to_string()))

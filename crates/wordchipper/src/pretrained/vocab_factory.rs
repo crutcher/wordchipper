@@ -1,36 +1,20 @@
 //! # Vocabulary Factories
 
-// Goals:
-// - resolve description for a given search name
-//   - resolved details
-//   - load hook
-//
-// - load a given name (or load from hook)
-
-use cfg_if::cfg_if;
+use once_cell::sync::OnceCell;
+use spin::RwLock;
 
 use crate::{
     UnifiedTokenVocab,
     WCError,
     WCResult,
-    alloc::sync::Arc,
+    alloc::{format, string::String, sync::Arc},
     prelude::*,
     pretrained::openai,
     support::resources::ResourceLoader,
 };
 
-cfg_if! {
-    if #[cfg(feature="std")] {
-        use std::sync::OnceLock;
-        use std::sync::RwLock;
-    } else {
-        use once_cell::sync::OnceLock;
-        use spin::RwLock;
-    }
-}
-
 /// Global vocabulary factory.
-static FACTORY: OnceLock<RwLock<VocabFactory>> = OnceLock::new();
+static FACTORY: OnceCell<RwLock<VocabFactory>> = OnceCell::new();
 
 fn init_factory() -> VocabFactory {
     let mut factory = VocabFactory::default();
@@ -49,13 +33,13 @@ pub fn get_vocab_factory() -> &'static RwLock<VocabFactory> {
 
 /// List all known vocabularies across all loaders.
 pub fn list_vocabs() -> Vec<VocabListing> {
-    let guard = get_vocab_factory().read().unwrap();
+    let guard = get_vocab_factory().read();
     guard.list_vocabs()
 }
 
 /// Resolve a [`VocabListing`] by name.
 pub fn resolve_vocab(name: &str) -> WCResult<VocabDescription> {
-    let guard = get_vocab_factory().read().unwrap();
+    let guard = get_vocab_factory().read();
     guard.resolve_vocab(name)
 }
 
@@ -69,7 +53,7 @@ pub fn load_vocab(
     name: &str,
     loader: &mut dyn ResourceLoader,
 ) -> WCResult<(VocabDescription, Arc<UnifiedTokenVocab<u32>>)> {
-    let guard = get_vocab_factory().read().unwrap();
+    let guard = get_vocab_factory().read();
     guard.load_vocab(name, loader)
 }
 

@@ -1,12 +1,12 @@
 //! # `OpenAI` Pretrained Vocabulary Loaders
 
+#[cfg(feature = "std")]
 use std::{io::BufRead, path::Path};
 
-#[cfg(feature = "download")]
+#[cfg(feature = "std")]
 use crate::support::resources::ResourceLoader;
 use crate::{
     TokenType,
-    WCResult,
     prelude::*,
     pretrained::openai::{
         OA_CL100K_BASE_PATTERN,
@@ -30,43 +30,43 @@ use crate::{
     },
     spanners::TextSpanningConfig,
     support::{regex::RegexPattern, resources::ConstKeyedResource},
-    vocab::{UnifiedTokenVocab, utility::factories::ConstVocabularyFactory},
+    vocab::utility::factories::ConstVocabularyFactory,
 };
 
 /// `OpenAI` Pretrained Tokenizer types.
-#[derive(
-    Clone,
-    Copy,
-    Debug,
-    PartialEq,
-    strum_macros::EnumString,
-    strum_macros::EnumIter,
-    strum_macros::Display,
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(
+    feature = "std",
+    derive(
+        strum_macros::EnumString,
+        strum_macros::EnumIter,
+        strum_macros::Display,
+    )
 )]
 #[non_exhaustive]
 pub enum OATokenizer {
     /// GPT-2 "`r50k_base`" tokenizer.
-    #[strum(serialize = "r50k_base")]
+    #[cfg_attr(feature = "std", strum(serialize = "r50k_base"))]
     R50kBase,
 
     /// GPT-2 "`p50k_base`" tokenizer.
-    #[strum(serialize = "p50k_base")]
+    #[cfg_attr(feature = "std", strum(serialize = "p50k_base"))]
     P50kBase,
 
     /// GPT-2 "`p50k_edit`" tokenizer.
-    #[strum(serialize = "p50k_edit")]
+    #[cfg_attr(feature = "std", strum(serialize = "p50k_edit"))]
     P50kEdit,
 
     /// GPT-3 "`cl100k_base`" tokenizer.
-    #[strum(serialize = "cl100k_base")]
+    #[cfg_attr(feature = "std", strum(serialize = "cl100k_base"))]
     Cl100kBase,
 
     /// GPT-5 "`o200k_base`" tokenizer.
-    #[strum(serialize = "o200k_base")]
+    #[cfg_attr(feature = "std", strum(serialize = "o200k_base"))]
     O200kBase,
 
     /// GPT-5 "`o200k_harmony`" tokenizer.
-    #[strum(serialize = "o200k_harmony")]
+    #[cfg_attr(feature = "std", strum(serialize = "o200k_harmony"))]
     O200kHarmony,
 }
 
@@ -102,27 +102,29 @@ impl OATokenizer {
     /// Load pretrained `OpenAI` tokenizer vocabulary.
     ///
     /// Downloads and caches resources using the `disk_cache`.
-    #[cfg(feature = "download")]
+    #[cfg(feature = "std")]
     pub fn load_vocab<T: TokenType>(
         &self,
         loader: &mut dyn ResourceLoader,
-    ) -> WCResult<UnifiedTokenVocab<T>> {
+    ) -> crate::WCResult<crate::UnifiedTokenVocab<T>> {
         self.factory().load_vocab(loader)
     }
 
     /// Load pretrained `OpenAI` tokenizer vocabulary from disk.
+    #[cfg(feature = "std")]
     pub fn load_path<T: TokenType>(
         &self,
         path: impl AsRef<Path>,
-    ) -> WCResult<UnifiedTokenVocab<T>> {
+    ) -> crate::WCResult<crate::UnifiedTokenVocab<T>> {
         self.factory().load_vocab_path(path)
     }
 
     /// Read pretrained `OpenAI` tokenizer vocabulary from a reader.
+    #[cfg(feature = "std")]
     pub fn read_vocab<T: TokenType, R: BufRead>(
         &self,
         reader: R,
-    ) -> WCResult<UnifiedTokenVocab<T>> {
+    ) -> crate::WCResult<crate::UnifiedTokenVocab<T>> {
         self.factory().read_vocab(reader)
     }
 }
@@ -192,12 +194,13 @@ pub const OA_O200K_HARMONY_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabula
 
 #[cfg(test)]
 mod test {
-    use core::str::FromStr;
-
-    use super::*;
-
     #[test]
+    #[cfg(feature = "std")]
     fn test_oa_tokenizer() {
+        use core::str::FromStr;
+
+        use super::*;
+
         assert_eq!(OATokenizer::R50kBase.to_string(), "r50k_base");
         assert_eq!(OATokenizer::P50kBase.to_string(), "p50k_base");
         assert_eq!(OATokenizer::P50kEdit.to_string(), "p50k_edit");
