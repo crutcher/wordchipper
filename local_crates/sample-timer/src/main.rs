@@ -196,8 +196,13 @@ fn main() -> Result<(), BoxError> {
 
     let wc_engine = Arc::new(WordchipperEngine::<Rank>::new(
         args.model.to_string(),
-        TokenEncoderOptions::default().build(vocab.clone()),
-        TokenDecoderOptions::default().build(vocab.clone()),
+        TokenEncoderOptions::default()
+            .with_accelerated_lexers(true)
+            .with_parallel(true)
+            .build(vocab.clone()),
+        TokenDecoderOptions::default()
+            .with_parallel(true)
+            .build(vocab.clone()),
     ));
     candidate_engines.push(wc_engine.clone());
 
