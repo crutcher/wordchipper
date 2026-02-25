@@ -34,7 +34,11 @@ impl<T: TokenType> TokenSpanEncoder<T> {
         vocab: Arc<UnifiedTokenVocab<T>>,
         selector: SpanEncoderSelector,
     ) -> Self {
-        Self::new_with_builder(spanner, vocab, selector.span_encoder_builder())
+        Self::new_with_builder(
+            spanner,
+            vocab.clone(),
+            selector.span_encoder_builder(&vocab),
+        )
     }
 
     /// Create a new encoder.

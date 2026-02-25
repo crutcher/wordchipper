@@ -65,6 +65,16 @@ pub fn bench_hf(
         .bench(|| tok.encode(black_box(text), true).unwrap());
 }
 
+pub fn bench_bpe_openai(
+    bencher: Bencher,
+    text: &str,
+    tok: &::bpe_openai::Tokenizer,
+) {
+    bencher
+        .counter(BytesCount::new(text.len()))
+        .bench(|| tok.encode(black_box(text)));
+}
+
 mod english {
     use super::*;
 
@@ -260,6 +270,54 @@ mod english {
         }
     }
 
+    mod bpe_backtrack {
+        use super::*;
+
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &english_text(),
+                OA_CL100K_BASE,
+                SpanEncoderSelector::BpeBacktrack,
+                false,
+            );
+        }
+
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &english_text(),
+                OA_O200K_BASE,
+                SpanEncoderSelector::BpeBacktrack,
+                false,
+            );
+        }
+
+        #[divan::bench]
+        fn cl100k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &english_text(),
+                OA_CL100K_BASE,
+                SpanEncoderSelector::BpeBacktrack,
+                true,
+            );
+        }
+
+        #[divan::bench]
+        fn o200k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &english_text(),
+                OA_O200K_BASE,
+                SpanEncoderSelector::BpeBacktrack,
+                true,
+            );
+        }
+    }
+
     mod tiktoken {
         use super::*;
 
@@ -293,6 +351,20 @@ mod english {
         #[divan::bench]
         fn o200k(bencher: Bencher) {
             bench_hf(bencher, &english_text(), HF_O200K)
+        }
+    }
+
+    mod bpe_openai {
+        use super::*;
+
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            bench_bpe_openai(bencher, &english_text(), ::bpe_openai::cl100k_base())
+        }
+
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            bench_bpe_openai(bencher, &english_text(), ::bpe_openai::o200k_base())
         }
     }
 }
@@ -493,6 +565,54 @@ mod diverse {
         }
     }
 
+    mod bpe_backtrack {
+        use super::*;
+
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &diverse_text(),
+                OA_CL100K_BASE,
+                SpanEncoderSelector::BpeBacktrack,
+                false,
+            );
+        }
+
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &diverse_text(),
+                OA_O200K_BASE,
+                SpanEncoderSelector::BpeBacktrack,
+                false,
+            );
+        }
+
+        #[divan::bench]
+        fn cl100k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &diverse_text(),
+                OA_CL100K_BASE,
+                SpanEncoderSelector::BpeBacktrack,
+                true,
+            );
+        }
+
+        #[divan::bench]
+        fn o200k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &diverse_text(),
+                OA_O200K_BASE,
+                SpanEncoderSelector::BpeBacktrack,
+                true,
+            );
+        }
+    }
+
     mod tiktoken {
         use super::*;
 
@@ -526,6 +646,20 @@ mod diverse {
         #[divan::bench]
         fn o200k(bencher: Bencher) {
             bench_hf(bencher, &diverse_text(), HF_O200K)
+        }
+    }
+
+    mod bpe_openai {
+        use super::*;
+
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            bench_bpe_openai(bencher, &diverse_text(), ::bpe_openai::cl100k_base())
+        }
+
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            bench_bpe_openai(bencher, &diverse_text(), ::bpe_openai::o200k_base())
         }
     }
 }

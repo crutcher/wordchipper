@@ -14,6 +14,7 @@ wordchipper = { path = "../../crates/wordchipper", features = ["default"] }
 wordchipper-data = { path = "../wordchipper-data" }
 
 arrow = { workspace = true }
+bpe-openai = { workspace = true }
 divan = { workspace = true }
 rayon = { workspace = true }
 tiktoken-rs = { workspace = true }

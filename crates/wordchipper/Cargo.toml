@@ -51,6 +51,7 @@ std = [
     "dep:base64",
     "dep:strum",
     "dep:strum_macros",
+    "aho-corasick/std",
     "fancy-regex/default",
     "foldhash?/std",
     "log/std",
@@ -132,6 +133,7 @@ inventory = { workspace = true }
 serde_json = { workspace = true, optional = true }
 
 ahash = { workspace = true, optional = true }
+aho-corasick = { workspace = true }
 foldhash = { workspace = true, optional = true }
 
 # "download" feature deps:

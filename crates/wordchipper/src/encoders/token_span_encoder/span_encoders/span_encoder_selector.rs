@@ -10,8 +10,10 @@ use crate::{
             MergeHeapSpanEncoder,
             PriorityMergeSpanEncoder,
             TailSweepSpanEncoder,
+            bpe_backtrack_encoder::{BpeBacktrackSpanEncoder, BpeVocab},
         },
     },
+    vocab::UnifiedTokenVocab,
 };
 
 /// Policy enum for selecting a [`SpanEncoder`] for
@@ -61,12 +63,19 @@ pub enum SpanEncoderSelector {
 
     /// Use the [`BufferSweepSpanEncoder`] encoder.
     BufferSweep,
+
+    /// Use the [`BpeBacktrackSpanEncoder`] encoder.
+    BpeBacktrack,
 }
 
 impl SpanEncoderSelector {
     /// Get a builder for the configured [`SpanEncoder`].
+    ///
+    /// The `vocab` parameter is needed by encoders that pre-build data structures
+    /// from the vocabulary (e.g. BPE automaton).
     pub fn span_encoder_builder<T: TokenType>(
-        &self
+        &self,
+        vocab: &UnifiedTokenVocab<T>,
     ) -> Arc<dyn Fn() -> Box<dyn SpanEncoder<T>> + Send + Sync> {
         use SpanEncoderSelector::*;
         match self {
@@ -79,6 +88,10 @@ impl SpanEncoderSelector {
             }
             SingleThreadDefault | PriorityMerge => {
                 Arc::new(|| Box::new(PriorityMergeSpanEncoder::<T>::default()))
+            }
+            BpeBacktrack => {
+                let bpe_vocab = Arc::new(BpeVocab::from_vocab(vocab));
+                Arc::new(move || Box::new(BpeBacktrackSpanEncoder::new(bpe_vocab.clone())))
             }
         }
     }

@@ -8,9 +8,11 @@ use tokenizers::Tokenizer;
 use wordchipper::{
     TokenDecoder,
     TokenEncoder,
+    TokenEncoderOptions,
     TokenizerOptions,
     UnifiedTokenVocab,
     disk_cache::WordchipperDiskCache,
+    encoders::token_span_encoder::SpanEncoderSelector,
     pretrained::openai::OATokenizer,
 };
 
@@ -128,4 +130,42 @@ fn cl100k_vs_tokenizers() {
 fn o200k_vs_tokenizers() {
     let tok = Tokenizer::from_pretrained("Xenova/gpt-4o", None).unwrap();
     tokenizers_validation(OATokenizer::O200kBase, &tok);
+}
+
+fn load_vocab(model: OATokenizer) -> Arc<UnifiedTokenVocab<u32>> {
+    let mut disk_cache = WordchipperDiskCache::default();
+    model.load_vocab(&mut disk_cache).unwrap().into()
+}
+
+fn span_encoder_vs_bpe(
+    model: OATokenizer,
+    selector: SpanEncoderSelector,
+) {
+    let vocab = load_vocab(model);
+
+    let bpe_encoder = TokenEncoderOptions::default().build(vocab.clone());
+    let alt_encoder = TokenEncoderOptions::default()
+        .with_span_encoder(selector)
+        .build(vocab);
+
+    for text in SAMPLES {
+        let bpe_tokens = bpe_encoder.try_encode(text).unwrap();
+        let alt_tokens = alt_encoder.try_encode(text).unwrap();
+        assert_eq!(
+            bpe_tokens, alt_tokens,
+            "{selector:?} mismatch for {model:?}: {text:?}",
+        );
+    }
+}
+
+#[test]
+#[ignore]
+fn cl100k_bpe_backtrack_vs_bpe() {
+    span_encoder_vs_bpe(OATokenizer::Cl100kBase, SpanEncoderSelector::BpeBacktrack);
+}
+
+#[test]
+#[ignore]
+fn o200k_bpe_backtrack_vs_bpe() {
+    span_encoder_vs_bpe(OATokenizer::O200kBase, SpanEncoderSelector::BpeBacktrack);
 }

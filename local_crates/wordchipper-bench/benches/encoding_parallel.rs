@@ -258,6 +258,50 @@ mod wordchipper {
             )
         }
     }
+
+    mod bpe_backtrack {
+        use super::*;
+
+        #[divan::bench]
+        fn cl100k(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OA_CL100K_BASE,
+                SpanEncoderSelector::BpeBacktrack,
+                false,
+            )
+        }
+
+        #[divan::bench]
+        fn o200k(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OA_O200K_BASE,
+                SpanEncoderSelector::BpeBacktrack,
+                false,
+            )
+        }
+
+        #[divan::bench]
+        fn cl100k_fast(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OA_CL100K_BASE,
+                SpanEncoderSelector::BpeBacktrack,
+                true,
+            )
+        }
+
+        #[divan::bench]
+        fn o200k_fast(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OA_O200K_BASE,
+                SpanEncoderSelector::BpeBacktrack,
+                true,
+            )
+        }
+    }
 }
 
 mod tiktoken {
@@ -315,5 +359,31 @@ mod tokenizers {
     #[divan::bench]
     fn o200k(bencher: Bencher) {
         bench_variant(bencher, HF_O200K)
+    }
+}
+
+mod bpe_openai {
+    use rayon::prelude::*;
+
+    use super::*;
+
+    fn bench_variant(
+        bencher: Bencher,
+        tok: &::bpe_openai::Tokenizer,
+    ) {
+        let strs = BATCH.strs();
+        bencher
+            .counter(BytesCount::new(BATCH.total_bytes))
+            .bench(|| strs.par_iter().map(|s| tok.encode(s)).collect::<Vec<_>>());
+    }
+
+    #[divan::bench]
+    fn cl100k(bencher: Bencher) {
+        bench_variant(bencher, ::bpe_openai::cl100k_base())
+    }
+
+    #[divan::bench]
+    fn o200k(bencher: Bencher) {
+        bench_variant(bencher, ::bpe_openai::o200k_base())
     }
 }
