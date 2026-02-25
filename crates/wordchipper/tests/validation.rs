@@ -6,8 +6,13 @@ use std::sync::Arc;
 use tiktoken_rs::CoreBPE;
 use tokenizers::Tokenizer;
 use wordchipper::{
-    TokenDecoder, TokenEncoder, TokenEncoderOptions, TokenizerOptions, UnifiedTokenVocab,
-    disk_cache::WordchipperDiskCache, encoders::token_span_encoder::SpanEncoderSelector,
+    TokenDecoder,
+    TokenEncoder,
+    TokenEncoderOptions,
+    TokenizerOptions,
+    UnifiedTokenVocab,
+    disk_cache::WordchipperDiskCache,
+    encoders::token_span_encoder::SpanEncoderSelector,
     pretrained::openai::OATokenizer,
 };
 
