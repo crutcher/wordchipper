@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="EMPTY_MODULE" version="4">
+  <component name="FacetManager">
+    <facet type="Python" name="Python facet">
+      <configuration sdkName="Python 3.12 (wordchipper)" />
+    </facet>
+  </component>
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/crates/wordchipper/examples" isTestSource="false" />
@@ -21,11 +26,15 @@
       <sourceFolder url="file://$MODULE_DIR$/local_crates/wordchipper-data/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/local_crates/wordchipper-experimental/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/wordchipper-training/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/bindings/python" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/bindings/python/py_src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/crates/nanochat/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/crates/wordchipper/target" />
+      <excludeFolder url="file://$MODULE_DIR$/bindings/python/.venv" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Python 3.12 (wordchipper) interpreter library" level="application" />
   </component>
 </module>

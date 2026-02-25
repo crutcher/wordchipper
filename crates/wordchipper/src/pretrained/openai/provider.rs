@@ -19,7 +19,7 @@ pub struct OpenaiVocabProvider {}
 
 impl VocabProvider for OpenaiVocabProvider {
     fn id(&self) -> String {
-        "OpenAI".to_string()
+        "openai".to_string()
     }
 
     fn description(&self) -> String {
@@ -30,19 +30,19 @@ impl VocabProvider for OpenaiVocabProvider {
         cfg_if! {if #[cfg(feature="std")] {
         vec![
             VocabDescription {
+                id: "r50k_base".to_string(),
+                context: vec!["openai".to_string(), "r50k_base".to_string()],
+                description: "GPT-2 `p50k_base` vocabulary".to_string(),
+            },
+            VocabDescription {
                 id: "p50k_base".to_string(),
                 context: vec!["openai".to_string(), "p50k_base".to_string()],
                 description: "GPT-2 `p50k_base` vocabulary".to_string(),
             },
             VocabDescription {
-                id: "r50k_base".to_string(),
-                context: vec!["openai".to_string(), "r50k_base".to_string()],
-                description: "GPT-2 `r50k_base` vocabulary".to_string(),
-            },
-            VocabDescription {
-                id: "r50k_edit".to_string(),
-                context: vec!["openai".to_string(), "r50k_edit".to_string()],
-                description: "GPT-2 `r50k_edit` vocabulary".to_string(),
+                id: "p50k_edit".to_string(),
+                context: vec!["openai".to_string(), "p50k_edit".to_string()],
+                description: "GPT-2 `p50k_edit` vocabulary".to_string(),
             },
             VocabDescription {
                 id: "cl100k_base".to_string(),
