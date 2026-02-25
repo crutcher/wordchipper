@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use divan::{Bencher, black_box, counter::BytesCount};
 use wordchipper::{
-    pretrained::openai::{OA_CL100K_BASE_PATTERN, OA_O200K_BASE_PATTERN},
+    pretrained::openai::{OA_CL100K_BASE_PATTERN, OA_O200K_BASE_PATTERN, OA_R50K_BASE_PATTERN},
     spanners::{
         TextSpanner,
         TextSpannerBuilder,
@@ -52,6 +52,24 @@ mod english {
     use super::*;
 
     #[divan::bench]
+    fn r50k_regex(bencher: Bencher) {
+        let text = english_text();
+        let spanner = build_regex_only_spanner(OA_R50K_BASE_PATTERN);
+        bencher
+            .counter(BytesCount::new(text.len()))
+            .bench(|| spanner.split_spans(black_box(&text)));
+    }
+
+    #[divan::bench]
+    fn r50k_default(bencher: Bencher) {
+        let text = english_text();
+        let spanner = build_default_spanner(OA_R50K_BASE_PATTERN);
+        bencher
+            .counter(BytesCount::new(text.len()))
+            .bench(|| spanner.split_spans(black_box(&text)));
+    }
+
+    #[divan::bench]
     fn cl100k_regex(bencher: Bencher) {
         let text = english_text();
         let spanner = build_regex_only_spanner(OA_CL100K_BASE_PATTERN);
@@ -90,6 +108,24 @@ mod english {
 
 mod diverse {
     use super::*;
+
+    #[divan::bench]
+    fn r50k_regex(bencher: Bencher) {
+        let text = diverse_text();
+        let spanner = build_regex_only_spanner(OA_R50K_BASE_PATTERN);
+        bencher
+            .counter(BytesCount::new(text.len()))
+            .bench(|| spanner.split_spans(black_box(&text)));
+    }
+
+    #[divan::bench]
+    fn r50k_default(bencher: Bencher) {
+        let text = diverse_text();
+        let spanner = build_default_spanner(OA_R50K_BASE_PATTERN);
+        bencher
+            .counter(BytesCount::new(text.len()))
+            .bench(|| spanner.split_spans(black_box(&text)));
+    }
 
     #[divan::bench]
     fn cl100k_regex(bencher: Bencher) {

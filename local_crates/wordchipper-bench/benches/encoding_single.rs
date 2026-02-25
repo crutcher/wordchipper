@@ -2,7 +2,7 @@
 
 use divan::{Bencher, black_box, counter::BytesCount};
 use wordchipper::{TokenEncoderOptions, encoders::token_span_encoder::SpanEncoderSelector};
-use wordchipper_bench::{HF_CL100K, HF_O200K, OA_CL100K_BASE, OA_O200K_BASE};
+use wordchipper_bench::{HF_CL100K, HF_O200K, OA_CL100K_BASE, OA_O200K_BASE, OA_R50K_BASE};
 
 #[global_allocator]
 static ALLOC: divan::AllocProfiler = divan::AllocProfiler::system();
@@ -82,6 +82,17 @@ mod english {
         use super::*;
 
         #[divan::bench]
+        fn r50k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &english_text(),
+                OA_R50K_BASE,
+                SpanEncoderSelector::BufferSweep,
+                true,
+            );
+        }
+
+        #[divan::bench]
         fn cl100k_fast(bencher: Bencher) {
             bench_wc(
                 bencher,
@@ -100,6 +111,17 @@ mod english {
                 OA_O200K_BASE,
                 SpanEncoderSelector::BufferSweep,
                 true,
+            );
+        }
+
+        #[divan::bench]
+        fn r50k(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &english_text(),
+                OA_R50K_BASE,
+                SpanEncoderSelector::BufferSweep,
+                false,
             );
         }
 
@@ -130,6 +152,17 @@ mod english {
         use super::*;
 
         #[divan::bench]
+        fn r50k(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &english_text(),
+                OA_R50K_BASE,
+                SpanEncoderSelector::TailSweep,
+                false,
+            );
+        }
+
+        #[divan::bench]
         fn cl100k(bencher: Bencher) {
             bench_wc(
                 bencher,
@@ -148,6 +181,17 @@ mod english {
                 OA_O200K_BASE,
                 SpanEncoderSelector::TailSweep,
                 false,
+            );
+        }
+
+        #[divan::bench]
+        fn r50k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &english_text(),
+                OA_R50K_BASE,
+                SpanEncoderSelector::TailSweep,
+                true,
             );
         }
 
@@ -178,6 +222,17 @@ mod english {
         use super::*;
 
         #[divan::bench]
+        fn r50k(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &english_text(),
+                OA_R50K_BASE,
+                SpanEncoderSelector::MergeHeap,
+                false,
+            );
+        }
+
+        #[divan::bench]
         fn cl100k(bencher: Bencher) {
             bench_wc(
                 bencher,
@@ -196,6 +251,17 @@ mod english {
                 OA_O200K_BASE,
                 SpanEncoderSelector::MergeHeap,
                 false,
+            );
+        }
+
+        #[divan::bench]
+        fn r50k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &english_text(),
+                OA_R50K_BASE,
+                SpanEncoderSelector::MergeHeap,
+                true,
             );
         }
 
@@ -226,6 +292,17 @@ mod english {
         use super::*;
 
         #[divan::bench]
+        fn r50k(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &english_text(),
+                OA_R50K_BASE,
+                SpanEncoderSelector::PriorityMerge,
+                false,
+            );
+        }
+
+        #[divan::bench]
         fn cl100k(bencher: Bencher) {
             bench_wc(
                 bencher,
@@ -244,6 +321,17 @@ mod english {
                 OA_O200K_BASE,
                 SpanEncoderSelector::PriorityMerge,
                 false,
+            );
+        }
+
+        #[divan::bench]
+        fn r50k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &english_text(),
+                OA_R50K_BASE,
+                SpanEncoderSelector::PriorityMerge,
+                true,
             );
         }
 
@@ -320,6 +408,11 @@ mod english {
 
     mod tiktoken {
         use super::*;
+
+        #[divan::bench]
+        fn r50k(bencher: Bencher) {
+            bench_tt(bencher, &english_text(), &tiktoken_rs::r50k_base().unwrap())
+        }
 
         #[divan::bench]
         fn cl100k(bencher: Bencher) {
@@ -376,6 +469,17 @@ mod diverse {
         use super::*;
 
         #[divan::bench]
+        fn r50k(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &diverse_text(),
+                OA_R50K_BASE,
+                SpanEncoderSelector::BufferSweep,
+                false,
+            );
+        }
+
+        #[divan::bench]
         fn cl100k(bencher: Bencher) {
             bench_wc(
                 bencher,
@@ -394,6 +498,17 @@ mod diverse {
                 OA_O200K_BASE,
                 SpanEncoderSelector::BufferSweep,
                 false,
+            );
+        }
+
+        #[divan::bench]
+        fn r50k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &diverse_text(),
+                OA_R50K_BASE,
+                SpanEncoderSelector::BufferSweep,
+                true,
             );
         }
 
@@ -424,6 +539,17 @@ mod diverse {
         use super::*;
 
         #[divan::bench]
+        fn r50k(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &diverse_text(),
+                OA_R50K_BASE,
+                SpanEncoderSelector::TailSweep,
+                false,
+            );
+        }
+
+        #[divan::bench]
         fn cl100k(bencher: Bencher) {
             bench_wc(
                 bencher,
@@ -442,6 +568,17 @@ mod diverse {
                 OA_O200K_BASE,
                 SpanEncoderSelector::TailSweep,
                 false,
+            );
+        }
+
+        #[divan::bench]
+        fn r50k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &diverse_text(),
+                OA_R50K_BASE,
+                SpanEncoderSelector::TailSweep,
+                true,
             );
         }
 
@@ -473,6 +610,17 @@ mod diverse {
         use crate::bench_wc;
 
         #[divan::bench]
+        fn r50k(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &diverse_text(),
+                OA_R50K_BASE,
+                SpanEncoderSelector::MergeHeap,
+                false,
+            );
+        }
+
+        #[divan::bench]
         fn cl100k(bencher: Bencher) {
             bench_wc(
                 bencher,
@@ -491,6 +639,17 @@ mod diverse {
                 OA_O200K_BASE,
                 SpanEncoderSelector::MergeHeap,
                 false,
+            );
+        }
+
+        #[divan::bench]
+        fn r50k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &diverse_text(),
+                OA_R50K_BASE,
+                SpanEncoderSelector::MergeHeap,
+                true,
             );
         }
 
@@ -521,6 +680,17 @@ mod diverse {
         use super::*;
 
         #[divan::bench]
+        fn r50k(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &diverse_text(),
+                OA_R50K_BASE,
+                SpanEncoderSelector::PriorityMerge,
+                false,
+            );
+        }
+
+        #[divan::bench]
         fn cl100k(bencher: Bencher) {
             bench_wc(
                 bencher,
@@ -539,6 +709,17 @@ mod diverse {
                 OA_O200K_BASE,
                 SpanEncoderSelector::PriorityMerge,
                 false,
+            );
+        }
+
+        #[divan::bench]
+        fn r50k_fast(bencher: Bencher) {
+            bench_wc(
+                bencher,
+                &diverse_text(),
+                OA_R50K_BASE,
+                SpanEncoderSelector::PriorityMerge,
+                true,
             );
         }
 
@@ -615,6 +796,11 @@ mod diverse {
 
     mod tiktoken {
         use super::*;
+
+        #[divan::bench]
+        fn r50k(bencher: Bencher) {
+            bench_tt(bencher, &diverse_text(), &tiktoken_rs::r50k_base().unwrap())
+        }
 
         #[divan::bench]
         fn cl100k(bencher: Bencher) {

@@ -9,6 +9,8 @@ use wordchipper::{
     load_vocab,
 };
 
+/// `OpenAI` "`r50k_base`" vocab.
+pub const OA_R50K_BASE: &str = "openai::r50k_base";
 /// `OpenAI` "`cl100k_base`" vocab.
 pub const OA_CL100K_BASE: &str = "openai::cl100k_base";
 /// `OpenAI` "`o200k_base`" vocab.
