@@ -47,6 +47,7 @@ strum = "0.27.0"
 strum_macros = "0.27.0"
 rayon = "1.11"
 spin = "0.9.8"
+inventory = "0.3.20"
 
 foldhash = { version = "0.2.0", default-features = false }
 logos = { version = "0.16.1", default-features = false }

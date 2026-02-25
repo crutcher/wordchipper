@@ -6,9 +6,13 @@ use crate::{
     WCResult,
     alloc::{sync::Arc, vec::Vec},
     prelude::*,
-    pretrained::{VocabDescription, VocabProvider},
+    pretrained::{VocabDescription, VocabProvider, VocabProviderInventoryHook},
     support::resources::ResourceLoader,
 };
+
+inventory::submit! {
+    VocabProviderInventoryHook::new(|| Arc::new(OpenaiVocabProvider{}))
+}
 
 /// [`VocabProvider`] for `OpenAI` models.
 pub struct OpenaiVocabProvider {}

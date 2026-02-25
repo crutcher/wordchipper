@@ -9,12 +9,25 @@ use crate::{
     WCResult,
     alloc::{format, string::String, sync::Arc},
     prelude::*,
-    pretrained::openai,
     support::resources::ResourceLoader,
 };
 
 /// Global vocabulary factory.
 static FACTORY: OnceCell<RwLock<VocabFactory>> = OnceCell::new();
+
+/// Hook for registering vocabulary providers at runtime.
+pub struct VocabProviderInventoryHook {
+    /// Builder function to create a new vocabulary provider.
+    pub builder: fn() -> Arc<dyn VocabProvider>,
+}
+inventory::collect!(VocabProviderInventoryHook);
+
+impl VocabProviderInventoryHook {
+    /// Create a new inventory hook.
+    pub const fn new(builder: fn() -> Arc<dyn VocabProvider>) -> Self {
+        Self { builder }
+    }
+}
 
 /// Get the global vocabulary factory.
 pub fn get_vocab_factory() -> &'static RwLock<VocabFactory> {
@@ -24,14 +37,25 @@ pub fn get_vocab_factory() -> &'static RwLock<VocabFactory> {
 fn init_factory() -> VocabFactory {
     let mut factory = VocabFactory::default();
 
-    factory
-        .register_provider(Arc::new(openai::OpenaiVocabProvider {}))
-        .unwrap();
+    for hook in inventory::iter::<VocabProviderInventoryHook> {
+        factory.register_provider((hook.builder)()).unwrap();
+    }
 
     factory
 }
 
-fn with_factory<F, V>(func: &mut F) -> V
+/// Run a function with mutable access to the global vocabulary factory.
+pub fn with_vocab_factory_mut<F, V>(func: &mut F) -> V
+where
+    F: FnMut(&mut VocabFactory) -> V,
+{
+    let mut guard = get_vocab_factory().write();
+    let factory = &mut *guard;
+    func(factory)
+}
+
+/// Run a function with access to the global vocabulary factory.
+pub fn with_vocab_factory<F, V>(func: &mut F) -> V
 where
     F: FnMut(&VocabFactory) -> V,
 {
@@ -42,12 +66,12 @@ where
 
 /// List all known vocabularies across all loaders.
 pub fn list_vocabs() -> Vec<VocabListing> {
-    with_factory(&mut |f: &VocabFactory| f.list_vocabs())
+    with_vocab_factory(&mut |f: &VocabFactory| f.list_vocabs())
 }
 
 /// Resolve a [`VocabListing`] by name.
 pub fn resolve_vocab(name: &str) -> WCResult<VocabDescription> {
-    with_factory(&mut |f: &VocabFactory| f.resolve_vocab(name))
+    with_vocab_factory(&mut |f: &VocabFactory| f.resolve_vocab(name))
 }
 
 /// Load a [`UnifiedTokenVocab`] by name.
@@ -60,7 +84,7 @@ pub fn load_vocab(
     name: &str,
     loader: &mut dyn ResourceLoader,
 ) -> WCResult<(VocabDescription, Arc<UnifiedTokenVocab<u32>>)> {
-    with_factory(&mut move |f: &VocabFactory| f.load_vocab(name, loader))
+    with_vocab_factory(&mut move |f: &VocabFactory| f.load_vocab(name, loader))
 }
 
 /// List the available pretrained models.
@@ -79,7 +103,7 @@ pub fn list_models() -> Vec<String> {
     res
 }
 
-/// A description of a pretrained vocabulary.
+/// A description of a pretrained tokenizer.
 pub struct VocabDescription {
     /// The resolution id of the vocabulary.
     pub id: String,
@@ -91,7 +115,7 @@ pub struct VocabDescription {
     pub description: String,
 }
 
-/// A listing of known vocabularies.
+/// A listing of known tokenizer.
 pub struct VocabListing {
     /// The id of the factory that produced the vocabularies.
     pub source: String,
@@ -230,22 +254,21 @@ impl VocabFactory {
             let (provider_name, vocab_name) = name.split_once("::").unwrap();
 
             if let Some(provider) = self.find_provider(provider_name) {
-                match provider.resolve_vocab(vocab_name) {
-                    Ok(vocab) => return Ok(vocab),
+                return match provider.resolve_vocab(vocab_name) {
+                    Ok(vocab) => Ok(vocab),
                     Err(WCError::ResourceNotFound(_)) => {
-                        return Err(WCError::ResourceNotFound(name.to_string()));
+                        Err(WCError::ResourceNotFound(name.to_string()))
                     }
+                    Err(err) => Err(err),
+                };
+            }
+        } else {
+            for provider in &self.providers {
+                match provider.resolve_vocab(name) {
+                    Ok(vocab) => return Ok(vocab),
+                    Err(WCError::ResourceNotFound(_)) => (),
                     Err(err) => return Err(err),
                 }
-            }
-            return Err(WCError::ResourceNotFound(name.to_string()));
-        }
-
-        for provider in &self.providers {
-            match provider.resolve_vocab(name) {
-                Ok(vocab) => return Ok(vocab),
-                Err(WCError::ResourceNotFound(_)) => (),
-                Err(err) => return Err(err),
             }
         }
         Err(WCError::ResourceNotFound(name.to_string()))
@@ -266,22 +289,21 @@ impl VocabFactory {
             let (provider_name, vocab_name) = name.split_once("::").unwrap();
 
             if let Some(provider) = self.find_provider(provider_name) {
-                match provider.load_vocab(vocab_name, loader) {
-                    Ok(vocab) => return Ok(vocab),
+                return match provider.load_vocab(vocab_name, loader) {
+                    Ok(vocab) => Ok(vocab),
                     Err(WCError::ResourceNotFound(_)) => {
-                        return Err(WCError::ResourceNotFound(name.to_string()));
+                        Err(WCError::ResourceNotFound(name.to_string()))
                     }
+                    Err(err) => Err(err),
+                };
+            }
+        } else {
+            for provider in &self.providers {
+                match provider.load_vocab(name, loader) {
+                    Ok(vocab) => return Ok(vocab),
+                    Err(WCError::ResourceNotFound(_)) => (),
                     Err(err) => return Err(err),
                 }
-            }
-            return Err(WCError::ResourceNotFound(name.to_string()));
-        }
-
-        for provider in &self.providers {
-            match provider.load_vocab(name, loader) {
-                Ok(vocab) => return Ok(vocab),
-                Err(WCError::ResourceNotFound(_)) => (),
-                Err(err) => return Err(err),
             }
         }
         Err(WCError::ResourceNotFound(name.to_string()))

@@ -113,7 +113,8 @@ strum_macros = { workspace = true, optional = true }
 hashbrown = { workspace = true, features = ["alloc"] }
 
 spin = { workspace = true }
-once_cell = { workspace = true, features = ["alloc"] }
+once_cell = { workspace = true, features = ["alloc", "critical-section"] }
+inventory = { workspace = true }
 
 ahash = { workspace = true, optional = true }
 foldhash = { workspace = true, optional = true }
