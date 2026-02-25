@@ -68,7 +68,7 @@ static BATCH: LazyLock<Batch> = LazyLock::new(load_batch);
 
 mod wordchipper {
     use ::wordchipper::{TokenEncoderOptions, encoders::token_span_encoder::SpanEncoderSelector};
-    use wordchipper_bench::{OA_CL100K_BASE, OA_O200K_BASE};
+    use wordchipper_bench::{OA_CL100K_BASE, OA_O200K_BASE, OA_R50K_BASE};
 
     use super::*;
 
@@ -97,6 +97,16 @@ mod wordchipper {
         use super::*;
 
         #[divan::bench]
+        fn r50k(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OA_R50K_BASE,
+                SpanEncoderSelector::BufferSweep,
+                false,
+            )
+        }
+
+        #[divan::bench]
         fn cl100k(bencher: Bencher) {
             bench_variant(
                 bencher,
@@ -113,6 +123,16 @@ mod wordchipper {
                 OA_O200K_BASE,
                 SpanEncoderSelector::BufferSweep,
                 false,
+            )
+        }
+
+        #[divan::bench]
+        fn r50k_fast(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OA_R50K_BASE,
+                SpanEncoderSelector::BufferSweep,
+                true,
             )
         }
 
@@ -141,6 +161,16 @@ mod wordchipper {
         use super::*;
 
         #[divan::bench]
+        fn r50k(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OA_R50K_BASE,
+                SpanEncoderSelector::TailSweep,
+                false,
+            )
+        }
+
+        #[divan::bench]
         fn cl100k(bencher: Bencher) {
             bench_variant(
                 bencher,
@@ -157,6 +187,16 @@ mod wordchipper {
                 OA_O200K_BASE,
                 SpanEncoderSelector::TailSweep,
                 false,
+            )
+        }
+
+        #[divan::bench]
+        fn r50k_fast(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OA_R50K_BASE,
+                SpanEncoderSelector::TailSweep,
+                true,
             )
         }
 
@@ -180,6 +220,16 @@ mod wordchipper {
         use super::*;
 
         #[divan::bench]
+        fn r50k(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OA_R50K_BASE,
+                SpanEncoderSelector::MergeHeap,
+                false,
+            )
+        }
+
+        #[divan::bench]
         fn cl100k(bencher: Bencher) {
             bench_variant(
                 bencher,
@@ -196,6 +246,16 @@ mod wordchipper {
                 OA_O200K_BASE,
                 SpanEncoderSelector::MergeHeap,
                 false,
+            )
+        }
+
+        #[divan::bench]
+        fn r50k_fast(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OA_R50K_BASE,
+                SpanEncoderSelector::MergeHeap,
+                true,
             )
         }
 
@@ -219,6 +279,16 @@ mod wordchipper {
         use super::*;
 
         #[divan::bench]
+        fn r50k(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OA_R50K_BASE,
+                SpanEncoderSelector::PriorityMerge,
+                false,
+            )
+        }
+
+        #[divan::bench]
         fn cl100k(bencher: Bencher) {
             bench_variant(
                 bencher,
@@ -235,6 +305,16 @@ mod wordchipper {
                 OA_O200K_BASE,
                 SpanEncoderSelector::PriorityMerge,
                 false,
+            )
+        }
+
+        #[divan::bench]
+        fn r50k_fast(bencher: Bencher) {
+            bench_variant(
+                bencher,
+                OA_R50K_BASE,
+                SpanEncoderSelector::PriorityMerge,
+                true,
             )
         }
 
@@ -306,7 +386,7 @@ mod wordchipper {
 
 mod tiktoken {
     use rayon::prelude::*;
-    use tiktoken_rs::{CoreBPE, cl100k_base, o200k_base};
+    use tiktoken_rs::{CoreBPE, cl100k_base, o200k_base, r50k_base};
 
     use super::*;
 
@@ -322,6 +402,11 @@ mod tiktoken {
                     .map(|s| bpe.encode_with_special_tokens(s))
                     .collect::<Vec<_>>()
             });
+    }
+
+    #[divan::bench]
+    fn r50k(bencher: Bencher) {
+        bench_variant(bencher, &r50k_base().unwrap())
     }
 
     #[divan::bench]
