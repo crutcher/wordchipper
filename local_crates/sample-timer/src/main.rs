@@ -204,8 +204,7 @@ fn main() -> Result<(), BoxError> {
         TokenizerOptions::default()
             .with_parallel(true)
             .with_accelerated_lexers(false)
-            .build(vocab.clone())
-            .into(),
+            .build(vocab.clone()),
     ));
     candidate_engines.push(wc_engine.clone());
 
@@ -222,7 +221,7 @@ fn main() -> Result<(), BoxError> {
             .build(vocab.clone());
 
         candidate_engines.push(Arc::new(WordchipperEngine::<Rank>::new(
-            format!("{}/accel", args.model.to_string()),
+            format!("{}/accel", args.model),
             Tokenizer::new(
                 vocab.clone(),
                 encoder,
