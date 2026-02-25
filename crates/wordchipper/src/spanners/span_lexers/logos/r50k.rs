@@ -16,14 +16,16 @@ use crate::spanners::{SpanRef, span_lexers::SpanLexer};
 /// |------------------------|---------------|
 /// | `'(?:[sdmt]|ll|ve|re)` | Contraction   |
 /// | ` ?\p{L}++`            | Letters       |
-/// | ` ?\p{N}++`            | Didgets       |
+/// | ` ?\p{N}++`            | Digits        |
 /// | ` ?[^\s\p{L}\p{N}]++`  | Punctuation   |
 /// | `\s++$`                | Whitespace    |
 /// | `\s+(?!\S)`            |               |
 /// | `\s`                   |               |
 #[derive(Logos, Debug, PartialEq, Clone)]
 pub(crate) enum R50kToken {
-    #[regex(r"'([sStTdDmM]|[rR][eE]|[vV][eE]|[lL][lL])")]
+    // Case-sensitive: the r50k regex `'(?:[sdmt]|ll|ve|re)` only matches
+    // lowercase suffixes, unlike cl100k which uses `(?i:...)`.
+    #[regex(r"'([sdtm]|re|ve|ll)")]
     Contraction,
 
     #[regex(r" ?\p{Letter}+")]
@@ -35,7 +37,9 @@ pub(crate) enum R50kToken {
     #[regex(r" ?[^\s\p{Letter}\p{Number}]+")]
     Punctuation,
 
-    #[regex(r"[^\S\r\n]+")]
+    // All whitespace including \r\n. The r50k regex treats all \s uniformly
+    // via `\s+(?!\S)` and `\s`; there is no separate newline branch.
+    #[regex(r"\s+")]
     Whitespace,
 }
 
@@ -43,11 +47,10 @@ impl R50kToken {
     fn role(&self) -> TokenRole {
         match self {
             Self::Whitespace => TokenRole::Whitespace,
-            Self::Letters => TokenRole::Word {
-                check_contraction: false,
-            },
-            Self::Punctuation => TokenRole::Punctuation,
-            Self::Contraction | Self::Digits => TokenRole::Standalone,
+            // All three r50k content patterns use ` ?X` which absorbs only
+            // literal ASCII space. This matches the Punctuation role behavior.
+            Self::Letters | Self::Digits | Self::Punctuation => TokenRole::Punctuation,
+            Self::Contraction => TokenRole::Standalone,
         }
     }
 }
@@ -137,10 +140,11 @@ mod tests {
         let text = "abc 123 4567";
         let spans = s.split_spans(text);
 
+        // Space absorbed by ` ?` prefix in each content pattern.
         assert_eq!(
             spans,
             vec![
-                SpanRef::Word(0..3),  // "abC"
+                SpanRef::Word(0..3),  // "abc"
                 SpanRef::Word(3..7),  // " 123"
                 SpanRef::Word(7..12), // " 4567"
             ]
@@ -153,7 +157,6 @@ mod tests {
         let text = "don't I'll she's";
         let spans = s.split_spans(text);
 
-        // cl100k: "don" is letters, "'t" is contraction (separate tokens).
         let words: Vec<&str> = spans
             .iter()
             .filter_map(|s| match s {
@@ -194,7 +197,9 @@ mod tests {
 
         let config: TextSpanningConfig<u32> =
             TextSpanningConfig::from_pattern(OA_R50K_BASE_PATTERN);
-        let regex_spanner = TextSpannerBuilder::new(config).build();
+        let regex_spanner = TextSpannerBuilder::new(config)
+            .with_accelerated_lexers(false)
+            .build();
         let logos_spanner = spanner(R50kLexer);
 
         let cases = [
@@ -214,7 +219,7 @@ mod tests {
 
             assert_eq!(
                 regex_spans, logos_spans,
-                "cl100k mismatch for {:?}:\n  regex: {:?}\n  logos: {:?}",
+                "r50k mismatch for {:?}:\n  regex: {:?}\n  logos: {:?}",
                 text, regex_spans, logos_spans
             );
         }
@@ -222,7 +227,7 @@ mod tests {
 
     #[test]
     #[cfg(feature = "std")]
-    fn test_logos_cl100k_realworld() {
+    fn test_logos_r50k_realworld() {
         use crate::{
             pretrained::openai::OA_R50K_BASE_PATTERN,
             spanners::{TextSpannerBuilder, TextSpanningConfig},
@@ -230,7 +235,9 @@ mod tests {
 
         let config: TextSpanningConfig<u32> =
             TextSpanningConfig::from_pattern(OA_R50K_BASE_PATTERN);
-        let regex_spanner = TextSpannerBuilder::new(config).build();
+        let regex_spanner = TextSpannerBuilder::new(config)
+            .with_accelerated_lexers(false)
+            .build();
         let logos_spanner = spanner(R50kLexer);
 
         let cases = [
@@ -245,6 +252,19 @@ mod tests {
             "  \nfoo",
             "foo  \nbar",
             "   hello world",
+            // Newline cases
+            "Pipeline\nThe mode",
+            "\nhello",
+            "\n\nhello",
+            " \nhello",
+            "\n hello",
+            "hello\n",
+            "  \r\n  bar",
+            "\r\nfoo",
+            "  123",
+            "\n123",
+            "  !",
+            "\n!",
         ];
 
         for text in cases {
@@ -261,7 +281,7 @@ mod tests {
                     .map(|s| &text[s.range().clone()])
                     .collect();
                 panic!(
-                    "cl100k mismatch for {:?}:\n  regex: {:?}\n  logos: {:?}",
+                    "r50k mismatch for {:?}:\n  regex: {:?}\n  logos: {:?}",
                     text, regex_words, logos_words
                 );
             }
@@ -270,7 +290,7 @@ mod tests {
 
     #[test]
     #[cfg(feature = "std")]
-    fn test_logos_cl100k_long_text() {
+    fn test_logos_r50k_long_text() {
         use crate::{
             pretrained::openai::OA_R50K_BASE_PATTERN,
             spanners::{TextSpannerBuilder, TextSpanningConfig},
@@ -278,7 +298,9 @@ mod tests {
 
         let config: TextSpanningConfig<u32> =
             TextSpanningConfig::from_pattern(OA_R50K_BASE_PATTERN);
-        let regex_spanner = TextSpannerBuilder::new(config).build();
+        let regex_spanner = TextSpannerBuilder::new(config)
+            .with_accelerated_lexers(false)
+            .build();
         let logos_spanner = spanner(R50kLexer);
 
         let cases = [
@@ -314,7 +336,7 @@ mod tests {
                     .map(|s| &text[s.range().clone()])
                     .collect();
                 panic!(
-                    "cl100k mismatch for {:?}:\n  regex: {:?}\n  logos: {:?}",
+                    "r50k mismatch for {:?}:\n  regex: {:?}\n  logos: {:?}",
                     text, regex_words, logos_words
                 );
             }
@@ -381,16 +403,20 @@ mod tests {
 
         let config: TextSpanningConfig<u32> =
             TextSpanningConfig::from_pattern(OA_R50K_BASE_PATTERN.clone());
-        let regex_spanner = TextSpannerBuilder::new(config).build();
+        let regex_spanner = TextSpannerBuilder::new(config)
+            .with_accelerated_lexers(false)
+            .build();
         let logos_spanner = spanner(R50kLexer);
 
+        // Include \n, \r, \t alongside printable chars to exercise
+        // whitespace splitting with newlines.
         let config = proptest::test_runner::Config::with_cases(2000);
-        proptest!(config, |(text in "\\PC{0,200}")| {
+        proptest!(config, |(text in "[\\PC\\n\\r\\t]{0,200}")| {
             let regex_spans = regex_spanner.split_spans(&text);
             let logos_spans = logos_spanner.split_spans(&text);
             prop_assert_eq!(
                 &regex_spans, &logos_spans,
-                "cl100k mismatch for {:?}",
+                "r50k mismatch for {:?}",
                 text
             );
         });
