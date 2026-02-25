@@ -15,6 +15,7 @@ wordchipper-data = { path = "../wordchipper-data" }
 
 arrow = { workspace = true }
 bpe-openai = { workspace = true }
+criterion = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 divan = { workspace = true }
 rayon = { workspace = true }
@@ -29,6 +30,10 @@ path = "src/bin/bench_json.rs"
 
 [[bench]]
 name = "spanning"
+harness = false
+
+[[bench]]
+name = "encoder_criterion"
 harness = false
 
 [[bench]]
