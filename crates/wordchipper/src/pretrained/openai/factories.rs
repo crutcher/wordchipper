@@ -5,8 +5,10 @@ use std::{io::BufRead, path::Path};
 
 #[cfg(feature = "std")]
 use crate::support::resources::ResourceLoader;
+#[allow(unused_imports)]
 use crate::{
     TokenType,
+    UnifiedTokenVocab,
     prelude::*,
     pretrained::openai::{
         OA_CL100K_BASE_PATTERN,
@@ -32,6 +34,38 @@ use crate::{
     support::{regex::RegexPattern, resources::ConstKeyedResource},
     vocab::utility::factories::ConstVocabularyFactory,
 };
+
+/// Load the `DataGym` GPT-2 span map vocabulary.
+#[cfg(all(feature = "std", feature = "datagym"))]
+pub fn load_gpt2_vocab<T: TokenType>(
+    loader: &mut dyn ResourceLoader
+) -> crate::WCResult<crate::UnifiedTokenVocab<T>> {
+    use std::io::BufReader;
+
+    use crate::{
+        pretrained::openai::{
+            oa_r50k_base_spanning_config,
+            resources::{OA_GPT2_ENCODER_JSON_KEYED_RESOURCE, OA_GPT2_VOCAB_BPE_KEYED_RESOURCE},
+        },
+        vocab::{SpanMapVocab, io::read_datagym_vocab},
+    };
+
+    let vocab_path = loader.load_resource_path(&OA_GPT2_VOCAB_BPE_KEYED_RESOURCE.into())?;
+    let encoder_path = loader.load_resource_path(&OA_GPT2_ENCODER_JSON_KEYED_RESOURCE.into())?;
+
+    let vocab_file = std::fs::File::open(vocab_path)?;
+    let encoder_file = std::fs::File::open(encoder_path)?;
+
+    let vocab_reader = BufReader::new(vocab_file);
+    let encoder_reader = BufReader::new(encoder_file);
+
+    let span_map = read_datagym_vocab(vocab_reader, encoder_reader, false)?;
+
+    UnifiedTokenVocab::from_span_vocab(
+        oa_r50k_base_spanning_config(),
+        SpanMapVocab::from_span_map(span_map).to_token_type()?,
+    )
+}
 
 /// `OpenAI` Pretrained Tokenizer types.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -232,5 +266,26 @@ mod test {
             OATokenizer::from_str("o200k_harmony").unwrap(),
             OATokenizer::O200kHarmony
         );
+    }
+
+    #[test]
+    #[cfg(all(feature = "std", feature = "datagym", feature = "download"))]
+    fn test_load_gpt2_vocab() {
+        use crate::{
+            TokenEncoder,
+            TokenEncoderOptions,
+            UnifiedTokenVocab,
+            alloc::sync::Arc,
+            encoders::testing::common_encoder_tests,
+        };
+
+        let mut disk_cache: crate::disk_cache::WordchipperDiskCache = Default::default();
+        let vocab: Arc<UnifiedTokenVocab<u32>> = crate::vocab::io::load_gpt2_vocab(&mut disk_cache)
+            .unwrap()
+            .into();
+        let encoder: Arc<dyn TokenEncoder<u32>> =
+            TokenEncoderOptions::default().build(vocab.clone());
+
+        common_encoder_tests(vocab, encoder);
     }
 }

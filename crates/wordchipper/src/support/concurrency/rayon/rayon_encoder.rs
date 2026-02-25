@@ -96,6 +96,8 @@ mod tests {
 
         assert_eq!(encoder.special_vocab(), encoder.inner.special_vocab());
 
+        let encoder: Arc<dyn TokenEncoder<T>> = Arc::new(encoder);
+
         common_encoder_tests(vocab, encoder)
     }
 

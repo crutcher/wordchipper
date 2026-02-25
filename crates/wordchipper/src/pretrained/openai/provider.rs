@@ -1,5 +1,3 @@
-use cfg_if::cfg_if;
-
 use crate::{
     UnifiedTokenVocab,
     WCError,
@@ -27,8 +25,18 @@ impl VocabProvider for OpenaiVocabProvider {
     }
 
     fn list_vocabs(&self) -> Vec<VocabDescription> {
-        cfg_if! {if #[cfg(feature="std")] {
-        vec![
+        #[allow(unused_mut)]
+        let mut vs: Vec<VocabDescription> = Default::default();
+
+        #[cfg(feature = "datagym")]
+        vs.push(VocabDescription {
+            id: "gpt2".to_string(),
+            context: vec!["openai".to_string(), "gpt2".to_string()],
+            description: "GPT-2 `gpt2` vocabulary".to_string(),
+        });
+
+        #[cfg(feature = "std")]
+        vs.extend_from_slice(&[
             VocabDescription {
                 id: "r50k_base".to_string(),
                 context: vec!["openai".to_string(), "r50k_base".to_string()],
@@ -59,10 +67,9 @@ impl VocabProvider for OpenaiVocabProvider {
                 context: vec!["openai".to_string(), "o200k_harmony".to_string()],
                 description: "GPT-5 `o200k_harmony` vocabulary".to_string(),
             },
-        ]
-        } else {
-            Default::default()
-        }}
+        ]);
+
+        vs
     }
 
     fn load_vocab(
@@ -72,6 +79,16 @@ impl VocabProvider for OpenaiVocabProvider {
     ) -> WCResult<(VocabDescription, Arc<UnifiedTokenVocab<u32>>)> {
         let _ = loader;
         let _descr = self.resolve_vocab(name)?;
+
+        #[cfg(feature = "datagym")]
+        {
+            use super::load_gpt2_vocab;
+
+            if name == "gpt2" {
+                let vocab = load_gpt2_vocab(loader)?;
+                return Ok((_descr, vocab.into()));
+            }
+        }
 
         #[cfg(feature = "std")]
         {

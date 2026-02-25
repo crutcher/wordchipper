@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use tiktoken_rs::{CoreBPE, Rank};
-use wordchipper::pretrained::openai::OATokenizer;
 
 use crate::engines::{BoxError, EncDecEngine};
 
@@ -62,16 +61,18 @@ impl EncDecEngine<Rank> for TiktokenRsEngine {
 }
 
 /// Load a tiktoken model from the given `OATokenizer` enum variant.
-pub fn load_tiktoken_bpe(model: OATokenizer) -> Result<(String, Arc<CoreBPE>), BoxError> {
-    use wordchipper::pretrained::openai::OATokenizer::*;
-
+pub fn load_tiktoken_bpe(model: &str) -> Result<(String, Arc<CoreBPE>), BoxError> {
     let (source, bpe) = match model {
-        R50kBase => ("r50k_base", tiktoken_rs::r50k_base()?),
-        P50kBase => ("p50k_base", tiktoken_rs::p50k_base()?),
-        P50kEdit => ("p50k_edit", tiktoken_rs::p50k_edit()?),
-        Cl100kBase => ("cl100k_base", tiktoken_rs::cl100k_base()?),
-        O200kBase => ("o200k_base", tiktoken_rs::o200k_base()?),
-        O200kHarmony => ("o200k_harmony", tiktoken_rs::o200k_harmony()?),
+        "openai::gpt2" => (
+            "gpt2",
+            tiktoken_rs::get_bpe_from_tokenizer(tiktoken_rs::tokenizer::Tokenizer::Gpt2)?,
+        ),
+        "openai::r50k_base" => ("r50k_base", tiktoken_rs::r50k_base()?),
+        "openai::p50k_base" => ("p50k_base", tiktoken_rs::p50k_base()?),
+        "openai::p50k_edit" => ("p50k_edit", tiktoken_rs::p50k_edit()?),
+        "openai::cl100k_base" => ("cl100k_base", tiktoken_rs::cl100k_base()?),
+        "openai::o200k_base" => ("o200k_base", tiktoken_rs::o200k_base()?),
+        "openai::o200k_harmony" => ("o200k_harmony", tiktoken_rs::o200k_harmony()?),
         _ => return Err(format!("unsupported model: {:?}", model).into()),
     };
     Ok((source.to_string(), Arc::new(bpe)))

@@ -205,6 +205,7 @@ impl<T: TokenType> SpanEncoder<T> for PriorityMergeSpanEncoder<T> {
 mod tests {
     use super::*;
     use crate::{
+        TokenEncoder,
         TokenType,
         alloc::sync::Arc,
         encoders::{
@@ -221,6 +222,7 @@ mod tests {
             vocab.clone(),
             SpanEncoderSelector::PriorityMerge,
         );
+        let encoder: Arc<dyn TokenEncoder<T>> = Arc::new(encoder);
         common_encoder_tests(vocab, encoder)
     }
 

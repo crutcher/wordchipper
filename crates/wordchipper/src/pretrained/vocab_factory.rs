@@ -104,6 +104,7 @@ pub fn list_models() -> Vec<String> {
 }
 
 /// A description of a pretrained tokenizer.
+#[derive(Debug, Clone)]
 pub struct VocabDescription {
     /// The resolution id of the vocabulary.
     pub id: String,

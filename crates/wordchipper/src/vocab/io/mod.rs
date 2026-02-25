@@ -33,3 +33,9 @@ mod base64_vocab;
 
 #[doc(inline)]
 pub use base64_vocab::*;
+
+#[cfg(all(feature = "std", feature = "json"))]
+mod datagym_vocab;
+
+#[cfg(all(feature = "std", feature = "json"))]
+pub use datagym_vocab::*;

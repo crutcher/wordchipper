@@ -3765,6 +3765,7 @@ dependencies = [
  "proptest",
  "rayon",
  "regex",
+ "serde_json",
  "serial_test",
  "spin",
  "strum",

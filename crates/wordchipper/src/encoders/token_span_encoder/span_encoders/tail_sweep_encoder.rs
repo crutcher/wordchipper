@@ -60,6 +60,7 @@ impl<T: TokenType> SpanEncoder<T> for TailSweepSpanEncoder<T> {
 mod tests {
     use super::*;
     use crate::{
+        TokenEncoder,
         TokenType,
         alloc::sync::Arc,
         encoders::{
@@ -76,7 +77,8 @@ mod tests {
             vocab.clone(),
             SpanEncoderSelector::TailSweep,
         );
-        common_encoder_tests(vocab, encoder)
+        let encoder: Arc<dyn TokenEncoder<T>> = Arc::new(encoder);
+        common_encoder_tests(vocab, encoder.into())
     }
 
     #[test]

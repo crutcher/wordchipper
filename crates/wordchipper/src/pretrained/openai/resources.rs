@@ -1,6 +1,18 @@
 //! # Public `OpenAI` Resources
 
-use crate::support::resources::ConstUrlResource;
+use crate::support::resources::{ConstKeyedResource, ConstUrlResource};
+
+/// Cache-keyed GPT-2 `DataGym` "vocab.bpe" vocabulary resource.
+pub const OA_GPT2_VOCAB_BPE_KEYED_RESOURCE: ConstKeyedResource = ConstKeyedResource {
+    key: &["openai", "gpt2"],
+    resource: OA_GPT2_DATAGYM_VOCAB_BPE_RESOURCE,
+};
+
+/// Cache-keyed GPT-2 `DataGym` "encoder.json" encoder resource.
+pub const OA_GPT2_ENCODER_JSON_KEYED_RESOURCE: ConstKeyedResource = ConstKeyedResource {
+    key: &["openai", "gpt2"],
+    resource: OA_GPT2_DATAGYM_ENCODER_JSON_RESOURCE,
+};
 
 /// The GPT-2 Data Gym "vocab.bpe" vocabulary resource.
 pub const OA_GPT2_DATAGYM_VOCAB_BPE_RESOURCE: ConstUrlResource = ConstUrlResource {

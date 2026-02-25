@@ -63,7 +63,7 @@ pub struct Args {
     pub batch_size: usize,
 
     /// The pretrained model to compare.
-    #[arg(long, default_value = "openai/o200k_harmony")]
+    #[arg(long, default_value = "openai::o200k_harmony")]
     pub model: ModelSelector,
 
     /// Ignore missing models?
@@ -104,28 +104,32 @@ pub struct Args {
 
 #[derive(ValueEnum, Clone, Copy, Debug)]
 pub enum ModelSelector {
-    /// Select "`openai/r50k_base`" model.
-    #[value(name = "openai/r50k_base")]
+    /// Select "`openai::gpt2`" model.
+    #[value(name = "openai::gpt2")]
+    OpenaiGpt2,
+
+    /// Select "`openai::r50k_base`" model.
+    #[value(name = "openai::r50k_base")]
     OpenaiR50kBase,
 
-    /// Select "`openai/p50k_base`" model.
-    #[value(name = "openai/p50k_base")]
+    /// Select "`openai::p50k_base`" model.
+    #[value(name = "openai::p50k_base")]
     OpenaiP50kBase,
 
-    /// Select "`openai/p50k_edit`" model.
-    #[value(name = "openai/p50k_edit")]
+    /// Select "`openai::p50k_edit`" model.
+    #[value(name = "openai::p50k_edit")]
     OpenaiP50kEdit,
 
-    /// Select "`openai/cl100k_base`" model.
-    #[value(name = "openai/cl100k_base")]
+    /// Select "`openai::cl100k_base`" model.
+    #[value(name = "openai::cl100k_base")]
     OpenaiCl100kBase,
 
-    /// Select "`openai/o200k_base`" model.
-    #[value(name = "openai/o200k_base")]
+    /// Select "`openai::o200k_base`" model.
+    #[value(name = "openai::o200k_base")]
     OpenaiO200kBase,
 
-    /// Select "`openai/o200k_harmony`" model.
-    #[value(name = "openai/o200k_harmony")]
+    /// Select "`openai::o200k_harmony`" model.
+    #[value(name = "openai::o200k_harmony")]
     OpenaiO200kHarmony,
 }
 
@@ -134,40 +138,43 @@ impl Display for ModelSelector {
         &self,
         f: &mut Formatter<'_>,
     ) -> std::fmt::Result {
-        write!(f, "openai/{}", self.model())
+        write!(f, "{}", self.model())
     }
 }
 
 impl ModelSelector {
-    pub fn model(&self) -> OATokenizer {
+    pub fn model(&self) -> String {
         use ModelSelector::*;
         use OATokenizer::*;
         match self {
-            OpenaiR50kBase => R50kBase,
-            OpenaiP50kBase => P50kBase,
-            OpenaiP50kEdit => P50kEdit,
-            OpenaiCl100kBase => Cl100kBase,
-            OpenaiO200kBase => O200kBase,
-            OpenaiO200kHarmony => O200kHarmony,
+            OpenaiGpt2 => "openai::gpt2".to_string(),
+            OpenaiR50kBase => format!("openai::{}", R50kBase),
+            OpenaiP50kBase => format!("openai::{}", P50kBase),
+            OpenaiP50kEdit => format!("openai::{}", P50kEdit),
+            OpenaiCl100kBase => format!("openai::{}", Cl100kBase),
+            OpenaiO200kBase => format!("openai::{}", O200kBase),
+            OpenaiO200kHarmony => format!("openai::{}", O200kHarmony),
         }
     }
 
     pub fn load_vocab<T: TokenType>(
         &self,
         disk_cache: &mut WordchipperDiskCache,
-    ) -> Result<UnifiedTokenVocab<T>, BoxError> {
-        Ok(self.model().load_vocab(disk_cache)?)
+    ) -> Result<Arc<UnifiedTokenVocab<T>>, BoxError> {
+        let (_desc, vocab) = wordchipper::load_vocab(&self.model(), disk_cache)?;
+        let vocab = vocab.to_token_type().unwrap().into();
+        Ok(vocab)
     }
 
     pub fn load_tiktoken_bpe(&self) -> Result<(String, Arc<CoreBPE>), BoxError> {
-        tiktoken_support::load_tiktoken_bpe(self.model())
+        tiktoken_support::load_tiktoken_bpe(&self.model())
     }
 
     #[cfg(feature = "tokenizers")]
     pub fn load_tokenizers_tokenizer(
         &self
     ) -> Result<(String, Arc<tokenizers::tokenizer::Tokenizer>), BoxError> {
-        load_tokenizers_tok(self.model())
+        load_tokenizers_tok(&self.model())
     }
 }
 

@@ -91,6 +91,7 @@ impl<T: TokenType> SpanEncoder<T> for MergeHeapSpanEncoder<T> {
 mod tests {
     use super::*;
     use crate::{
+        TokenEncoder,
         TokenType,
         alloc::sync::Arc,
         encoders::{
@@ -107,6 +108,7 @@ mod tests {
             vocab.clone(),
             SpanEncoderSelector::MergeHeap,
         );
+        let encoder: Arc<dyn TokenEncoder<T>> = Arc::new(encoder);
         common_encoder_tests(vocab.into(), encoder)
     }
 
