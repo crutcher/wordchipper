@@ -16,6 +16,11 @@ use crate::{
 /// Global vocabulary factory.
 static FACTORY: OnceCell<RwLock<VocabFactory>> = OnceCell::new();
 
+/// Get the global vocabulary factory.
+pub fn get_vocab_factory() -> &'static RwLock<VocabFactory> {
+    FACTORY.get_or_init(|| RwLock::new(init_factory()))
+}
+
 fn init_factory() -> VocabFactory {
     let mut factory = VocabFactory::default();
 
@@ -26,21 +31,23 @@ fn init_factory() -> VocabFactory {
     factory
 }
 
-/// Get the global vocabulary factory.
-pub fn get_vocab_factory() -> &'static RwLock<VocabFactory> {
-    FACTORY.get_or_init(|| RwLock::new(init_factory()))
+fn with_factory<F, V>(func: &mut F) -> V
+where
+    F: FnMut(&VocabFactory) -> V,
+{
+    let guard = get_vocab_factory().read();
+    let factory = &*guard;
+    func(factory)
 }
 
 /// List all known vocabularies across all loaders.
 pub fn list_vocabs() -> Vec<VocabListing> {
-    let guard = get_vocab_factory().read();
-    guard.list_vocabs()
+    with_factory(&mut |f: &VocabFactory| f.list_vocabs())
 }
 
 /// Resolve a [`VocabListing`] by name.
 pub fn resolve_vocab(name: &str) -> WCResult<VocabDescription> {
-    let guard = get_vocab_factory().read();
-    guard.resolve_vocab(name)
+    with_factory(&mut |f: &VocabFactory| f.resolve_vocab(name))
 }
 
 /// Load a [`UnifiedTokenVocab`] by name.
@@ -53,8 +60,7 @@ pub fn load_vocab(
     name: &str,
     loader: &mut dyn ResourceLoader,
 ) -> WCResult<(VocabDescription, Arc<UnifiedTokenVocab<u32>>)> {
-    let guard = get_vocab_factory().read();
-    guard.load_vocab(name, loader)
+    with_factory(&mut move |f: &VocabFactory| f.load_vocab(name, loader))
 }
 
 /// List the available pretrained models.
