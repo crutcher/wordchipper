@@ -162,12 +162,7 @@ mod wordchipper {
 
         #[divan::bench]
         fn r50k(bencher: Bencher) {
-            bench_variant(
-                bencher,
-                OA_R50K_BASE,
-                SpanEncoderSelector::TailSweep,
-                false,
-            )
+            bench_variant(bencher, OA_R50K_BASE, SpanEncoderSelector::TailSweep, false)
         }
 
         #[divan::bench]
@@ -192,12 +187,7 @@ mod wordchipper {
 
         #[divan::bench]
         fn r50k_fast(bencher: Bencher) {
-            bench_variant(
-                bencher,
-                OA_R50K_BASE,
-                SpanEncoderSelector::TailSweep,
-                true,
-            )
+            bench_variant(bencher, OA_R50K_BASE, SpanEncoderSelector::TailSweep, true)
         }
 
         #[divan::bench]
@@ -221,12 +211,7 @@ mod wordchipper {
 
         #[divan::bench]
         fn r50k(bencher: Bencher) {
-            bench_variant(
-                bencher,
-                OA_R50K_BASE,
-                SpanEncoderSelector::MergeHeap,
-                false,
-            )
+            bench_variant(bencher, OA_R50K_BASE, SpanEncoderSelector::MergeHeap, false)
         }
 
         #[divan::bench]
@@ -251,12 +236,7 @@ mod wordchipper {
 
         #[divan::bench]
         fn r50k_fast(bencher: Bencher) {
-            bench_variant(
-                bencher,
-                OA_R50K_BASE,
-                SpanEncoderSelector::MergeHeap,
-                true,
-            )
+            bench_variant(bencher, OA_R50K_BASE, SpanEncoderSelector::MergeHeap, true)
         }
 
         #[divan::bench]

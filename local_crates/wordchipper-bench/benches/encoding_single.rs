@@ -411,11 +411,7 @@ mod english {
 
         #[divan::bench]
         fn r50k(bencher: Bencher) {
-            bench_tt(
-                bencher,
-                &english_text(),
-                &tiktoken_rs::r50k_base().unwrap(),
-            )
+            bench_tt(bencher, &english_text(), &tiktoken_rs::r50k_base().unwrap())
         }
 
         #[divan::bench]
@@ -803,11 +799,7 @@ mod diverse {
 
         #[divan::bench]
         fn r50k(bencher: Bencher) {
-            bench_tt(
-                bencher,
-                &diverse_text(),
-                &tiktoken_rs::r50k_base().unwrap(),
-            )
+            bench_tt(bencher, &diverse_text(), &tiktoken_rs::r50k_base().unwrap())
         }
 
         #[divan::bench]
