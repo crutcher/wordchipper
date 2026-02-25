@@ -15,6 +15,7 @@
 mod cl100k;
 mod engine;
 mod o200k;
+mod r50k;
 mod token_role;
 
 #[doc(inline)]
@@ -23,6 +24,8 @@ pub use cl100k::Cl100kLexer;
 pub use engine::for_each_classified_span;
 #[doc(inline)]
 pub use o200k::O200kLexer;
+#[doc(inline)]
+pub use r50k::R50kLexer;
 #[doc(inline)]
 pub use token_role::{TokenRole, contraction_split};
 
@@ -35,11 +38,13 @@ pub(crate) fn lookup_word_lexer(
 ) -> Option<crate::alloc::sync::Arc<dyn super::SpanLexer>> {
     use crate::{
         alloc::sync::Arc,
-        pretrained::openai::{OA_CL100K_BASE_PATTERN, OA_O200K_BASE_PATTERN},
+        pretrained::openai::{OA_CL100K_BASE_PATTERN, OA_O200K_BASE_PATTERN, OA_R50K_BASE_PATTERN},
     };
 
     let pat = pattern.as_str();
-    if pat == OA_CL100K_BASE_PATTERN.as_str() {
+    if pat == OA_R50K_BASE_PATTERN.as_str() {
+        Some(Arc::new(R50kLexer))
+    } else if pat == OA_CL100K_BASE_PATTERN.as_str() {
         Some(Arc::new(Cl100kLexer))
     } else if pat == OA_O200K_BASE_PATTERN.as_str() {
         Some(Arc::new(O200kLexer))

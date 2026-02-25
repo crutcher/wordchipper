@@ -209,6 +209,9 @@ fn main() -> Result<(), BoxError> {
     candidate_engines.push(wc_engine.clone());
 
     if [
+        ModelSelector::OpenaiR50kBase,
+        ModelSelector::OpenaiP50kBase,
+        ModelSelector::OpenaiP50kEdit,
         ModelSelector::OpenaiCl100kBase,
         ModelSelector::OpenaiO200kBase,
         ModelSelector::OpenaiO200kHarmony,
