@@ -3863,8 +3863,11 @@ version = "0.0.0"
 dependencies = [
  "arrow",
  "bpe-openai",
+ "clap",
  "divan",
  "rayon",
+ "serde",
+ "serde_json",
  "tiktoken-rs",
  "tokenizers",
  "wordchipper",

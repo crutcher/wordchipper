@@ -31,7 +31,7 @@ cargo bench -p wordchipper-bench
 cargo bench -p wordchipper-bench --bench encoding_single
 cargo bench -p wordchipper-bench --bench encoding_parallel
 cargo bench -p wordchipper-bench --bench decoding_single
-cargo bench -p wordchipper-bench --bench spanners
+cargo bench -p wordchipper-bench --bench spanning
 
 # Filter by name
 cargo bench -p wordchipper-bench --bench encoding_single -- diverse
@@ -41,6 +41,24 @@ cargo bench -p wordchipper-bench --bench encoding_parallel -- priority_merge
 ### Parallel bench data
 
 `encoding_parallel` uses fineweb-edu parquet shards. The dataset is auto-downloaded on first run.
+
+## JSON output
+
+The `bench-json` binary runs benchmarks and converts divan's human-readable output to JSON.
+
+```bash
+# Specific bench target
+cargo run --release -p wordchipper-bench --bin bench-json -- --bench spanning
+
+# With divan args
+cargo run --release -p wordchipper-bench --bin bench-json -- --bench spanning -- --sample-count 10
+
+# All targets, save to file
+cargo run --release -p wordchipper-bench --bin bench-json -- -o results.json
+
+# Echo human output to stderr while parsing
+cargo run --release -p wordchipper-bench --bin bench-json -- --bench spanning --tee
+```
 
 ## Results
 
