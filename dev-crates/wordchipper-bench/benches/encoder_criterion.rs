@@ -1,7 +1,15 @@
 use std::{hint::black_box, sync::LazyLock};
 
-use criterion::{Criterion, Throughput, criterion_group, criterion_main};
-use wordchipper::encoders::token_span_encoder::SpanEncoderSelector;
+use criterion::{
+    AxisScale,
+    BenchmarkId,
+    Criterion,
+    PlotConfiguration,
+    Throughput,
+    criterion_group,
+    criterion_main,
+};
+use wordchipper::{TokenEncoderOptions, encoders::token_span_encoder::SpanEncoderSelector};
 use wordchipper_data::dataset::DatasetCacheConfig;
 
 const BATCH_SIZE: usize = 1024;
@@ -61,6 +69,7 @@ fn load_batch() -> Batch {
 
 static BATCH: LazyLock<Batch> = LazyLock::new(load_batch);
 
+#[allow(unused)]
 fn rayon_pool_size() -> usize {
     use rayon::prelude::*;
     let _ = [1, 2, 3].par_iter().max().unwrap().to_owned();
@@ -70,29 +79,35 @@ fn rayon_pool_size() -> usize {
 
 fn bench_encoders(c: &mut Criterion) {
     const MODELS: &[(&str, bool)] = &[
-        //        "openai::gpt2",
-        //        "openai::p50k_base",
-        ("openai::cl100k_base", true),
-        //       "openai::o200k_base",
+        //        ("gpt2", false),
+        //        ("p50k_base", false),
+        ("cl100k_base", true),
+        //       ("o200k_base", true),
     ];
 
     const SPAN_ENCODERS: &[SpanEncoderSelector] = &[
         SpanEncoderSelector::BufferSweep,
-        SpanEncoderSelector::MergeHeap,
+        // SpanEncoderSelector::MergeHeap,
         SpanEncoderSelector::PriorityMerge,
-        SpanEncoderSelector::TailSweep,
+        // SpanEncoderSelector::TailSweep,
     ];
 
-    let max_pool = rayon_pool_size();
-    let mut par_sizes: Vec<usize> = vec![max_pool];
+    // let max_pool = rayon_pool_size();
+    let mut par_sizes: Vec<usize> = vec![64, 48, 32, 24, 16];
+    /*
     loop {
         let last = par_sizes.last().cloned().unwrap();
         let next = last / 2;
-        if next < 2 {
+        if next < 8 {
             break;
         }
         par_sizes.push(next);
     }
+    par_sizes.push(1);
+     */
+    par_sizes.sort();
+
+    let plot_config = PlotConfiguration::default().summary_scale(AxisScale::Logarithmic);
 
     let strs = BATCH.strs();
 
@@ -100,40 +115,42 @@ fn bench_encoders(c: &mut Criterion) {
         let vocab = wordchipper_bench::load_bench_vocab(model);
         let accel_options: &[bool] = if *has_accel { &[false, true] } else { &[false] };
 
-        let mut group = c.benchmark_group(format!("TokenEncoders/model={model}"));
-
-        group.throughput(Throughput::Bytes(BATCH.total_bytes() as u64));
+        let mut group = c.benchmark_group(format!("TokenEncoder/{model}"));
+        group.plot_config(plot_config.clone());
         group.sample_size(10);
         group.nresamples(1001);
+        group.throughput(Throughput::Bytes(BATCH.total_bytes() as u64));
 
-        let options = wordchipper::TokenEncoderOptions::default().with_parallel(true);
+        for accel in accel_options {
+            let accelerated = *accel;
+            let options = TokenEncoderOptions::default().with_accelerated_lexers(accelerated);
 
-        for &thread_count in par_sizes.iter() {
-            let pool = rayon::ThreadPoolBuilder::new()
-                .num_threads(thread_count)
-                .build()
-                .unwrap();
+            let lexer = if accelerated { "logos" } else { "regex" };
 
-            for span_encoder in SPAN_ENCODERS {
-                let options = options.clone().with_span_encoder(span_encoder.clone());
+            for &thread_count in par_sizes.iter() {
+                let pool = rayon::ThreadPoolBuilder::new()
+                    .num_threads(thread_count)
+                    .build()
+                    .unwrap();
 
-                for accel in accel_options {
-                    let accel = *accel;
-                    let label = format!("threads={thread_count};algo={span_encoder};accel={accel}");
+                let options = options.clone().with_parallel(thread_count > 1);
+
+                for &span_encoder in SPAN_ENCODERS {
+                    let id = BenchmarkId::new(format!("{}/{}", span_encoder, lexer), thread_count);
 
                     let encoder = options
                         .clone()
-                        .with_accelerated_lexers(accel)
+                        .with_span_encoder(span_encoder)
                         .build(vocab.clone());
-                    group.bench_function(label, |b| {
+                    group.bench_function(id, |b| {
                         pool.install(|| {
                             b.iter(|| encoder.try_encode_batch(black_box(&strs)).unwrap())
                         })
                     });
                 }
-            }
 
-            drop(pool);
+                drop(pool);
+            }
         }
     }
 }

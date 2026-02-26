@@ -24,6 +24,9 @@ serde_json = { workspace = true }
 tiktoken-rs = { workspace = true }
 tokenizers = { workspace = true, features = ["http"] }
 
+[dev-dependencies]
+criterion = { workspace = true, features = ["stable"] }
+
 [[bin]]
 name = "bench-json"
 path = "src/bin/bench_json.rs"
