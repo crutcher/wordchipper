@@ -28,6 +28,8 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/wordchipper-training/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bindings/python" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bindings/python/py_src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/bindings/wasm/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/wordchipper-cli/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/crates/nanochat/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/crates/wordchipper/target" />

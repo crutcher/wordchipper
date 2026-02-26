@@ -117,6 +117,7 @@ pub struct VocabDescription {
 }
 
 /// A listing of known tokenizer.
+#[derive(Debug, Clone)]
 pub struct VocabListing {
     /// The id of the factory that produced the vocabularies.
     pub source: String,
