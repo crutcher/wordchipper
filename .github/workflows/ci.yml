@@ -48,6 +48,16 @@ jobs:
       - run: cargo check -p wordchipper --target wasm32-unknown-unknown --no-default-features
       - run: cargo check -p wordchipper --target thumbv7m-none-eabi --no-default-features
 
+  wasm:
+    name: WASM Bindings
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup toolchain install stable --profile minimal --target wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo install wasm-pack --locked
+      - run: cd bindings/wasm && wasm-pack test --node
+
   python:
     name: Python Bindings
     runs-on: ubuntu-latest
@@ -74,7 +84,7 @@ jobs:
   ci:
     name: CI
     if: always()
-    needs: [fmt, clippy, test, cross, python]
+    needs: [fmt, clippy, test, cross, wasm, python]
     runs-on: ubuntu-latest
     steps:
       - run: |
@@ -83,6 +93,7 @@ jobs:
             "${{ needs.clippy.result }}"
             "${{ needs.test.result }}"
             "${{ needs.cross.result }}"
+            "${{ needs.wasm.result }}"
             "${{ needs.python.result }}"
           )
           for r in "${results[@]}"; do
