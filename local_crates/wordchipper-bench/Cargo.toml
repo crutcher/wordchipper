@@ -15,10 +15,17 @@ wordchipper-data = { path = "../wordchipper-data" }
 
 arrow = { workspace = true }
 bpe-openai = { workspace = true }
+clap = { workspace = true, features = ["derive"] }
 divan = { workspace = true }
 rayon = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
 tiktoken-rs = { workspace = true }
 tokenizers = { workspace = true, features = ["http"] }
+
+[[bin]]
+name = "bench-json"
+path = "src/bin/bench_json.rs"
 
 [[bench]]
 name = "spanning"
