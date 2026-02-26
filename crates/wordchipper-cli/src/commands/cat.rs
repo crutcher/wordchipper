@@ -16,15 +16,15 @@ use crate::{
 #[derive(clap::Args, Debug)]
 pub struct CatArgs {
     #[command(flatten)]
-    model: ModelSelectorArgs,
+    model_selector: ModelSelectorArgs,
 
     #[command(flatten)]
-    mode: TokenizerModeArgs,
+    tokenizer_mode: TokenizerModeArgs,
 
     #[command(flatten)]
-    input_output: InputOutputArgs,
+    io: InputOutputArgs,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     pub disk_cache: disk_cache::DiskCacheArgs,
 }
 
@@ -32,12 +32,12 @@ impl CatArgs {
     /// Run the cat command.
     pub fn run(&self) -> Result<(), Box<dyn std::error::Error>> {
         let mut disk_cache = self.disk_cache.init_disk_cache()?;
-        let tokenizer = self.model.load_tokenizer(&mut disk_cache)?;
+        let tokenizer = self.model_selector.load_tokenizer(&mut disk_cache)?;
 
-        let mut reader = self.input_output.open_reader()?;
-        let mut writer = self.input_output.open_writer()?;
+        let mut reader = self.io.open_reader()?;
+        let mut writer = self.io.open_writer()?;
 
-        match self.mode.mode() {
+        match self.tokenizer_mode.mode() {
             TokenizerMode::Encode => run_cat_encode(&mut reader, &mut writer, tokenizer)?,
             TokenizerMode::Decode => run_cat_decode(&mut reader, &mut writer, tokenizer)?,
         }
