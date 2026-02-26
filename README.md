@@ -103,12 +103,12 @@ See [bindings/wasm](bindings/wasm) for full API, build instructions, and example
 
 ### Unpublished Crates
 
-- [wordchipper-data](local_crates/wordchipper-data)
+- [wordchipper-data](dev-crates/wordchipper-data)
 
 ### Tools
 
-- [sample-timer](local_crates/sample-timer) - wordchipper vs tiktoken side-by-side timer.
-- [tokenizer_trainer](local_crates/tokenizer_trainer) - training example.
+- [sample-timer](dev-crates/sample-timer) - wordchipper vs tiktoken side-by-side timer.
+- [tokenizer_trainer](dev-crates/tokenizer_trainer) - training example.
 
 ## Acknowledgements
 

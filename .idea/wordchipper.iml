@@ -17,20 +17,20 @@
       <sourceFolder url="file://$MODULE_DIR$/bindings/python/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/crates/wordchipper/benches" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/crates/wordchipper/tests" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/local_crates/sample-timer/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/local_crates/tokenizer_trainer/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/local_crates/wordchipper-bench/benches" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/local_crates/wordchipper-bench/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/local_crates/wordchipper-data/examples" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/local_crates/wordchipper-data/examples/pull/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/local_crates/wordchipper-data/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/local_crates/wordchipper-experimental/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/wordchipper-training/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bindings/python" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bindings/python/py_src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bindings/wasm/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/wordchipper-cli/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bindings/wasm/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/dev-crates/sample-timer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/dev-crates/tokenizer_trainer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/dev-crates/wordchipper-bench/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/dev-crates/wordchipper-bench/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/dev-crates/wordchipper-data/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/dev-crates/wordchipper-data/examples/pull/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/dev-crates/wordchipper-data/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/dev-crates/wordchipper-experimental/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/crates/nanochat/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/crates/wordchipper/target" />

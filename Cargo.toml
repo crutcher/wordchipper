@@ -5,7 +5,7 @@ resolver = "2"
 
 members = [
     "crates/*",
-    "local_crates/*",
+    "dev-crates/*",
     "bindings/*",
 ]
 

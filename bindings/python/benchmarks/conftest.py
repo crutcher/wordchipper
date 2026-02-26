@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-DATA_DIR = REPO_ROOT / "local_crates" / "wordchipper-bench" / "benches" / "data"
+DATA_DIR = REPO_ROOT / "dev-crates" / "wordchipper-bench" / "benches" / "data"
 
 SHARD_URL = (
     "https://huggingface.co/datasets/karpathy/"
