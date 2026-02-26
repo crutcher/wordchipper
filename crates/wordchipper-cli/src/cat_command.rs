@@ -1,4 +1,5 @@
 use std::{
+    fs::File,
     io::{BufRead, BufReader, BufWriter, Write},
     sync::Arc,
 };
@@ -18,6 +19,14 @@ pub struct CatArgs {
 
     #[command(flatten)]
     mode: TokenizerModeArgs,
+
+    /// Input file, or use stdin.
+    #[clap(long, default_value = None)]
+    input: Option<String>,
+
+    /// Output file, or use stdout.
+    #[clap(long, default_value = None)]
+    output: Option<String>,
 }
 
 pub fn run_cat(
@@ -27,9 +36,14 @@ pub fn run_cat(
     let mut disk_cache = build_disk_cache(args);
     let tokenizer = cat_args.model.load_tokenizer(&mut disk_cache)?;
 
-    // Input/Output files?
-    let mut reader = BufReader::new(std::io::stdin().lock());
-    let mut writer = BufWriter::new(std::io::stdout().lock());
+    let mut reader: Box<dyn BufRead> = match &cat_args.input {
+        None => Box::new(BufReader::new(std::io::stdin().lock())),
+        Some(p) => Box::new(BufReader::new(File::open(p)?)),
+    };
+    let mut writer: Box<dyn Write> = match &cat_args.output {
+        Some(p) => Box::new(BufWriter::new(File::create(p)?)),
+        None => Box::new(BufWriter::new(std::io::stdout().lock())),
+    };
 
     match cat_args.mode.mode() {
         TokenizerMode::Encode => run_cat_encode(&mut reader, &mut writer, tokenizer)?,
@@ -39,9 +53,9 @@ pub fn run_cat(
     Ok(())
 }
 
-fn run_cat_encode<R: BufRead, W: Write>(
-    reader: &mut R,
-    writer: &mut W,
+fn run_cat_encode(
+    reader: &mut dyn BufRead,
+    writer: &mut dyn Write,
     tokenizer: Arc<Tokenizer<u32>>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // This could probably be sped up with a non-blocking buffer accumulation;
@@ -61,9 +75,9 @@ fn run_cat_encode<R: BufRead, W: Write>(
     Ok(())
 }
 
-fn run_cat_decode<R: BufRead, W: Write>(
-    reader: &mut R,
-    writer: &mut W,
+fn run_cat_decode(
+    reader: &mut dyn BufRead,
+    writer: &mut dyn Write,
     tokenizer: Arc<Tokenizer<u32>>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // non-block reading + buffering is complicated on rust.
