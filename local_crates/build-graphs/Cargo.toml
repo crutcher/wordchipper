@@ -13,6 +13,7 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 csv = { workspace = true }
 humansize = { workspace = true }
+plotters = { workspace = true }
 
 [lints]
 workspace = true

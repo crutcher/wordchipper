@@ -1,14 +1,20 @@
-use std::{fs::DirEntry, path::Path, str::FromStr, time::Duration};
+use std::{
+    fs::{DirEntry, create_dir_all},
+    path::Path,
+    str::FromStr,
+    time::Duration,
+};
 
 use wordchipper::encoders::token_span_encoder::SpanEncoderSelector;
 
-fn main() {
-    let data_dir = std::env::current_dir()
-        .unwrap()
-        .join("target")
-        .join("criterion");
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let data_dir = std::env::current_dir()?.join("target").join("criterion");
 
-    build(&data_dir);
+    let output_dir = std::env::current_dir()?.join("target").join("plots");
+
+    create_dir_all(output_dir.clone())?;
+
+    build(&data_dir, &output_dir)
 }
 
 #[allow(unused)]
@@ -24,13 +30,42 @@ struct Record {
     iteration_count: u64,
 }
 
-pub fn build(data_dir: &Path) {
+pub fn build(
+    data_dir: &Path,
+    output_dir: &Path,
+) -> Result<(), Box<dyn std::error::Error>> {
     for model_dir_read in data_dir.read_dir().unwrap() {
         let model_dir = model_dir_read.unwrap();
         let model_dir_name = model_dir.file_name().to_string_lossy().to_string();
         if model_dir_name.starts_with("TokenEncoder_") {
             let model_name = model_dir_name.split("_").nth(1).unwrap();
             println!("model={:?}", model_name);
+
+            use plotters::prelude::*;
+
+            let plot_path = output_dir.join(format!("{model_dir_name}.png"));
+            println!("plot={:?}", plot_path);
+
+            let root = BitMapBackend::new(&plot_path, (640, 480)).into_drawing_area();
+            root.fill(&WHITE)?;
+            let mut chart = ChartBuilder::on(&root)
+                .caption(model_name, ("sans-serif", 50).into_font())
+                .margin(5)
+                .x_label_area_size(30)
+                .y_label_area_size(30)
+                .build_cartesian_2d((10..100).log_scale(), (1.0e8..2.0e9).log_scale())?;
+
+            chart.configure_mesh().draw()?;
+
+            /*
+            chart
+                .draw_series(LineSeries::new(
+                    (-50..=50).map(|x| x as f32 / 50.0).map(|x| (x, x * x)),
+                    &RED,
+                ))?
+                .label("y = x^2")
+                .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &RED));
+             */
 
             for seq_dir_read in model_dir.path().read_dir().unwrap() {
                 let seq_dir = seq_dir_read.unwrap();
@@ -48,6 +83,9 @@ pub fn build(data_dir: &Path) {
                 }
 
                 println!("{span_name}/{lexer_name}");
+
+                // [(thread_count, mean_bps)]
+                let mut chart_series: Vec<(u32, f64)> = Vec::new();
 
                 let mut dirs = seq_dir
                     .path()
@@ -98,28 +136,54 @@ pub fn build(data_dir: &Path) {
                         let mean_time = inliers.iter().sum::<Duration>() / inliers.len() as u32;
                         let mean_bps = byte_count.unwrap() as f64 / mean_time.as_secs_f64();
 
+                        chart_series.push((thread_count, mean_bps));
+
                         println!(
                             "| {thread_count:>10} | {mean_bps:>8.2e} b/s | {:>8.2?} | {:>11}/s |",
                             mean_time,
                             humansize::format_size_i(mean_bps, humansize::BINARY)
                         );
                     }
+
+                    let color = match span_name {
+                        "PriorityMerge" => RED,
+                        "BufferSweep" => BLUE,
+                        "TailSweep" => GREEN,
+                        "HeapMerge" => CYAN,
+                        _ => BLACK,
+                    };
+
+                    chart
+                        .draw_series(PointSeries::<_, _, Circle<_, _>, _>::new(
+                            chart_series.iter().map(|(x, y)| (*x as i32, *y)),
+                            4,
+                            if lexer_name == "logos" {
+                                color.filled()
+                            } else {
+                                color.into()
+                            },
+                        ))?
+                        .label(format!("{span_name} {lexer_name}"));
+                    chart
+                        .draw_series(LineSeries::new(
+                            chart_series.iter().map(|(x, y)| (*x as i32, *y)),
+                            &color,
+                        ))?
+                        .label(format!("{span_name} {lexer_name}"));
                 }
-
-                /*
-                let thread_path = thread_dir.unwrap().path();
-                let new_data_path = thread_path.join("new");
-
-                let benchmark_path = new_data_path.join("benchmark.json");
-
-                let value: serde_json::Value =
-                    serde_json::from_reader(std::fs::File::open(benchmark_path).unwrap()).unwrap();
-
-                println!("{:?}", value);
-                 */
             }
+
+            chart
+                .configure_series_labels()
+                .background_style(&WHITE.mix(0.8))
+                .border_style(&BLACK)
+                .draw()?;
+
+            root.present()?;
         }
     }
+
+    Ok(())
 }
 
 fn build_duration(

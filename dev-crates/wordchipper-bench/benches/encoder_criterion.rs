@@ -80,20 +80,20 @@ fn rayon_pool_size() -> usize {
 fn bench_encoders(c: &mut Criterion) {
     const MODELS: &[(&str, bool)] = &[
         //        ("gpt2", false),
-        //        ("p50k_base", false),
+        ("p50k_base", true),
         ("cl100k_base", true),
         //       ("o200k_base", true),
     ];
 
     const SPAN_ENCODERS: &[SpanEncoderSelector] = &[
         SpanEncoderSelector::BufferSweep,
-        // SpanEncoderSelector::MergeHeap,
+        SpanEncoderSelector::MergeHeap,
         SpanEncoderSelector::PriorityMerge,
-        // SpanEncoderSelector::TailSweep,
+        SpanEncoderSelector::TailSweep,
     ];
 
     // let max_pool = rayon_pool_size();
-    let mut par_sizes: Vec<usize> = vec![64, 48, 32, 24, 16];
+    let mut par_sizes: Vec<usize> = vec![64, 54, 48, 40, 32, 24, 16, 8, 1];
     /*
     loop {
         let last = par_sizes.last().cloned().unwrap();
