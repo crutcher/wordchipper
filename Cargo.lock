@@ -3984,6 +3984,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "wordchipper-cli"
+version = "0.7.3"
+dependencies = [
+ "clap",
+ "wordchipper",
+]
+
+[[package]]
 name = "wordchipper-data"
 version = "0.0.0"
 dependencies = [
