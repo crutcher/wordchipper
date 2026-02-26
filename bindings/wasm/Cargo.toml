@@ -1,0 +1,27 @@
+[package]
+name = "wordchipper-wasm"
+description = "WebAssembly bindings for the wordchipper tokenizer library"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+
+[lints]
+workspace = true
+
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+
+[dependencies]
+wasm-bindgen = { workspace = true }
+js-sys = { workspace = true }
+base64 = { workspace = true, features = ["alloc"] }
+wordchipper = { path = "../../crates/wordchipper", default-features = false }
+
+
+[dev-dependencies]
+wasm-bindgen-test = { workspace = true }

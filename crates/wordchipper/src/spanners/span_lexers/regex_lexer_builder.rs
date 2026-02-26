@@ -37,7 +37,6 @@ pub fn build_regex_lexer(
     let _ = concurrent;
     let _ = max_pool;
 
-    #[cfg(feature = "logos")]
     if accelerated {
         use crate::spanners::span_lexers::logos::lookup_word_lexer;
         if let Some(lexer) = lookup_word_lexer(&pattern) {

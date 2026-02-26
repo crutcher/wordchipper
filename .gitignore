@@ -32,3 +32,16 @@ __pycache__/
 *.so
 .venv/
 .pytest_cache
+
+# WASM build artifacts
+bindings/wasm/pkg/
+
+# Example build artifacts (copied by setup.sh)
+examples/wasm-browser/vocab/
+examples/wasm-browser/wordchipper_wasm*
+examples/wasm-node/wordchipper_wasm*
+examples/wasm-node/*.tiktoken
+
+# Node.js
+node_modules/
+dist/

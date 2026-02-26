@@ -1,0 +1,21 @@
+{
+  "name": "wordchipper",
+  "version": "0.7.3",
+  "description": "High-performance LLM tokenizer for JavaScript/TypeScript (WebAssembly)",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/",
+    "src/"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "keywords": ["tokenizer", "bpe", "wasm", "openai", "tiktoken"],
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

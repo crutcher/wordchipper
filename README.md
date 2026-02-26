@@ -59,12 +59,47 @@ wordchipper = { version = "0.7", default-features = false }
 Features that require `std` (training, file I/O, download, rayon parallelism) are behind
 feature flags that imply `std`.
 
+## Language Bindings
+
+### Python
+
+```bash
+pip install wordchipper
+```
+
+```python
+from wordchipper import Tokenizer
+
+tok = Tokenizer.from_pretrained("cl100k_base")
+tokens = tok.encode("hello world")       # [15339, 1917]
+text = tok.decode(tokens)                 # "hello world"
+```
+
+See [bindings/python](bindings/python) for full API and benchmarks.
+
+### JavaScript / TypeScript (WASM)
+
+```js
+import { Tokenizer } from "./js/dist/index.js";
+
+const tok = await Tokenizer.fromPretrained("o200k_base");
+const tokens = tok.encode("hello world"); // Uint32Array
+const text = tok.decode(tokens);          // "hello world"
+```
+
+See [bindings/wasm](bindings/wasm) for full API, build instructions, and examples.
+
 ## Components
 
 ### Published Crates
 
 - [wordchipper](crates/wordchipper)
 - [wordchipper-disk-cache](crates/wordchipper-disk-cache)
+
+### Bindings
+
+- [wordchipper-python](bindings/python) - Python bindings (PyO3/maturin)
+- [wordchipper-wasm](bindings/wasm) - WASM bindings (wasm-bindgen) with TypeScript wrapper
 
 ### Unpublished Crates
 

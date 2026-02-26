@@ -24,12 +24,8 @@ workspace = true
 default = [
     "foldhash",
     "client",
-    "logos",
     "rayon",
 ]
-
-## Enable the logos DFA word lexer for cl100k/o200k patterns.
-logos = ["dep:logos"]
 
 ## The base set of features needed to load and run pre-trained encoders and decoders.
 client = [
@@ -48,7 +44,7 @@ download = [
 ## Without "std", the crate uses hashbrown for HashMap/HashSet.
 std = [
     "thiserror/std",
-    "dep:base64",
+    "base64/std",
     "dep:strum",
     "dep:strum_macros",
     "aho-corasick/std",
@@ -112,14 +108,12 @@ cfg-if = { workspace = true }
 document-features = { workspace = true }
 
 thiserror = { workspace = true }
-logos = { workspace = true, optional = true, features = ["export_derive"] }
+logos = { workspace = true, features = ["export_derive"] }
+base64 = { workspace = true, features = ["alloc"] }
 fancy-regex = { workspace = true, features = ["unicode"] }
 log = { workspace = true }
 num-traits = { workspace = true }
 regex = { workspace = true, features = ["unicode"] }
-
-# "std" feature deps:
-base64 = { workspace = true, optional = true }
 strum = { workspace = true, optional = true }
 strum_macros = { workspace = true, optional = true }
 
