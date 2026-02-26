@@ -51,11 +51,18 @@ pub fn build(
             let mut chart = ChartBuilder::on(&root)
                 .caption(model_name, ("sans-serif", 50).into_font())
                 .margin(5)
-                .x_label_area_size(30)
-                .y_label_area_size(30)
-                .build_cartesian_2d((10..100).log_scale(), (1.0e8..2.0e9).log_scale())?;
+                .x_label_area_size(40)
+                .y_label_area_size(90)
+                .build_cartesian_2d((8..64).log_scale(), (1.0e8..2.0e9).log_scale())?;
 
-            chart.configure_mesh().draw()?;
+            chart
+                .configure_mesh()
+                .x_desc("Thread Count")
+                .y_desc("Throughput")
+                .y_label_formatter(&|&bps| {
+                    format!("{}/s", humansize::format_size_i(bps, humansize::BINARY))
+                })
+                .draw()?;
 
             /*
             chart
@@ -67,8 +74,14 @@ pub fn build(
                 .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &RED));
              */
 
-            for seq_dir_read in model_dir.path().read_dir().unwrap() {
-                let seq_dir = seq_dir_read.unwrap();
+            let mut seq_dirs = model_dir
+                .path()
+                .read_dir()
+                .unwrap()
+                .collect::<Result<Vec<_>, _>>()?;
+            seq_dirs.sort_by_key(|e| e.file_name().to_string_lossy().to_string());
+
+            for seq_dir in seq_dirs {
                 let seq_name = seq_dir.file_name().to_string_lossy().to_string();
 
                 let parts = seq_name.splitn(2, "_").collect::<Vec<_>>();
@@ -89,16 +102,29 @@ pub fn build(
 
                 let mut dirs = seq_dir
                     .path()
-                    .read_dir()
-                    .unwrap()
-                    .collect::<Result<Vec<DirEntry>, _>>()
-                    .unwrap();
-                dirs.sort_by_key(|e| e.file_name().to_string_lossy().to_string());
+                    .read_dir()?
+                    .filter_map(|e| {
+                        let d = e.unwrap();
+                        if u32::from_str(&d.file_name().to_string_lossy().to_string()).is_ok() {
+                            Some(d)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<DirEntry>>();
+                dirs.sort_by_key(|e| {
+                    u32::from_str(&e.file_name().to_string_lossy().to_string()).unwrap()
+                });
 
                 for thread_dir in dirs {
                     let dir_name = thread_dir.file_name().to_string_lossy().to_string();
                     if let Ok(thread_count) = u32::from_str(&dir_name) {
                         let csv_path = thread_dir.path().join("new").join("raw.csv");
+
+                        if thread_count == 1 {
+                            continue;
+                        }
+
                         let mut rdr = csv::ReaderBuilder::new()
                             .has_headers(true)
                             .from_path(csv_path)
@@ -144,37 +170,39 @@ pub fn build(
                             humansize::format_size_i(mean_bps, humansize::BINARY)
                         );
                     }
-
-                    let color = match span_name {
-                        "PriorityMerge" => RED,
-                        "BufferSweep" => BLUE,
-                        "TailSweep" => GREEN,
-                        "HeapMerge" => CYAN,
-                        _ => BLACK,
-                    };
-
-                    chart
-                        .draw_series(PointSeries::<_, _, Circle<_, _>, _>::new(
-                            chart_series.iter().map(|(x, y)| (*x as i32, *y)),
-                            4,
-                            if lexer_name == "logos" {
-                                color.filled()
-                            } else {
-                                color.into()
-                            },
-                        ))?
-                        .label(format!("{span_name} {lexer_name}"));
-                    chart
-                        .draw_series(LineSeries::new(
-                            chart_series.iter().map(|(x, y)| (*x as i32, *y)),
-                            &color,
-                        ))?
-                        .label(format!("{span_name} {lexer_name}"));
                 }
+
+                let color = match span_name {
+                    "PriorityMerge" => RED,
+                    "BufferSweep" => BLUE,
+                    "TailSweep" => GREEN,
+                    "MergeHeap" => CYAN,
+                    _ => BLACK,
+                };
+
+                let style = if lexer_name == "logos" {
+                    color.filled()
+                } else {
+                    color.into()
+                };
+
+                chart
+                    .draw_series(PointSeries::<_, _, Circle<_, _>, _>::new(
+                        chart_series.iter().map(|(x, y)| (*x as i32, *y)),
+                        4,
+                        style.clone(),
+                    ))?
+                    .label(format!("{span_name}/{lexer_name}"))
+                    .legend(move |coord| Circle::new(coord, 4, style));
+                chart.draw_series(LineSeries::new(
+                    chart_series.iter().map(|(x, y)| (*x as i32, *y)),
+                    &color,
+                ))?;
             }
 
             chart
                 .configure_series_labels()
+                .position(SeriesLabelPosition::LowerRight)
                 .background_style(&WHITE.mix(0.8))
                 .border_style(&BLACK)
                 .draw()?;
