@@ -1,0 +1,6 @@
+[book]
+authors = ["Dilshod Tadjibaev"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Wordchipper: High-Performance Tokenization in Rust"
