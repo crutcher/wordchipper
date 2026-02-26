@@ -1,5 +1,8 @@
 # Building Custom Logos Lexers
 
+> This chapter assumes familiarity with the two-phase pipeline (spanning + BPE encoding) described
+> in [How Tokenizers Work](./how-tokenizers-work.md).
+
 BPE tokenizers split text in two phases: first into words (pre-tokenization), then each word into
 subword tokens. The first phase is typically a big regex. OpenAI's `cl100k_base` pattern, for
 example, uses alternations with Unicode property classes and lookaheads to segment "hello world"
