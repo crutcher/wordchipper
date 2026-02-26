@@ -1,14 +1,15 @@
 use std::{
-    fs::File,
-    io::{BufRead, BufReader, BufWriter, Write},
+    io::{BufRead, Write},
     sync::Arc,
 };
 
 use wordchipper::{TokenDecoder, TokenEncoder, Tokenizer};
 
 use crate::{
-    Args,
-    common::{ModelSelectorArgs, TokenizerMode, TokenizerModeArgs, build_disk_cache},
+    disk_cache,
+    input_output::InputOutputArgs,
+    model_selector::ModelSelectorArgs,
+    tokenizer_mode::{TokenizerMode, TokenizerModeArgs},
 };
 
 /// Args for the cat command.
@@ -20,37 +21,29 @@ pub struct CatArgs {
     #[command(flatten)]
     mode: TokenizerModeArgs,
 
-    /// Input file, or use stdin.
-    #[clap(long, default_value = None)]
-    input: Option<String>,
+    #[command(flatten)]
+    input_output: InputOutputArgs,
 
-    /// Output file, or use stdout.
-    #[clap(long, default_value = None)]
-    output: Option<String>,
+    #[clap(flatten)]
+    pub disk_cache: disk_cache::DiskCacheArgs,
 }
 
-pub fn run_cat(
-    args: &Args,
-    cat_args: &CatArgs,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let mut disk_cache = build_disk_cache(args);
-    let tokenizer = cat_args.model.load_tokenizer(&mut disk_cache)?;
+impl CatArgs {
+    /// Run the cat command.
+    pub fn run(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let mut disk_cache = self.disk_cache.init_disk_cache()?;
+        let tokenizer = self.model.load_tokenizer(&mut disk_cache)?;
 
-    let mut reader: Box<dyn BufRead> = match &cat_args.input {
-        None => Box::new(BufReader::new(std::io::stdin().lock())),
-        Some(p) => Box::new(BufReader::new(File::open(p)?)),
-    };
-    let mut writer: Box<dyn Write> = match &cat_args.output {
-        Some(p) => Box::new(BufWriter::new(File::create(p)?)),
-        None => Box::new(BufWriter::new(std::io::stdout().lock())),
-    };
+        let mut reader = self.input_output.open_reader()?;
+        let mut writer = self.input_output.open_writer()?;
 
-    match cat_args.mode.mode() {
-        TokenizerMode::Encode => run_cat_encode(&mut reader, &mut writer, tokenizer)?,
-        TokenizerMode::Decode => run_cat_decode(&mut reader, &mut writer, tokenizer)?,
+        match self.mode.mode() {
+            TokenizerMode::Encode => run_cat_encode(&mut reader, &mut writer, tokenizer)?,
+            TokenizerMode::Decode => run_cat_decode(&mut reader, &mut writer, tokenizer)?,
+        }
+
+        Ok(())
     }
-
-    Ok(())
 }
 
 fn run_cat_encode(
