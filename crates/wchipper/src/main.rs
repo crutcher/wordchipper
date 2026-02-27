@@ -8,7 +8,7 @@ mod tokenizer_mode;
 use clap::Parser;
 use commands::Commands;
 
-/// wordchipper-cli
+/// Text tokenizer multi-tool.
 #[derive(clap::Parser, Debug)]
 pub struct Args {
     /// Subcommand to run.

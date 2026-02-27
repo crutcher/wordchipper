@@ -10,7 +10,7 @@ This crate is functional but has not received the same level of scrutiny as the 
 
 ## Training Demo
 
-See the training demo in [wordchipper-cli](../wordchipper-cli)
+See the training demo in [wordchipper-cli](../wchipper)
 
 ## Training
 
