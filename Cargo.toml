@@ -4,10 +4,9 @@
 resolver = "2"
 
 members = [
-    "crates/*",
-    "crates/*/examples/*",
-    "dev-crates/*",
     "bindings/*",
+    "crates/*",
+    "dev-crates/*",
 ]
 
 [workspace.package]

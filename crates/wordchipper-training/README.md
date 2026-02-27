@@ -10,18 +10,20 @@ This crate is functional but has not received the same level of scrutiny as the 
 
 ## Training Demo
 
-See the [training-ddemo](examples/training-demo) for an example of training a WordChipper tokenizer.
+See the training demo in [wordchipper-cli](../wordchipper-cli)
 
 ## Training
 
 This is a code snippet overview of training.
 
-Expect training to take ~1s/10MB of input; and to be slowed primarily by how well the stream logic of loading the
+Expect training to take ~1s/10MB of input; and to be slowed primarily by how well the stream logic
+of loading the
 training samples is parallelized.
 
 Note: currently, training has limited logging and no progress reporting.
 
-A common training binary is probably a good idea; and much of the messiness of supporting many different training data
+A common training binary is probably a good idea; and much of the messiness of supporting many
+different training data
 sources could be hidden in the isolated deps of such a tool.
 
 Consider the following, to train a tokenizer and export it a "*.tiktoken" file.
