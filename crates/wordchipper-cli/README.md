@@ -24,18 +24,21 @@
 ## cat
 
 ```terminaloutput
-% echo "abc def" | cargo run --release -p wordchipper-cli -- cat --encode --model=openai::gpt2
+% echo "abc def" | cargo run --release -p wordchipper-cli -- \
+    cat --encode --model=openai::gpt2
 39305 825 198
 
-% echo "39305 825 198" | cargo run --release -p wordchipper-cli -- cat --decode -
--model=openai::gpt2
+% echo "39305 825 198" | cargo run --release -p wordchipper-cli -- \
+    cat --decode --model=openai::gpt2
 abc def
 ```
 
 ## train
 
 ```terminal
-% cargo run --release -p wordchipper-cli -- train --input-format=parquet --output=/tmp/tok.tokenizer ~/Data/nanochat/dataset/*.parquet 
+% cargo run --release -p wordchipper-cli -- \
+    train --output=/tmp/tok.tokenizer \
+    --input-format=parquet  ~/Data/nanochat/dataset/*.parquet 
 INFO Reading shards:
 INFO 0: /Users/crutcher/Data/nanochat/dataset/shard_00000.parquet
 INFO 1: /Users/crutcher/Data/nanochat/dataset/shard_00001.parquet
