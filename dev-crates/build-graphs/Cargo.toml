@@ -1,0 +1,19 @@
+[package]
+name = "build-graphs"
+version.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+wordchipper = { path = "../../crates/wordchipper" }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+csv = { workspace = true }
+humansize = { workspace = true }
+plotters = { workspace = true }
+
+[lints]
+workspace = true

@@ -8,7 +8,6 @@ use wordchipper::{
     TokenType,
     UnifiedTokenVocab,
     disk_cache::WordchipperDiskCache,
-    load_vocab,
 };
 
 /// `OpenAI` "`r50k_base`" vocab.
@@ -31,6 +30,17 @@ fn get_disk_cache() -> &'static Mutex<WordchipperDiskCache> {
     DISK_CACHE.get_or_init(|| Mutex::new(WordchipperDiskCache::default()))
 }
 
+/// Loads a vocab for the target model.
+///
+/// Uses the default disk cache to load the vocab.
+pub fn load_bench_vocab(model: &str) -> Arc<UnifiedTokenVocab<u32>> {
+    let mut guard = get_disk_cache().lock().unwrap();
+    let disk_cache = &mut *guard;
+
+    let (_desc, vocab) = wordchipper::load_vocab(model, disk_cache).unwrap();
+
+    vocab
+}
 /// Builds an `Arc<Tokenizer<T>>` for the target model and options.
 ///
 /// Use the default disk cache to load the vocab.
@@ -38,12 +48,8 @@ pub fn load_encoder<T: TokenType>(
     model: &str,
     options: TokenEncoderOptions,
 ) -> Arc<dyn TokenEncoder<T>> {
-    let mut guard = get_disk_cache().lock().unwrap();
-    let disk_cache = &mut *guard;
-
-    let (_desc, vocab) = load_vocab(model, disk_cache).unwrap();
-
-    let vocab: Arc<UnifiedTokenVocab<T>> = vocab.to_token_type::<T>().unwrap().into();
+    let vocab: Arc<UnifiedTokenVocab<T>> =
+        load_bench_vocab(model).to_token_type::<T>().unwrap().into();
 
     options.build(vocab)
 }
