@@ -1,5 +1,5 @@
 [package]
-name = "tokenizer_trainer"
+name = "training-demo"
 repository.workspace = true
 rust-version.workspace = true
 edition.workspace = true
@@ -10,9 +10,9 @@ publish = false
 workspace = true
 
 [dependencies]
-wordchipper-data = { path = "../wordchipper-data" }
-wordchipper = { path = "../../crates/wordchipper" }
-wordchipper-training = { path = "../../crates/wordchipper-training" }
+wordchipper-data = { path = "../../../../dev-crates/wordchipper-data" }
+wordchipper = { path = "../../../wordchipper" }
+wordchipper-training = { path = "../.." }
 
 arrow = { workspace = true }
 clap = { workspace = true, features = ["derive"] }

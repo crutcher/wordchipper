@@ -93,22 +93,26 @@ See [bindings/wasm](bindings/wasm) for full API, build instructions, and example
 
 ### Published Crates
 
-- [wordchipper](crates/wordchipper)
-- [wordchipper-disk-cache](crates/wordchipper-disk-cache)
+- [wordchipper](crates/wordchipper) - main crate.
+- [wordchipper-training](crates/wordchipper-training) - training library.
+- [wordchipper-cli](crates/wordchipper-cli) - multifunction command-line tool.
+
+#### Internally Sourced Dep Crates
+
+You should never need to import these directly.
+
+- [wordchipper-disk-cache](crates/wordchipper-disk-cache) - disk cache.
 
 ### Bindings
 
 - [wordchipper-python](bindings/python) - Python bindings (PyO3/maturin)
 - [wordchipper-wasm](bindings/wasm) - WASM bindings (wasm-bindgen) with TypeScript wrapper
 
-### Unpublished Crates
+### Development Crates
 
-- [wordchipper-data](dev-crates/wordchipper-data)
+A Number of internal crates are used for development.
 
-### Tools
-
-- [sample-timer](dev-crates/sample-timer) - wordchipper vs tiktoken side-by-side timer.
-- [tokenizer_trainer](dev-crates/tokenizer_trainer) - training example.
+- [dev-crates](dev-crates)
 
 ## Acknowledgements
 

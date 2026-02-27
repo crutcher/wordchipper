@@ -3089,18 +3089,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
-name = "tokenizer_trainer"
-version = "0.0.0"
-dependencies = [
- "arrow",
- "clap",
- "similar",
- "wordchipper",
- "wordchipper-data",
- "wordchipper-training",
-]
-
-[[package]]
 name = "tokenizers"
 version = "0.22.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3233,6 +3221,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "db97caf9d906fbde555dd62fa95ddba9eecfd14cb388e4f491a66d74cd5fb79a"
 dependencies = [
  "once_cell",
+]
+
+[[package]]
+name = "training-demo"
+version = "0.0.0"
+dependencies = [
+ "arrow",
+ "clap",
+ "similar",
+ "wordchipper",
+ "wordchipper-data",
+ "wordchipper-training",
 ]
 
 [[package]]
