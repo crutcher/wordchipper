@@ -7,7 +7,7 @@ use wordchipper::{TokenDecoder, TokenEncoder, Tokenizer};
 
 use crate::{
     disk_cache,
-    input_output::InputOutputArgs,
+    input_output::{InputArgs, OutputArgs},
     model_selector::ModelSelectorArgs,
     tokenizer_mode::{TokenizerMode, TokenizerModeArgs},
 };
@@ -22,10 +22,13 @@ pub struct CatArgs {
     tokenizer_mode: TokenizerModeArgs,
 
     #[command(flatten)]
-    io: InputOutputArgs,
+    input: InputArgs,
 
     #[command(flatten)]
-    pub disk_cache: disk_cache::DiskCacheArgs,
+    output: OutputArgs,
+
+    #[command(flatten)]
+    disk_cache: disk_cache::DiskCacheArgs,
 }
 
 impl CatArgs {
@@ -34,8 +37,8 @@ impl CatArgs {
         let mut disk_cache = self.disk_cache.init_disk_cache()?;
         let tokenizer = self.model_selector.load_tokenizer(&mut disk_cache)?;
 
-        let mut reader = self.io.open_reader()?;
-        let mut writer = self.io.open_writer()?;
+        let mut reader = self.input.open_reader()?;
+        let mut writer = self.output.open_writer()?;
 
         match self.tokenizer_mode.mode() {
             TokenizerMode::Encode => run_cat_encode(&mut reader, &mut writer, tokenizer)?,

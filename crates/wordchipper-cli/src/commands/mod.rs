@@ -1,16 +1,18 @@
-use crate::commands::{cat::CatArgs, list_models::ListModelsArgs};
-
-pub mod cat;
-pub mod list_models;
+mod cat;
+mod list_models;
+mod train;
 
 /// Subcommands for wordchipper-cli
 #[derive(clap::Subcommand, Debug)]
 pub enum Commands {
     /// Act as a streaming tokenizer.
-    Cat(CatArgs),
+    Cat(cat::CatArgs),
 
     /// List available models.
-    ListModels(ListModelsArgs),
+    ListModels(list_models::ListModelsArgs),
+
+    /// Train a new model.
+    Train(train::TrainArgs),
 }
 
 impl Commands {
@@ -19,6 +21,7 @@ impl Commands {
         match self {
             Commands::Cat(cmd) => cmd.run(),
             Commands::ListModels(cmd) => cmd.run(),
+            Commands::Train(cmd) => cmd.run(),
         }
     }
 }

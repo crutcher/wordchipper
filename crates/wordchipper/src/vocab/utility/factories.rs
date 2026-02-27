@@ -83,15 +83,15 @@ impl ConstVocabularyFactory {
         &self,
         path: impl AsRef<Path>,
     ) -> WCResult<UnifiedTokenVocab<T>> {
-        let reader = BufReader::new(File::open(path)?);
-        self.read_vocab(reader)
+        let mut reader = BufReader::new(File::open(path)?);
+        self.read_vocab(&mut reader)
     }
 
     /// Read the pretrained vocabulary from a reader.
     #[cfg(feature = "std")]
-    pub fn read_vocab<T: TokenType, R: BufRead>(
+    pub fn read_vocab<T: TokenType>(
         &self,
-        reader: R,
+        reader: &mut dyn BufRead,
     ) -> WCResult<UnifiedTokenVocab<T>> {
         crate::vocab::io::read_base64_unified_vocab(reader, self.spanning_config())
     }

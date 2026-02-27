@@ -27,8 +27,8 @@ pub fn load_base64_unified_vocab_path<T: TokenType>(
     path: impl AsRef<Path>,
     spanning: TextSpanningConfig<T>,
 ) -> WCResult<UnifiedTokenVocab<T>> {
-    let reader = BufReader::new(File::open(path)?);
-    read_base64_unified_vocab(reader, spanning)
+    let mut reader = BufReader::new(File::open(path)?);
+    read_base64_unified_vocab(&mut reader, spanning)
 }
 
 /// Build a [`UnifiedTokenVocab`] from a pretrained bas64 vocab file.
@@ -37,8 +37,8 @@ pub fn load_base64_unified_vocab_path<T: TokenType>(
 /// * `data_path` - path to the file.
 /// * `pattern` - the word split pattern.
 /// * `special_tokens` - the special tokens.
-pub fn read_base64_unified_vocab<T: TokenType, R: BufRead>(
-    reader: R,
+pub fn read_base64_unified_vocab<T: TokenType>(
+    reader: &mut dyn BufRead,
     spanning: TextSpanningConfig<T>,
 ) -> WCResult<UnifiedTokenVocab<T>> {
     UnifiedTokenVocab::from_span_vocab(spanning, read_base64_span_map(reader)?.into())
@@ -75,8 +75,8 @@ where
     T: TokenType,
     P: AsRef<Path>,
 {
-    let reader = BufReader::new(File::open(path)?);
-    read_base64_span_map(reader)
+    let mut reader = BufReader::new(File::open(path)?);
+    read_base64_span_map(&mut reader)
 }
 
 /// Read a [`SpanTokenMap`] from a base64 vocab line reader.
@@ -89,10 +89,9 @@ where
 /// # Arguments
 /// * `span_map` - the vocabulary to extend.
 /// * `reader` - the line reader.
-pub fn read_base64_span_map<T, R>(reader: R) -> WCResult<SpanTokenMap<T>>
+pub fn read_base64_span_map<T>(reader: &mut dyn BufRead) -> WCResult<SpanTokenMap<T>>
 where
     T: TokenType,
-    R: BufRead,
 {
     let mut vocab = SpanTokenMap::default();
 
@@ -147,13 +146,12 @@ pub fn save_base64_span_map_path<T: TokenType, P: AsRef<Path>>(
 /// # Arguments
 /// * `span_map` - the vocabulary to save.
 /// * `writer` - the writer to target.
-pub fn write_base64_span_map<T, W>(
+pub fn write_base64_span_map<T>(
     span_map: &SpanTokenMap<T>,
-    writer: &mut W,
+    writer: &mut dyn Write,
 ) -> WCResult<()>
 where
     T: TokenType,
-    W: Write,
 {
     let mut items: Vec<(T, &Vec<u8>)> = span_map
         .iter()

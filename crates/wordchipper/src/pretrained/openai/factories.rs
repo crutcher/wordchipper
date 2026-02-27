@@ -155,9 +155,9 @@ impl OATokenizer {
 
     /// Read pretrained `OpenAI` tokenizer vocabulary from a reader.
     #[cfg(feature = "std")]
-    pub fn read_vocab<T: TokenType, R: BufRead>(
+    pub fn read_vocab<T: TokenType>(
         &self,
-        reader: R,
+        reader: &mut dyn BufRead,
     ) -> crate::WCResult<crate::UnifiedTokenVocab<T>> {
         self.factory().read_vocab(reader)
     }
