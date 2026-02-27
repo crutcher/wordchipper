@@ -38,7 +38,7 @@
   <script type="module">
     import init, { Tokenizer } from "./wordchipper_wasm.js";
 
-    // Local vocab files downloaded by setup.sh (OpenAI CDN lacks CORS headers).
+    // Local vocab files downloaded by `cargo x wasm-browser` (OpenAI CDN lacks CORS headers).
     const VOCAB_URLS = {
       r50k_base:   "vocab/r50k_base.tiktoken",
       p50k_base:   "vocab/p50k_base.tiktoken",

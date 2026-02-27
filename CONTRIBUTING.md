@@ -112,7 +112,7 @@ tokenizer demo. When adding or changing public API, update the relevant book cha
 doc comments.
 
 ```sh
+cargo x book-demo-setup   # first time only
 cd book
-./setup-wasm.sh   # first time only
 mdbook serve
 ```

@@ -8,6 +8,7 @@ members = [
     "crates/*/examples/*",
     "dev-crates/*",
     "bindings/*",
+    "xtask",
 ]
 
 [workspace.package]

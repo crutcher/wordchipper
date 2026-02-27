@@ -97,8 +97,8 @@ pytest tests/ -v
 
 ```sh
 cargo install mdbook
+cargo x book-demo-setup             # Build WASM demo and download vocab files
 cd book
-./setup-wasm.sh                     # Build WASM demo and download vocab files
 mdbook serve                        # Serve locally at http://localhost:3000
 mdbook build                        # Build static HTML to book/book/
 ```
