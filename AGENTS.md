@@ -1,13 +1,14 @@
 # AGENTS.md — wordchipper
 
-This document describes the project layout and architecture of **wordchipper**. It is intended to
-provide a overview context for coding agents.
+Context for coding agents working on **wordchipper**. Read this before writing any code.
+
+---
 
 ## Project Overview
 
-**wordchipper** is a high-performance Rust BPE (Byte Pair Encoding) tokenizer library targeting HPC
-environments. It provides training, encoding, and decoding of BPE vocabularies, with compatibility
-for `tiktoken` and `nanochat/rustbpe` formats.
+**wordchipper** is a high-performance Rust BPE (Byte Pair Encoding) tokenizer library targeting
+HPC environments. It provides training, encoding, and decoding of BPE vocabularies, with
+compatibility for `tiktoken` and `nanochat/rustbpe` formats.
 
 - **Repository**: https://github.com/crutcher/wordchipper
 - **License**: MIT
@@ -15,27 +16,44 @@ for `tiktoken` and `nanochat/rustbpe` formats.
 - **MSRV**: 1.93.0
 - **Current Version**: 0.7.3
 
+---
+
 ## Workspace Layout
 
 ```
 wordchipper/
 ├── crates/
-│   ├── wordchipper/           # Core library (published)
-│   ├── wordchipper-disk-cache/# Download cache (published)
-│   ├── wordchipper-data/      # Dataset loading (unpublished)
-│   └── wordchipper-experimental/ # Experimental extensions (unpublished)
+│   ├── wordchipper/              # Core library (published)
+│   ├── wordchipper-disk-cache/   # Download cache utility (published, internal dep)
+│   ├── wordchipper-training/     # BPE training library (published)
+│   └── wordchipper-cli/          # CLI tool (published)
 ├── bindings/
-│   └── python/                # Python bindings (PyO3 + maturin)
-├── examples/
-│   ├── sample-timer/          # Benchmark tool vs tiktoken/tokenizers
-│   └── tokenizer_trainer/     # Training example
+│   ├── python/                   # PyO3/maturin Python bindings (published to PyPI)
+│   └── wasm/                     # wasm-bindgen WASM bindings + TypeScript wrapper
+├── dev-crates/
+│   ├── wordchipper-bench/        # Divan benchmark suite (unpublished)
+│   ├── wordchipper-data/         # Dataset loading for training (unpublished)
+│   └── sample-timer/             # Timing comparisons vs tiktoken/tokenizers (unpublished)
+└── book/                         # mdBook documentation with interactive WASM demo
 ```
+
+### Published Crates
+
+| Crate | Purpose |
+|---|---|
+| `wordchipper` | Core encode/decode/vocab library |
+| `wordchipper-training` | BPE vocabulary trainer |
+| `wordchipper-cli` | Command-line interface |
+| `wordchipper-disk-cache` | Disk cache for vocab downloads (not intended for direct use) |
+
+---
 
 ## Build & Test Commands
 
 ```sh
 # Format (requires nightly)
-cargo +nightly fmt --check
+cargo +nightly fmt
+cargo +nightly fmt --check   # CI check
 
 # Lint
 cargo clippy --no-deps
@@ -43,225 +61,156 @@ cargo clippy --no-deps
 # Test (full workspace)
 cargo test --workspace
 
-# Test with training feature
-cargo test -p wordchipper --features training
+# Test alternate hash backend
+cargo test -p wordchipper --no-default-features --features client,ahash
 
-# Test with foldhash instead of ahash
-cargo test -p wordchipper --no-default-features --features client,foldhash
-
-# Test no_std
+# Test no_std surface
 cargo test -p wordchipper --no-default-features --tests
 
-# Cross-check no_std (wasm32 + ARM Cortex-M3)
+# Cross-check no_std targets (wasm32 + ARM Cortex-M3)
 cargo check -p wordchipper --target wasm32-unknown-unknown --no-default-features
 cargo check -p wordchipper --target thumbv7m-none-eabi --no-default-features
 
-# Generate docs
+# Generate docs (all features)
 cargo doc --no-deps --quiet --all-features
 ```
 
-CI runs all of the above on every push/PR to `main`.
+### WASM Bindings
+
+```sh
+cd bindings/wasm
+wasm-pack build --target web        # Build package
+wasm-pack test --node               # Run tests (used by CI)
+```
 
 ### Python Bindings
 
 ```sh
 cd bindings/python
-uv venv .venv
-source .venv/bin/activate
+uv venv .venv && source .venv/bin/activate
 uv pip install maturin pytest
 maturin develop
 pytest tests/ -v
 ```
 
-## Feature Flags
+### Book (mdBook)
 
-| Feature    | Purpose                                                                         |
-| ---------- | ------------------------------------------------------------------------------- |
-| `default`  | `foldhash` + `client` + `logos` + `rayon`                                       |
-| `std`      | Standard library support (most features depend on this)                         |
-| `client`   | `download` + `std`; load and run pretrained encoders/decoders                   |
-| `download` | Enable vocabulary downloading via `wordchipper-disk-cache`                      |
-| `training` | BPE vocabulary training (`compact_str`, `dary_heap`)                            |
-| `ahash`    | Swap `HashMap`/`HashSet` to `ahash` (wins if both `ahash` + `foldhash` enabled) |
-| `foldhash` | Alternative fast hash via `foldhash`                                            |
-| `rayon`    | Batch parallelism wrappers for encoders/decoders                                |
-| `tracing`  | `tracing` instrumentation points                                                |
-| `testing`  | Test utilities for downstream crates                                            |
+```sh
+cargo install mdbook
+cd book
+./setup-wasm.sh                     # Build WASM demo and download vocab files
+mdbook serve                        # Serve locally at http://localhost:3000
+mdbook build                        # Build static HTML to book/book/
+```
+
+### CI Jobs
+
+All of the following must pass on every push/PR to `main`:
+`fmt` → `clippy` → `test` → `cross` → `wasm` → `python`
+
+---
+
+## Feature Flags (`wordchipper` crate)
+
+| Feature | Default | Purpose |
+|---|---|---|
+| `std` | via `client` | Standard library support |
+| `client` | ✓ | Load and run pretrained encoders/decoders |
+| `download` | via `client` | Network vocab downloading |
+| `datagym` | via `client` | JSON I/O for training data |
+| `foldhash` | ✓ | Fast hashing (default hasher) |
+| `ahash` | | Alternative fast hasher; wins if both enabled |
+| `rayon` | ✓ | Batch parallelism for encode/decode |
+| `tracing` | | `tracing` instrumentation points |
+| `testing` | | Utilities for downstream test crates |
+
+`wordchipper-training` has no default features; enable `tracing` optionally.
+
+---
 
 ## `no_std` Support
 
-The crate uses unconditional `#![no_std]` with `#[cfg(feature = "std")] extern crate std;` (see
-[this PSA](https://www.reddit.com/r/rust/comments/1hs6spy/psa_for_std_feature_in_no_std_libraries/)).
-A `pub(crate) mod prelude` in `lib.rs` re-exports common `alloc` types (`Vec`, `String`, `ToString`,
-`Box`) so modules just add `use crate::prelude::*;` instead of individual `alloc` imports.
+The crate uses unconditional `#![no_std]` with `#[cfg(feature = "std")] extern crate std;`
+(the "Reddit PSA" pattern). A `pub(crate) mod prelude` re-exports `alloc` types (`Vec`, `String`,
+`ToString`, `Box`). Add `use crate::prelude::*;` in any module needing those types.
 
-### Modules that work in `no_std`
+- `hashbrown` is always present (non-optional) for `HashMap`/`HashSet` in `no_std`.
+- All features that require OS threads, file I/O, or network are `std`-gated.
+- WASM bindings (`bindings/wasm/`) build with `default-features = false` as the canonical
+  `no_std` integration example.
 
-The core tokenization pipeline compiles and runs without `std`:
+---
 
-| Module                   | What it provides                                                        |
-| ------------------------ | ----------------------------------------------------------------------- |
-| `spanning`               | Text splitting (regex spanners, logos DFA lexers)                       |
-| `encoders`               | BPE span encoding (falls back to non-pooled mode without std)           |
-| `decoders`               | Token decoding, byte/string decode results                              |
-| `vocab` (core)           | `ByteMapVocab`, `SpanMapVocab`, `PairMapVocab`, `UnifiedTokenVocab`     |
-| `pretrained` (constants) | Regex patterns, special token definitions                               |
-| `tokenizer`              | Combined `Tokenizer` builder                                            |
-| `types`                  | `TokenType` trait, `WCHashMap`/`WCHashSet` (uses `hashbrown` in no_std) |
-| `errors`                 | `WCError` (without `Io` variant)                                        |
-| `support` (partial)      | Regex wrappers, string/slice utilities                                  |
+## Core Architecture
 
-### Modules that require `std`
+### Two-Phase Tokenization
 
-| Module                          | Feature gate | Why                                          |
-| ------------------------------- | ------------ | -------------------------------------------- |
-| `training/*`                    | `training`   | Depends on `compact_str`, `dary_heap`        |
-| `disk_cache`                    | `download`   | File I/O, HTTP downloads                     |
-| `pretrained::load_by_name`      | `download`   | Loads vocabs from disk/network               |
-| `pretrained::openai::factories` | `std`        | File I/O for vocab loading                   |
-| `vocab::io`                     | `std`        | Base64 vocab file reading/writing            |
-| `support::concurrency`          | `std`        | `PoolToy`, thread utilities, `Mutex` pooling |
-| `support::concurrency::rayon`   | `rayon`      | Batch parallelism wrappers                   |
-| `support::timers`               | `std`        | Timing utilities                             |
+1. **Spanning** (pre-tokenization) — splits raw text into word-level spans via regex or Logos DFA.
+2. **BPE Encoding** — merges subword pairs within each span using the vocabulary merge table.
 
-### CI cross-compilation targets
+### Key Types
 
-No-std compatibility is verified in CI against real no_std targets:
+| Type | Role |
+|---|---|
+| `UnifiedTokenVocab<T>` | Primary user-facing vocabulary; owns `ByteMapVocab`, `SpanMapVocab`, `PairMapVocab`, and `TextSpanningConfig` |
+| `Tokenizer<T>` | Wraps vocab + encoder + decoder; primary entry point |
+| `TokenizerOptions` | Builder for `Tokenizer`; controls parallelism and other options |
+| `TextSpanningConfig<T>` | Regex patterns + special tokens for pre-tokenization |
+| `SpanMapVocab<T>` | `Vec<u8> → T` dictionary |
+| `PairMapVocab<T>` | `(T, T) → T` BPE merge rules |
+| `ByteMapVocab<T>` | Bijective `u8 ↔ T` byte map (256 entries) |
 
-```sh
-# Host tests
-cargo test -p wordchipper --no-default-features --tests
+`T` is generic over `TokenType` (`u16`, `u32`, `u64`). `u32` is standard; use `u16` only for
+vocabs ≤ 65535 tokens.
 
-# Cross-compilation checks (no test runner, just type-checking)
-cargo check -p wordchipper --target wasm32-unknown-unknown --no-default-features
-cargo check -p wordchipper --target thumbv7m-none-eabi --no-default-features
-```
+### Encoder/Decoder Implementations
 
-## Architecture
+Multiple encoder and decoder implementations are maintained deliberately for cross-benchmarking.
+Do **not** consolidate them to a single "best" implementation — the ability to benchmark across
+approaches is an architectural requirement.
 
-### Core Pipeline
+### Vocabulary Immutability
 
-**Text → Spans → Tokens → Text**
+`UnifiedTokenVocab` is immutable after construction and typically wrapped in `Arc`. This is a
+deliberate design choice enabling thread safety and cacheline-friendly access patterns.
 
-1. **Spanning** (`spanning/`): Regex-based text splitting + special token handling via
-   `TextSpanningConfig`. `RegexTextSpanner` implements runtime management with thread-safe regex
-   pooling.
-2. **Encoding** (`encoders/`): Span → token sequences via BPE merge. Use `TokenEncoderBuilder` to
-   construct encoders. Multiple `SpanPolicy` implementations exist for cross-benchmarking:
-   - `MergeHeapSpanPolicy` — heap-based best-merge selection
-   - `MergeScanCompoundPolicy` — incremental rescan for merges
-3. **Decoding** (`decoders/`): Token → bytes via dictionary lookup (`TokenDictDecoder`). Use
-   `TokenDecoderBuilder` to construct decoders.
-4. **Vocabulary** (`vocab/`): Layered vocab types — `ByteMapVocab`, `SpanMapVocab`, `PairMapVocab`,
-   `SpecialVocab`, unified in `UnifiedTokenVocab`.
+Dynamic span caching was tested and abandoned due to cacheline contention under multi-threaded load.
 
-### Key Design Principles
+### Logos DFA Lexers
 
-- **Vocabularies are immutable post-construction.** This is critical for thread safety and
-  cache-line performance. Dynamic span caching was tested and abandoned due to cacheline contention
-  under concurrent access.
-- **Multiple encoder/decoder implementations coexist** for cross-benchmarking across workloads and
-  hardware.
-- **Generic over `TokenType`** (`T: TokenType`). Common concrete types: `u16`, `u32`.
-- **Hash strategy is swappable** via `WCHashMap`/`WCHashSet` type aliases in `types/`, controlled by
-  `ahash`/ `foldhash`/`hashbrown` features.
-- **Builder pattern for encoders/decoders.** Use `TokenEncoderBuilder` and `TokenDecoderBuilder` to
-  construct production-ready encoder/decoder instances with appropriate parallelism configuration.
+For OpenAI-style pre-tokenization patterns, Logos DFA lexers provide 30–50× speedup over regex by
+compiling patterns to DFAs at build time. Post-processing via `TokenRole` and
+`for_each_classified_span` corrects the DFA output to match the `\s+(?!\S)` lookahead semantics
+that Logos cannot express natively.
 
-### Concurrency
+---
 
-- `PoolToy<T>` — thread-ID-hashed pool (avoids contention vs true thread-local storage).
-- `ParallelRayonEncoder` / `ParallelRayonDecoder` — batch-level `rayon` wrappers, automatically
-  included when using builders with `parallel = true` (the default).
-- Thread ID hashing uses an `unsafe transmute` (documented, mirrors `tiktoken`'s approach).
-- `TokenEncoder::spanner()` now returns `Arc<dyn TextSpanner>` for safe sharing of spanner instances
-  across threads.
+## Code Conventions
 
-### Pretrained Models
+See [`STYLE_GUIDE.md`](STYLE_GUIDE.md) for full details. Key rules:
 
-OpenAI tokenizer support in `pretrained/openai/`:
+- **"Style Hints"**: Many types carry `## Style Hints` doc comments prescribing preferred variable
+  names. Follow them. Examples: `SpanTokenMap<T>` → `span_map`; `TextSpanningConfig<T>` →
+  `spanner_config`.
+- **All public items must have `///` doc comments** with `## Arguments`, `## Returns`,
+  `## Panics` sections as appropriate.
+- **Private fields, public accessors**: struct fields are private; expose via `foo()`, `set_foo()`,
+  `with_foo()`.
+- **Constructors**: prefer `from_*` and `new()` returning `Self` or `WCResult<Self>`.
+- **Builder methods**: `with_*`, consume `self`.
+- **`cfg` gating**: feature-gated modules use `#[cfg(feature = "...")]` at `mod` declarations.
+- **Error handling**: use `thiserror` in `wordchipper`; `anyhow` is acceptable in binaries and
+  dev-crates.
+- **Tests**: live in `#[cfg(test)] mod tests` in the same file; use `serial_test::serial` for
+  env-var mutation.
+- **`missing_docs` and `unused` are warned** at crate root; treat warnings as errors (`deny`).
 
-- `OATokenizer` enum: `R50kBase`, `P50kBase`, `P50kEdit`, `Cl100kBase`, `O200kBase`, `O200kHarmony`
-- Each has associated regex patterns, special tokens, and vocabulary resources.
+---
 
-### Python Bindings (`bindings/python/`)
+## Dependency Notes
 
-PyO3 + maturin based Python package exposing the core tokenizer API:
-
-- `src/lib.rs` — FFI layer: `Tokenizer` pyclass wrapping `UnifiedTokenVocab`,
-  `Arc<dyn TokenEncoder>`, `Arc<dyn TokenDecoder>`. Errors convert via `WordchipperError` to
-  `PyValueError`/`PyIOError`.
-- `py_src/wordchipper/` — Python package with `__init__.py` (re-export), `__init__.pyi` (type
-  stubs), `py.typed` (PEP 561 marker).
-- Methods: `from_pretrained()`, `encode()`, `decode()`, `encode_batch()`, `decode_batch()`,
-  `vocab_size`, `token_to_id()`, `id_to_token()`, `get_special_tokens()`, `available_models()`,
-  `save_vocab()`.
-- Build: `maturin develop` for dev, `maturin build --release` for wheels.
-
-## Code Style Conventions
-
-### "Style Hints" Pattern
-
-Many types and type aliases carry `## Style Hints` doc comments that prescribe preferred instance
-variable names. **Follow these.** Examples:
-
-- `SpanTokenMap<T>` → instance name `span_map` or `span_token_map`
-- `PoolToy<T>` → instance name `${T-name}_pool` (e.g. `regex_pool`)
-- `TokenEncoder<T>` → prefer `encoder` when unambiguous
-- `TokenDecoder<T>` → prefer `decoder` when unambiguous
-- `TokenEncoderBuilder<T>` / `TokenDecoderBuilder<T>` → use `builder` suffixes when constructing
-- `TextSpanningConfig<T>` → prefer `spanner_config` or `config`
-- `RegexTextSpanner` → prefer `spanner`
-
-### Rust Style
-
-- **Formatter**: `rustfmt` on nightly, with custom `rustfmt.toml`:
-  - `fn_params_layout = "Vertical"` — each parameter on its own line
-  - `group_imports = "StdExternalCrate"` / `imports_granularity = "Crate"`
-  - `format_code_in_doc_comments = true`
-- **Lints**: `warnings = "deny"`, `clippy::doc_markdown = "deny"`,
-  `clippy::double_must_use = "allow"`
-- **`#![warn(missing_docs, unused)]`** is set at crate root.
-- **Doc comments**: Use `///` with `## Arguments`, `## Returns`, `## Panics` sections as
-  appropriate.
-- All public items must have doc comments.
-- **Constructor pattern**: Prefer `from_*` and `new()` returning `Self` or
-  `wordchipper::errors::Result<Self>`.
-- Builder-style methods use `with_*` naming and consume `self`.
-- **Encapsulation**: Struct fields are private; provide accessor methods.
-- **`cfg` gating**: Feature-gated modules use `#[cfg(feature = "...")]` at `mod` declarations.
-- **`no_std` prelude**: The crate is unconditionally `#![no_std]`. Common alloc types (`Vec`,
-  `String`, `ToString`, `Box`) are re-exported via `crate::prelude`. Add `use crate::prelude::*;` to
-  any module that uses these types. The `vec!` and `format!` macros are available crate-wide via
-  `#[macro_use] extern crate alloc` when `std` is enabled. For other alloc items, import via
-  `crate::alloc::*` (e.g. `crate::alloc::sync::Arc`).
-
-### Testing
-
-- Tests live in `#[cfg(test)] mod tests` within the same file.
-- Common test utilities are behind the `testing` feature flag.
-- Use `serial_test::serial` for tests that mutate environment variables.
-- Integration testing for pretrained models may require network access
-  (`#[cfg(feature = "download")]`).
-
-### Dependencies
-
-- **Error handling**: The core `wordchipper` crate uses `thiserror` (not `anyhow`) for structured
-  error types. See `crates/wordchipper/src/errors.rs` for the `WordchipperError` enum and
-  `Result<T>` alias. Ancillary crates (disk-cache, examples) may still use `anyhow` at their own
-  boundaries.
-- **Regex pinning**: `fancy-regex = "0.13.0"` and `regex = "1.10.3"` are intentionally pinned.
-  Upgrading introduces performance regressions under concurrent encoding due to contention; do not
-  upgrade without benchmarking.
-- `pip install` equivalent: always add deps to `[workspace.dependencies]` first, then reference with
-  `{ workspace = true }` in crate-level `Cargo.toml`.
-
-## Things to Know
-
-- The `o200k_base` / `o200k_harmony` models use more complex regex patterns and are inherently
-  slower than the `r50k`/ `p50k`/`cl100k` family.
-- `tokenizers` crate benchmarks show anomalously low throughput — likely a `rayon` interaction
-  issue, not yet diagnosed.
-- The `no_std` path is CI-tested (host tests + wasm32/thumbv7m cross-compilation) but not yet
-  validated in an actual embedded/no-std deployment.
-- The project is in alpha-publication stage; API stability is not yet guaranteed.
+- `regex` and `fancy-regex` are intentionally pinned due to a performance regression under
+  concurrent access in newer versions. Do not upgrade without benchmarking.
+- `hashbrown` is non-optional so `default-features = false` works out of the box.
+- Library crates require broader semver ranges than binaries; validate with
+  `cargo +nightly update -Z minimal-versions` before bumping deps.
