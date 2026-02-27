@@ -98,7 +98,7 @@ text, and click **Encode & Decode** to see the token IDs, roundtrip verification
     Tokenizer = mod.Tokenizer;
     await init();
   } catch (e) {
-    statusEl.textContent = "WASM not loaded. Run ./book/setup-wasm.sh to build.";
+    statusEl.textContent = "WASM not loaded. Run: cargo x book-demo-setup";
     throw e;
   }
 

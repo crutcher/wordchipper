@@ -9,11 +9,11 @@ cargo install mdbook
 ## WASM interactive demo
 
 The book includes an interactive tokenizer demo that runs in the browser via WebAssembly.
-Before building or serving the book, run the setup script to build the WASM module and
+Before building or serving the book, run the setup task to build the WASM module and
 download vocab files:
 
 ```bash
-./setup-wasm.sh
+cargo x book-demo-setup
 ```
 
 This creates `src/wasm/` (gitignored) with the WASM binary and vocab data.

@@ -1,5 +1,5 @@
 // Node.js example for wordchipper WASM bindings.
-// Run setup.sh first, then: node index.mjs
+// Run `cargo x wasm-node` first, then: node index.mjs
 
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
