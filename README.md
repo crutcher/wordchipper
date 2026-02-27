@@ -1,4 +1,4 @@
-![wordchipper hpc rust tokenizer](media/logo.svg)
+![wordchipper hpc rust tokenizer](media/logo.png)
 
 [![Crates.io Version](https://img.shields.io/crates/v/wordchipper)](https://crates.io/crates/wordchipper)
 [![Documentation](https://img.shields.io/docsrs/wordchipper)](https://docs.rs/wordchipper/latest/wordchipper/)
