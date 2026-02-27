@@ -3229,7 +3229,7 @@ version = "0.0.0"
 dependencies = [
  "arrow",
  "clap",
- "similar",
+ "compact_str",
  "wordchipper",
  "wordchipper-data",
  "wordchipper-training",
