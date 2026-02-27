@@ -91,7 +91,7 @@ pub fn build(
                 let span_name = parts[0];
                 let lexer_name = parts[1];
 
-                if SpanEncoderSelector::from_str(&span_name).is_err() {
+                if SpanEncoderSelector::from_str(span_name).is_err() {
                     continue;
                 }
 
@@ -105,7 +105,7 @@ pub fn build(
                     .read_dir()?
                     .filter_map(|e| {
                         let d = e.unwrap();
-                        if u32::from_str(&d.file_name().to_string_lossy().to_string()).is_ok() {
+                        if u32::from_str(d.file_name().to_string_lossy().as_ref()).is_ok() {
                             Some(d)
                         } else {
                             None
@@ -113,7 +113,7 @@ pub fn build(
                     })
                     .collect::<Vec<DirEntry>>();
                 dirs.sort_by_key(|e| {
-                    u32::from_str(&e.file_name().to_string_lossy().to_string()).unwrap()
+                    u32::from_str(e.file_name().to_string_lossy().as_ref()).unwrap()
                 });
 
                 for thread_dir in dirs {
@@ -190,7 +190,7 @@ pub fn build(
                     .draw_series(PointSeries::<_, _, Circle<_, _>, _>::new(
                         chart_series.iter().map(|(x, y)| (*x as i32, *y)),
                         4,
-                        style.clone(),
+                        style,
                     ))?
                     .label(format!("{span_name}/{lexer_name}"))
                     .legend(move |coord| Circle::new(coord, 4, style));
@@ -203,8 +203,8 @@ pub fn build(
             chart
                 .configure_series_labels()
                 .position(SeriesLabelPosition::LowerRight)
-                .background_style(&WHITE.mix(0.8))
-                .border_style(&BLACK)
+                .background_style(WHITE.mix(0.8))
+                .border_style(BLACK)
                 .draw()?;
 
             root.present()?;

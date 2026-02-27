@@ -31,6 +31,7 @@
       <sourceFolder url="file://$MODULE_DIR$/dev-crates/wordchipper-data/examples/pull/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/dev-crates/wordchipper-data/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/dev-crates/wordchipper-experimental/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/dev-crates/build-graphs/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/crates/nanochat/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/crates/wordchipper/target" />
