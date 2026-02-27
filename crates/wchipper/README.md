@@ -1,9 +1,13 @@
-# wordchipper-cli
+# wchipper
+
+A text LLM tokenizer command line multi-tool.
+
+Released as part of [wordchipper](https://crates.io/crates/wordchipper) suite.
 
 ## list-models
 
 ```terminaloutput
- % cargo run --release -p wordchipper-cli -- list-models                  
+ % wchipper list-models                  
 "openai" - Pretrained vocabularies from OpenAI
   * "openai:gpt2"
     GPT-2 `gpt2` vocabulary
@@ -24,8 +28,7 @@
 ## cat
 
 ```terminaloutput
-% echo "abc def" | cargo run --release -p wordchipper-cli -- \
-    cat --encode --model=openai::gpt2
+% echo "abc def" | wchipper cat --encode --model=openai::gpt2
 39305 825 198
 
 % echo "39305 825 198" | cargo run --release -p wordchipper-cli -- \
@@ -36,8 +39,7 @@ abc def
 ## train
 
 ```terminal
-% cargo run --release -p wordchipper-cli -- \
-    train --output=/tmp/tok.tokenizer \
+% wchipper train --output=/tmp/tok.tokenizer \
     --input-format=parquet  ~/Data/nanochat/dataset/*.parquet 
 INFO Reading shards:
 INFO 0: /Users/crutcher/Data/nanochat/dataset/shard_00000.parquet

@@ -2,7 +2,7 @@ mod cat;
 mod list_models;
 mod train;
 
-/// Subcommands for wordchipper-cli
+/// Subcommands for wchipper
 #[derive(clap::Subcommand, Debug)]
 pub enum Commands {
     /// Act as a streaming tokenizer.
