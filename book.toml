@@ -1,5 +1,5 @@
 [book]
-title = "Wordchipper"
+title = "Wordchipper: High-Performance Tokenization in Rust"
 authors = ["Crutcher Dunnavant"]
 src = "book/src"
 
