@@ -18,3 +18,5 @@ stderrlog = { workspace = true }
 log = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 
+arrow = { workspace = true }
+parquet = { workspace = true, features = ["arrow"] }

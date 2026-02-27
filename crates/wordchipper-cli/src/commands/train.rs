@@ -3,6 +3,8 @@ use std::{
     sync::Arc,
 };
 
+use arrow::array::{Array, StringArray};
+use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
 use wordchipper::{
     UnifiedTokenVocab,
     VocabIndex,
@@ -18,6 +20,9 @@ use crate::{input_output::OutputArgs, logging::LogArgs};
 pub enum FileFormat {
     /// Simple text files.
     Text,
+
+    /// Parquet files.
+    Parquet,
 }
 
 /// Args for the train command.
@@ -57,6 +62,9 @@ impl TrainArgs {
                 FileFormat::Text => {
                     self.read_text_file(&mut trainer, path)?;
                 }
+                FileFormat::Parquet => {
+                    self.read_parquet_file(&mut trainer, path)?;
+                }
             }
         }
 
@@ -84,9 +92,33 @@ impl TrainArgs {
     ) -> Result<(), Box<dyn std::error::Error>> {
         let reader = BufReader::new(std::fs::File::open(path)?);
         for line in reader.lines() {
-            let line = line?;
-            trainer.update_from_samples(vec![line.to_string()]);
+            trainer.update_from_samples(vec![line?.to_string()]);
         }
+        Ok(())
+    }
+
+    fn read_parquet_file(
+        &self,
+        trainer: &mut BPETrainer,
+        path: &str,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let file = std::fs::File::open(path)?;
+        let reader = ParquetRecordBatchReaderBuilder::try_new(file)?.build()?;
+        for batch in reader {
+            let batch = batch?;
+
+            let samples = batch
+                .column_by_name("text")
+                .expect("failed to find 'text' column in batch")
+                .as_any()
+                .downcast_ref::<StringArray>()
+                .unwrap()
+                .iter()
+                .filter_map(|s| s.map(|s| s.to_string()));
+
+            trainer.update_from_samples(samples);
+        }
+
         Ok(())
     }
 }

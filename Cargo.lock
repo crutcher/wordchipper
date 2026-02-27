@@ -4037,8 +4037,10 @@ dependencies = [
 name = "wordchipper-cli"
 version = "0.7.3"
 dependencies = [
+ "arrow",
  "clap",
  "log",
+ "parquet",
  "stderrlog",
  "wordchipper",
  "wordchipper-training",
