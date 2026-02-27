@@ -156,15 +156,11 @@ where
 /// Assume ISO/IEC 8859-1 (<https://en.wikipedia.org/wiki/ISO/IEC_8859-1>)
 /// non-whitespace printable character range:
 /// [0x21-0x7E], [0xA1-0xAD), (0xAD-0xFF]
-pub fn read_datagym_vocab<VR, ER>(
-    vocab_bpe_reader: VR,
-    encoder_json_reader: ER,
+pub fn read_datagym_vocab(
+    vocab_bpe_reader: &mut dyn BufRead,
+    encoder_json_reader: &mut dyn BufRead,
     clobber_one_byte_tokens: bool,
-) -> WCResult<SpanTokenMap<usize>>
-where
-    VR: BufRead,
-    ER: BufRead,
-{
+) -> WCResult<SpanTokenMap<usize>> {
     let (mojibake_map, mut span_map) = read_datagym_vocab_bpe(vocab_bpe_reader)?;
 
     let encoder_json_loaded = read_datagym_encoder_json(encoder_json_reader, &mojibake_map)?;
@@ -191,10 +187,10 @@ pub fn load_gpt2_vocab<T: TokenType>(
     let vocab_file = std::fs::File::open(vocab_path)?;
     let encoder_file = std::fs::File::open(encoder_path)?;
 
-    let vocab_reader = BufReader::new(vocab_file);
-    let encoder_reader = BufReader::new(encoder_file);
+    let mut vocab_reader = BufReader::new(vocab_file);
+    let mut encoder_reader = BufReader::new(encoder_file);
 
-    let span_map = read_datagym_vocab(vocab_reader, encoder_reader, false)?;
+    let span_map = read_datagym_vocab(&mut vocab_reader, &mut encoder_reader, false)?;
 
     UnifiedTokenVocab::from_span_vocab(
         oa_r50k_base_spanning_config(),

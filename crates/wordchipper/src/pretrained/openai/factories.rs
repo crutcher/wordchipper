@@ -51,15 +51,12 @@ pub fn load_gpt2_vocab<T: TokenType>(
     };
 
     let vocab_path = loader.load_resource_path(&OA_GPT2_VOCAB_BPE_KEYED_RESOURCE.into())?;
+    let mut vocab_reader = BufReader::new(std::fs::File::open(vocab_path)?);
+
     let encoder_path = loader.load_resource_path(&OA_GPT2_ENCODER_JSON_KEYED_RESOURCE.into())?;
+    let mut encoder_reader = BufReader::new(std::fs::File::open(encoder_path)?);
 
-    let vocab_file = std::fs::File::open(vocab_path)?;
-    let encoder_file = std::fs::File::open(encoder_path)?;
-
-    let vocab_reader = BufReader::new(vocab_file);
-    let encoder_reader = BufReader::new(encoder_file);
-
-    let span_map = read_datagym_vocab(vocab_reader, encoder_reader, false)?;
+    let span_map = read_datagym_vocab(&mut vocab_reader, &mut encoder_reader, false)?;
 
     UnifiedTokenVocab::from_span_vocab(
         oa_r50k_base_spanning_config(),
