@@ -1,4 +1,4 @@
-# wordchipper - HPC Rust BPE Tokenizer
+![wordchipper hpc rust tokenizer](media/logo.svg)
 
 [![Crates.io Version](https://img.shields.io/crates/v/wordchipper)](https://crates.io/crates/wordchipper)
 [![Documentation](https://img.shields.io/docsrs/wordchipper)](https://docs.rs/wordchipper/latest/wordchipper/)
@@ -71,8 +71,8 @@ pip install wordchipper
 from wordchipper import Tokenizer
 
 tok = Tokenizer.from_pretrained("cl100k_base")
-tokens = tok.encode("hello world")       # [15339, 1917]
-text = tok.decode(tokens)                 # "hello world"
+tokens = tok.encode("hello world")  # [15339, 1917]
+text = tok.decode(tokens)  # "hello world"
 ```
 
 See [bindings/python](bindings/python) for full API and benchmarks.
