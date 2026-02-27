@@ -3592,7 +3592,7 @@ dependencies = [
 
 [[package]]
 name = "wchipper"
-version = "0.7.3"
+version = "0.8.0"
 dependencies = [
  "arrow",
  "clap",
@@ -3986,7 +3986,7 @@ dependencies = [
 
 [[package]]
 name = "wordchipper"
-version = "0.7.3"
+version = "0.8.0"
 dependencies = [
  "ahash",
  "aho-corasick",
@@ -4046,7 +4046,7 @@ dependencies = [
 
 [[package]]
 name = "wordchipper-disk-cache"
-version = "0.7.3"
+version = "0.8.0"
 dependencies = [
  "directories-next",
  "downloader",
@@ -4055,7 +4055,7 @@ dependencies = [
 
 [[package]]
 name = "wordchipper-python"
-version = "0.7.3"
+version = "0.8.0"
 dependencies = [
  "pyo3",
  "strum",
@@ -4064,7 +4064,7 @@ dependencies = [
 
 [[package]]
 name = "wordchipper-training"
-version = "0.7.3"
+version = "0.8.0"
 dependencies = [
  "compact_str",
  "dary_heap",
@@ -4076,7 +4076,7 @@ dependencies = [
 
 [[package]]
 name = "wordchipper-wasm"
-version = "0.7.3"
+version = "0.8.0"
 dependencies = [
  "base64 0.22.1",
  "js-sys",
