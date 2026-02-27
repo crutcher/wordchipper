@@ -80,7 +80,7 @@ See [bindings/python](bindings/python) for full API and benchmarks.
 ### JavaScript / TypeScript (WASM)
 
 ```js
-import { Tokenizer } from "./js/dist/index.js";
+import {Tokenizer} from "./js/dist/index.js";
 
 const tok = await Tokenizer.fromPretrained("o200k_base");
 const tokens = tok.encode("hello world"); // Uint32Array
@@ -95,7 +95,7 @@ See [bindings/wasm](bindings/wasm) for full API, build instructions, and example
 
 - [wordchipper](crates/wordchipper) - main crate.
 - [wordchipper-training](crates/wordchipper-training) - training library.
-- [wordchipper-cli](crates/wordchipper-cli) - multifunction command-line tool.
+- [wchipper](crates/wchipper) - `chipper` multifunction command-line tool.
 
 #### Internally Sourced Dep Crates
 

@@ -3591,6 +3591,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "wchipper"
+version = "0.7.3"
+dependencies = [
+ "arrow",
+ "clap",
+ "log",
+ "parquet",
+ "stderrlog",
+ "wordchipper",
+ "wordchipper-training",
+]
+
+[[package]]
 name = "web-sys"
 version = "0.3.90"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4019,19 +4032,6 @@ dependencies = [
  "tokenizers",
  "wordchipper",
  "wordchipper-data",
-]
-
-[[package]]
-name = "wordchipper-cli"
-version = "0.7.3"
-dependencies = [
- "arrow",
- "clap",
- "log",
- "parquet",
- "stderrlog",
- "wordchipper",
- "wordchipper-training",
 ]
 
 [[package]]
