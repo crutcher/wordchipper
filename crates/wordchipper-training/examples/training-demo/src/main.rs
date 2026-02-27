@@ -2,7 +2,6 @@ use std::{collections::HashSet, sync::Arc};
 
 use arrow::array::{Array, StringArray};
 use clap::Parser;
-use compact_str::CompactString;
 use wordchipper::{
     UnifiedTokenVocab,
     VocabIndex,
@@ -10,7 +9,7 @@ use wordchipper::{
     vocab::io::save_base64_span_map_path,
 };
 use wordchipper_data::dataset::DatasetCacheConfig;
-use wordchipper_training::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions};
+use wordchipper_training::{BPETRainerOptions, BPETrainer};
 
 /// Example encoders trainer.
 #[derive(Parser, Debug)]
@@ -72,9 +71,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let t0 = std::time::Instant::now();
 
     let vocab_size = args.vocab_size;
-    let options = BinaryPairVocabTrainerOptions::new(args.regex, vocab_size);
+    let options = BPETRainerOptions::new(args.regex, vocab_size);
 
-    let mut trainer: BinaryPairVocabTrainer<CompactString, u32> = options.init();
+    let mut trainer: BPETrainer = options.init();
 
     for &shard in &shards {
         println!("- shard: {}", shard);

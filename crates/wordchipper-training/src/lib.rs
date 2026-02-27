@@ -38,7 +38,7 @@
 //!     pretrained::openai::OA_CL100K_BASE_PATTERN,
 //!     vocab::{ByteMapVocab, io::save_base64_span_map_path},
 //! };
-//! use wordchipper_training::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions};
+//! use wordchipper_training::{BPETRainerOptions, BPETrainer};
 //!
 //! fn example<I, S>(
 //!     vocab_size: usize,
@@ -53,12 +53,8 @@
 //!     // We can pick any unsigned integer type > vocab_size;
 //!     // See [`wordchipper::TokenType`].
 //!     type T = u32;
-//!     type K = String;
-//!     type C = u64;
 //!
-//!     let options = BinaryPairVocabTrainerOptions::new(OA_CL100K_BASE_PATTERN, vocab_size);
-//!
-//!     let mut trainer: BinaryPairVocabTrainer<K, C> = options.init();
+//!     let mut trainer = BPETRainerOptions::new(OA_CL100K_BASE_PATTERN, vocab_size).init();
 //!
 //!     for batch in batches {
 //!         // The trainer has no parallelism.
@@ -94,6 +90,6 @@ mod bpe_trainer;
 mod training_types;
 
 #[doc(inline)]
-pub use bpe_trainer::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions};
+pub use bpe_trainer::{BPETRainerOptions, BPETrainer};
 #[doc(inline)]
 pub use training_types::{CountType, StringChunkType};

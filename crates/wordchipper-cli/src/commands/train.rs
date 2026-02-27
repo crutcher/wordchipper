@@ -9,9 +9,9 @@ use wordchipper::{
     pretrained::openai::OA_R50K_BASE_PATTERN,
     vocab::io::write_base64_span_map,
 };
-use wordchipper_training::{BinaryPairVocabTrainer, BinaryPairVocabTrainerOptions};
+use wordchipper_training::{BPETRainerOptions, BPETrainer};
 
-use crate::{LogArgs, input_output::OutputArgs};
+use crate::{input_output::OutputArgs, logging::LogArgs};
 
 /// File formats for the train command.
 #[derive(Debug, Clone, Copy, clap::ValueEnum)]
@@ -48,10 +48,7 @@ impl TrainArgs {
     pub fn run(&self) -> Result<(), Box<dyn std::error::Error>> {
         self.logging.setup_logging(3)?;
 
-        let vocab_size = self.vocab_size;
-        let options = BinaryPairVocabTrainerOptions::new(self.regex.clone(), vocab_size);
-
-        let mut trainer: BinaryPairVocabTrainer<String, u32> = options.init();
+        let mut trainer = BPETRainerOptions::new(self.regex.clone(), self.vocab_size).init();
 
         log::info!("Reading shards:");
         for (idx, path) in self.files.iter().enumerate() {
@@ -82,7 +79,7 @@ impl TrainArgs {
 
     fn read_text_file(
         &self,
-        trainer: &mut BinaryPairVocabTrainer<String, u32>,
+        trainer: &mut BPETrainer,
         path: &str,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let reader = BufReader::new(std::fs::File::open(path)?);

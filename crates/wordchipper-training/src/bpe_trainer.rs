@@ -4,6 +4,7 @@ use core::cmp::Ordering;
 
 use compact_str::CompactString;
 use dary_heap::OctonaryHeap;
+use num_traits::{One, Zero};
 use wordchipper::{
     Pair,
     TokenType,
@@ -24,13 +25,12 @@ use wordchipper::{
 
 use crate::{
     CountType,
-    StringChunkType,
     utility::{PairIndexMap, PairSpanIndex, TextSpanCounter, TextSpanCounterOptions, TokenSpanBuf},
 };
 
-/// Options for [`BinaryPairVocabTrainer`].
+/// Options for [`BPETrainer`].
 #[derive(Debug, Clone)]
-pub struct BinaryPairVocabTrainerOptions {
+pub struct BPETRainerOptions {
     /// The regex pattern used for text splitting.
     pub pattern: RegexPattern,
 
@@ -38,7 +38,7 @@ pub struct BinaryPairVocabTrainerOptions {
     pub vocab_size: usize,
 }
 
-impl BinaryPairVocabTrainerOptions {
+impl BPETRainerOptions {
     /// Create new options.
     ///
     /// ## Arguments
@@ -58,7 +58,7 @@ impl BinaryPairVocabTrainerOptions {
     }
 }
 
-impl BinaryPairVocabTrainerOptions {
+impl BPETRainerOptions {
     /// Sets the vocab size.
     ///
     /// ## Arguments
@@ -92,16 +92,12 @@ impl BinaryPairVocabTrainerOptions {
         Self { pattern, ..self }
     }
 
-    /// Initializes a [`BinaryPairVocabTrainer`] from these options.
+    /// Initializes a [`BPETrainer`] from these options.
     ///
     /// ## Returns
     /// A new `BinaryPairVocabTrainer` instance.
-    pub fn init<K, C>(self) -> BinaryPairVocabTrainer<K, C>
-    where
-        K: StringChunkType,
-        C: CountType,
-    {
-        BinaryPairVocabTrainer::new(self)
+    pub fn init(self) -> BPETrainer {
+        BPETrainer::new(self)
     }
 }
 
@@ -159,16 +155,12 @@ impl<T: TokenType, C: CountType> Ord for MergeJob<T, C> {
 /// # Parameters
 /// * `K` - the type used to store strings in the word counts.
 /// * `C` - the type used to store counts in the word counts.
-pub struct BinaryPairVocabTrainer<K = CompactString, C = u32>
-where
-    K: StringChunkType,
-    C: CountType,
-{
+pub struct BPETrainer {
     /// Trainer options.
-    pub options: BinaryPairVocabTrainerOptions,
+    pub options: BPETRainerOptions,
 
     /// The text span counter.
-    pub span_counter: TextSpanCounter<K, C>,
+    pub span_counter: TextSpanCounter<CompactString, u32>,
 }
 
 /// Basic binary pair train results.
@@ -181,20 +173,16 @@ pub struct TrainResults<T: TokenType> {
     pub pair_vocab: PairMapVocab<T>,
 }
 
-impl<K, C> BinaryPairVocabTrainer<K, C>
-where
-    K: StringChunkType,
-    C: CountType,
-{
-    /// Initializes a [`BinaryPairVocabTrainer`].
+impl BPETrainer {
+    /// Initializes a [`BPETrainer`].
     ///
     /// ## Arguments
     /// * `options` - The trainer options.
     ///
     /// ## Returns
     /// A new `BinaryPairVocabTrainer` instance.
-    pub fn new(options: BinaryPairVocabTrainerOptions) -> Self {
-        let span_counter = TextSpanCounter::<K, C>::new(
+    pub fn new(options: BPETRainerOptions) -> Self {
+        let span_counter = TextSpanCounter::<CompactString, u32>::new(
             options
                 .pattern
                 .compile()
@@ -202,7 +190,7 @@ where
             TextSpanCounterOptions::default(),
         );
 
-        BinaryPairVocabTrainer {
+        BPETrainer {
             options,
             span_counter,
         }
@@ -242,7 +230,6 @@ where
     ) -> WCResult<TrainResults<T>>
     where
         T: TokenType,
-        C: CountType,
     {
         expect_vocab_size::<T>(self.options.vocab_size);
 
@@ -268,6 +255,7 @@ where
             pair_index: table_pair_index,
         } = PairSpanIndex::from_span_count_table(&words, &word_counts);
 
+        type C = u32;
         let zero = C::zero();
         let one = C::one();
 
@@ -404,7 +392,6 @@ where
     ) -> WCResult<UnifiedTokenVocab<T>>
     where
         T: TokenType,
-        C: CountType,
     {
         let results = self.train_basic_pairs(byte_vocab)?;
         UnifiedTokenVocab::from_pair_vocab(results.pattern.into(), results.pair_vocab)
@@ -416,7 +403,6 @@ mod tests {
     use core::cmp::Ordering;
     use std::sync::Arc;
 
-    use compact_str::CompactString;
     use wordchipper::{
         TokenDecoder,
         TokenEncoder,
@@ -426,11 +412,11 @@ mod tests {
         vocab::ByteMapVocab,
     };
 
-    use crate::{BinaryPairVocabTrainerOptions, bpe_trainer::MergeJob};
+    use crate::{BPETRainerOptions, bpe_trainer::MergeJob};
 
     #[test]
     fn test_tokenizer_options() {
-        let options = BinaryPairVocabTrainerOptions::new(OA_CL100K_BASE_PATTERN, 1000);
+        let options = BPETRainerOptions::new(OA_CL100K_BASE_PATTERN, 1000);
 
         assert_eq!(options.vocab_size, 1000);
         assert_eq!(options.pattern, OA_CL100K_BASE_PATTERN.into());
@@ -444,16 +430,13 @@ mod tests {
     #[test]
     #[should_panic(expected = "regex pattern compilation failed")]
     fn test_tokenizer_options_bad_pattern() {
-        let _ = BinaryPairVocabTrainerOptions::new(r"(", 1000).init::<String, u32>();
+        let _ = BPETRainerOptions::new(r"(", 1000).init();
     }
 
     #[test]
     fn test_train_tokenizer() {
         type T = u16;
-        type C = u32;
-        type K = CompactString;
-
-        let options = BinaryPairVocabTrainerOptions::new(OA_CL100K_BASE_PATTERN, 1000);
+        let options = BPETRainerOptions::new(OA_CL100K_BASE_PATTERN, 1000);
 
         let samples = vec![
             "hello world",
@@ -461,7 +444,7 @@ mod tests {
             "it's not the heat, it's the salt",
         ];
 
-        let mut trainer = options.init::<K, C>();
+        let mut trainer = options.init();
         trainer.update_from_samples(samples.iter());
 
         let byte_vocab: ByteMapVocab<T> = Default::default();
