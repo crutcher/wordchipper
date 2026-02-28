@@ -1,13 +1,57 @@
 # wchipper
 
+[![Crates.io Version](https://img.shields.io/crates/v/wchipper)](https://crates.io/crates/wchipper)
+[![Documentation](https://img.shields.io/docsrs/wordchipper)](https://docs.rs/wordchipper/latest/wchipper/)
+[![Test Status](https://github.com/crutcher/wordchipper/actions/workflows/ci.yml/badge.svg)](https://github.com/crutcher/wordchipper/actions/workflows/ci.yml)
+
 A text LLM tokenizer command line multi-tool.
 
-Released as part of [wordchipper](https://crates.io/crates/wordchipper) suite.
+## Overview
 
-## list-models
+Part of the [wordchipper tokenizer suite](https://crates.io/crates/wordchipper).
+
+### Suite Crates
+
+This is the binary tokenizer multi-tool for the
+[wordchipper tokenizer suite](https://github.com/crutcher/wordchipper).
+
+The core additional user-facing crates are:
+
+* [wordchipper](https://crates.io/crates/wordchipper) - the core tokenizer library.
+* [wordchipper-training](https://crates.io/crates/wordchipper-training) - an extension crate for training tokenizers.
+
+## Installation
 
 ```terminaloutput
- % wchipper list-models                  
+% cargo install wchipper
+```
+
+## Usage
+
+`wchipper <COMMAND>`
+
+* `cat` - encode/decode text
+* `models <COMMAND>`
+    * `list`|`ls` - list available models
+* `train` - train a tokenizer
+
+### Usage: wchipper cat
+
+```terminaloutput
+% echo "abc def" | wchipper cat --encode --model=openai::gpt2
+39305 825 198
+
+% echo "39305 825 198" | cargo run --release -p wordchipper-cli -- \
+    cat --decode --model=openai::gpt2
+abc def
+```
+
+### Usage: wchipper models
+
+#### Usage: wchipper models list
+
+```terminaloutput
+ % wchipper models list                  
 "openai" - Pretrained vocabularies from OpenAI
   * "openai:gpt2"
     GPT-2 `gpt2` vocabulary
@@ -25,18 +69,7 @@ Released as part of [wordchipper](https://crates.io/crates/wordchipper) suite.
     GPT-5 `o200k_harmony` vocabulary
 ```
 
-## cat
-
-```terminaloutput
-% echo "abc def" | wchipper cat --encode --model=openai::gpt2
-39305 825 198
-
-% echo "39305 825 198" | cargo run --release -p wordchipper-cli -- \
-    cat --decode --model=openai::gpt2
-abc def
-```
-
-## train
+### Usage: wchipper train
 
 ```terminal
 % wchipper train --output=/tmp/tok.tokenizer \
