@@ -132,7 +132,7 @@ impl SpanLexer for O200kLexer {
 mod tests {
     use super::*;
     use crate::{
-        alloc::{sync::Arc, vec::Vec},
+        alloc::{sync::Arc, vec, vec::Vec},
         spanners::{TextSpanner, span_lexers::LexerTextSpanner},
     };
 
