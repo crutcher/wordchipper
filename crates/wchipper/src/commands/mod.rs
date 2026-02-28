@@ -1,5 +1,5 @@
 mod cat;
-mod list_models;
+mod models;
 mod train;
 
 /// Subcommands for wchipper
@@ -8,8 +8,8 @@ pub enum Commands {
     /// Act as a streaming tokenizer.
     Cat(cat::CatArgs),
 
-    /// List available models.
-    ListModels(list_models::ListModelsArgs),
+    /// Models sub-menu.
+    Models(models::ModelsArgs),
 
     /// Train a new model.
     Train(train::TrainArgs),
@@ -20,7 +20,7 @@ impl Commands {
     pub fn run(&self) -> Result<(), Box<dyn std::error::Error>> {
         match self {
             Commands::Cat(cmd) => cmd.run(),
-            Commands::ListModels(cmd) => cmd.run(),
+            Commands::Models(cmd) => cmd.run(),
             Commands::Train(cmd) => cmd.run(),
         }
     }

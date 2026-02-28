@@ -1,4 +1,3 @@
-/// Args for the model listing command.
 #[derive(clap::Args, Debug)]
 pub struct ListModelsArgs {}
 

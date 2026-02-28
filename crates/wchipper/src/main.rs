@@ -10,6 +10,7 @@ use commands::Commands;
 
 /// Text tokenizer multi-tool.
 #[derive(clap::Parser, Debug)]
+#[command(name = "wchipper")]
 pub struct Args {
     /// Subcommand to run.
     #[clap(subcommand)]
