@@ -11,7 +11,7 @@ use crate::{
 /// specific targeted regex patterns.
 ///
 /// See:
-/// * [`get_regex_accelerator``]
+/// * [`get_regex_accelerator`]
 /// * [`build_regex_lexer`](`super::build_regex_lexer`)
 ///
 /// # Example
