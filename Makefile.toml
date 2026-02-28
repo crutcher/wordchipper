@@ -1,0 +1,91 @@
+[config]
+default_to_workspace = false
+
+[tasks.default]
+dependencies = [
+    "fix",
+    "ci",
+]
+
+# ── individual tasks ──────────────────────────────────────────────────────────
+
+[tasks.check-format]
+description = "Check formatting (nightly rustfmt)"
+toolchain = "nightly"
+install_crate = "rustfmt"
+command = "cargo"
+args = ["fmt", "--check"]
+
+[tasks.format]
+description = "Apply formatting (nightly rustfmt)"
+toolchain = "nightly"
+install_crate = "rustfmt"
+command = "cargo"
+args = ["fmt"]
+
+[tasks.clippy]
+description = "Lint (treat warnings as errors)"
+command = "cargo"
+args = ["clippy", "--no-deps"]
+
+[tasks.test]
+description = "Test with default features"
+command = "cargo"
+args = ["test", "--workspace"]
+
+[tasks.test-ahash]
+description = "Test with no_std + client + ahash features"
+command = "cargo"
+args = ["test", "-p", "wordchipper", "--no-default-features", "--features", "client,ahash"]
+
+[tasks.test-no-std]
+description = "Test no_std surface (no default features, integration tests only)"
+command = "cargo"
+args = ["test", "-p", "wordchipper", "--no-default-features", "--tests"]
+
+[tasks.cross-wasm]
+description = "Check no_std build for wasm32-unknown-unknown"
+command = "cargo"
+args = ["check", "-p", "wordchipper", "--target", "wasm32-unknown-unknown", "--no-default-features"]
+
+[tasks.cross-thumb]
+description = "Check no_std build for thumbv7m-none-eabi"
+command = "cargo"
+args = ["check", "-p", "wordchipper", "--target", "thumbv7m-none-eabi", "--no-default-features"]
+
+[tasks.minimal-versions]
+description = "Verify minimum dependency versions resolve and tests pass"
+script = """
+cargo +nightly update -Z minimal-versions
+cargo test --workspace
+"""
+
+# ── convenience composites ────────────────────────────────────────────────────
+
+[tasks.fix]
+description = "Format + clippy (mirrors fix.sh)"
+dependencies = ["format", "clippy"]
+
+[tasks.cross]
+description = "All no_std cross-compilation checks"
+dependencies = ["cross-wasm", "cross-thumb"]
+
+[tasks.tests-all]
+description = "All test variants (default, ahash, no_std)"
+dependencies = ["test", "test-ahash", "test-no-std"]
+
+[tasks.bindings]
+description = "All language binding tests"
+dependencies = ["wasm-bindings", "python-bindings"]
+
+[tasks.ci]
+description = "Full CI validation (mirrors GitHub Actions)"
+dependencies = [
+    "check-format",
+    "clippy",
+    "test",
+    "test-ahash",
+    "test-no-std",
+    "cross-wasm",
+    "cross-thumb",
+]
