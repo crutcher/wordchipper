@@ -21,7 +21,7 @@ impl ConstRegexPattern {
     ///
     /// ## Returns
     /// The regex pattern string slice.
-    pub fn as_str(&self) -> &str {
+    pub const fn as_str(&self) -> &str {
         match self {
             Self::Basic(pattern) => pattern,
             Self::Fancy(pattern) => pattern,

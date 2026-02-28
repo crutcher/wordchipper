@@ -28,27 +28,3 @@ pub use o200k::O200kLexer;
 pub use r50k::R50kLexer;
 #[doc(inline)]
 pub use token_role::{TokenRole, contraction_split};
-
-/// Look up an accelerated word lexer for a known regex pattern.
-///
-/// Returns `Some(lexer)` when the pattern matches a pattern for which
-/// a compile-time DFA lexer exists, `None` otherwise.
-pub(crate) fn lookup_word_lexer(
-    pattern: &crate::support::regex::RegexPattern
-) -> Option<crate::alloc::sync::Arc<dyn super::SpanLexer>> {
-    use crate::{
-        alloc::sync::Arc,
-        pretrained::openai::{OA_CL100K_BASE_PATTERN, OA_O200K_BASE_PATTERN, OA_R50K_BASE_PATTERN},
-    };
-
-    let pat = pattern.as_str();
-    if pat == OA_R50K_BASE_PATTERN.as_str() {
-        Some(Arc::new(R50kLexer))
-    } else if pat == OA_CL100K_BASE_PATTERN.as_str() {
-        Some(Arc::new(Cl100kLexer))
-    } else if pat == OA_O200K_BASE_PATTERN.as_str() {
-        Some(Arc::new(O200kLexer))
-    } else {
-        None
-    }
-}

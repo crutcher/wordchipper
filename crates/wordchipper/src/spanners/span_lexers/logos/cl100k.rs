@@ -8,7 +8,14 @@
 use logos::Logos;
 
 use super::{engine::for_each_classified_span, token_role::TokenRole};
-use crate::spanners::{SpanRef, span_lexers::SpanLexer};
+use crate::{
+    alloc::sync::Arc,
+    pretrained::openai::OA_CL100K_BASE_PATTERN,
+    spanners::{
+        SpanRef,
+        span_lexers::{SpanLexer, accelerators::RegexAcceleratorHook},
+    },
+};
 
 /// Logos token for the `cl100k_base` pattern.
 ///
@@ -64,6 +71,10 @@ impl Cl100kToken {
 /// Only matches the regex spans; does not match the special tokens.
 #[derive(Clone, Debug)]
 pub struct Cl100kLexer;
+
+inventory::submit! {
+    RegexAcceleratorHook::new(OA_CL100K_BASE_PATTERN,|| Arc::new(Cl100kLexer))
+}
 
 impl SpanLexer for Cl100kLexer {
     fn for_each_word(

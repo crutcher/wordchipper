@@ -3,7 +3,7 @@
 
 use core::fmt::Debug;
 
-use crate::{alloc::boxed::Box, support::regex::RegexPattern};
+use crate::{alloc::boxed::Box, spanners::span_lexers::SpanLexer, support::regex::RegexPattern};
 
 /// Error wrapper for regex patterns.
 #[non_exhaustive]
@@ -56,6 +56,18 @@ pub enum RegexWrapper {
 
     /// Wrapper for `fancy_regex::Regex`.
     Fancy(fancy_regex::Regex),
+}
+
+impl SpanLexer for RegexWrapper {
+    fn next_span(
+        &self,
+        text: &str,
+        offset: usize,
+    ) -> Option<(usize, usize)> {
+        self.find_iter(&text[offset..])
+            .next()
+            .map(|m| (offset + m.start(), offset + m.end()))
+    }
 }
 
 impl PartialEq for RegexWrapper {

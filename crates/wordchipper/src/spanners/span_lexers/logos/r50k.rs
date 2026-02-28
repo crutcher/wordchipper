@@ -8,7 +8,14 @@
 use logos::Logos;
 
 use super::{engine::for_each_classified_span, token_role::TokenRole};
-use crate::spanners::{SpanRef, span_lexers::SpanLexer};
+use crate::{
+    alloc::sync::Arc,
+    pretrained::openai::OA_R50K_BASE_PATTERN,
+    spanners::{
+        SpanRef,
+        span_lexers::{SpanLexer, accelerators::RegexAcceleratorHook},
+    },
+};
 
 /// Logos token for the `r50k_base` pattern.
 ///
@@ -62,6 +69,10 @@ impl R50kToken {
 /// Only matches the regex spans; does not match the special tokens.
 #[derive(Clone, Debug)]
 pub struct R50kLexer;
+
+inventory::submit! {
+    RegexAcceleratorHook::new(OA_R50K_BASE_PATTERN,|| Arc::new(R50kLexer))
+}
 
 impl SpanLexer for R50kLexer {
     fn for_each_word(

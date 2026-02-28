@@ -8,8 +8,14 @@
 use logos::Logos;
 
 use super::{engine::for_each_classified_span, token_role::TokenRole};
-use crate::spanners::{SpanRef, span_lexers::SpanLexer};
-
+use crate::{
+    alloc::sync::Arc,
+    pretrained::openai::OA_O200K_BASE_PATTERN,
+    spanners::{
+        SpanRef,
+        span_lexers::{SpanLexer, accelerators::RegexAcceleratorHook},
+    },
+};
 // Shorthand aliases for the character classes used in o200k:
 //   UPPER = [\p{Uppercase_Letter}\p{Titlecase_Letter}\p{Modifier_Letter}\p{Other_Letter}\p{Mark}]
 //   LOWER = [\p{Lowercase_Letter}\p{Modifier_Letter}\p{Other_Letter}\p{Mark}]
@@ -79,6 +85,10 @@ impl O200kToken {
 /// Only matches the regex spans; does not match the special tokens.
 #[derive(Clone, Debug)]
 pub struct O200kLexer;
+
+inventory::submit! {
+    RegexAcceleratorHook::new(OA_O200K_BASE_PATTERN,|| Arc::new(O200kLexer))
+}
 
 impl SpanLexer for O200kLexer {
     fn for_each_word(

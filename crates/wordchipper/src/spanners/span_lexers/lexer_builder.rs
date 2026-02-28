@@ -4,21 +4,9 @@ use core::num::NonZeroUsize;
 
 use crate::{
     alloc::sync::Arc,
-    spanners::span_lexers::SpanLexer,
+    spanners::span_lexers::{SpanLexer, accelerators},
     support::regex::{RegexPattern, RegexWrapper},
 };
-
-impl SpanLexer for RegexWrapper {
-    fn next_span(
-        &self,
-        text: &str,
-        offset: usize,
-    ) -> Option<(usize, usize)> {
-        self.find_iter(&text[offset..])
-            .next()
-            .map(|m| (offset + m.start(), offset + m.end()))
-    }
-}
 
 /// Build a regex-based [`SpanLexer`] with the given configuration.
 ///
@@ -37,11 +25,8 @@ pub fn build_regex_lexer(
     let _ = concurrent;
     let _ = max_pool;
 
-    if accelerated {
-        use crate::spanners::span_lexers::logos::lookup_word_lexer;
-        if let Some(lexer) = lookup_word_lexer(&pattern) {
-            return lexer;
-        }
+    if accelerated && let Some(lexer) = accelerators::get_regex_accelerator(pattern.as_str()) {
+        return lexer;
     }
 
     let re: RegexWrapper = pattern.into();
