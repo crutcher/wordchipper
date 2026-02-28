@@ -179,8 +179,8 @@ For more control, use `wordchipper-training` directly. Add it to your `Cargo.tom
 
 ```toml
 [dependencies]
-wordchipper = "0.7"
-wordchipper-training = "0.7"
+wordchipper = "0.8"
+wordchipper-training = "0.8"
 ```
 
 ### Minimal example
@@ -391,7 +391,7 @@ streaming record batches.
 
 ## Putting it all together
 
-Here's a complete workflow: train a tokenizer on your data, save it, and load it back for encoding.
+Here's a complete workflow: train a tokenizer on your data, save it, and use it for encoding.
 
 ```rust,no_run
 use std::sync::Arc;
@@ -401,7 +401,6 @@ use wordchipper::{
     Tokenizer, TokenizerOptions, UnifiedTokenVocab, VocabIndex,
     pretrained::openai::OA_CL100K_BASE_PATTERN,
     vocab::{ByteMapVocab, io::save_base64_span_map_path},
-    load_vocab, disk_cache::WordchipperDiskCache,
 };
 use wordchipper_training::BPETRainerOptions;
 
