@@ -13,7 +13,11 @@ use crate::{
     pretrained::openai::OA_O200K_BASE_PATTERN,
     spanners::{
         SpanRef,
-        span_lexers::{SpanLexer, accelerators::RegexAcceleratorHook},
+        span_lexers::{
+            SpanLexer,
+            accelerators::RegexAcceleratorHook,
+            logos::token_role::WithTokenRole,
+        },
     },
 };
 // Shorthand aliases for the character classes used in o200k:
@@ -65,7 +69,7 @@ pub(crate) enum O200kToken {
     Whitespace,
 }
 
-impl O200kToken {
+impl WithTokenRole for O200kToken {
     fn role(&self) -> TokenRole {
         match self {
             Self::Whitespace => TokenRole::Whitespace,

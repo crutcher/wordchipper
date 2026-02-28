@@ -13,7 +13,11 @@ use crate::{
     pretrained::openai::OA_CL100K_BASE_PATTERN,
     spanners::{
         SpanRef,
-        span_lexers::{SpanLexer, accelerators::RegexAcceleratorHook},
+        span_lexers::{
+            SpanLexer,
+            accelerators::RegexAcceleratorHook,
+            logos::token_role::WithTokenRole,
+        },
     },
 };
 
@@ -51,7 +55,7 @@ pub(crate) enum Cl100kToken {
     Whitespace,
 }
 
-impl Cl100kToken {
+impl WithTokenRole for Cl100kToken {
     fn role(&self) -> TokenRole {
         match self {
             Self::Whitespace => TokenRole::Whitespace,

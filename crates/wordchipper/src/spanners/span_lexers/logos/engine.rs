@@ -9,8 +9,10 @@
 
 use core::ops::Range;
 
-use super::token_role::{TokenRole, contraction_split};
-use crate::spanners::SpanRef;
+use logos::{Logos, SpannedIter};
+
+use super::token_role::{TokenRole, WithTokenRole, contraction_split};
+use crate::{alloc::vec::Vec, spanners::SpanRef};
 
 /// Iterate classified logos tokens and emit Word/Gap spans with
 /// post-processing corrections for regex compatibility:
@@ -249,6 +251,206 @@ pub fn for_each_classified_span(
     }
 
     (true, last)
+}
+
+/// Adapter Iterator.
+pub struct DfaSpanIter<'source, Token>
+where
+    Token: Logos<'source> + WithTokenRole,
+{
+    bytes: &'source [u8],
+    offset: usize,
+    token_iter: SpannedIter<'source, Token>,
+    last: usize,
+    pending_ws: Option<Range<usize>>,
+    fifo: Vec<SpanRef>,
+}
+
+impl<'source, Token> DfaSpanIter<'source, Token>
+where
+    Token: Logos<'source> + WithTokenRole,
+{
+    /// Create a new iter.
+    pub fn new(
+        text: &'source str,
+        offset: usize,
+        token_iter: SpannedIter<'source, Token>,
+    ) -> Self {
+        DfaSpanIter {
+            bytes: text.as_bytes(),
+            token_iter,
+            last: 0,
+            pending_ws: None,
+            fifo: Default::default(),
+        }
+    }
+}
+
+impl<'source, Token> Iterator for DfaSpanIter<'source, Token>
+where
+    Token: Logos<'source> + WithTokenRole,
+{
+    type Item = SpanRef;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            if !self.fifo.is_empty() {
+                let range = self.fifo.remove(0);
+                return Some(range);
+            }
+            if let Some((res, span)) = self.token_iter.next() {
+                let kind = match res {
+                    Ok(tok) => tok.role(),
+                    Err(_) => TokenRole::Gap,
+                };
+
+                let Range { start, end } = span;
+
+                if self.last < start {
+                    if let Some(ws) = self.pending_ws.take() {
+                        return Some(ws);
+                    }
+                }
+
+                self.last = end;
+
+                macro_rules! flush_ws_split {
+                    ($ws:expr) => {{
+                        let ws = $ws;
+                        debug_assert!(!ws.is_empty(), "flush_ws_split called with empty range");
+                        // Find start of the last character (may be multi-byte, e.g. NBSP).
+                        // Safety: text is &str bytes, so valid UTF-8; the scan always finds
+                        // a leading byte before reaching ws.start.
+                        let mut trim = ws.end - 1;
+                        while trim > ws.start && (self.bytes[trim] & 0xC0) == 0x80 {
+                            trim -= 1;
+                        }
+                        debug_assert!(
+                            (self.bytes[trim] & 0xC0) != 0x80,
+                            "no leading byte found in ws range"
+                        );
+                        if ws.start < trim {
+                            self.fifo.push(ws.start..trim);
+                        }
+                        trim
+                    }};
+                }
+                macro_rules! emit_absorbing {
+                    ($start:expr, $end:expr, $check_contraction:expr) => {
+                        if $check_contraction {
+                            if let Some(split) = contraction_split(&self.bytes[$start..$end]) {
+                                self.fifo.push($start..$start + split);
+                                self.fifo.push($start + split..$end);
+                            } else {
+                                self.fifo.push($start..$end);
+                            }
+                        } else {
+                            self.fifo.push($start..$end);
+                        }
+                    };
+                }
+
+                match kind {
+                    TokenRole::Whitespace => {
+                        if let Some(ws) = self.pending_ws.take() {
+                            self.fifo.push(ws);
+                        }
+                        self.pending_ws = Some(start..end);
+                    }
+                    TokenRole::Punctuation => {
+                        // Regex ` ?[^\s\p{L}\p{N}]+` absorbs a preceding ASCII
+                        // space (literal ` ?`). Non-space whitespace (NBSP, tab)
+                        // is NOT absorbed.
+                        if let Some(ws) = self.pending_ws.take() {
+                            let ws_start = ws.start;
+                            let ws_end = ws.end;
+                            let trim = flush_ws_split!(ws);
+                            if trim == ws_start || self.bytes[trim] != b' ' {
+                                // Single ws char, or last char is not ASCII space.
+                                self.fifo.push(trim..ws_end);
+                                self.fifo.push(start..end);
+                            } else {
+                                self.fifo.push(trim..end);
+                            }
+                        } else {
+                            self.fifo.push(start..end);
+                        }
+                    }
+                    TokenRole::Word { check_contraction } => {
+                        if let Some(ws) = self.pending_ws.take() {
+                            let ws_start = ws.start;
+                            let ws_end = ws.end;
+                            let trim = flush_ws_split!(ws);
+                            let single_char = trim == ws_start;
+
+                            // Decode only the first UTF-8 char from bytes to avoid
+                            // validating the entire tail (which would be O(n^2) overall).
+                            let first_is_letter = {
+                                let tail = &self.bytes[start..];
+                                let char_len = match tail.first() {
+                                    Some(&b) if b < 0x80 => 1,
+                                    Some(&b) if b < 0xE0 => 2,
+                                    Some(&b) if b < 0xF0 => 3,
+                                    Some(_) => 4,
+                                    None => 0,
+                                };
+                                char_len > 0
+                                    && core::str::from_utf8(&tail[..char_len])
+                                        .ok()
+                                        .and_then(|s| s.chars().next())
+                                        .is_some_and(char::is_alphabetic)
+                            };
+
+                            if first_is_letter {
+                                // Token has no existing prefix; merge last ws char.
+                                emit_absorbing!(trim, end, check_contraction);
+                            } else if single_char {
+                                // Single ws char: emit standalone, token as-is.
+                                self.fifo.push(trim..ws_end);
+                                emit_absorbing!(start, end, check_contraction);
+                            } else {
+                                // 2+ ws chars: merge last ws char + non-letter
+                                // prefix into one span (like Punctuation ` ?X`),
+                                // then emit remaining letters separately.
+                                let prefix_len = core::str::from_utf8(&self.bytes[start..end])
+                                    .expect("text is &str bytes, always valid UTF-8")
+                                    .chars()
+                                    .next()
+                                    .map_or(1, char::len_utf8);
+                                self.fifo.push(trim..start + prefix_len);
+                                emit_absorbing!(start + prefix_len, end, check_contraction);
+                            }
+                        } else {
+                            emit_absorbing!(start, end, check_contraction);
+                        }
+                    }
+                    TokenRole::Standalone => {
+                        if let Some(ws) = self.pending_ws.take() {
+                            let ws_end = ws.end;
+                            let trim = flush_ws_split!(ws);
+                            self.fifo.push(trim..ws_end);
+                        } else {
+                            self.fifo.push(start..end);
+                        }
+                    }
+                    TokenRole::Gap => {
+                        if let Some(ws) = self.pending_ws.take() {
+                            self.fifo.push(ws);
+                        }
+                    }
+                }
+                continue;
+            }
+            break;
+        }
+
+        if let Some(ws) = self.pending_ws.take() {
+            self.last = ws.end;
+            return Some(ws);
+        }
+
+        None
+    }
 }
 
 #[cfg(test)]

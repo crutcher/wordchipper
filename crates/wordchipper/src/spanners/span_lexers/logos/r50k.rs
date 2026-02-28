@@ -13,7 +13,11 @@ use crate::{
     pretrained::openai::OA_R50K_BASE_PATTERN,
     spanners::{
         SpanRef,
-        span_lexers::{SpanLexer, accelerators::RegexAcceleratorHook},
+        span_lexers::{
+            SpanLexer,
+            accelerators::RegexAcceleratorHook,
+            logos::{engine::DfaSpanIter, token_role::WithTokenRole},
+        },
     },
 };
 
@@ -50,7 +54,7 @@ pub(crate) enum R50kToken {
     Whitespace,
 }
 
-impl R50kToken {
+impl WithTokenRole for R50kToken {
     fn role(&self) -> TokenRole {
         match self {
             Self::Whitespace => TokenRole::Whitespace,
@@ -97,18 +101,14 @@ impl SpanLexer for R50kLexer {
         offset: usize,
         f: &mut dyn FnMut(SpanRef) -> bool,
     ) -> (bool, usize) {
-        for_each_classified_span(
-            R50kToken::lexer(text).spanned().map(|(res, range)| {
-                let role = match res {
-                    Ok(tok) => tok.role(),
-                    Err(()) => TokenRole::Gap,
-                };
-                (role, range)
-            }),
-            text,
-            offset,
-            f,
-        )
+        let mut last = 0;
+        for span_ref in DfaSpanIter::new(text, offset, R50kToken::lexer(text).spanned()) {
+            if !f(span_ref) {
+                return (false, last);
+            }
+            last = range.end;
+        }
+        (true, last)
     }
 }
 

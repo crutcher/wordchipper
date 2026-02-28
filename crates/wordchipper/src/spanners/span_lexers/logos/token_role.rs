@@ -44,6 +44,10 @@ pub enum TokenRole {
     Gap,
 }
 
+pub trait WithTokenRole {
+    fn role(&self) -> TokenRole;
+}
+
 /// Check if a byte slice starts with a cl100k contraction pattern
 /// (`'s`, `'t`, `'d`, `'m`, `'re`, `'ve`, `'ll`, case-insensitive)
 /// followed by additional bytes. Returns the split point
