@@ -44,49 +44,45 @@ impl<T> TokenType for T where
 pub type Pair<T> = (T, T);
 
 cfg_if::cfg_if! {
-    if #[cfg(feature = "ahash")] {
+    if #[cfg(all(feature = "fast-hash", feature = "std"))] {
         /// Type Alias for hash maps in this crate.
-        pub type WCHashMap<K, V> = ahash::AHashMap<K, V>;
+        pub type WCHashMap<K, V> = std::collections::HashMap<K, V, foldhash::fast::FixedState>;
 
         /// Create a new empty hash map.
         pub fn hash_map_new<K, V>() -> WCHashMap<K, V> {
-            WCHashMap::new()
+            WCHashMap::with_hasher(foldhash::fast::FixedState::default())
         }
 
         /// Create a new hash map with the given capacity.
         pub fn hash_map_with_capacity<K, V>(capacity: usize) -> WCHashMap<K, V> {
-            WCHashMap::with_capacity(capacity)
+            WCHashMap::with_capacity_and_hasher(capacity, foldhash::fast::FixedState::default())
         }
 
         /// Iterator over hash map entries.
-        ///
-        /// Note: `ahash::AHashMap` is a specialization of `std::collections::HashMap`.
         pub type WCHashIter<'a, K, V> = std::collections::hash_map::Iter<'a, K, V>;
 
         /// Type Alias for hash sets in this crate.
-        pub type WCHashSet<V> = ahash::AHashSet<V>;
+        pub type WCHashSet<V> = std::collections::HashSet<V, foldhash::fast::FixedState>;
 
-    } else if #[cfg(feature = "foldhash")] {
+    } else if #[cfg(feature = "fast-hash")] {
         /// Type Alias for hash maps in this crate.
-        pub type WCHashMap<K, V> = foldhash::HashMap<K, V>;
+        pub type WCHashMap<K, V> = hashbrown::HashMap<K, V, foldhash::fast::FixedState>;
 
         /// Create a new empty hash map.
         pub fn hash_map_new<K, V>() -> WCHashMap<K, V> {
-            foldhash::HashMapExt::new()
+            WCHashMap::with_hasher(foldhash::fast::FixedState::default())
         }
 
         /// Create a new hash map with the given capacity.
         pub fn hash_map_with_capacity<K, V>(capacity: usize) -> WCHashMap<K, V> {
-            foldhash::HashMapExt::with_capacity(capacity)
+            WCHashMap::with_capacity_and_hasher(capacity, foldhash::fast::FixedState::default())
         }
 
         /// Iterator over hash map entries.
-        ///
-        /// Note: `foldhash::HashMap` is a specialization of `std::collections::HashMap`.
-        pub type WCHashIter<'a, K, V> = std::collections::hash_map::Iter<'a, K, V>;
+        pub type WCHashIter<'a, K, V> = hashbrown::hash_map::Iter<'a, K, V>;
 
         /// Type Alias for hash sets in this crate.
-        pub type WCHashSet<V> = foldhash::HashSet<V>;
+        pub type WCHashSet<V> = hashbrown::HashSet<V, foldhash::fast::FixedState>;
 
     } else if #[cfg(feature = "std")] {
         /// Type Alias for hash maps in this crate.

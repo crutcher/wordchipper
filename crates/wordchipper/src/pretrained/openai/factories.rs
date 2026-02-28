@@ -65,39 +65,31 @@ pub fn load_gpt2_vocab<T: TokenType>(
 }
 
 /// `OpenAI` Pretrained Tokenizer types.
-#[derive(Clone, Copy, Debug, PartialEq)]
-#[cfg_attr(
-    feature = "std",
-    derive(
-        strum_macros::EnumString,
-        strum_macros::EnumIter,
-        strum_macros::Display,
-    )
-)]
+#[derive(Clone, Copy, Debug, PartialEq, strum::EnumString, strum::EnumIter, strum::Display)]
 #[non_exhaustive]
 pub enum OATokenizer {
     /// GPT-2 "`r50k_base`" tokenizer.
-    #[cfg_attr(feature = "std", strum(serialize = "r50k_base"))]
+    #[strum(serialize = "r50k_base")]
     R50kBase,
 
     /// GPT-2 "`p50k_base`" tokenizer.
-    #[cfg_attr(feature = "std", strum(serialize = "p50k_base"))]
+    #[strum(serialize = "p50k_base")]
     P50kBase,
 
     /// GPT-2 "`p50k_edit`" tokenizer.
-    #[cfg_attr(feature = "std", strum(serialize = "p50k_edit"))]
+    #[strum(serialize = "p50k_edit")]
     P50kEdit,
 
     /// GPT-3 "`cl100k_base`" tokenizer.
-    #[cfg_attr(feature = "std", strum(serialize = "cl100k_base"))]
+    #[strum(serialize = "cl100k_base")]
     Cl100kBase,
 
     /// GPT-5 "`o200k_base`" tokenizer.
-    #[cfg_attr(feature = "std", strum(serialize = "o200k_base"))]
+    #[strum(serialize = "o200k_base")]
     O200kBase,
 
     /// GPT-5 "`o200k_harmony`" tokenizer.
-    #[cfg_attr(feature = "std", strum(serialize = "o200k_harmony"))]
+    #[strum(serialize = "o200k_harmony")]
     O200kHarmony,
 }
 
@@ -226,7 +218,6 @@ pub const OA_O200K_HARMONY_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabula
 #[cfg(test)]
 mod test {
     #[test]
-    #[cfg(feature = "std")]
     fn test_oa_tokenizer() {
         use core::str::FromStr;
 

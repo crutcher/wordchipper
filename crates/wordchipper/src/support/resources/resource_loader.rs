@@ -3,7 +3,7 @@
 #[cfg(feature = "std")]
 use std::path::PathBuf;
 
-#[cfg(feature = "std")]
+#[cfg(feature = "download")]
 use crate::prelude::*;
 #[cfg(feature = "std")]
 use crate::support::resources::KeyedResource;

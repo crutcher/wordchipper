@@ -1,6 +1,6 @@
 //! # Concurrency Utilities
 
-#[cfg(feature = "rayon")]
+#[cfg(feature = "parallel")]
 pub mod rayon;
 #[cfg(feature = "std")]
 pub mod threads;

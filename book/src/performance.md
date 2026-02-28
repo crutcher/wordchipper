@@ -94,7 +94,8 @@ For most users, the defaults are correct:
 
 ## Parallelism with rayon
 
-When the `rayon` feature is enabled (it is by default), batch operations parallelize across threads:
+When the `parallel` feature is enabled (it is by default), batch operations parallelize across
+threads:
 
 ```rust,no_run
 # use wordchipper::{TokenizerOptions, TokenEncoder, load_vocab, disk_cache::WordchipperDiskCache};
@@ -124,16 +125,16 @@ Or configure it programmatically via `rayon::ThreadPoolBuilder`.
 
 ## Hash function selection
 
-wordchipper uses hash maps extensively for vocabulary lookups. Two fast hash functions are available
-via feature flags:
+wordchipper uses hash maps extensively for vocabulary lookups. The `fast-hash` feature (enabled by
+default) swaps in foldhash for faster hashing:
 
-| Feature              | Hash function | Notes                                   |
-| -------------------- | ------------- | --------------------------------------- |
-| `foldhash` (default) | foldhash      | Good general-purpose performance        |
-| `ahash`              | aHash         | Often faster on modern CPUs with AES-NI |
+| Feature     | Hash function | Notes                                  |
+| ----------- | ------------- | -------------------------------------- |
+| `fast-hash` | foldhash      | Good general-purpose, works in no_std  |
+| (none)      | default       | SipHash (std) or hashbrown default     |
 
-If both are enabled, `ahash` takes priority. For `no_std` builds without either feature, hashbrown's
-default hasher is used.
+Unlike previous versions, `fast-hash` works in `no_std` environments. See
+[Feature Flags](./feature-flags.md) for details.
 
 ## End-to-end benchmarks
 
@@ -165,7 +166,7 @@ cargo bench -p wordchipper-bench
 
 ## Performance tips
 
-1. **Use the default features.** DFA acceleration and rayon parallelism are on by default.
+1. **Use the default features.** DFA acceleration and rayon parallelism (`parallel`) are both on by default.
 2. **Batch your inputs.** `try_encode_batch` is significantly faster than calling `try_encode` in a
    loop because it amortizes thread pool overhead.
 3. **Reuse the tokenizer.** Building a `Tokenizer` pre-computes data structures. Build it once,

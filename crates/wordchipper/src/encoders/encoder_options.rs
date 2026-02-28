@@ -214,7 +214,7 @@ impl TokenEncoderOptions {
             self.effective_span_encoder(),
         ));
 
-        #[cfg(feature = "rayon")]
+        #[cfg(feature = "parallel")]
         if self.parallel() {
             enc = Arc::new(crate::support::concurrency::rayon::ParallelRayonEncoder::new(enc));
         }

@@ -20,10 +20,10 @@ where
     /// Text Spanner.
     spanner: Arc<dyn TextSpanner>,
 
-    #[cfg(feature = "std")]
+    #[cfg(feature = "concurrent")]
     se_pool: crate::support::concurrency::PoolToy<std::sync::Mutex<Box<dyn SpanEncoder<T>>>>,
 
-    #[cfg(not(feature = "std"))]
+    #[cfg(not(feature = "concurrent"))]
     se_builder: Arc<dyn Fn() -> Box<dyn SpanEncoder<T>> + Send + Sync>,
 }
 
@@ -48,7 +48,7 @@ impl<T: TokenType> TokenSpanEncoder<T> {
         se_builder: Arc<dyn Fn() -> Box<dyn SpanEncoder<T>> + Send + Sync>,
     ) -> Self {
         cfg_if::cfg_if! {
-            if #[cfg(feature = "std")] {
+            if #[cfg(feature = "concurrent")] {
                 use crate::support::concurrency::{PoolToy, threads::resolve_max_pool};
 
                 let pool_size = resolve_max_pool(None);
@@ -90,7 +90,7 @@ impl<T: TokenType> TokenEncoder<T> for TokenSpanEncoder<T> {
         tokens: &mut Vec<T>,
     ) -> WCResult<()> {
         cfg_if::cfg_if! {
-            if #[cfg(feature = "std")] {
+            if #[cfg(feature = "concurrent")] {
                 let mut se = self.se_pool.get().lock().unwrap_or_else(|e| e.into_inner());
             } else {
                 let mut se = (self.se_builder)();

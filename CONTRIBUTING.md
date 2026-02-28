@@ -44,9 +44,9 @@ cargo +nightly fmt --check
 # Lint
 cargo clippy --no-deps
 
-# Tests (default features, alternate hasher, no_std surface)
+# Tests (default features, alternate feature set, no_std surface)
 cargo test --workspace
-cargo test -p wordchipper --no-default-features --features client,ahash
+cargo test -p wordchipper --no-default-features --features client,fast-hash
 cargo test -p wordchipper --no-default-features --tests
 
 # no_std cross-check

@@ -10,4 +10,5 @@
 - [Python & WASM Bindings](./bindings.md)
 - [no_std & Embedded](./no-std.md)
 - [Advanced: Span Encoders](./advanced-span-encoders.md)
+- [Feature Flags](./feature-flags.md)
 - [Interactive Tokenizer Demo](./interactive-tokenizer.md)

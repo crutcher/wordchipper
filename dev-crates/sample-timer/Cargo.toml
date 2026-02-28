@@ -11,17 +11,17 @@ workspace = true
 
 [features]
 default = [
-    "rayon",
+    "parallel",
     "tokenizers",
 ]
-rayon = [
-    "wordchipper/rayon",
+parallel = [
+    "wordchipper/parallel",
     "dep:tokenizers",
     "dep:rayon",
 ]
 tokenizers = [
     "dep:tokenizers",
-    "rayon",
+    "parallel",
 ]
 
 [dependencies]

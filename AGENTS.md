@@ -61,8 +61,8 @@ cargo clippy --no-deps
 # Test (full workspace)
 cargo test --workspace
 
-# Test alternate hash backend
-cargo test -p wordchipper --no-default-features --features client,ahash
+# Test alternate feature set
+cargo test -p wordchipper --no-default-features --features client,fast-hash
 
 # Test no_std surface
 cargo test -p wordchipper --no-default-features --tests
@@ -114,13 +114,13 @@ All of the following must pass on every push/PR to `main`:
 
 | Feature | Default | Purpose |
 |---|---|---|
-| `std` | via `client` | Standard library support |
-| `client` | ✓ | Load and run pretrained encoders/decoders |
+| `std` | ✓ | Standard library support |
+| `fast-hash` | ✓ | Fast hashing via foldhash (works in no_std) |
+| `parallel` | ✓ | Batch parallelism via rayon (implies `concurrent`) |
+| `concurrent` | via `parallel` | Thread pool and concurrency utilities (implies `std`) |
+| `client` | | Load and run pretrained encoders/decoders |
 | `download` | via `client` | Network vocab downloading |
-| `datagym` | via `client` | JSON I/O for training data |
-| `foldhash` | ✓ | Fast hashing (default hasher) |
-| `ahash` | | Alternative fast hasher; wins if both enabled |
-| `rayon` | ✓ | Batch parallelism for encode/decode |
+| `datagym` | via `client` | DataGym I/O for training data |
 | `tracing` | | `tracing` instrumentation points |
 | `testing` | | Utilities for downstream test crates |
 

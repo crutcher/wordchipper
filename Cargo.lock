@@ -2931,6 +2931,9 @@ name = "strum"
 version = "0.27.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "af23d6f6c1a224baef9d3f61e287d2761385a5b88fdab4eb4c6f11aeb54c4bcf"
+dependencies = [
+ "strum_macros",
+]
 
 [[package]]
 name = "strum_macros"
@@ -3988,7 +3991,6 @@ dependencies = [
 name = "wordchipper"
 version = "0.8.0"
 dependencies = [
- "ahash",
  "aho-corasick",
  "base64 0.22.1",
  "cfg-if",
@@ -4008,7 +4010,6 @@ dependencies = [
  "serial_test",
  "spin",
  "strum",
- "strum_macros",
  "tempdir",
  "thiserror 2.0.18",
  "tiktoken-rs",
@@ -4058,7 +4059,6 @@ name = "wordchipper-python"
 version = "0.8.0"
 dependencies = [
  "pyo3",
- "strum",
  "wordchipper",
 ]
 

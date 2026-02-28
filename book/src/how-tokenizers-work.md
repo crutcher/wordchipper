@@ -198,7 +198,7 @@ Decoding is simpler than encoding. Each token ID maps to a byte sequence in the 
 decoder concatenates all byte sequences and interprets the result as UTF-8:
 
 ```text
-[9906, 11, 1917, 0]
+[9906,   11,  1917, 0]
   |      |    |     |
   v      v    v     v
 "Hello" "," " world" "!"

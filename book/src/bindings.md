@@ -76,7 +76,7 @@ pytest tests/ -v
 ## JavaScript / TypeScript (WASM)
 
 wordchipper compiles to WebAssembly and runs in browsers and Node.js. The WASM build uses
-`default-features = false` (no `std`, no `rayon`, no file I/O), so all core tokenization works in
+`default-features = false` (no `std`, no parallelism, no file I/O), so all core tokenization works in
 the browser without a server.
 
 ### Quick start

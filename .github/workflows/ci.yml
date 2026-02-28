@@ -35,7 +35,7 @@ jobs:
       - run: rustup toolchain install stable --profile minimal
       - uses: Swatinem/rust-cache@v2
       - run: cargo test --workspace
-      - run: cargo test -p wordchipper --no-default-features --features client,ahash
+      - run: cargo test -p wordchipper --no-default-features --features client,fast-hash
       - run: cargo test -p wordchipper --no-default-features --tests
 
   cross:

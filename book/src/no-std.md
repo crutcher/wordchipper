@@ -18,13 +18,16 @@ The following all work with `default-features = false`:
 
 These features are behind feature flags that imply `std`:
 
-| Feature              | Requires std because             |
-| -------------------- | -------------------------------- |
-| `download`           | Network I/O, file system caching |
-| `datagym`            | JSON parsing, file I/O           |
-| `rayon`              | Thread pool, OS threads          |
-| `ahash` / `foldhash` | Standard HashMap integration     |
+| Feature      | Requires std because             |
+| ------------ | -------------------------------- |
+| `download`   | Network I/O, file system caching |
+| `datagym`    | JSON parsing, file I/O           |
+| `concurrent` | Thread pool, OS threads          |
+| `parallel`   | Rayon requires OS threads         |
 | Regex-based spanning | `regex` and `fancy-regex` crates |
+
+Note that `fast-hash` does *not* require `std`. See [Feature Flags](./feature-flags.md) for the
+full reference.
 
 ## Configuration
 
@@ -52,9 +55,10 @@ extern crate alloc;
 This means the crate always starts in `no_std` mode. The `std` feature adds standard library support
 on top. All collection types come from `alloc` (Vec, String, Box) via an internal prelude module.
 
-For hash maps, `hashbrown` is always available as a non-optional dependency. When `std` is active
-and a fast hasher feature (`foldhash` or `ahash`) is enabled, the standard library's HashMap is used
-with the fast hasher. Without `std`, hashbrown provides HashMap/HashSet.
+For hash maps, `hashbrown` is always available as a non-optional dependency. When `fast-hash` is
+enabled, foldhash is used as the hasher (with either `std::collections::HashMap` or
+`hashbrown::HashMap` depending on whether `std` is active). Without `fast-hash`, the default hasher
+is used.
 
 ## WASM targets
 
@@ -88,8 +92,8 @@ On memory-constrained targets, be aware that:
 - **No regex.** Without `std`, regex-based spanning is unavailable. The logos DFA lexers work in
   `no_std` since they're compiled at build time, but only for known patterns (r50k, cl100k, o200k).
   For custom patterns, you'd need to implement `SpanLexer` directly.
-- **No parallelism.** rayon requires `std`. All encoding runs single-threaded. Use
-  `SingleThreadDefault` for the best single-threaded span encoder.
+- **No parallelism.** The `parallel` and `concurrent` features require `std`. All encoding runs
+  single-threaded. Use `SingleThreadDefault` for the best single-threaded span encoder.
 - **Allocator required.** wordchipper uses `alloc` (Vec, String, Box, Arc). Your target must provide
   a global allocator.
 

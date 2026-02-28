@@ -9,9 +9,9 @@ Add wordchipper to your `Cargo.toml`:
 wordchipper = "0.7"
 ```
 
-The default features include everything most users need: vocabulary download, file I/O, rayon
-parallelism, and the `foldhash` hasher. See [no_std & Embedded](./no-std.md) for minimal
-configurations.
+The default features include `std`, `fast-hash` (foldhash hasher), and `parallel` (rayon). Add
+`client` for vocabulary download. See [Feature Flags](./feature-flags.md) for all options and
+[no_std & Embedded](./no-std.md) for minimal configurations.
 
 ## Encode and decode in five lines
 
@@ -77,8 +77,8 @@ let (_desc, vocab) = load_vocab("o200k_base", &mut cache).unwrap();
 
 ## Batch encoding
 
-For multiple strings, batch encoding runs spans in parallel across threads (when the `rayon` feature
-is enabled):
+For multiple strings, batch encoding runs spans in parallel across threads (when the `parallel`
+feature is enabled):
 
 ```rust,no_run
 use wordchipper::{

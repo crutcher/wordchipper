@@ -51,17 +51,11 @@ fn parse_tiktoken_data(data: &[u8]) -> Result<SpanTokenMap<u32>, JsError> {
 
 /// Resolve a model name string to an `OATokenizer` variant.
 fn resolve_model(name: &str) -> Result<OATokenizer, JsError> {
-    match name {
-        "r50k_base" => Ok(OATokenizer::R50kBase),
-        "p50k_base" => Ok(OATokenizer::P50kBase),
-        "p50k_edit" => Ok(OATokenizer::P50kEdit),
-        "cl100k_base" => Ok(OATokenizer::Cl100kBase),
-        "o200k_base" => Ok(OATokenizer::O200kBase),
-        "o200k_harmony" => Ok(OATokenizer::O200kHarmony),
-        _ => Err(JsError::new(&format!(
+    name.parse::<OATokenizer>().map_err(|_| {
+        JsError::new(&format!(
             "unknown model '{name}'. Use Tokenizer.availableModels() to list valid names."
-        ))),
-    }
+        ))
+    })
 }
 
 /// A tokenizer for encoding text to tokens and decoding tokens to text.

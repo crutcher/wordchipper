@@ -23,12 +23,12 @@ pub fn unstable_current_thread_id_hash() -> usize {
 }
 
 /// The search list of environment variables that Rayon uses to control parallelism.
-#[cfg(feature = "rayon")]
+#[cfg(feature = "parallel")]
 const RAYON_VARS: &[&str] = &["RAYON_NUM_THREADS", "RAYON_RS_NUM_CPUS"];
 
 /// Get the max parallelism available.
 ///
-/// When `rayon` is enabled, will scan over `RAYON_VARS`.
+/// When `parallel` is enabled, will scan over `RAYON_VARS`.
 pub fn est_max_parallelism() -> usize {
     let default = || {
         thread::available_parallelism()
@@ -36,7 +36,7 @@ pub fn est_max_parallelism() -> usize {
             .unwrap_or(1)
     };
 
-    #[cfg(feature = "rayon")]
+    #[cfg(feature = "parallel")]
     for name in RAYON_VARS {
         use core::str::FromStr;
         use std::env;
@@ -74,7 +74,7 @@ mod tests {
         #[allow(unused_mut)]
         let mut orig_env: WCHashMap<String, Option<String>> = Default::default();
 
-        #[cfg(feature = "rayon")]
+        #[cfg(feature = "parallel")]
         for name in RAYON_VARS {
             orig_env.insert(name.to_string(), env::var(name).ok());
             unsafe { env::remove_var(name) };
@@ -82,7 +82,7 @@ mod tests {
 
         let base = est_max_parallelism();
 
-        #[cfg(feature = "rayon")]
+        #[cfg(feature = "parallel")]
         for name in ["RAYON_NUM_THREADS", "RAYON_RS_NUM_CPUS"] {
             let orig = env::var(name);
 

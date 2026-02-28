@@ -46,7 +46,7 @@ pub fn build_regex_lexer(
 
     let re: RegexWrapper = pattern.into();
 
-    #[cfg(feature = "std")]
+    #[cfg(feature = "concurrent")]
     if concurrent {
         return Arc::new(crate::support::concurrency::PoolToy::new(re, max_pool));
     }

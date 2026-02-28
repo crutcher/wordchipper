@@ -57,7 +57,7 @@ impl TokenDecoderOptions {
         #[allow(unused_mut)]
         let mut dec: Arc<dyn TokenDecoder<T>> = Arc::new(SlabIndexDecoder::from_vocab(vocab));
 
-        #[cfg(feature = "rayon")]
+        #[cfg(feature = "parallel")]
         if self.parallel {
             use crate::support::concurrency::rayon::ParallelRayonDecoder;
             dec = Arc::new(ParallelRayonDecoder::new(dec));

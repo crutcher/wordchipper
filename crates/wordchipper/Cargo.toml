@@ -22,16 +22,15 @@ workspace = true
 
 [features]
 default = [
-    "foldhash",
-    "client",
-    "rayon",
+    "std",
+    "fast-hash",
+    "parallel",
 ]
 
 ## The base set of features needed to load and run pre-trained encoders and decoders.
 client = [
     "download",
     "datagym",
-    "std",
 ]
 
 ## The download feature enables downloading vocabularies from the internet.
@@ -45,8 +44,7 @@ download = [
 std = [
     "thiserror/std",
     "base64/std",
-    "dep:strum",
-    "dep:strum_macros",
+    "strum/std",
     "aho-corasick/std",
     "fancy-regex/default",
     "foldhash?/std",
@@ -57,38 +55,25 @@ std = [
 
 ## Enables datagym io.
 datagym = [
-    "json",
-    "std",
-]
-
-## Enables json features.
-json = [
     "dep:serde_json",
     "std",
 ]
 
-## Swaps HashMap/HashSet to ``ahash`` for faster hashing on most modern CPUs.
-## If both "ahash" and "foldhash" are enabled, "ahash" wins.
-ahash = [
-    "dep:ahash",
-    "std",
-]
-
-## Swaps HashMap/HashSet to ``foldhash`` for faster hashing on most modern CPUs.
-## If both "ahash" and "foldhash" are enabled, "ahash" wins.
-foldhash = [
+## Swaps HashMap/HashSet to ``foldhash`` for faster hashing.
+## Works in both std and no_std environments.
+fast-hash = [
     "dep:foldhash",
-    "std",
 ]
 
-
-## This enables some parallelism wrappers using the ``rayon`` crate.
-##
-## TODO: I intend on providing a ``tokio`` based ``async`` parallelism mechanism
-## as well, to structure more direct ``regex find > encode span`` pipeline parallelism.
-rayon = [
+## Enables parallelism wrappers using the ``rayon`` crate.
+parallel = [
     "dep:rayon",
-    "std"
+    "concurrent",
+]
+
+## Gates thread pool (PoolToy) and concurrency utilities.
+concurrent = [
+    "std",
 ]
 
 ## This enables a number of ``tracing`` instrumentation points.
@@ -114,8 +99,7 @@ fancy-regex = { workspace = true, features = ["unicode"] }
 log = { workspace = true }
 num-traits = { workspace = true }
 regex = { workspace = true, features = ["unicode"] }
-strum = { workspace = true, optional = true }
-strum_macros = { workspace = true, optional = true }
+strum = { workspace = true }
 
 # Provides HashMap/HashSet in no_std mode (non-optional so `default-features = false` just works).
 hashbrown = { workspace = true, features = ["alloc"] }
@@ -126,14 +110,13 @@ inventory = { workspace = true }
 
 serde_json = { workspace = true, optional = true }
 
-ahash = { workspace = true, optional = true }
 aho-corasick = { workspace = true }
 foldhash = { workspace = true, optional = true }
 
 # "download" feature deps:
 wordchipper-disk-cache = { version = "0.8.0", path = "../wordchipper-disk-cache", optional = true }
 
-# "rayon" feature deps:
+# "parallel" feature deps:
 rayon = { workspace = true, optional = true }
 
 # "tracing" feature deps:

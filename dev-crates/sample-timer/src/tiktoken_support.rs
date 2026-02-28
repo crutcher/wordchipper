@@ -30,7 +30,7 @@ impl EncDecEngine<Rank> for TiktokenRsEngine {
         batch: &[&str],
     ) -> Result<Vec<Vec<Rank>>, BoxError> {
         cfg_if::cfg_if! {
-            if #[cfg(feature = "rayon")] {
+            if #[cfg(feature = "parallel")] {
                 use rayon::prelude::*;
                 let it =batch.par_iter();
             } else {
@@ -47,7 +47,7 @@ impl EncDecEngine<Rank> for TiktokenRsEngine {
         batch: &[&[Rank]],
     ) -> Result<Vec<String>, BoxError> {
         cfg_if::cfg_if! {
-            if #[cfg(feature = "rayon")] {
+            if #[cfg(feature = "parallel")] {
                 use rayon::prelude::*;
                 let it =batch.par_iter();
             } else {

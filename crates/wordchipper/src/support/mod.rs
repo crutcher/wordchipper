@@ -1,6 +1,6 @@
 //! # Support and Utility Modules
 
-#[cfg(feature = "std")]
+#[cfg(feature = "concurrent")]
 pub mod concurrency;
 pub mod ranges;
 pub mod regex;

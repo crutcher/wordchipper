@@ -174,8 +174,8 @@ extern crate alloc;
 Gate feature-dependent modules at the `mod` declaration:
 
 ```rust
-#[cfg(feature = "rayon")]
-pub mod parallel;
+#[cfg(feature = "parallel")]
+pub mod rayon;
 ```
 
 Conditional items within a module use `#[cfg(feature = "...")]` on the item itself.

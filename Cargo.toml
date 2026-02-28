@@ -32,7 +32,6 @@ doc_markdown = "deny"
 # Public Deps
 # These are visible to users, so we need to be careful about overly recent requirements.
 
-ahash = "0.8.10"
 base64 = { version = "0.22.1", default-features = false }
 aho-corasick = { version = "1.1", default-features = false }
 bpe-openai = "0.3"
@@ -47,8 +46,7 @@ serde_json = "1.0.140"
 jsonl = "4.0.1"
 rand = "0.9.2"
 shellexpand = "3.1.0"
-strum = "0.27.0"
-strum_macros = "0.27.0"
+strum = { version = "0.27.0", default-features = false, features = ["derive"] }
 rayon = "1.11"
 spin = "0.9.8"
 inventory = "0.3.20"
