@@ -1,9 +1,18 @@
 //! Accelerated custom [`SpanLexer`] machinery.
-use std::sync::Arc;
-
-use crate::{spanners::span_lexers::SpanLexer, support::regex::ConstRegexPattern};
+use crate::{
+    alloc::sync::Arc,
+    spanners::span_lexers::SpanLexer,
+    support::regex::ConstRegexPattern,
+};
 
 /// The [`inventory`] hook mechanism for registering regex accelerators.
+///
+/// These accelerators provide compiled lexers as replacements for
+/// specific targeted regex patterns.
+///
+/// See:
+/// * [`get_regex_accelerator``]
+/// * [`build_regex_lexer`](`super::build_regex_lexer`)
 ///
 /// # Example
 ///
