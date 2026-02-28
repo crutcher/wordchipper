@@ -10,8 +10,8 @@ Pretrained tokenizers like `cl100k_base` and `o200k_base` are trained on broad i
 work well for general English, but they have trade-offs:
 
 - **Domain-specific text.** If your corpus is primarily code, legal documents, or scientific
-  notation, a general-purpose tokenizer wastes vocabulary slots on tokens your data rarely uses.
-  A tokenizer trained on your data will encode it in fewer tokens.
+  notation, a general-purpose tokenizer wastes vocabulary slots on tokens your data rarely uses. A
+  tokenizer trained on your data will encode it in fewer tokens.
 - **Non-English languages.** General tokenizers are biased toward English. The same sentence in
   Hindi or Korean may produce 3-5x more tokens. Training on your target language fixes this.
 - **Smaller vocabularies.** Pretrained models use 50k-200k tokens. If you're building a small model
@@ -118,8 +118,8 @@ Internally, this is handled by `TextSpanCounter`, which stores span strings as `
 ### Phase 2: building the pair index
 
 Once all data is counted, the trainer converts each unique span into a `TokenSpanBuf`: a buffer of
-byte-level token IDs. Every span starts as its raw UTF-8 bytes, mapped through a `ByteMapVocab`
-(the initial 256-entry vocabulary where token 0 = byte 0, token 1 = byte 1, etc.).
+byte-level token IDs. Every span starts as its raw UTF-8 bytes, mapped through a `ByteMapVocab` (the
+initial 256-entry vocabulary where token 0 = byte 0, token 1 = byte 1, etc.).
 
 Then it scans every span to build two structures:
 
@@ -150,14 +150,14 @@ while merges_done < num_merges:
 
 The "lazy refresh" in step 2 is important. When pair `(a, b)` is merged, it changes the neighbors of
 `a` and `b` in every span where they appeared. This can reduce the count of other pairs in the heap
-that haven't been popped yet. Rather than updating every affected heap entry (expensive), the trainer
-just checks the current count when a pair is popped. If it's stale, it's re-pushed with the correct
-count and the loop continues. This is a standard trick in BPE implementations.
+that haven't been popped yet. Rather than updating every affected heap entry (expensive), the
+trainer just checks the current count when a pair is popped. If it's stale, it's re-pushed with the
+correct count and the loop continues. This is a standard trick in BPE implementations.
 
 #### A concrete merge example
 
-Given the span `"hello"` (tokens: `[104, 101, 108, 108, 111]`) and the merge
-`(108, 108) -> 256` (merging `l`, `l`):
+Given the span `"hello"` (tokens: `[104, 101, 108, 108, 111]`) and the merge `(108, 108) -> 256`
+(merging `l`, `l`):
 
 ```text
 Before: [104, 101, 108, 108, 111]
@@ -296,11 +296,11 @@ decisions in tokenizer design. The pattern determines what kinds of tokens can e
 
 wordchipper provides the same patterns used by OpenAI's models as constants:
 
-| Constant                     | Used by          | Key behavior                              |
-| ---------------------------- | ---------------- | ----------------------------------------- |
-| `OA_R50K_BASE_PATTERN`       | GPT-2            | Basic word/number/punctuation splitting   |
-| `OA_CL100K_BASE_PATTERN`     | GPT-3.5, GPT-4   | Adds case-insensitive contractions        |
-| `OA_O200K_BASE_PATTERN`      | GPT-4o           | Unicode-aware, broader letter categories  |
+| Constant                 | Used by        | Key behavior                             |
+| ------------------------ | -------------- | ---------------------------------------- |
+| `OA_R50K_BASE_PATTERN`   | GPT-2          | Basic word/number/punctuation splitting  |
+| `OA_CL100K_BASE_PATTERN` | GPT-3.5, GPT-4 | Adds case-insensitive contractions       |
+| `OA_O200K_BASE_PATTERN`  | GPT-4o         | Unicode-aware, broader letter categories |
 
 All patterns live in `wordchipper::pretrained::openai`.
 
@@ -348,17 +348,17 @@ The vocabulary size is the total number of tokens, including the 256 byte tokens
 
 ### Trade-offs
 
-| Vocab size | Merges | Effect                                                          |
-| ---------- | ------ | --------------------------------------------------------------- |
-| 256        | 0      | Pure byte-level. Every character is 1-4 tokens. Long sequences. |
-| 1,000      | 744    | Common bigrams and short words are single tokens.               |
-| 8,000      | 7,744  | Most common words are single tokens. Good for small models.     |
-| 50,000     | 49,744 | Covers most English words. Standard for GPT-2 era models.       |
-| 100,000    | 99,744 | Covers English + common multilingual tokens. GPT-4 range.       |
-| 200,000    | 199,744| Broad multilingual coverage. GPT-4o range.                      |
+| Vocab size | Merges  | Effect                                                          |
+| ---------- | ------- | --------------------------------------------------------------- |
+| 256        | 0       | Pure byte-level. Every character is 1-4 tokens. Long sequences. |
+| 1,000      | 744     | Common bigrams and short words are single tokens.               |
+| 8,000      | 7,744   | Most common words are single tokens. Good for small models.     |
+| 50,000     | 49,744  | Covers most English words. Standard for GPT-2 era models.       |
+| 100,000    | 99,744  | Covers English + common multilingual tokens. GPT-4 range.       |
+| 200,000    | 199,744 | Broad multilingual coverage. GPT-4o range.                      |
 
-Larger vocabularies mean shorter token sequences (faster inference, more text per context window) but
-larger embedding tables (more parameters, more memory). For a small model on a specific domain,
+Larger vocabularies mean shorter token sequences (faster inference, more text per context window)
+but larger embedding tables (more parameters, more memory). For a small model on a specific domain,
 4k-16k is often a good range. For a general-purpose model, 50k-200k.
 
 ### How merges tail off
@@ -444,8 +444,8 @@ fn main() -> wordchipper::WCResult<()> {
 
 Once you have a trained tokenizer, you might want to:
 
-- Benchmark it against pretrained tokenizers. See [Performance](./performance.md) for how wordchipper
-  measures throughput.
+- Benchmark it against pretrained tokenizers. See [Performance](./performance.md) for how
+  wordchipper measures throughput.
 - Build a custom DFA lexer for your regex pattern. See
   [Building Custom Logos Lexers](./custom-logos-lexers.md) for 30-50x faster pre-tokenization.
 - Understand the BPE encoding algorithms available. See
