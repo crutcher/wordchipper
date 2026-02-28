@@ -77,6 +77,22 @@ inventory::submit! {
 }
 
 impl SpanLexer for Cl100kLexer {
+    fn next_span(
+        &self,
+        text: &str,
+        offset: usize,
+    ) -> Option<(usize, usize)> {
+        let mut next_span: Option<(usize, usize)> = None;
+        self.for_each_word(text, offset, &mut |span_ref| match span_ref {
+            SpanRef::Word(r) => {
+                next_span = Some((r.start, r.end));
+                false
+            }
+            _ => true,
+        });
+        next_span
+    }
+
     fn for_each_word(
         &self,
         text: &str,
@@ -109,6 +125,22 @@ mod tests {
     /// Build a `TextSpanner` from a logos lexer with no specials.
     fn spanner(lexer: impl SpanLexer + 'static) -> LexerTextSpanner {
         LexerTextSpanner::new(Arc::new(lexer), None)
+    }
+
+    #[test]
+    fn test_span_lexer() {
+        let lexer = Cl100kLexer {};
+
+        let text = "hello world";
+        let mut spans: Vec<SpanRef> = Default::default();
+        lexer.for_each_word(text, 0, &mut |span_ref| {
+            spans.push(span_ref);
+            true
+        });
+        assert_eq!(spans, vec![SpanRef::Word(0..5), SpanRef::Word(5..11),]);
+
+        assert_eq!(lexer.next_span(text, 0), Some((0, 5)));
+        assert_eq!(lexer.next_span(&text[5..], 5), Some((5, 11)));
     }
 
     #[test]
