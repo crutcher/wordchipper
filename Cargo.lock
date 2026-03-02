@@ -3601,6 +3601,7 @@ dependencies = [
  "clap",
  "log",
  "parquet",
+ "rayon",
  "stderrlog",
  "wordchipper",
  "wordchipper-training",
