@@ -5,6 +5,37 @@ use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
 
 use crate::commands::train_cmd::FileFormat;
 
+/// Args for batched input.
+#[derive(clap::Args, Debug)]
+#[group(required = true, multiple = false)]
+pub struct BatchedInputArgs {
+    /// Input files.
+    files: Vec<String>,
+
+    /// The input shard file format.
+    #[arg(long)]
+    input_format: FileFormat,
+
+    /// The input batch size.
+    #[arg(long, default_value = "100")]
+    input_batch_size: usize,
+}
+
+impl BatchedInputArgs {
+    /// Run the function for each batch.
+    pub fn for_each_batch<F>(
+        &self,
+        f: &mut F,
+    ) -> Result<(), Box<dyn std::error::Error>>
+    where
+        F: FnMut(&[String]) -> Result<bool, Box<dyn std::error::Error>>,
+    {
+        InputBatcher::new(self.input_format, self.files.clone())
+            .with_batch_size(self.input_batch_size)
+            .for_each_batch(f)
+    }
+}
+
 /// Batcher for input files.
 pub struct InputBatcher {
     pub format: FileFormat,

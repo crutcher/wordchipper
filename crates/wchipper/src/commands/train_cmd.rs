@@ -5,7 +5,7 @@ use wordchipper_training::BPETRainerOptions;
 
 use crate::{
     commands::lexers::LexerSelectorArgs,
-    util::{input_batcher::InputBatcher, input_output::OutputArgs, logging::LogArgs},
+    util::{input_batcher::BatchedInputArgs, input_output::OutputArgs, logging::LogArgs},
 };
 
 /// File formats for the train command.
@@ -21,20 +21,12 @@ pub enum FileFormat {
 /// Args for the train command.
 #[derive(clap::Args, Debug)]
 pub struct TrainArgs {
-    /// Input files.
-    files: Vec<String>,
+    #[command(flatten)]
+    batched_input: BatchedInputArgs,
 
     /// Logging options.
     #[clap(flatten)]
     pub logging: LogArgs,
-
-    /// The input shard file format.
-    #[arg(long, default_value = "text")]
-    input_format: FileFormat,
-
-    /// The input batch size.
-    #[arg(long, default_value = "100")]
-    input_batch_size: usize,
 
     /// Max vocab size.
     #[arg(long, default_value = "50281")]
@@ -56,12 +48,10 @@ impl TrainArgs {
         let mut trainer = BPETRainerOptions::new(pattern.clone(), self.vocab_size).init();
 
         log::info!("Reading shards:");
-        InputBatcher::new(self.input_format, self.files.clone())
-            .with_batch_size(self.input_batch_size)
-            .for_each_batch(&mut |samples| {
-                trainer.update_from_samples(samples.to_vec());
-                Ok(true)
-            })?;
+        self.batched_input.for_each_batch(&mut |samples| {
+            trainer.update_from_samples(samples.to_vec());
+            Ok(true)
+        })?;
 
         log::info!("Training Tokenizer...");
         let vocab: Arc<UnifiedTokenVocab<u32>> = trainer
