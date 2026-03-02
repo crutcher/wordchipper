@@ -1,19 +1,12 @@
-use std::{
-    io::{BufRead, BufReader},
-    sync::Arc,
-};
+use std::sync::Arc;
 
-use arrow::array::{Array, StringArray};
-use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
-use wordchipper::{
-    UnifiedTokenVocab,
-    VocabIndex,
-    pretrained::openai::OA_R50K_BASE_PATTERN,
-    vocab::io::write_base64_span_map,
-};
-use wordchipper_training::{BPETRainerOptions, BPETrainer};
+use wordchipper::{UnifiedTokenVocab, VocabIndex, vocab::io::write_base64_span_map};
+use wordchipper_training::BPETRainerOptions;
 
-use crate::util::{input_output::OutputArgs, logging::LogArgs};
+use crate::{
+    commands::lexers::LexerSelectorArgs,
+    util::{input_batcher::InputBatcher, input_output::OutputArgs, logging::LogArgs},
+};
 
 /// File formats for the train command.
 #[derive(Debug, Clone, Copy, clap::ValueEnum)]
@@ -31,19 +24,24 @@ pub struct TrainArgs {
     /// Input files.
     files: Vec<String>,
 
+    /// Logging options.
     #[clap(flatten)]
     pub logging: LogArgs,
 
+    /// The input shard file format.
     #[arg(long, default_value = "text")]
     input_format: FileFormat,
+
+    /// The input batch size.
+    #[arg(long, default_value = "100")]
+    input_batch_size: usize,
 
     /// Max vocab size.
     #[arg(long, default_value = "50281")]
     vocab_size: usize,
 
-    /// Word span regex.
-    #[arg(long, default_value_t = OA_R50K_BASE_PATTERN.as_str().to_string())]
-    regex: String,
+    #[command(flatten)]
+    lexer_selector: LexerSelectorArgs,
 
     #[command(flatten)]
     output: OutputArgs,
@@ -53,20 +51,17 @@ impl TrainArgs {
     pub fn run(&self) -> Result<(), Box<dyn std::error::Error>> {
         self.logging.setup_logging(3)?;
 
-        let mut trainer = BPETRainerOptions::new(self.regex.clone(), self.vocab_size).init();
+        let pattern = self.lexer_selector.get_pattern()?;
+
+        let mut trainer = BPETRainerOptions::new(pattern.clone(), self.vocab_size).init();
 
         log::info!("Reading shards:");
-        for (idx, path) in self.files.iter().enumerate() {
-            log::info!("{idx}: {path}");
-            match self.input_format {
-                FileFormat::Text => {
-                    self.read_text_file(&mut trainer, path)?;
-                }
-                FileFormat::Parquet => {
-                    self.read_parquet_file(&mut trainer, path)?;
-                }
-            }
-        }
+        InputBatcher::new(self.input_format, self.files.clone())
+            .with_batch_size(self.input_batch_size)
+            .for_each_batch(&mut |samples| {
+                trainer.update_from_samples(samples.to_vec());
+                Ok(true)
+            })?;
 
         log::info!("Training Tokenizer...");
         let vocab: Arc<UnifiedTokenVocab<u32>> = trainer
@@ -81,43 +76,6 @@ impl TrainArgs {
         }
         let mut writer = self.output.open_writer()?;
         write_base64_span_map(vocab.span_vocab().span_map(), &mut writer)?;
-
-        Ok(())
-    }
-
-    fn read_text_file(
-        &self,
-        trainer: &mut BPETrainer,
-        path: &str,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        let reader = BufReader::new(std::fs::File::open(path)?);
-        for line in reader.lines() {
-            trainer.update_from_samples(vec![line?.to_string()]);
-        }
-        Ok(())
-    }
-
-    fn read_parquet_file(
-        &self,
-        trainer: &mut BPETrainer,
-        path: &str,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        let file = std::fs::File::open(path)?;
-        let reader = ParquetRecordBatchReaderBuilder::try_new(file)?.build()?;
-        for batch in reader {
-            let batch = batch?;
-
-            let samples = batch
-                .column_by_name("text")
-                .expect("failed to find 'text' column in batch")
-                .as_any()
-                .downcast_ref::<StringArray>()
-                .unwrap()
-                .iter()
-                .filter_map(|s| s.map(|s| s.to_string()));
-
-            trainer.update_from_samples(samples);
-        }
 
         Ok(())
     }

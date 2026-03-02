@@ -87,11 +87,9 @@ impl LexerInventory {
                 }
             }
         }
-        for lexer in &self.lexers {
-            if lexer.aliases.iter().any(|a| a == query) {
-                return Some(lexer);
-            }
-        }
-        None
+        self.lexers
+            .iter()
+            .find(|&lexer| lexer.aliases.iter().any(|a| a == query))
+            .map(|v| v as _)
     }
 }

@@ -13,7 +13,7 @@ pub struct StressLexerArgs {
 
 impl StressLexerArgs {
     pub fn run(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let pattern = self.selector.resolve()?;
+        let pattern = self.selector.get_pattern()?;
 
         let accel_lexer = get_regex_accelerator(&pattern);
         if accel_lexer.is_none() {
