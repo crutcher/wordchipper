@@ -369,6 +369,13 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         let bytes = self.text.as_bytes();
 
+        // TODO: simplify the macros into methods, once we've debugged the difference.
+        macro_rules! emit {
+            ($r:expr) => {
+                self.emit($r)
+            };
+        }
+
         macro_rules! flush_ws_split {
             ($ws:expr) => {{
                 let ws = $ws;
@@ -385,7 +392,7 @@ where
                     "no leading byte found in ws range"
                 );
                 if ws.start < trim {
-                    self.emit(ws.start..trim);
+                    emit!(ws.start..trim);
                 }
                 trim
             }};
@@ -396,13 +403,13 @@ where
             ($start:expr, $end:expr, $check_contraction:expr) => {
                 if $check_contraction {
                     if let Some(split) = contraction_split(&bytes[$start..$end]) {
-                        self.emit($start..$start + split);
-                        self.emit($start + split..$end);
+                        emit!($start..$start + split);
+                        emit!($start + split..$end);
                     } else {
-                        self.emit($start..$end);
+                        emit!($start..$end);
                     }
                 } else {
-                    self.emit($start..$end);
+                    emit!($start..$end);
                 }
             };
         }
@@ -419,7 +426,7 @@ where
                     // We skipped over a gap.
                     // If there was a pending ws, emit it.
                     if let Some(ws) = self.pending_ws.take() {
-                        self.emit(ws);
+                        emit!(ws);
                     }
                 }
 
@@ -428,7 +435,7 @@ where
                 match role {
                     Gpt2FamilyTokenRole::Whitespace => {
                         if let Some(ws) = self.pending_ws.take() {
-                            self.emit(ws);
+                            emit!(ws);
                         }
                         self.pending_ws = Some(start..end);
                     }
@@ -444,11 +451,13 @@ where
 
                             if trim == ws_start || bytes[trim] != b' ' {
                                 // Single ws char, or last char is not ASCII space.
-                                self.emit(trim..ws_end);
-                                self.emit(start..end);
+                                emit!(trim..ws_end);
+                                emit!(start..end);
+                            } else {
+                                emit!(trim..end)
                             }
                         }
-                        self.emit(start..end);
+                        emit!(start..end);
                     }
                     Gpt2FamilyTokenRole::Word { check_contraction } => {
                         if let Some(ws) = self.pending_ws.take() {
@@ -480,7 +489,7 @@ where
                                 emit_absorbing!(trim, end, check_contraction);
                             } else if single_char {
                                 // Single ws char: emit standalone, token as-is.
-                                self.emit(trim..ws_end);
+                                emit!(trim..ws_end);
                                 emit_absorbing!(start, end, check_contraction);
                             } else {
                                 // 2+ ws chars: merge last ws char + non-letter
@@ -491,7 +500,7 @@ where
                                     .chars()
                                     .next()
                                     .map_or(1, char::len_utf8);
-                                self.emit(trim..start + prefix_len);
+                                emit!(trim..start + prefix_len);
                                 emit_absorbing!(start + prefix_len, end, check_contraction);
                             }
                         } else {
@@ -502,13 +511,13 @@ where
                         if let Some(ws) = self.pending_ws.take() {
                             let ws_end = ws.end;
                             let trim = flush_ws_split!(ws);
-                            self.emit(trim..ws_end);
+                            emit!(trim..ws_end);
                         }
-                        self.emit(start..end);
+                        emit!(start..end);
                     }
                     Gpt2FamilyTokenRole::Gap => {
                         if let Some(ws) = self.pending_ws.take() {
-                            self.emit(ws);
+                            emit!(ws);
                         }
                     }
                 }
