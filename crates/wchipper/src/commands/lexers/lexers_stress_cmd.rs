@@ -112,6 +112,8 @@ impl StressLexerArgs {
         log::error!("expected: {:?}", expected_ctx);
         log::error!("observed: {:?}", observed_ctx);
 
-        return Err(format!("Accelerated lexer failed to match reference lexer.").into());
+        Err("Accelerated lexer failed to match reference lexer."
+            .to_string()
+            .into())
     }
 }
