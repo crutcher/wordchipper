@@ -15,7 +15,7 @@ use crate::{
     spanners::span_lexers::{
         SpanLexer,
         accelerators::RegexAcceleratorHook,
-        logos::gpt2::{Gpt2FamilyLogos, Gpt2FamilyTokenRole, gpt2_family_token_next_span},
+        logos::gpt2_family::{Gpt2FamilyLogos, Gpt2FamilyTokenRole, gpt2_family_token_next_span},
     },
 };
 // Shorthand aliases for the character classes used in o200k:

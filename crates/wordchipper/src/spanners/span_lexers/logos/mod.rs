@@ -13,6 +13,6 @@
 //! See [`Cl100kLexer`] and [`O200kLexer`] for reference implementations.
 
 pub mod cl100k;
-pub mod gpt2;
+pub mod gpt2_family;
 pub mod o200k;
 pub mod r50k;

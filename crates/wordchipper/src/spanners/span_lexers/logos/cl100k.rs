@@ -9,7 +9,7 @@ use core::ops::Range;
 
 use logos::Logos;
 
-use super::gpt2::{Gpt2FamilyLogos, Gpt2FamilyTokenRole, gpt2_family_token_next_span};
+use super::gpt2_family::{Gpt2FamilyLogos, Gpt2FamilyTokenRole, gpt2_family_token_next_span};
 use crate::{
     alloc::sync::Arc,
     pretrained::openai::OA_CL100K_BASE_PATTERN,

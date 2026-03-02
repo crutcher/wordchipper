@@ -24,7 +24,7 @@ use crate::spanners::SpanRef;
 /// # Example
 ///
 /// ```
-/// use wordchipper::spanners::span_lexers::logos::gpt2::Gpt2FamilyTokenRole;
+/// use wordchipper::spanners::span_lexers::logos::gpt2_family::Gpt2FamilyTokenRole;
 ///
 /// // Map your logos token to a role:
 /// let role = Gpt2FamilyTokenRole::Word {
@@ -73,7 +73,7 @@ pub trait Gpt2FamilyLogos<'a>: Logos<'a> {
 /// # Examples
 ///
 /// ```
-/// use wordchipper::spanners::span_lexers::logos::gpt2::contraction_split;
+/// use wordchipper::spanners::span_lexers::logos::gpt2_family::contraction_split;
 ///
 /// assert_eq!(contraction_split(b"'There"), Some(2)); // split after 'T
 /// assert_eq!(contraction_split(b"'llama"), Some(3)); // split after 'll
@@ -337,7 +337,7 @@ pub fn gpt2_family_token_next_span<'source, Token: Gpt2FamilyLogos<'source>>(
 /// ```
 /// use wordchipper::spanners::{
 ///     SpanRef,
-///     span_lexers::logos::gpt2::{Gpt2FamilyTokenRole, for_each_classified_span},
+///     span_lexers::logos::gpt2_family::{Gpt2FamilyTokenRole, for_each_classified_span},
 /// };
 ///
 /// let text = "hello world";
@@ -547,7 +547,7 @@ mod tests {
     use proptest::prelude::*;
 
     use super::*;
-    use crate::{alloc::vec::Vec, spanners::span_lexers::logos::gpt2::Gpt2FamilyTokenRole};
+    use crate::{alloc::vec::Vec, spanners::span_lexers::logos::gpt2_family::Gpt2FamilyTokenRole};
 
     /// Collect spans from for_each_classified_span for testing.
     fn collect_spans(
