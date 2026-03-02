@@ -3,17 +3,19 @@
 //! Compile-time DFA lexer for the `r50k_base` pattern (GPT-2).
 //!
 //! This serves as a reference implementation showing how to build an
-//! accelerated lexer using [`TokenRole`] and [`for_each_classified_span`].
+//! accelerated lexer using [`Gpt2FamilyTokenRole`] and [`for_each_classified_span`].
+
+use core::ops::Range;
 
 use logos::Logos;
 
-use super::{engine::for_each_classified_span, token_role::TokenRole};
 use crate::{
     alloc::sync::Arc,
     pretrained::openai::OA_R50K_BASE_PATTERN,
-    spanners::{
-        SpanRef,
-        span_lexers::{SpanLexer, accelerators::RegexAcceleratorHook},
+    spanners::span_lexers::{
+        SpanLexer,
+        accelerators::RegexAcceleratorHook,
+        logos::gpt2::{Gpt2FamilyLogos, Gpt2FamilyTokenRole, gpt2_family_token_next_span},
     },
 };
 
@@ -50,14 +52,14 @@ pub(crate) enum R50kToken {
     Whitespace,
 }
 
-impl R50kToken {
-    fn role(&self) -> TokenRole {
+impl Gpt2FamilyLogos<'_> for R50kToken {
+    fn family_role(&self) -> Gpt2FamilyTokenRole {
         match self {
-            Self::Whitespace => TokenRole::Whitespace,
+            Self::Whitespace => Gpt2FamilyTokenRole::Whitespace,
             // All three r50k content patterns use ` ?X` which absorbs only
             // literal ASCII space. This matches the Punctuation role behavior.
-            Self::Letters | Self::Digits | Self::Punctuation => TokenRole::Punctuation,
-            Self::Contraction => TokenRole::Standalone,
+            Self::Letters | Self::Digits | Self::Punctuation => Gpt2FamilyTokenRole::Punctuation,
+            Self::Contraction => Gpt2FamilyTokenRole::Standalone,
         }
     }
 }
@@ -80,35 +82,9 @@ impl SpanLexer for R50kLexer {
         text: &str,
         offset: usize,
     ) -> Option<(usize, usize)> {
-        let mut next_span: Option<(usize, usize)> = None;
-        self.for_each_word(text, offset, &mut |span_ref| match span_ref {
-            SpanRef::Word(r) => {
-                next_span = Some((r.start, r.end));
-                false
-            }
-            _ => true,
-        });
-        next_span
-    }
-
-    fn for_each_word(
-        &self,
-        text: &str,
-        offset: usize,
-        f: &mut dyn FnMut(SpanRef) -> bool,
-    ) -> (bool, usize) {
-        for_each_classified_span(
-            R50kToken::lexer(text).spanned().map(|(res, range)| {
-                let role = match res {
-                    Ok(tok) => tok.role(),
-                    Err(()) => TokenRole::Gap,
-                };
-                (role, range)
-            }),
-            text,
-            offset,
-            f,
-        )
+        let offset_text = &text[offset..];
+        gpt2_family_token_next_span(offset_text, R50kToken::lexer(offset_text).spanned())
+            .map(|Range { start, end }| (start + offset, end + offset))
     }
 }
 
@@ -117,28 +93,12 @@ mod tests {
     use super::*;
     use crate::{
         alloc::{string::ToString, sync::Arc, vec, vec::Vec},
-        spanners::{TextSpanner, span_lexers::LexerTextSpanner},
+        spanners::{SpanRef, TextSpanner, span_lexers::LexerTextSpanner},
     };
 
     /// Build a `TextSpanner` from a logos lexer with no specials.
     fn spanner(lexer: impl SpanLexer + 'static) -> LexerTextSpanner {
         LexerTextSpanner::new(Arc::new(lexer), None)
-    }
-
-    #[test]
-    fn test_span_lexer() {
-        let lexer = R50kLexer {};
-
-        let text = "hello world";
-        let mut spans: Vec<SpanRef> = Default::default();
-        lexer.for_each_word(text, 0, &mut |span_ref| {
-            spans.push(span_ref);
-            true
-        });
-        assert_eq!(spans, vec![SpanRef::Word(0..5), SpanRef::Word(5..11),]);
-
-        assert_eq!(lexer.next_span(text, 0), Some((0, 5)));
-        assert_eq!(lexer.next_span(&text[5..], 5), Some((5, 11)));
     }
 
     #[test]
