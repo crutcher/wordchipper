@@ -6,13 +6,12 @@
 //! accelerated lexer using [`Gpt2FamilyTokenRole`] and [`for_each_classified_span`].
 
 use core::ops::Range;
-use std::prelude::rust_2015::Box;
 
 use logos::Logos;
 
 use super::gpt2_family::{Gpt2FamilyLogos, Gpt2FamilySpanIter, Gpt2FamilyTokenRole};
 use crate::{
-    alloc::sync::Arc,
+    alloc::{boxed::Box, sync::Arc},
     pretrained::openai::OA_CL100K_BASE_PATTERN,
     spanners::span_lexers::{SpanLexer, accelerators::RegexAcceleratorHook},
 };
