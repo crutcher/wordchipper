@@ -10,7 +10,7 @@ use core::ops::Range;
 
 use logos::{Logos, SpannedIter};
 
-use crate::spanners::SpanRef;
+use crate::{alloc::vec::Vec, spanners::SpanRef};
 
 /// How a logos token interacts with whitespace splitting.
 ///
@@ -156,10 +156,13 @@ pub fn contraction_split(bytes: &[u8]) -> Option<usize> {
 ///     }
 /// }
 /// ```
-pub fn gpt2_family_token_next_span<'source, Token: Gpt2FamilyLogos<'source>>(
+pub fn gpt2_family_token_next_span<'source, Token>(
     text: &'source str,
     iter: SpannedIter<'source, Token>,
-) -> Option<Range<usize>> {
+) -> Option<Range<usize>>
+where
+    Token: Gpt2FamilyLogos<'source>,
+{
     let bytes = text.as_bytes();
     let mut last = 0;
     let mut pending_ws: Option<Range<usize>> = None;
@@ -301,6 +304,219 @@ pub fn gpt2_family_token_next_span<'source, Token: Gpt2FamilyLogos<'source>>(
     }
 
     pending_ws
+}
+
+/// `.next_span()` iterator for `Gpt2FamilyLogos`.
+pub struct Gpt2FamilySpanIter<'source, Token>
+where
+    Token: Gpt2FamilyLogos<'source>,
+{
+    text: &'source str,
+    last: usize,
+    pending_ws: Option<Range<usize>>,
+
+    fifo: Vec<Range<usize>>,
+    iter: Option<SpannedIter<'source, Token>>,
+}
+
+impl<'source, Token> Gpt2FamilySpanIter<'source, Token>
+where
+    Token: Gpt2FamilyLogos<'source>,
+{
+    /// Create a new iterator.
+    pub fn new(
+        text: &'source str,
+        iter: SpannedIter<'source, Token>,
+    ) -> Self {
+        Self {
+            text,
+            last: 0,
+            pending_ws: None,
+            fifo: Vec::new(),
+            iter: Some(iter),
+        }
+    }
+
+    fn emit(
+        &mut self,
+        range: Range<usize>,
+    ) {
+        self.fifo.push(range);
+    }
+
+    fn next_tok(&mut self) -> Option<(Gpt2FamilyTokenRole, Range<usize>)> {
+        if self.iter.is_some() {
+            let iter = self.iter.as_mut().unwrap();
+            if let Some((res, range)) = iter.next() {
+                let role = match res {
+                    Ok(tok) => tok.family_role(),
+                    Err(_) => Gpt2FamilyTokenRole::Gap,
+                };
+                return Some((role, range));
+            }
+            self.iter = None;
+        }
+        None
+    }
+}
+
+impl<'source, Token> Iterator for Gpt2FamilySpanIter<'source, Token>
+where
+    Token: Gpt2FamilyLogos<'source>,
+{
+    type Item = Range<usize>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let bytes = self.text.as_bytes();
+
+        macro_rules! flush_ws_split {
+            ($ws:expr) => {{
+                let ws = $ws;
+                debug_assert!(!ws.is_empty(), "flush_ws_split called with empty range");
+                // Find start of the last character (may be multi-byte, e.g. NBSP).
+                // Safety: text is &str bytes, so valid UTF-8; the scan always finds
+                // a leading byte before reaching ws.start.
+                let mut trim = ws.end - 1;
+                while trim > ws.start && (bytes[trim] & 0xC0) == 0x80 {
+                    trim -= 1;
+                }
+                debug_assert!(
+                    (bytes[trim] & 0xC0) != 0x80,
+                    "no leading byte found in ws range"
+                );
+                if ws.start < trim {
+                    self.emit(ws.start..trim);
+                }
+                trim
+            }};
+        }
+
+        // Emit a Letters/Word span, splitting contractions if needed.
+        macro_rules! emit_absorbing {
+            ($start:expr, $end:expr, $check_contraction:expr) => {
+                if $check_contraction {
+                    if let Some(split) = contraction_split(&bytes[$start..$end]) {
+                        self.emit($start..$start + split);
+                        self.emit($start + split..$end);
+                    } else {
+                        self.emit($start..$end);
+                    }
+                } else {
+                    self.emit($start..$end);
+                }
+            };
+        }
+
+        loop {
+            if !self.fifo.is_empty() {
+                return Some(self.fifo.remove(0));
+            }
+
+            if let Some((role, range)) = self.next_tok() {
+                let Range { start, end } = range;
+
+                if self.last < start {
+                    // We skipped over a gap.
+                    // If there was a pending ws, emit it.
+                    if let Some(ws) = self.pending_ws.take() {
+                        self.emit(ws);
+                    }
+                }
+
+                self.last = end;
+
+                match role {
+                    Gpt2FamilyTokenRole::Whitespace => {
+                        if let Some(ws) = self.pending_ws.take() {
+                            self.emit(ws);
+                        }
+                        self.pending_ws = Some(start..end);
+                    }
+                    Gpt2FamilyTokenRole::Punctuation => {
+                        // Regex ` ?[^\s\p{L}\p{N}]+` absorbs a preceding ASCII
+                        // space (literal ` ?`). Non-space whitespace (NBSP, tab)
+                        // is NOT absorbed.
+                        if let Some(ws) = self.pending_ws.take() {
+                            let ws_start = ws.start;
+                            let ws_end = ws.end;
+
+                            let trim = flush_ws_split!(ws);
+
+                            if trim == ws_start || bytes[trim] != b' ' {
+                                // Single ws char, or last char is not ASCII space.
+                                self.emit(trim..ws_end);
+                                self.emit(start..end);
+                            }
+                        }
+                        self.emit(start..end);
+                    }
+                    Gpt2FamilyTokenRole::Word { check_contraction } => {
+                        if let Some(ws) = self.pending_ws.take() {
+                            let ws_start = ws.start;
+                            let ws_end = ws.end;
+                            let trim = flush_ws_split!(ws);
+                            let single_char = trim == ws_start;
+
+                            // Decode only the first UTF-8 char from bytes to avoid
+                            // validating the entire tail (which would be O(n^2) overall).
+                            let first_is_letter = {
+                                let tail = &bytes[start..];
+                                let char_len = match tail.first() {
+                                    Some(&b) if b < 0x80 => 1,
+                                    Some(&b) if b < 0xE0 => 2,
+                                    Some(&b) if b < 0xF0 => 3,
+                                    Some(_) => 4,
+                                    None => 0,
+                                };
+                                char_len > 0
+                                    && core::str::from_utf8(&tail[..char_len])
+                                        .ok()
+                                        .and_then(|s| s.chars().next())
+                                        .is_some_and(char::is_alphabetic)
+                            };
+
+                            if first_is_letter {
+                                // Token has no existing prefix; merge last ws char.
+                                emit_absorbing!(trim, end, check_contraction);
+                            } else if single_char {
+                                // Single ws char: emit standalone, token as-is.
+                                self.emit(trim..ws_end);
+                                emit_absorbing!(start, end, check_contraction);
+                            } else {
+                                // 2+ ws chars: merge last ws char + non-letter
+                                // prefix into one span (like Punctuation ` ?X`),
+                                // then emit remaining letters separately.
+                                let prefix_len = core::str::from_utf8(&bytes[start..end])
+                                    .expect("text is &str bytes, always valid UTF-8")
+                                    .chars()
+                                    .next()
+                                    .map_or(1, char::len_utf8);
+                                self.emit(trim..start + prefix_len);
+                                emit_absorbing!(start + prefix_len, end, check_contraction);
+                            }
+                        } else {
+                            emit_absorbing!(start, end, check_contraction);
+                        }
+                    }
+                    Gpt2FamilyTokenRole::Standalone => {
+                        if let Some(ws) = self.pending_ws.take() {
+                            let ws_end = ws.end;
+                            let trim = flush_ws_split!(ws);
+                            self.emit(trim..ws_end);
+                        }
+                        self.emit(start..end);
+                    }
+                    Gpt2FamilyTokenRole::Gap => {
+                        if let Some(ws) = self.pending_ws.take() {
+                            self.emit(ws);
+                        }
+                    }
+                }
+            } else {
+                return self.pending_ws.take();
+            }
+        }
+    }
 }
 
 /// Iterate classified logos tokens and emit Word/Gap spans with
