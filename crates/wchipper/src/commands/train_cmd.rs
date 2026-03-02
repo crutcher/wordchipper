@@ -24,7 +24,6 @@ pub struct TrainArgs {
     #[command(flatten)]
     batched_input: BatchedInputArgs,
 
-    /// Logging options.
     #[clap(flatten)]
     pub logging: LogArgs,
 
