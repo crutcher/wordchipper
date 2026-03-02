@@ -6,7 +6,7 @@
 //! to a [`Gpt2FamilyTokenRole`] that tells the post-processing engine how the token
 //! interacts with preceding whitespace.
 
-use std::ops::Range;
+use core::ops::Range;
 
 use logos::{Logos, SpannedIter};
 

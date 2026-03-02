@@ -91,7 +91,7 @@ impl SpanLexer for Cl100kLexer {
 mod tests {
     use super::*;
     use crate::{
-        alloc::{string::ToString, sync::Arc, vec::Vec},
+        alloc::{string::ToString, sync::Arc, vec, vec::Vec},
         spanners::{SpanRef, TextSpanner, span_lexers::LexerTextSpanner},
     };
 
