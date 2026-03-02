@@ -72,9 +72,11 @@ impl InputBatcher {
     where
         F: FnMut(&[String]) -> Result<bool, Box<dyn std::error::Error>>,
     {
+        log::info!("InputBatcher: Batch Size: {}", self.batch_size);
+        log::info!("InputBatcher: Input Format: {:?}", self.format);
         let mut buffer: Vec<String> = Vec::with_capacity(self.batch_size);
         for (idx, path) in self.files.iter().enumerate() {
-            log::info!("{idx}: {path}");
+            log::info!("File {idx}: {path}");
 
             if !self.for_each_path_item(path, &mut |item| {
                 buffer.push(item.to_string());
