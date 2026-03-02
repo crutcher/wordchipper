@@ -80,11 +80,9 @@ impl SpanLexer for R50kLexer {
     fn next_span(
         &self,
         text: &str,
-        offset: usize,
     ) -> Option<(usize, usize)> {
-        let offset_text = &text[offset..];
-        gpt2_family_token_next_span(offset_text, R50kToken::lexer(offset_text).spanned())
-            .map(|Range { start, end }| (start + offset, end + offset))
+        gpt2_family_token_next_span(text, R50kToken::lexer(text).spanned())
+            .map(|Range { start, end }| (start, end))
     }
 }
 

@@ -62,11 +62,8 @@ impl SpanLexer for RegexWrapper {
     fn next_span(
         &self,
         text: &str,
-        offset: usize,
     ) -> Option<(usize, usize)> {
-        self.find_iter(&text[offset..])
-            .next()
-            .map(|m| (offset + m.start(), offset + m.end()))
+        self.find_iter(text).next().map(|m| (m.start(), m.end()))
     }
 }
 

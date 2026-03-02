@@ -79,11 +79,9 @@ impl SpanLexer for Cl100kLexer {
     fn next_span(
         &self,
         text: &str,
-        offset: usize,
     ) -> Option<(usize, usize)> {
-        let offset_text = &text[offset..];
-        gpt2_family_token_next_span(offset_text, Cl100kToken::lexer(offset_text).spanned())
-            .map(|Range { start, end }| (start + offset, end + offset))
+        gpt2_family_token_next_span(text, Cl100kToken::lexer(text).spanned())
+            .map(|Range { start, end }| (start, end))
     }
 }
 

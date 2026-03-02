@@ -26,11 +26,7 @@ pub trait SpanLexer: Send + Sync {
     fn next_span(
         &self,
         text: &str,
-        offset: usize,
-    ) -> Option<(usize, usize)> {
-        let _ = (text, offset);
-        None
-    }
+    ) -> Option<(usize, usize)>;
 }
 
 // Blanket implementation for any type that derefs to a SpanLexer.
@@ -43,8 +39,7 @@ where
     fn next_span(
         &self,
         text: &str,
-        offset: usize,
     ) -> Option<(usize, usize)> {
-        self.deref().next_span(text, offset)
+        self.deref().next_span(text)
     }
 }
