@@ -241,6 +241,9 @@ where
             if let Some(range) = self.pop() {
                 return Some(range);
             }
+            if self.iter.is_none() {
+                return self.pending_ws.take();
+            }
 
             if let Some((role, Range { start, end })) = self.next_tok() {
                 if self.last < start {
@@ -341,8 +344,6 @@ where
                         }
                     }
                 }
-            } else {
-                return self.pending_ws.take();
             }
         }
     }

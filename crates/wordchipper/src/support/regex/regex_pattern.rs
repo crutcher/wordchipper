@@ -1,7 +1,5 @@
 //! # Regex Pattern Labeled Wrapper
 
-use core::fmt::Display;
-
 use crate::{
     alloc::string::{String, ToString},
     support::regex::{ErrorWrapper, RegexWrapper},
@@ -18,11 +16,11 @@ pub enum ConstRegexPattern {
     Fancy(&'static str),
 }
 
-impl Display for ConstRegexPattern {
+impl core::fmt::Display for ConstRegexPattern {
     fn fmt(
         &self,
-        f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result {
+        f: &mut core::fmt::Formatter<'_>,
+    ) -> core::fmt::Result {
         write!(f, "{}", self.as_str())
     }
 }
