@@ -33,14 +33,17 @@
 //! }
 //! ```
 
+pub mod factory;
 pub mod openai;
-mod vocab_description;
-mod vocab_factory;
-mod vocab_query;
 
 #[doc(inline)]
-pub use vocab_description::*;
-#[doc(inline)]
-pub use vocab_factory::*;
-#[doc(inline)]
-pub use vocab_query::*;
+pub use factory::{
+    LabeledVocab,
+    VocabDescription,
+    VocabListing,
+    VocabQuery,
+    list_models,
+    list_vocabs,
+    load_vocab,
+    resolve_vocab,
+};

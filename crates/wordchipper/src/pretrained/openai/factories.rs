@@ -5,85 +5,102 @@ use std::io::BufRead;
 #[cfg(feature = "std")]
 use std::path::Path;
 
-#[allow(unused_imports)]
-use crate::TokenType;
-#[allow(unused_imports)]
-use crate::UnifiedTokenVocab;
-#[allow(unused_imports)]
-use crate::prelude::*;
-#[allow(unused_imports)]
-use crate::pretrained::openai::OA_CL100K_BASE_PATTERN;
-#[allow(unused_imports)]
-use crate::pretrained::openai::OA_O200K_BASE_PATTERN;
-#[allow(unused_imports)]
-use crate::pretrained::openai::OA_P50K_BASE_PATTERN;
-#[allow(unused_imports)]
-use crate::pretrained::openai::OA_R50K_BASE_PATTERN;
-#[allow(unused_imports)]
-use crate::pretrained::openai::resources::OA_CL100K_BASE_TIKTOKEN_RESOURCE;
-#[allow(unused_imports)]
-use crate::pretrained::openai::resources::OA_O200K_BASE_TIKTOKEN_RESOURCE;
-#[allow(unused_imports)]
-use crate::pretrained::openai::resources::OA_P50K_BASE_TIKTOKEN_RESOURCE;
-#[allow(unused_imports)]
-use crate::pretrained::openai::resources::OA_R50K_BASE_TIKTOKEN_RESOURCE;
-#[allow(unused_imports)]
-use crate::pretrained::openai::specials::oa_cl100k_edit_special_tokens;
-#[allow(unused_imports)]
-use crate::pretrained::openai::specials::oa_o200k_base_special_tokens;
-#[allow(unused_imports)]
-use crate::pretrained::openai::specials::oa_o200k_harmony_special_tokens;
-#[allow(unused_imports)]
-use crate::pretrained::openai::specials::oa_p50k_base_special_tokens;
-#[allow(unused_imports)]
-use crate::pretrained::openai::specials::oa_p50k_edit_special_tokens;
-#[allow(unused_imports)]
-use crate::pretrained::openai::specials::oa_r50k_base_special_tokens;
-#[allow(unused_imports)]
-use crate::spanners::TextSpanningConfig;
-#[allow(unused_imports)]
-use crate::support::regex::RegexPattern;
-#[allow(unused_imports)]
-use crate::support::resources::ConstKeyedResource;
 #[cfg(feature = "std")]
 use crate::support::resources::ResourceLoader;
-#[allow(unused_imports)]
-use crate::vocab::utility::factories::ConstVocabularyFactory;
+use crate::{
+    TokenType,
+    prelude::*,
+    pretrained::openai::{
+        OA_CL100K_BASE_PATTERN,
+        OA_O200K_BASE_PATTERN,
+        OA_P50K_BASE_PATTERN,
+        OA_R50K_BASE_PATTERN,
+        resources::{
+            OA_CL100K_BASE_TIKTOKEN_RESOURCE,
+            OA_O200K_BASE_TIKTOKEN_RESOURCE,
+            OA_P50K_BASE_TIKTOKEN_RESOURCE,
+            OA_R50K_BASE_TIKTOKEN_RESOURCE,
+        },
+        specials::{
+            oa_cl100k_edit_special_tokens,
+            oa_o200k_base_special_tokens,
+            oa_o200k_harmony_special_tokens,
+            oa_p50k_base_special_tokens,
+            oa_p50k_edit_special_tokens,
+            oa_r50k_base_special_tokens,
+        },
+    },
+    spanners::TextSpanningConfig,
+    support::{
+        regex::RegexPattern,
+        resources::ConstKeyedResource,
+    },
+    vocab::utility::factories::ConstVocabularyFactory,
+};
 
-/// Load the `DataGym` GPT-2 span map vocabulary.
 #[cfg(all(feature = "std", feature = "datagym"))]
-pub fn load_gpt2_vocab<T: TokenType>(
-    loader: &mut dyn ResourceLoader
-) -> crate::WCResult<crate::UnifiedTokenVocab<T>> {
-    use std::io::BufReader;
-
+mod datagym {
     use crate::{
-        pretrained::openai::{
-            oa_r50k_base_spanning_config,
-            resources::{
-                OA_GPT2_ENCODER_JSON_KEYED_RESOURCE,
-                OA_GPT2_VOCAB_BPE_KEYED_RESOURCE,
-            },
-        },
-        vocab::{
-            SpanMapVocab,
-            io::read_datagym_vocab,
-        },
+        TokenType,
+        UnifiedTokenVocab,
+        VocabDescription,
+        pretrained::factory::BuiltinPretrainedVocabHook,
+        support::resources::ResourceLoader,
     };
 
-    let vocab_path = loader.load_resource_path(&OA_GPT2_VOCAB_BPE_KEYED_RESOURCE.into())?;
-    let mut vocab_reader = BufReader::new(std::fs::File::open(vocab_path)?);
+    /// Load the `DataGym` GPT-2 span map vocabulary.
+    #[cfg(all(feature = "std", feature = "datagym"))]
+    pub fn load_gpt2_vocab<T: TokenType>(
+        loader: &mut dyn ResourceLoader
+    ) -> crate::WCResult<UnifiedTokenVocab<T>> {
+        use std::io::BufReader;
 
-    let encoder_path = loader.load_resource_path(&OA_GPT2_ENCODER_JSON_KEYED_RESOURCE.into())?;
-    let mut encoder_reader = BufReader::new(std::fs::File::open(encoder_path)?);
+        use crate::{
+            pretrained::openai::{
+                oa_r50k_base_spanning_config,
+                resources::{
+                    OA_GPT2_ENCODER_JSON_KEYED_RESOURCE,
+                    OA_GPT2_VOCAB_BPE_KEYED_RESOURCE,
+                },
+            },
+            vocab::{
+                SpanMapVocab,
+                io::read_datagym_vocab,
+            },
+        };
 
-    let span_map = read_datagym_vocab(&mut vocab_reader, &mut encoder_reader, false)?;
+        let vocab_path = loader.load_resource_path(&OA_GPT2_VOCAB_BPE_KEYED_RESOURCE.into())?;
+        let mut vocab_reader = BufReader::new(std::fs::File::open(vocab_path)?);
 
-    UnifiedTokenVocab::from_span_vocab(
-        oa_r50k_base_spanning_config(),
-        SpanMapVocab::from_span_map(span_map).to_token_type()?,
-    )
+        let encoder_path =
+            loader.load_resource_path(&OA_GPT2_ENCODER_JSON_KEYED_RESOURCE.into())?;
+        let mut encoder_reader = BufReader::new(std::fs::File::open(encoder_path)?);
+
+        let span_map = read_datagym_vocab(&mut vocab_reader, &mut encoder_reader, false)?;
+
+        UnifiedTokenVocab::from_span_vocab(
+            oa_r50k_base_spanning_config(),
+            SpanMapVocab::from_span_map(span_map).to_token_type()?,
+        )
+    }
+
+    #[cfg(all(feature = "std", feature = "datagym"))]
+    inventory::submit! {
+        BuiltinPretrainedVocabHook::new(
+            "openai:gpt2",
+            |id| VocabDescription::new(
+                id,
+                &["openai", "gpt2"],
+                "GPT-2 `gpt2` vocabulary",
+            ),
+            |_, loader| {
+                super::load_gpt2_vocab::<u32>(loader)
+            },
+        )
+    }
 }
+#[cfg(all(feature = "std", feature = "datagym"))]
+pub use self::datagym::*;
 
 /// `OpenAI` Pretrained Tokenizer types.
 #[derive(Clone, Copy, Debug, PartialEq, strum::EnumString, strum::EnumIter, strum::Display)]
@@ -176,6 +193,102 @@ impl OATokenizer {
 /// Shared download context key.
 const OA_KEY: &str = "openai";
 
+#[cfg(feature = "std")]
+mod builtin_loaders {
+    use super::*;
+    use crate::{
+        VocabDescription,
+        pretrained::factory::BuiltinPretrainedVocabHook,
+    };
+
+    inventory::submit! {
+        BuiltinPretrainedVocabHook::new(
+            "openai:r50k_base",
+            |id| VocabDescription::new(
+                id,
+                &["openai", "r50k_base"],
+                "GPT-2 `p50k_base` vocabulary; remote",
+            ),
+            |_, loader| {
+                OA_R50K_BASE_VOCAB_FACTORY.load_vocab(loader)
+            }
+        )
+    }
+
+    #[cfg(feature = "std")]
+    inventory::submit! {
+        BuiltinPretrainedVocabHook::new(
+            "openai:p50k_base",
+            |id| VocabDescription::new(
+                id,
+                &["openai", "p50k_base"],
+                "GPT-2 `p50k_base` vocabulary; remote",
+            ),
+            |_, loader| {
+                OA_P50K_BASE_VOCAB_FACTORY.load_vocab(loader)
+            }
+        )
+    }
+
+    #[cfg(feature = "std")]
+    inventory::submit! {
+        BuiltinPretrainedVocabHook::new(
+            "openai:p50k_edit",
+            |id| VocabDescription::new(
+                id,
+                &["openai", "p50k_base"],
+                "GPT-2 `p50k_base` vocabulary; remote",
+            ),
+            |_, loader| {
+                OA_P50K_EDIT_VOCAB_FACTORY.load_vocab(loader)
+            }
+        )
+    }
+    #[cfg(feature = "std")]
+    inventory::submit! {
+        BuiltinPretrainedVocabHook::new(
+            "openai:cl100k_base",
+            |id| VocabDescription::new(
+                id,
+                &["openai", "cl100k_base"],
+                "GPT-3 `cl100k_base` vocabulary; remote",
+            ),
+            |_, loader| {
+                OA_CL100K_BASE_VOCAB_FACTORY.load_vocab(loader)
+            }
+        )
+    }
+
+    #[cfg(feature = "std")]
+    inventory::submit! {
+        BuiltinPretrainedVocabHook::new(
+            "openai:o200k_base",
+            |id| VocabDescription::new(
+                id,
+                &["openai", "o200k_base"],
+                "GPT-3 `o200k_base` vocabulary; remote",
+            ),
+            |_, loader| {
+                OA_O200K_BASE_VOCAB_FACTORY.load_vocab(loader)
+            }
+        )
+    }
+
+    #[cfg(feature = "std")]
+    inventory::submit! {
+        BuiltinPretrainedVocabHook::new(
+            "openai:o200k_harmony",
+            |id| VocabDescription::new(
+                id,
+                &["openai", "o200k_harmony"],
+                "GPT-3 `o200k_harmony` vocabulary; remote",
+            ),
+            |_, loader| {
+                OA_O200K_HARMONY_VOCAB_FACTORY.load_vocab(loader)
+            }
+        )
+    }
+}
 /// The "`r50k_base`" tokenizer.
 pub const OA_R50K_BASE_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabularyFactory {
     name: "r50k_base",
