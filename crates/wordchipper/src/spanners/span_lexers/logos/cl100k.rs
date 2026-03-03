@@ -21,11 +21,11 @@ use crate::{
 /// | Regex branch                      | Logos variant  |
 /// |-----------------------------------|----------------|
 /// | `'(?i:[sdmt]\|ll\|ve\|re)`        | Contraction    |
-/// | `[^\r\n\p{L}\p{N}]?\p{L}+`       | Letters        |
+/// | `[^\r\n\p{L}\p{N}]?\p{L}+`        | Letters        |
 /// | `\p{N}{1,3}`                      | Digits         |
-/// | ` ?[^\s\p{L}\p{N}]+[\r\n]*`      | Punctuation    |
+/// | ` ?[^\s\p{L}\p{N}]+[\r\n]*`       | Punctuation    |
 /// | `\s*[\r\n]`                       | Newline        |
-/// | `\s+(?!\S)` / `\s`               | Whitespace     |
+/// | `\s+(?!\S)` / `\s`                | Whitespace     |
 #[derive(Logos, Debug, PartialEq, Clone)]
 pub(crate) enum Cl100kToken {
     #[regex(r"'[sStTdDmM]|'[rR][eE]|'[vV][eE]|'[lL][lL]")]

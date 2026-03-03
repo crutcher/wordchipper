@@ -19,39 +19,47 @@ use crate::{
     },
 };
 // Shorthand aliases for the character classes used in o200k:
-//   UPPER = [\p{Uppercase_Letter}\p{Titlecase_Letter}\p{Modifier_Letter}\p{Other_Letter}\p{Mark}]
-//   LOWER = [\p{Lowercase_Letter}\p{Modifier_Letter}\p{Other_Letter}\p{Mark}]
-//   CONTRACTION_SUFFIX = ('[sS]|'[tT]|'[dD]|'[mM]|'[rR][eE]|'[vV][eE]|'[lL][lL])?
+//   UPPER      = [\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]
+//   LOWER      = [\p{Ll}\p{Lm}\p{Lo}\p{M}]
+//   UPPER_ONLY = [\p{Lu}\p{Lt}]  (excludes Lm, Lo, M)
+//   CONTRACTION = ('[sS]|'[tT]|'[dD]|'[mM]|'[rR][eE]|'[vV][eE]|'[lL][lL])?
 //
 // These are inlined below because logos derive macros require string literals.
 
 /// Logos token for the `o200k_base` pattern.
 ///
-/// Key difference from cl100k: contractions are attached to the preceding word,
-/// and two word `span_encoders` (uppercase-leading vs lowercase-ending) are merged
-/// into a single `Word` variant because logos requires unambiguous DFA states.
+/// Key difference from cl100k: contractions are attached to the preceding word.
+/// The two word regex branches are split into separate variants (`WordLower` and
+/// `WordUpper`) to avoid DFA longest-match merging characters like `º` (Lo) with
+/// following uppercase letters. `WordUpper` restricts its leading chars to
+/// `[\p{Lu}\p{Lt}]` so Lo/Lm/M chars can only match via `WordLower`.
 ///
 /// | Regex branch                                         | Logos variant  |
 /// |------------------------------------------------------|----------------|
-/// | `[^\r\n\p{L}\p{N}]?[UPPER]*[LOWER]+CONTRACTION?`    | Word           |
-/// | `[^\r\n\p{L}\p{N}]?[UPPER]+[LOWER]*CONTRACTION?`    | Word           |
+/// | `[^\r\n\p{L}\p{N}]?[UPPER]*[LOWER]+CONTRACTION?`     | WordLower      |
+/// | `[^\r\n\p{L}\p{N}]?[Lu,Lt]+[LOWER]*CONTRACTION?`     | WordUpper      |
 /// | `\p{N}{1,3}`                                         | Digits         |
-/// | ` ?[^\s\p{L}\p{N}]+[\r\n/]*`                        | Punctuation    |
+/// | ` ?[^\s\p{L}\p{N}]+[\r\n/]*`                         | Punctuation    |
 /// | `\s*[\r\n]+`                                         | Newline        |
 /// | `\s+`                                                | Whitespace     |
 #[derive(Logos, Debug, PartialEq, Clone)]
 pub(crate) enum O200kToken {
-    // Both word patterns merged via alternation into a single regex.
-    // The two overlap on \p{Modifier_Letter}/\p{Other_Letter}/\p{Mark}
-    // characters (e.g. CJK), so logos requires a single DFA pattern.
-    // CamelCase splitting still works: the DFA's longest-match finds
-    // the same boundaries as regex first-match (e.g. "OpenAI" -> "Open"+"AI").
-    // Priority > default to beat Punctuation on the [^\r\n\p{L}\p{N}]? prefix.
+    // Regex Branch 1: UPPER*LOWER+ (with optional prefix and contraction).
+    // Higher priority wins equal-length ties against WordUpper.
     #[regex(
-        r"[^\r\n\p{Letter}\p{Number}]?([\p{Uppercase_Letter}\p{Titlecase_Letter}\p{Modifier_Letter}\p{Other_Letter}\p{Mark}]*[\p{Lowercase_Letter}\p{Modifier_Letter}\p{Other_Letter}\p{Mark}]+|[\p{Uppercase_Letter}\p{Titlecase_Letter}\p{Modifier_Letter}\p{Other_Letter}\p{Mark}]+[\p{Lowercase_Letter}\p{Modifier_Letter}\p{Other_Letter}\p{Mark}]*)('[sS]|'[tT]|'[dD]|'[mM]|'[rR][eE]|'[vV][eE]|'[lL][lL])?",
+        r"[^\r\n\p{Letter}\p{Number}]?[\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]*[\p{Ll}\p{Lm}\p{Lo}\p{M}]+(?i:'(?:s|t|d|m|re|ve|ll))?",
+        priority = 4
+    )]
+    WordLower,
+
+    // Regex Branch 2: UPPER_ONLY+LOWER* (with optional prefix and contraction).
+    // Leading chars restricted to [\p{Lu}\p{Lt}] so that Lo/Lm/M chars (which
+    // are in both UPPER and LOWER sets) can only be claimed by WordLower.
+    #[regex(
+        r"[^\r\n\p{Letter}\p{Number}]?[\p{Lu}\p{Lt}]+[\p{Ll}\p{Lm}\p{Lo}\p{M}]*(?i:'(?:s|t|d|m|re|ve|ll))?",
         priority = 3
     )]
-    Word,
+    WordUpper,
 
     #[regex(r"\p{Number}{1,3}")]
     Digits,
@@ -71,7 +79,7 @@ impl Gpt2FamilyLogos<'_> for O200kToken {
     fn family_role(&self) -> Gpt2FamilyTokenRole {
         match self {
             Self::Whitespace => Gpt2FamilyTokenRole::Whitespace,
-            Self::Word => Gpt2FamilyTokenRole::Word {
+            Self::WordLower | Self::WordUpper => Gpt2FamilyTokenRole::Word {
                 check_contraction: false,
             },
             Self::Punctuation => Gpt2FamilyTokenRole::Punctuation,
@@ -146,17 +154,32 @@ mod tests {
     #[test]
     #[cfg(feature = "std")]
     fn test_o200k_regression() {
-        let sample = " average temperature of 21°C (70ºF) during the winter.
-Owing to";
+        use crate::{
+            spanners::span_lexers::accelerators::testutil::*,
+            support::regex::RegexWrapper,
+        };
 
-        use crate::support::regex::RegexWrapper;
         let ref_lexer: Box<dyn SpanLexer> =
             Box::new(RegexWrapper::from(OA_O200K_BASE_PATTERN.to_pattern()));
-
         let accel_lexer: Box<dyn SpanLexer> = Box::new(O200kLexer);
 
-        use crate::spanners::span_lexers::accelerators::testutil::*;
-        assert_matches_reference_lexer(sample, &ref_lexer, &accel_lexer);
+        let cases = [
+            // Original regression: Lo (U+00BA) + Lu
+            " average temperature of 21°C (70ºF) during the winter.\nOwing to",
+            // Standalone Lo chars
+            "\u{00BA}",
+            "\u{00BA}\u{00BA}\u{00BA}",
+            // Lm (U+02B0 Modifier_Letter) + Lu
+            "\u{02B0}F",
+            "\u{02B0}Hello",
+            // Lo + Lu sequences
+            "\u{00BA}ABC",
+            "\u{00BA}OpenAI",
+        ];
+
+        for sample in cases {
+            assert_matches_reference_lexer(sample, &ref_lexer, &accel_lexer);
+        }
     }
 
     #[test]
