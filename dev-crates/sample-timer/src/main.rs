@@ -1,10 +1,6 @@
 extern crate core;
 
 use std::{
-    fmt::{
-        Display,
-        Formatter,
-    },
     io,
     io::IsTerminal,
     iter::Iterator,
@@ -43,7 +39,6 @@ use wordchipper::{
     TokenizerOptions,
     UnifiedTokenVocab,
     disk_cache::WordchipperDiskCache,
-    pretrained::openai::OATokenizer,
     support::{
         slices::{
             inner_slice_view,
@@ -130,59 +125,47 @@ pub struct Args {
     pub respan_input_for_decode_check: bool,
 }
 
-#[derive(ValueEnum, Clone, Copy, Debug, PartialEq)]
+#[derive(ValueEnum, Clone, Copy, Debug, PartialEq, strum::EnumString, strum::Display)]
 pub enum ModelSelector {
     /// Select "`openai::gpt2`" model.
     #[value(name = "openai:gpt2")]
+    #[strum(serialize = "openai:gpt2")]
     OpenaiGpt2,
 
     /// Select "`openai::r50k_base`" model.
     #[value(name = "openai:r50k_base")]
+    #[strum(serialize = "openai:r50k_base")]
     OpenaiR50kBase,
 
     /// Select "`openai::p50k_base`" model.
     #[value(name = "openai:p50k_base")]
+    #[strum(serialize = "openai:p50k_base")]
     OpenaiP50kBase,
 
     /// Select "`openai::p50k_edit`" model.
     #[value(name = "openai:p50k_edit")]
+    #[strum(serialize = "openai:p50k_edit")]
     OpenaiP50kEdit,
 
     /// Select "`openai::cl100k_base`" model.
     #[value(name = "openai:cl100k_base")]
+    #[strum(serialize = "openai:cl100k_base")]
     OpenaiCl100kBase,
 
     /// Select "`openai::o200k_base`" model.
     #[value(name = "openai:o200k_base")]
+    #[strum(serialize = "openai:o200k_base")]
     OpenaiO200kBase,
 
     /// Select "`openai::o200k_harmony`" model.
     #[value(name = "openai:o200k_harmony")]
+    #[strum(serialize = "openai:o200k_harmony")]
     OpenaiO200kHarmony,
-}
-
-impl Display for ModelSelector {
-    fn fmt(
-        &self,
-        f: &mut Formatter<'_>,
-    ) -> std::fmt::Result {
-        write!(f, "{}", self.model())
-    }
 }
 
 impl ModelSelector {
     pub fn model(&self) -> String {
-        use ModelSelector::*;
-        use OATokenizer::*;
-        match self {
-            OpenaiGpt2 => "openai:gpt2".to_string(),
-            OpenaiR50kBase => format!("openai:{}", R50kBase),
-            OpenaiP50kBase => format!("openai:{}", P50kBase),
-            OpenaiP50kEdit => format!("openai:{}", P50kEdit),
-            OpenaiCl100kBase => format!("openai:{}", Cl100kBase),
-            OpenaiO200kBase => format!("openai:{}", O200kBase),
-            OpenaiO200kHarmony => format!("openai:{}", O200kHarmony),
-        }
+        self.to_string()
     }
 
     pub fn load_vocab<T: TokenType>(

@@ -4,8 +4,6 @@ use once_cell::sync::OnceCell;
 use spin::RwLock;
 
 use crate::{
-    TokenType,
-    UnifiedTokenVocab,
     WCError,
     WCResult,
     alloc::{
@@ -14,8 +12,13 @@ use crate::{
         sync::Arc,
     },
     prelude::*,
-    pretrained::{
-        vocab_description::VocabDescription,
+    pretrained::factory::{
+        vocab_description::{
+            LabeledVocab,
+            VocabDescription,
+            VocabListing,
+        },
+        vocab_provider::VocabProvider,
         vocab_query::VocabQuery,
     },
     support::resources::ResourceLoader,
@@ -103,130 +106,11 @@ pub fn load_vocab(
 pub fn list_models() -> Vec<String> {
     let mut res = Vec::new();
     for listing in list_vocabs() {
-        for descr in &listing.vocabs {
+        for descr in listing.vocabs() {
             res.push(descr.id().to_string());
         }
     }
     res
-}
-
-/// A listing of known tokenizer.
-#[derive(Debug, Clone)]
-pub struct VocabListing {
-    /// The id of the factory that produced the vocabularies.
-    source: String,
-
-    /// A description of the factory.
-    description: String,
-
-    /// Explicitly listed vocabularies.
-    vocabs: Vec<VocabDescription>,
-}
-
-impl VocabListing {
-    /// Build a new vocabulary listing.
-    pub fn new(
-        source: &str,
-        description: &str,
-        vocabs: Vec<VocabDescription>,
-    ) -> Self {
-        Self {
-            source: source.to_string(),
-            description: description.to_string(),
-            vocabs,
-        }
-    }
-
-    /// Get the id of the factory that produced the vocabularies.
-    pub fn provider(&self) -> &str {
-        &self.source
-    }
-
-    /// Get the description of the factory.
-    pub fn description(&self) -> &str {
-        &self.description
-    }
-
-    /// Get the explicit list of vocabularies.
-    pub fn vocabs(&self) -> &[VocabDescription] {
-        &self.vocabs
-    }
-}
-
-/// Resolved vocabulary with its description and loaded vocabulary.
-#[derive(Clone)]
-pub struct LabeledVocab<T: TokenType> {
-    description: VocabDescription,
-    vocab: Arc<UnifiedTokenVocab<T>>,
-}
-
-impl<T: TokenType> LabeledVocab<T> {
-    /// Build a new resolved vocabulary.
-    pub fn new(
-        description: VocabDescription,
-        vocab: Arc<UnifiedTokenVocab<T>>,
-    ) -> Self {
-        Self { description, vocab }
-    }
-
-    /// Get the description of the vocabulary.
-    pub fn description(&self) -> &VocabDescription {
-        &self.description
-    }
-
-    /// Get the unified token vocabulary.
-    pub fn vocab(&self) -> &Arc<UnifiedTokenVocab<T>> {
-        &self.vocab
-    }
-}
-
-/// A factory for searching for and loading.
-pub trait VocabProvider: Sync + Send {
-    /// The name of the factory.
-    fn name(&self) -> String;
-
-    /// Get an extended description of the factory.
-    fn description(&self) -> String;
-
-    /// Get a listing of known vocabularies.
-    fn list_vocabs(&self) -> Vec<VocabDescription>;
-
-    /// Resolve a vocabulary description.
-    ///
-    /// ## Returns
-    /// * `Ok(description)` - on success.
-    /// * `Err(WCError::ResourceNotFound)` - if the vocabulary is not found.
-    /// * `Err(e)` - on any other error.
-    fn resolve_vocab(
-        &self,
-        query: &VocabQuery,
-    ) -> WCResult<VocabDescription> {
-        for desc in self.list_vocabs() {
-            if query.schema().is_some() && query.schema() != desc.id().schema() {
-                continue;
-            }
-            if query.path().is_some() && query.path() != desc.id().path() {
-                continue;
-            }
-
-            if query.name() == desc.id().name() {
-                return Ok(desc);
-            }
-        }
-        Err(WCError::ResourceNotFound(query.to_string()))
-    }
-
-    /// Load a vocabulary from a name.
-    ///
-    /// ## Returns
-    /// * `Ok((desc, vocab))` - on success.
-    /// * `Err(WCError::ResourceNotFound)` - the vocabulary is not found.
-    /// * `Err(e)` - on any other error.
-    fn load_vocab(
-        &self,
-        query: &VocabQuery,
-        loader: &mut dyn ResourceLoader,
-    ) -> WCResult<LabeledVocab<u32>>;
 }
 
 /// A factory for searching for and loading vocabularies.
@@ -292,11 +176,12 @@ impl VocabFactory {
     pub fn list_vocabs(&self) -> Vec<VocabListing> {
         let mut res = Vec::new();
         for provider in &self.providers {
-            res.push(VocabListing {
-                source: provider.name(),
-                description: provider.description(),
-                vocabs: provider.list_vocabs(),
-            });
+            let listing = VocabListing::new(
+                &provider.name(),
+                &provider.description(),
+                provider.list_vocabs(),
+            );
+            res.push(listing);
         }
         res
     }

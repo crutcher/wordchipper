@@ -132,11 +132,16 @@ pub use encoders::TokenEncoderOptions;
 #[doc(inline)]
 pub use errors::*;
 #[doc(inline)]
-pub use pretrained::list_models;
-#[doc(inline)]
-pub use pretrained::list_vocabs;
-#[doc(inline)]
-pub use pretrained::load_vocab;
+pub use pretrained::{
+    LabeledVocab,
+    VocabDescription,
+    VocabListing,
+    VocabQuery,
+    list_models,
+    list_vocabs,
+    load_vocab,
+    resolve_vocab,
+};
 #[doc(inline)]
 pub use tokenizer::*;
 #[doc(inline)]

@@ -160,6 +160,20 @@ impl VocabQuery {
         self.set_name(name);
         self
     }
+
+    /// Return true if `query` would match this reference.
+    pub fn fuzzy_match(
+        &self,
+        query: &VocabQuery,
+    ) -> bool {
+        if query.schema().is_some() && query.schema() != self.schema() {
+            return false;
+        }
+        if query.path().is_some() && query.path() != self.path() {
+            return false;
+        }
+        query.name() == self.name()
+    }
 }
 
 #[cfg(test)]
@@ -168,7 +182,7 @@ mod tests {
 
     use crate::{
         prelude::*,
-        pretrained::vocab_query::VocabQuery,
+        pretrained::factory::vocab_query::VocabQuery,
     };
 
     #[test]

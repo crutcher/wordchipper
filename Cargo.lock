@@ -2670,6 +2670,7 @@ dependencies = [
  "rand 0.9.2",
  "rayon",
  "similar",
+ "strum",
  "tiktoken-rs",
  "tokenizers",
  "wordchipper",

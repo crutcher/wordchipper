@@ -2,7 +2,6 @@
 
 pub mod factories;
 pub mod patterns;
-mod provider;
 pub mod resources;
 pub mod spanning;
 pub mod specials;
@@ -11,7 +10,5 @@ pub mod specials;
 pub use factories::*;
 #[doc(inline)]
 pub use patterns::*;
-#[doc(inline)]
-pub use provider::*;
 #[doc(inline)]
 pub use spanning::*;
