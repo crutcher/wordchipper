@@ -1,10 +1,18 @@
 //! K-tuple combinatorial equivalence testing harness for
 //! [`SpanLexer`](wordchipper::spanners::span_lexers::SpanLexer) pairs.
 
-use std::{collections::BTreeMap, fmt::Write, ops::Range, sync::Arc};
+use std::{
+    collections::BTreeMap,
+    fmt::Write,
+    ops::Range,
+    sync::Arc,
+};
 
 use wordchipper::{
-    spanners::span_lexers::{SpanLexer, build_regex_lexer},
+    spanners::span_lexers::{
+        SpanLexer,
+        build_regex_lexer,
+    },
     support::regex::ConstRegexPattern,
 };
 

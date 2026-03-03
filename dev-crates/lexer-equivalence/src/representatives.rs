@@ -1,4 +1,5 @@
-//! Unicode character class representative codepoints for `OpenAI` tokenizer patterns.
+//! Unicode character class representative codepoints for `OpenAI` tokenizer
+//! patterns.
 //!
 //! # Derivation
 //!
@@ -11,15 +12,16 @@
 //! - `\p{N}` (any number)
 //! - `\s` (whitespace), `\r`, `\n`
 //! - `[^\s\p{L}\p{N}]` (punctuation/symbols)
-//! - Literal chars: `'` (contraction trigger), `/` (o200k trailer), ` ` (r50k prefix)
+//! - Literal chars: `'` (contraction trigger), `/` (o200k trailer), ` ` (r50k
+//!   prefix)
 //! - Contraction suffixes: `'(?:[sdmt]|ll|ve|re)` (r50k case-sensitive;
 //!   cl100k/o200k case-insensitive via `(?i:...)`)
 //!
 //! Intersecting these predicates partitions Unicode into 22 equivalence cells
 //! (validated programmatically by `validate_representative_completeness` test).
-//! The contraction patterns split Ll into 5 sub-cells (non-contraction, single-char
-//! suffix, double-char `ll`, multi-start `r`/`v`, multi-end `e`) and likewise Lu
-//! into 5 sub-cells for case-insensitive patterns.
+//! The contraction patterns split Ll into 5 sub-cells (non-contraction,
+//! single-char suffix, double-char `ll`, multi-start `r`/`v`, multi-end `e`)
+//! and likewise Lu into 5 sub-cells for case-insensitive patterns.
 //!
 //! Some cells have multiple entries (Mn/Mc/Me for Mark, Nd/Nl/No for Number,
 //! tab/NBSP for other whitespace, `!`/`$`/`\u{00AE}` for punctuation) because
@@ -146,11 +148,11 @@ pub const REPRESENTATIVES_STRICT_O200K: &[(char, &str)] = &[
 /// whitespace, and contraction Ll/Lu sub-cells.
 ///
 /// Additional cl100k divergences beyond o200k:
-/// - CR/LF at end of string: regex `\s++$` groups newlines + trailing ws,
-///   but logos splits by Newline/Whitespace token types.
-/// - Contraction: same divergence as r50k (` ?[^\s\p{L}\p{N}]++` absorbs
-///   `" '"`, splitting the contraction). Affects both Ll and Lu sub-cells
-///   since cl100k contractions are case-insensitive.
+/// - CR/LF at end of string: regex `\s++$` groups newlines + trailing ws, but
+///   logos splits by Newline/Whitespace token types.
+/// - Contraction: same divergence as r50k (` ?[^\s\p{L}\p{N}]++` absorbs `"
+///   '"`, splitting the contraction). Affects both Ll and Lu sub-cells since
+///   cl100k contractions are case-insensitive.
 pub const REPRESENTATIVES_STRICT_CL100K: &[(char, &str)] = &[
     ('A', "Lu"),
     ('a', "Ll"),

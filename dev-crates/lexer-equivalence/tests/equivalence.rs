@@ -1,7 +1,10 @@
 use std::sync::Arc;
 
 use lexer_equivalence::{
-    harness::{assert_k_tuple_equivalence, regex_lexer},
+    harness::{
+        assert_k_tuple_equivalence,
+        regex_lexer,
+    },
     representatives::{
         REPRESENTATIVES,
         REPRESENTATIVES_STRICT_CL100K,
@@ -10,11 +13,19 @@ use lexer_equivalence::{
     },
 };
 use wordchipper::{
-    pretrained::openai::{OA_CL100K_BASE_PATTERN, OA_O200K_BASE_PATTERN, OA_R50K_BASE_PATTERN},
+    pretrained::openai::{
+        OA_CL100K_BASE_PATTERN,
+        OA_O200K_BASE_PATTERN,
+        OA_R50K_BASE_PATTERN,
+    },
     spanners::span_lexers::{
         SpanLexer,
         accelerators::testutil::assert_matches_reference_lexer,
-        logos::{cl100k::Cl100kLexer, o200k::O200kLexer, r50k::R50kLexer},
+        logos::{
+            cl100k::Cl100kLexer,
+            o200k::O200kLexer,
+            r50k::R50kLexer,
+        },
     },
 };
 
@@ -177,7 +188,8 @@ mod predicates {
     }
 
     /// Verify that every candidate char's signature is covered by at least
-    /// one representative. Returns a map of (signature -> representative labels).
+    /// one representative. Returns a map of (signature -> representative
+    /// labels).
     pub fn validate_coverage(
         representatives: &[(char, &str)]
     ) -> Result<BTreeMap<u32, Vec<(char, String)>>, Vec<(char, u32)>> {
