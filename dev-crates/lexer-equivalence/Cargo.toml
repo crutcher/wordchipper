@@ -1,0 +1,13 @@
+[package]
+name = "lexer-equivalence"
+repository.workspace = true
+rust-version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+wordchipper = { path = "../../crates/wordchipper", features = ["default", "testing"] }
