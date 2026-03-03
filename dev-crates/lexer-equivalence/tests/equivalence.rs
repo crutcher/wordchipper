@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use lexer_equivalence::{
-    harness::{assert_k_tuple_equivalence, regex_lexer, report_k_tuple_divergences},
+    harness::{assert_k_tuple_equivalence, regex_lexer},
     representatives::{
         REPRESENTATIVES, REPRESENTATIVES_STRICT_CL100K, REPRESENTATIVES_STRICT_O200K,
         REPRESENTATIVES_STRICT_R50K,
@@ -292,42 +292,31 @@ fn o200k_equivalence_k1_to_k4() {
 }
 
 // =====================================================================
-// DIVERGENCE INVENTORY (informational, always passes)
+// FULL EQUIVALENCE TESTS
 //
-// Documents the known divergence counts when ALL representatives are
-// included. Some individual comparisons diverge between logos and regex;
-// the counts are printed to stderr for manual review. These tests
-// themselves always pass.
+// These test ALL representatives including character classes with known
+// divergences. They fail until the corresponding logos lexer is fixed.
 // =====================================================================
 
 #[test]
-fn cl100k_divergence_inventory() {
-    let ref_lexer = regex_lexer(OA_CL100K_BASE_PATTERN);
-    let test_lexer: Arc<dyn SpanLexer> = Arc::new(Cl100kLexer);
-    let (total, failures) =
-        report_k_tuple_divergences("cl100k", 4, REPRESENTATIVES, &*ref_lexer, &*test_lexer);
-    // Record divergence count for regression tracking.
-    // If this changes, investigate whether the logos post-processing improved
-    // or regressed.
-    eprintln!("cl100k divergence rate: {failures}/{total}");
-}
-
-#[test]
-fn o200k_divergence_inventory() {
-    let ref_lexer = regex_lexer(OA_O200K_BASE_PATTERN);
-    let test_lexer: Arc<dyn SpanLexer> = Arc::new(O200kLexer);
-    let (total, failures) =
-        report_k_tuple_divergences("o200k", 4, REPRESENTATIVES, &*ref_lexer, &*test_lexer);
-    eprintln!("o200k divergence rate: {failures}/{total}");
-}
-
-#[test]
-fn r50k_divergence_inventory() {
+fn r50k_full_equivalence() {
     let ref_lexer = regex_lexer(OA_R50K_BASE_PATTERN);
     let test_lexer: Arc<dyn SpanLexer> = Arc::new(R50kLexer);
-    let (total, failures) =
-        report_k_tuple_divergences("r50k", 4, REPRESENTATIVES, &*ref_lexer, &*test_lexer);
-    eprintln!("r50k divergence rate: {failures}/{total}");
+    assert_k_tuple_equivalence("r50k", 4, REPRESENTATIVES, &*ref_lexer, &*test_lexer);
+}
+
+#[test]
+fn cl100k_full_equivalence() {
+    let ref_lexer = regex_lexer(OA_CL100K_BASE_PATTERN);
+    let test_lexer: Arc<dyn SpanLexer> = Arc::new(Cl100kLexer);
+    assert_k_tuple_equivalence("cl100k", 4, REPRESENTATIVES, &*ref_lexer, &*test_lexer);
+}
+
+#[test]
+fn o200k_full_equivalence() {
+    let ref_lexer = regex_lexer(OA_O200K_BASE_PATTERN);
+    let test_lexer: Arc<dyn SpanLexer> = Arc::new(O200kLexer);
+    assert_k_tuple_equivalence("o200k", 4, REPRESENTATIVES, &*ref_lexer, &*test_lexer);
 }
 
 // =====================================================================

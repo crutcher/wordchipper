@@ -306,10 +306,10 @@ where
                                 // Single ws char: emit standalone, token as-is.
                                 emit!(trim..ws_end);
                                 emit_absorbing!(start, end, check_contraction);
-                            } else {
-                                // 2+ ws chars: merge last ws char + non-letter
-                                // prefix into one span (like Punctuation ` ?X`),
-                                // then emit remaining letters separately.
+                            } else if bytes[trim] == b' ' {
+                                // 2+ ws chars ending in ASCII space: merge
+                                // space + non-letter prefix into one span
+                                // (like Punctuation ` ?X`), then emit rest.
                                 let prefix_len = core::str::from_utf8(&bytes[start..end])
                                     .expect("text is &str bytes, always valid UTF-8")
                                     .chars()
@@ -317,6 +317,11 @@ where
                                     .map_or(1, char::len_utf8);
                                 emit!(trim..start + prefix_len);
                                 emit_absorbing!(start + prefix_len, end, check_contraction);
+                            } else {
+                                // 2+ ws chars ending in non-space (NBSP, tab):
+                                // don't absorb; emit last ws char standalone.
+                                emit!(trim..ws_end);
+                                emit_absorbing!(start, end, check_contraction);
                             }
                         } else {
                             emit_absorbing!(start, end, check_contraction);
@@ -537,10 +542,10 @@ pub fn for_each_classified_span(
                         // Single ws char: emit standalone, token as-is.
                         emit!(word(trim..ws_end));
                         emit_absorbing!(start, end, check_contraction);
-                    } else {
-                        // 2+ ws chars: merge last ws char + non-letter
-                        // prefix into one span (like Punctuation ` ?X`),
-                        // then emit remaining letters separately.
+                    } else if text[trim] == b' ' {
+                        // 2+ ws chars ending in ASCII space: merge
+                        // space + non-letter prefix into one span
+                        // (like Punctuation ` ?X`), then emit rest.
                         let prefix_len = core::str::from_utf8(&text[start..end])
                             .expect("text is &str bytes, always valid UTF-8")
                             .chars()
@@ -548,6 +553,11 @@ pub fn for_each_classified_span(
                             .map_or(1, char::len_utf8);
                         emit!(word(trim..start + prefix_len));
                         emit_absorbing!(start + prefix_len, end, check_contraction);
+                    } else {
+                        // 2+ ws chars ending in non-space (NBSP, tab):
+                        // don't absorb; emit last ws char standalone.
+                        emit!(word(trim..ws_end));
+                        emit_absorbing!(start, end, check_contraction);
                     }
                 } else {
                     emit_absorbing!(start, end, check_contraction);

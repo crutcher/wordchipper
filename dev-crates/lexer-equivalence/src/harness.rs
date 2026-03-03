@@ -1,7 +1,7 @@
 //! K-tuple combinatorial equivalence testing harness for
 //! [`SpanLexer`](wordchipper::spanners::span_lexers::SpanLexer) pairs.
 
-use std::{ops::Range, sync::Arc};
+use std::{collections::BTreeMap, fmt::Write, ops::Range, sync::Arc};
 
 use wordchipper::{
     spanners::span_lexers::{SpanLexer, build_regex_lexer},
@@ -21,25 +21,46 @@ pub fn collect_spans(
     lexer.find_span_iter(text).collect()
 }
 
-/// Generate all k-tuples from the given character set and test each
+/// A single divergence between regex and logos lexers.
+pub struct Divergence {
+    /// Representative index for each character position.
+    pub rep_indices: Vec<usize>,
+    /// The concrete input text.
+    pub text: String,
+    /// Regex span strings.
+    pub regex_strs: Vec<String>,
+    /// Logos span strings.
+    pub logos_strs: Vec<String>,
+    /// Which char indices are grouped into each regex span.
+    pub regex_groups: Vec<Vec<usize>>,
+    /// Which char indices are grouped into each logos span.
+    pub logos_groups: Vec<Vec<usize>>,
+}
+
+/// Generate all k-tuples from the representative set and test each
 /// against both `ref_lexer` (regex) and `test_lexer` (logos).
 ///
-/// Returns `(total_cases, failure_descriptions)`.
+/// Returns `(total_cases, divergences)`.
 pub fn run_k_tuple_equivalence(
     k: usize,
-    chars: &[char],
+    representatives: &[(char, &str)],
     ref_lexer: &dyn SpanLexer,
     test_lexer: &dyn SpanLexer,
-) -> (usize, Vec<String>) {
-    let n = chars.len();
+) -> (usize, Vec<Divergence>) {
+    let n = representatives.len();
     let total = n.pow(k as u32);
-    let mut failures = Vec::new();
+    let mut divergences = Vec::new();
 
     for combo in 0..total {
+        let mut rep_indices = Vec::with_capacity(k);
         let mut text = String::new();
+        let mut char_byte_starts = Vec::with_capacity(k);
         let mut remainder = combo;
         for _ in 0..k {
-            text.push(chars[remainder % n]);
+            let idx = remainder % n;
+            rep_indices.push(idx);
+            char_byte_starts.push(text.len());
+            text.push(representatives[idx].0);
             remainder /= n;
         }
 
@@ -47,15 +68,113 @@ pub fn run_k_tuple_equivalence(
         let observed = collect_spans(test_lexer, &text);
 
         if expected != observed {
-            let expected_strs: Vec<&str> = expected.iter().map(|r| &text[r.clone()]).collect();
-            let observed_strs: Vec<&str> = observed.iter().map(|r| &text[r.clone()]).collect();
-            failures.push(format!(
-                "k={k} text={text:?}\n  regex:  {expected_strs:?}\n  logos:  {observed_strs:?}"
-            ));
+            let to_groups = |spans: &[Range<usize>]| -> Vec<Vec<usize>> {
+                spans
+                    .iter()
+                    .map(|span| {
+                        (0..k)
+                            .filter(|&ci| {
+                                let start = char_byte_starts[ci];
+                                start >= span.start && start < span.end
+                            })
+                            .collect()
+                    })
+                    .collect()
+            };
+            divergences.push(Divergence {
+                rep_indices,
+                text: text.clone(),
+                regex_strs: expected.iter().map(|r| text[r.clone()].to_string()).collect(),
+                logos_strs: observed.iter().map(|r| text[r.clone()].to_string()).collect(),
+                regex_groups: to_groups(&expected),
+                logos_groups: to_groups(&observed),
+            });
         }
     }
 
-    (total, failures)
+    (total, divergences)
+}
+
+/// Group divergences by span-boundary pattern and format as classes.
+///
+/// Two divergences are in the same class if they have identical
+/// (regex_groups, logos_groups). Positions where multiple labels appear
+/// are shown as wildcards.
+fn format_divergence_classes(
+    divergences: &[Divergence],
+    representatives: &[(char, &str)],
+) -> String {
+    let mut classes: BTreeMap<String, Vec<&Divergence>> = BTreeMap::new();
+    for d in divergences {
+        let key = format!("{:?}|{:?}", d.regex_groups, d.logos_groups);
+        classes.entry(key).or_default().push(d);
+    }
+
+    let mut out = String::new();
+    let _ = writeln!(out, "{} divergence class(es):\n", classes.len());
+
+    for (i, (_key, members)) in classes.iter().enumerate() {
+        let d0 = members[0];
+        let k = d0.rep_indices.len();
+
+        // Collect which labels appear at each position across all members.
+        let mut pos_labels: Vec<BTreeMap<&str, usize>> = vec![BTreeMap::new(); k];
+        for d in members {
+            for (pos, &ri) in d.rep_indices.iter().enumerate() {
+                *pos_labels[pos].entry(representatives[ri].1).or_insert(0) += 1;
+            }
+        }
+
+        let format_groups = |groups: &[Vec<usize>]| -> String {
+            groups
+                .iter()
+                .map(|group| {
+                    let labels: Vec<&str> = group
+                        .iter()
+                        .map(|&ci| {
+                            if pos_labels[ci].len() == 1 {
+                                *pos_labels[ci].keys().next().unwrap()
+                            } else {
+                                "*"
+                            }
+                        })
+                        .collect();
+                    format!("[{}]", labels.join(" "))
+                })
+                .collect::<Vec<_>>()
+                .join(" ")
+        };
+
+        let _ = writeln!(
+            out,
+            "  {}. {} case(s), k={}:\n     regex: {}\n     logos: {}",
+            i + 1,
+            members.len(),
+            k,
+            format_groups(&d0.regex_groups),
+            format_groups(&d0.logos_groups),
+        );
+
+        // Show wildcard expansions.
+        for (pos, labels) in pos_labels.iter().enumerate() {
+            if labels.len() > 1 {
+                let list: Vec<String> = labels
+                    .iter()
+                    .map(|(label, count)| format!("{label}({count})"))
+                    .collect();
+                let _ = writeln!(out, "     * at position {pos}: {{{}}}", list.join(", "));
+            }
+        }
+
+        // One concrete example.
+        let _ = writeln!(
+            out,
+            "     e.g. {:?} -> regex {:?} / logos {:?}\n",
+            d0.text, d0.regex_strs, d0.logos_strs,
+        );
+    }
+
+    out
 }
 
 /// Run equivalence tests for `k=1..=max_k`, panic on any failures.
@@ -66,27 +185,20 @@ pub fn assert_k_tuple_equivalence(
     ref_lexer: &dyn SpanLexer,
     test_lexer: &dyn SpanLexer,
 ) {
-    let chars: Vec<char> = representatives.iter().map(|(c, _)| *c).collect();
     let mut total_cases = 0;
-    let mut all_failures = Vec::new();
+    let mut all_divergences = Vec::new();
 
     for k in 1..=max_k {
-        let (cases, failures) = run_k_tuple_equivalence(k, &chars, ref_lexer, test_lexer);
+        let (cases, divs) = run_k_tuple_equivalence(k, representatives, ref_lexer, test_lexer);
         total_cases += cases;
-        all_failures.extend(failures);
+        all_divergences.extend(divs);
     }
 
-    if !all_failures.is_empty() {
-        let sample: Vec<&String> = all_failures.iter().take(20).collect();
+    if !all_divergences.is_empty() {
+        let report = format_divergence_classes(&all_divergences, representatives);
         panic!(
-            "{name}: {}/{total_cases} cases failed (showing first {}):\n{}",
-            all_failures.len(),
-            sample.len(),
-            sample
-                .iter()
-                .map(|s| s.as_str())
-                .collect::<Vec<_>>()
-                .join("\n"),
+            "{name}: {}/{total_cases} cases failed\n\n{report}",
+            all_divergences.len(),
         );
     }
 
@@ -106,25 +218,23 @@ pub fn report_k_tuple_divergences(
     ref_lexer: &dyn SpanLexer,
     test_lexer: &dyn SpanLexer,
 ) -> (usize, usize) {
-    let chars: Vec<char> = representatives.iter().map(|(c, _)| *c).collect();
     let mut total_cases = 0;
-    let mut total_failures = 0;
+    let mut all_divergences = Vec::new();
 
     for k in 1..=max_k {
-        let (cases, failures) = run_k_tuple_equivalence(k, &chars, ref_lexer, test_lexer);
+        let (cases, divs) = run_k_tuple_equivalence(k, representatives, ref_lexer, test_lexer);
         total_cases += cases;
-        if !failures.is_empty() {
-            eprintln!("{name} k={k}: {}/{cases} divergences", failures.len());
-            for f in failures.iter().take(5) {
-                eprintln!("  {f}");
-            }
-            if failures.len() > 5 {
-                eprintln!("  ... and {} more", failures.len() - 5);
-            }
-            total_failures += failures.len();
-        }
+        all_divergences.extend(divs);
     }
 
-    eprintln!("{name}: {total_failures}/{total_cases} total divergences (k=1..={max_k})");
+    let total_failures = all_divergences.len();
+    if total_failures > 0 {
+        let report = format_divergence_classes(&all_divergences, representatives);
+        eprintln!("{name}: {total_failures}/{total_cases} total divergences (k=1..={max_k})");
+        eprintln!("{report}");
+    } else {
+        eprintln!("{name}: 0/{total_cases} divergences (k=1..={max_k})");
+    }
+
     (total_cases, total_failures)
 }

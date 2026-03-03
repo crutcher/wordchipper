@@ -67,7 +67,14 @@ impl Gpt2FamilyLogos<'_> for R50kToken {
             // All three r50k content patterns use ` ?X` which absorbs only
             // literal ASCII space. This matches the Punctuation role behavior.
             Self::Letters | Self::Digits | Self::Punctuation => Gpt2FamilyTokenRole::Punctuation,
-            Self::Contraction => Gpt2FamilyTokenRole::Standalone,
+            // When preceded by whitespace ending in ASCII space, the regex
+            // ` ?[^\s\p{L}\p{N}]+` absorbs the space + apostrophe as punctuation,
+            // leaving the suffix letter(s) as a separate span. The Word role's
+            // non-letter-prefix path replicates this: it merges the last ws char
+            // with the apostrophe and emits the suffix separately.
+            Self::Contraction => Gpt2FamilyTokenRole::Word {
+                check_contraction: false,
+            },
         }
     }
 }
