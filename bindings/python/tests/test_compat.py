@@ -30,7 +30,14 @@ class TestTiktokenGetEncoding:
         names = tiktoken.list_encoding_names()
         assert "cl100k_base" in names
         assert "o200k_base" in names
+        assert "o200k_harmony" in names
         assert "r50k_base" in names
+
+    def test_get_encoding_o200k_harmony(self):
+        enc = tiktoken.get_encoding("o200k_harmony")
+        assert enc.name == "o200k_harmony"
+        tokens = enc.encode("hello")
+        assert enc.decode(tokens) == "hello"
 
 
 class TestTiktokenModelMapping:

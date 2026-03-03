@@ -90,7 +90,11 @@ MODEL_PREFIX_TO_ENCODING: dict[str, str] = {
     "ft:babbage-002": "cl100k_base",
 }
 
-_ENCODING_NAMES = ["r50k_base", "p50k_base", "p50k_edit", "cl100k_base", "o200k_base"]
+_ENCODING_NAMES = [
+    m.split("::", 1)[-1]
+    for m in Tokenizer.available_models()
+    if not m.endswith("::gpt2")
+]
 
 # Encoding cache (keyed by encoding name)
 _cache: dict[str, Encoding] = {}
