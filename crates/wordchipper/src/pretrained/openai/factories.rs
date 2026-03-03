@@ -159,11 +159,13 @@ impl OATokenizer {
     pub fn spanning_config<T: TokenType>(&self) -> TextSpanningConfig<T> {
         self.factory().spanning_config()
     }
+}
 
+#[cfg(feature = "std")]
+impl OATokenizer {
     /// Load pretrained `OpenAI` tokenizer vocabulary.
     ///
     /// Downloads and caches resources using the `disk_cache`.
-    #[cfg(feature = "std")]
     pub fn load_vocab<T: TokenType>(
         &self,
         loader: &mut dyn ResourceLoader,
@@ -172,7 +174,6 @@ impl OATokenizer {
     }
 
     /// Load pretrained `OpenAI` tokenizer vocabulary from disk.
-    #[cfg(feature = "std")]
     pub fn load_path<T: TokenType>(
         &self,
         path: impl AsRef<Path>,
@@ -181,7 +182,6 @@ impl OATokenizer {
     }
 
     /// Read pretrained `OpenAI` tokenizer vocabulary from a reader.
-    #[cfg(feature = "std")]
     pub fn read_vocab<T: TokenType>(
         &self,
         reader: &mut dyn BufRead,
@@ -215,7 +215,6 @@ mod builtin_loaders {
         )
     }
 
-    #[cfg(feature = "std")]
     inventory::submit! {
         BuiltinPretrainedVocabHook::new(
             "openai:p50k_base",
@@ -230,7 +229,6 @@ mod builtin_loaders {
         )
     }
 
-    #[cfg(feature = "std")]
     inventory::submit! {
         BuiltinPretrainedVocabHook::new(
             "openai:p50k_edit",
@@ -244,7 +242,7 @@ mod builtin_loaders {
             }
         )
     }
-    #[cfg(feature = "std")]
+
     inventory::submit! {
         BuiltinPretrainedVocabHook::new(
             "openai:cl100k_base",
@@ -259,7 +257,6 @@ mod builtin_loaders {
         )
     }
 
-    #[cfg(feature = "std")]
     inventory::submit! {
         BuiltinPretrainedVocabHook::new(
             "openai:o200k_base",
@@ -274,7 +271,6 @@ mod builtin_loaders {
         )
     }
 
-    #[cfg(feature = "std")]
     inventory::submit! {
         BuiltinPretrainedVocabHook::new(
             "openai:o200k_harmony",
