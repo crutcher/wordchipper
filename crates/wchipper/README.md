@@ -72,8 +72,11 @@ abc def
 ### Usage: wchipper train
 
 ```terminal
-% wchipper train --output=/tmp/tok.tokenizer \
-    --input-format=parquet  ~/Data/nanochat/dataset/*.parquet 
+% wchipper train \
+    --output=/tmp/tok.tokenizer \
+    --lexer-model=gpt2 \
+    --input-format=parquet \
+     ~/Data/nanochat/dataset/*.parquet 
 INFO Reading shards:
 INFO 0: /Users/crutcher/Data/nanochat/dataset/shard_00000.parquet
 INFO 1: /Users/crutcher/Data/nanochat/dataset/shard_00001.parquet

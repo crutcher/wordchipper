@@ -44,6 +44,7 @@ mod wordchipper_support;
 mod tokenizers_support;
 #[cfg(feature = "tokenizers")]
 use tokenizers_support::{TokenizersEngine, load_tokenizers_tok};
+use wordchipper::spanners::span_lexers::accelerators::get_regex_accelerator;
 
 /// Wordchipper Encode/Decode Side-by-Side Benchmarks.
 #[derive(Parser, Debug)]
@@ -208,16 +209,7 @@ fn main() -> Result<(), BoxError> {
     ));
     candidate_engines.push(wc_engine.clone());
 
-    if [
-        ModelSelector::OpenaiR50kBase,
-        ModelSelector::OpenaiP50kBase,
-        ModelSelector::OpenaiP50kEdit,
-        ModelSelector::OpenaiCl100kBase,
-        ModelSelector::OpenaiO200kBase,
-        ModelSelector::OpenaiO200kHarmony,
-    ]
-    .contains(&args.model)
-    {
+    if get_regex_accelerator(vocab.spanning().pattern().as_str()).is_some() {
         let encoder = TokenEncoderOptions::default()
             .with_parallel(true)
             .with_accelerated_lexers(true)

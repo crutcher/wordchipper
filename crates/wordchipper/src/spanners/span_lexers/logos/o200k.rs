@@ -3,53 +3,63 @@
 //! Compile-time DFA lexer for the `o200k_base` pattern (GPT-4o).
 //!
 //! This serves as a reference implementation showing how to build an
-//! accelerated lexer using [`TokenRole`] and [`for_each_classified_span`].
+//! accelerated lexer using [`Gpt2FamilyTokenRole`] and [`for_each_classified_span`].
+
+use core::ops::Range;
 
 use logos::Logos;
 
-use super::{engine::for_each_classified_span, token_role::TokenRole};
 use crate::{
-    alloc::sync::Arc,
+    alloc::{boxed::Box, sync::Arc},
     pretrained::openai::OA_O200K_BASE_PATTERN,
-    spanners::{
-        SpanRef,
-        span_lexers::{SpanLexer, accelerators::RegexAcceleratorHook},
+    spanners::span_lexers::{
+        SpanLexer,
+        accelerators::RegexAcceleratorHook,
+        logos::gpt2_family::{Gpt2FamilyLogos, Gpt2FamilySpanIter, Gpt2FamilyTokenRole},
     },
 };
 // Shorthand aliases for the character classes used in o200k:
-//   UPPER = [\p{Uppercase_Letter}\p{Titlecase_Letter}\p{Modifier_Letter}\p{Other_Letter}\p{Mark}]
-//   LOWER = [\p{Lowercase_Letter}\p{Modifier_Letter}\p{Other_Letter}\p{Mark}]
-//   CONTRACTION_SUFFIX = ('[sS]|'[tT]|'[dD]|'[mM]|'[rR][eE]|'[vV][eE]|'[lL][lL])?
+//   UPPER      = [\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]
+//   LOWER      = [\p{Ll}\p{Lm}\p{Lo}\p{M}]
+//   UPPER_ONLY = [\p{Lu}\p{Lt}]  (excludes Lm, Lo, M)
+//   CONTRACTION = ('[sS]|'[tT]|'[dD]|'[mM]|'[rR][eE]|'[vV][eE]|'[lL][lL])?
 //
 // These are inlined below because logos derive macros require string literals.
 
 /// Logos token for the `o200k_base` pattern.
 ///
-/// Key difference from cl100k: contractions are attached to the preceding word,
-/// and two word `span_encoders` (uppercase-leading vs lowercase-ending) are merged
-/// into a single `Word` variant because logos requires unambiguous DFA states.
+/// Key difference from cl100k: contractions are attached to the preceding word.
+/// The two word regex branches are split into separate variants (`WordLower` and
+/// `WordUpper`) to avoid DFA longest-match merging characters like `º` (Lo) with
+/// following uppercase letters. `WordUpper` restricts its leading chars to
+/// `[\p{Lu}\p{Lt}]` so Lo/Lm/M chars can only match via `WordLower`.
 ///
 /// | Regex branch                                         | Logos variant  |
 /// |------------------------------------------------------|----------------|
-/// | `[^\r\n\p{L}\p{N}]?[UPPER]*[LOWER]+CONTRACTION?`    | Word           |
-/// | `[^\r\n\p{L}\p{N}]?[UPPER]+[LOWER]*CONTRACTION?`    | Word           |
+/// | `[^\r\n\p{L}\p{N}]?[UPPER]*[LOWER]+CONTRACTION?`     | WordLower      |
+/// | `[^\r\n\p{L}\p{N}]?[Lu,Lt]+[LOWER]*CONTRACTION?`     | WordUpper      |
 /// | `\p{N}{1,3}`                                         | Digits         |
-/// | ` ?[^\s\p{L}\p{N}]+[\r\n/]*`                        | Punctuation    |
+/// | ` ?[^\s\p{L}\p{N}]+[\r\n/]*`                         | Punctuation    |
 /// | `\s*[\r\n]+`                                         | Newline        |
 /// | `\s+`                                                | Whitespace     |
 #[derive(Logos, Debug, PartialEq, Clone)]
 pub(crate) enum O200kToken {
-    // Both word patterns merged via alternation into a single regex.
-    // The two overlap on \p{Modifier_Letter}/\p{Other_Letter}/\p{Mark}
-    // characters (e.g. CJK), so logos requires a single DFA pattern.
-    // CamelCase splitting still works: the DFA's longest-match finds
-    // the same boundaries as regex first-match (e.g. "OpenAI" -> "Open"+"AI").
-    // Priority > default to beat Punctuation on the [^\r\n\p{L}\p{N}]? prefix.
+    // Regex Branch 1: UPPER*LOWER+ (with optional prefix and contraction).
+    // Higher priority wins equal-length ties against WordUpper.
     #[regex(
-        r"[^\r\n\p{Letter}\p{Number}]?([\p{Uppercase_Letter}\p{Titlecase_Letter}\p{Modifier_Letter}\p{Other_Letter}\p{Mark}]*[\p{Lowercase_Letter}\p{Modifier_Letter}\p{Other_Letter}\p{Mark}]+|[\p{Uppercase_Letter}\p{Titlecase_Letter}\p{Modifier_Letter}\p{Other_Letter}\p{Mark}]+[\p{Lowercase_Letter}\p{Modifier_Letter}\p{Other_Letter}\p{Mark}]*)('[sS]|'[tT]|'[dD]|'[mM]|'[rR][eE]|'[vV][eE]|'[lL][lL])?",
+        r"[^\r\n\p{Letter}\p{Number}]?[\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]*[\p{Ll}\p{Lm}\p{Lo}\p{M}]+(?i:'(?:s|t|d|m|re|ve|ll))?",
+        priority = 4
+    )]
+    WordLower,
+
+    // Regex Branch 2: UPPER_ONLY+LOWER* (with optional prefix and contraction).
+    // Leading chars restricted to [\p{Lu}\p{Lt}] so that Lo/Lm/M chars (which
+    // are in both UPPER and LOWER sets) can only be claimed by WordLower.
+    #[regex(
+        r"[^\r\n\p{Letter}\p{Number}]?[\p{Lu}\p{Lt}]+[\p{Ll}\p{Lm}\p{Lo}\p{M}]*(?i:'(?:s|t|d|m|re|ve|ll))?",
         priority = 3
     )]
-    Word,
+    WordUpper,
 
     #[regex(r"\p{Number}{1,3}")]
     Digits,
@@ -65,15 +75,15 @@ pub(crate) enum O200kToken {
     Whitespace,
 }
 
-impl O200kToken {
-    fn role(&self) -> TokenRole {
+impl Gpt2FamilyLogos<'_> for O200kToken {
+    fn family_role(&self) -> Gpt2FamilyTokenRole {
         match self {
-            Self::Whitespace => TokenRole::Whitespace,
-            Self::Word => TokenRole::Word {
+            Self::Whitespace => Gpt2FamilyTokenRole::Whitespace,
+            Self::WordLower | Self::WordUpper => Gpt2FamilyTokenRole::Word {
                 check_contraction: false,
             },
-            Self::Punctuation => TokenRole::Punctuation,
-            Self::Digits | Self::Newline => TokenRole::Standalone,
+            Self::Punctuation => Gpt2FamilyTokenRole::Punctuation,
+            Self::Digits | Self::Newline => Gpt2FamilyTokenRole::Standalone,
         }
     }
 }
@@ -91,40 +101,14 @@ inventory::submit! {
 }
 
 impl SpanLexer for O200kLexer {
-    fn next_span(
-        &self,
-        text: &str,
-        offset: usize,
-    ) -> Option<(usize, usize)> {
-        let mut next_span: Option<(usize, usize)> = None;
-        self.for_each_word(text, offset, &mut |span_ref| match span_ref {
-            SpanRef::Word(r) => {
-                next_span = Some((r.start, r.end));
-                false
-            }
-            _ => true,
-        });
-        next_span
-    }
-
-    fn for_each_word(
-        &self,
-        text: &str,
-        offset: usize,
-        f: &mut dyn FnMut(SpanRef) -> bool,
-    ) -> (bool, usize) {
-        for_each_classified_span(
-            O200kToken::lexer(text).spanned().map(|(res, range)| {
-                let role = match res {
-                    Ok(tok) => tok.role(),
-                    Err(()) => TokenRole::Gap,
-                };
-                (role, range)
-            }),
+    fn find_span_iter<'a>(
+        &'a self,
+        text: &'a str,
+    ) -> Box<dyn Iterator<Item = Range<usize>> + 'a> {
+        Box::new(Gpt2FamilySpanIter::new(
             text,
-            offset,
-            f,
-        )
+            O200kToken::lexer(text).spanned(),
+        ))
     }
 }
 
@@ -132,29 +116,13 @@ impl SpanLexer for O200kLexer {
 mod tests {
     use super::*;
     use crate::{
-        alloc::{sync::Arc, vec, vec::Vec},
-        spanners::{TextSpanner, span_lexers::LexerTextSpanner},
+        alloc::{sync::Arc, vec::Vec},
+        spanners::{SpanRef, TextSpanner, span_lexers::LexerTextSpanner},
     };
 
     /// Build a `TextSpanner` from a logos lexer with no specials.
     fn spanner(lexer: impl SpanLexer + 'static) -> LexerTextSpanner {
         LexerTextSpanner::new(Arc::new(lexer), None)
-    }
-
-    #[test]
-    fn test_span_lexer() {
-        let lexer = O200kLexer {};
-
-        let text = "hello world";
-        let mut spans: Vec<SpanRef> = Default::default();
-        lexer.for_each_word(text, 0, &mut |span_ref| {
-            spans.push(span_ref);
-            true
-        });
-        assert_eq!(spans, vec![SpanRef::Word(0..5), SpanRef::Word(5..11),]);
-
-        assert_eq!(lexer.next_span(text, 0), Some((0, 5)));
-        assert_eq!(lexer.next_span(&text[5..], 5), Some((5, 11)));
     }
 
     #[test]
@@ -181,6 +149,37 @@ mod tests {
             "expected \" she's\" as one token, got: {:?}",
             words
         );
+    }
+
+    #[test]
+    #[cfg(feature = "std")]
+    fn test_o200k_regression() {
+        use crate::{
+            spanners::span_lexers::accelerators::testutil::*,
+            support::regex::RegexWrapper,
+        };
+
+        let ref_lexer: Box<dyn SpanLexer> =
+            Box::new(RegexWrapper::from(OA_O200K_BASE_PATTERN.to_pattern()));
+        let accel_lexer: Box<dyn SpanLexer> = Box::new(O200kLexer);
+
+        let cases = [
+            // Original regression: Lo (U+00BA) + Lu
+            " average temperature of 21°C (70ºF) during the winter.\nOwing to",
+            // Standalone Lo chars
+            "\u{00BA}",
+            "\u{00BA}\u{00BA}\u{00BA}",
+            // Lm (U+02B0 Modifier_Letter) + Lu
+            "\u{02B0}F",
+            "\u{02B0}Hello",
+            // Lo + Lu sequences
+            "\u{00BA}ABC",
+            "\u{00BA}OpenAI",
+        ];
+
+        for sample in cases {
+            assert_matches_reference_lexer(sample, &ref_lexer, &accel_lexer);
+        }
     }
 
     #[test]
@@ -300,6 +299,58 @@ mod tests {
                     }
                 }
             }
+        }
+    }
+
+    // -------------------------------------------------------------------
+    // iterator vs for_each oracle equivalence
+    // -------------------------------------------------------------------
+
+    /// Collect Word ranges from for_each_classified_span (the oracle).
+    fn oracle_word_ranges(text: &str) -> Vec<Range<usize>> {
+        use crate::spanners::span_lexers::logos::gpt2_family::{
+            Gpt2FamilyTokenRole,
+            for_each_classified_span,
+        };
+
+        let tokens: Vec<(Gpt2FamilyTokenRole, Range<usize>)> = O200kToken::lexer(text)
+            .spanned()
+            .map(|(res, range)| {
+                let role = match res {
+                    Ok(tok) => tok.family_role(),
+                    Err(_) => Gpt2FamilyTokenRole::Gap,
+                };
+                (role, range)
+            })
+            .collect();
+
+        let mut word_ranges = Vec::new();
+        for_each_classified_span(tokens.into_iter(), text, 0, &mut |span| {
+            if let SpanRef::Word(r) = span {
+                word_ranges.push(r);
+            }
+            true
+        });
+        word_ranges
+    }
+
+    proptest::proptest! {
+        #![proptest_config(proptest::prelude::ProptestConfig::with_cases(2000))]
+
+        /// The iterator must produce exactly the same Word ranges as
+        /// the for_each_classified_span oracle for any input.
+        #[test]
+        fn iter_matches_oracle(text in "\\PC{0,200}") {
+            use crate::spanners::span_lexers::logos::gpt2_family::Gpt2FamilySpanIter;
+
+            let iter_ranges: Vec<Range<usize>> =
+                Gpt2FamilySpanIter::new(text.as_str(), O200kToken::lexer(&text).spanned())
+                    .collect();
+            let oracle_ranges = oracle_word_ranges(&text);
+            proptest::prop_assert_eq!(
+                &iter_ranges, &oracle_ranges,
+                "o200k iter vs oracle mismatch for {:?}", text
+            );
         }
     }
 
