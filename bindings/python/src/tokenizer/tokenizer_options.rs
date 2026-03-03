@@ -33,7 +33,7 @@ impl TokenizerOptions {
     #[staticmethod]
     fn default() -> Self {
         Self {
-            inner: wc::TokenizerOptions::default(),
+            inner: wc::TokenizerOptions::default().with_parallel(false),
         }
     }
 
