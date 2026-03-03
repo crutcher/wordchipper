@@ -5,6 +5,9 @@ use crate::support::resources::{
     ConstUrlResource,
 };
 
+/// Shared download context key.
+const OA_KEY: &str = "openai";
+
 /// Cache-keyed GPT-2 `DataGym` "vocab.bpe" vocabulary resource.
 pub const OA_GPT2_VOCAB_BPE_KEYED_RESOURCE: ConstKeyedResource = ConstKeyedResource {
     key: &["openai", "gpt2"],
@@ -35,10 +38,22 @@ pub const OA_R50K_BASE_TIKTOKEN_RESOURCE: ConstUrlResource = ConstUrlResource {
     hash: Some("306cd27f03c1a714eca7108e03d66b7dc042abe8c258b44c199a7ed9838dd930"),
 };
 
+/// A keyed resource for the "`r50k_base`" tokenizer.
+pub const OA_R50K_BASE_TIKTOKEN_KEYED_RESOURCE: ConstKeyedResource = ConstKeyedResource {
+    key: &[OA_KEY, "r50k_base"],
+    resource: OA_R50K_BASE_TIKTOKEN_RESOURCE,
+};
+
 /// The "`p50k_base.tiktoken`" vocabulary resource.
 pub const OA_P50K_BASE_TIKTOKEN_RESOURCE: ConstUrlResource = ConstUrlResource {
     urls: &["https://openaipublic.blob.core.windows.net/encodings/p50k_base.tiktoken"],
     hash: Some("94b5ca7dff4d00767bc256fdd1b27e5b17361d7b8a5f968547f9f23eb70d2069"),
+};
+
+/// A keyed resource for the "`p50k_base`" tokenizer.
+pub const OA_P50K_BASE_TIKTOKEN_KEYED_RESOURCE: ConstKeyedResource = ConstKeyedResource {
+    key: &[OA_KEY, "p50k_base"],
+    resource: OA_P50K_BASE_TIKTOKEN_RESOURCE,
 };
 
 /// The "`cl100k_base.tiktoken`" vocabulary resource.
@@ -47,8 +62,20 @@ pub const OA_CL100K_BASE_TIKTOKEN_RESOURCE: ConstUrlResource = ConstUrlResource 
     hash: Some("223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7"),
 };
 
+/// A keyed resource for the "`cl100k_base`" tokenizer.
+pub const OA_CL100K_BASE_TIKTOKEN_KEYED_RESOURCE: ConstKeyedResource = ConstKeyedResource {
+    key: &[OA_KEY, "cl100k_base"],
+    resource: OA_CL100K_BASE_TIKTOKEN_RESOURCE,
+};
+
 /// The "`o200k_base.tiktoken`" vocabulary resource.
 pub const OA_O200K_BASE_TIKTOKEN_RESOURCE: ConstUrlResource = ConstUrlResource {
     urls: &["https://openaipublic.blob.core.windows.net/encodings/o200k_base.tiktoken"],
     hash: Some("446a9538cb6c348e3516120d7c08b09f57c36495e2acfffe59a5bf8b0cfb1a2d"),
+};
+
+/// A keyed resource for the "`o200k_base`" tokenizer.
+pub const OA_O200K_BASE_TIKTOKEN_KEYED_RESOURCE: ConstKeyedResource = ConstKeyedResource {
+    key: &[OA_KEY, "o200k_base"],
+    resource: OA_O200K_BASE_TIKTOKEN_RESOURCE,
 };

@@ -62,7 +62,7 @@ pub fn oa_p50k_edit_special_tokens<T: TokenType>() -> Vec<(String, T)> {
 }
 
 /// The "cl100k" special tokens.
-pub const OA_CL100K_EDIT_SPECIAL_TOKENS: &[(&str, usize)] = &[
+pub const OA_CL100K_BASE_SPECIAL_TOKENS: &[(&str, usize)] = &[
     (ENDOFTEXT, 100257),
     (FIM_PREFIX, 100258),
     (FIM_MIDDLE, 100259),
@@ -71,8 +71,8 @@ pub const OA_CL100K_EDIT_SPECIAL_TOKENS: &[(&str, usize)] = &[
 ];
 
 /// The "cl100k" special tokens.
-pub fn oa_cl100k_edit_special_tokens<T: TokenType>() -> Vec<(String, T)> {
-    OA_CL100K_EDIT_SPECIAL_TOKENS.to_token_list::<T>()
+pub fn oa_cl100k_base_special_tokens<T: TokenType>() -> Vec<(String, T)> {
+    OA_CL100K_BASE_SPECIAL_TOKENS.to_token_list::<T>()
 }
 
 /// The "o200k base" special tokens.
@@ -183,7 +183,7 @@ mod tests {
     #[test]
     fn test_oa_gpt3_cl100k_edit_specials() {
         assert_eq!(
-            oa_cl100k_edit_special_tokens::<usize>(),
+            oa_cl100k_base_special_tokens::<usize>(),
             vec![
                 ("<|endoftext|>".to_string(), 100257),
                 ("<|fim_prefix|>".to_string(), 100258),

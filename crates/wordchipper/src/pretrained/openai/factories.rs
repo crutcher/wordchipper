@@ -1,9 +1,10 @@
 //! # `OpenAI` Pretrained Vocabulary Loaders
 
 #[cfg(feature = "std")]
-use std::io::BufRead;
-#[cfg(feature = "std")]
-use std::path::Path;
+use std::{
+    io::BufRead,
+    path::Path,
+};
 
 #[cfg(feature = "std")]
 use crate::support::resources::ResourceLoader;
@@ -22,7 +23,7 @@ use crate::{
             OA_R50K_BASE_TIKTOKEN_RESOURCE,
         },
         specials::{
-            oa_cl100k_edit_special_tokens,
+            oa_cl100k_base_special_tokens,
             oa_o200k_base_special_tokens,
             oa_o200k_harmony_special_tokens,
             oa_p50k_base_special_tokens,
@@ -101,6 +102,154 @@ mod datagym {
 }
 #[cfg(all(feature = "std", feature = "datagym"))]
 pub use self::datagym::*;
+
+/// Shared download context key.
+const OA_KEY: &str = "openai";
+
+#[cfg(feature = "std")]
+mod builtin_loaders {
+
+    use super::*;
+    use crate::{
+        UnifiedTokenVocab,
+        VocabDescription,
+        WCResult,
+        pretrained::{
+            factory::BuiltinPretrainedVocabHook,
+            openai::resources::{
+                OA_CL100K_BASE_TIKTOKEN_KEYED_RESOURCE,
+                OA_O200K_BASE_TIKTOKEN_KEYED_RESOURCE,
+                OA_P50K_BASE_TIKTOKEN_KEYED_RESOURCE,
+                OA_R50K_BASE_TIKTOKEN_KEYED_RESOURCE,
+            },
+        },
+        support::resources::KeyedResource,
+        vocab::io::load_base64_unified_vocab_path,
+    };
+
+    fn load_tiktoken_vocab(
+        loader: &mut dyn ResourceLoader,
+        resource: &KeyedResource,
+        spanning: TextSpanningConfig<u32>,
+    ) -> WCResult<UnifiedTokenVocab<u32>> {
+        let path = loader.load_resource_path(resource)?;
+        load_base64_unified_vocab_path::<u32>(path, spanning)
+    }
+
+    inventory::submit! {
+        BuiltinPretrainedVocabHook::new(
+            "openai:r50k_base",
+            |id| VocabDescription::new(
+                id,
+                &["openai", "r50k_base"],
+                "GPT-2 `p50k_base` vocabulary; remote",
+            ),
+            |_, loader| {
+                load_tiktoken_vocab(
+                    loader,
+                     &OA_R50K_BASE_TIKTOKEN_KEYED_RESOURCE.into(),
+                    TextSpanningConfig::<u32>::from(OA_R50K_BASE_PATTERN.to_pattern())
+                        .with_special_words(oa_r50k_base_special_tokens::<u32>()),
+                )
+            }
+        )
+    }
+
+    inventory::submit! {
+        BuiltinPretrainedVocabHook::new(
+            "openai:p50k_base",
+            |id| VocabDescription::new(
+                id,
+                &["openai", "p50k_base"],
+                "GPT-2 `p50k_base` vocabulary; remote",
+            ),
+            |_, loader| {
+                load_tiktoken_vocab(
+                    loader,
+                     &OA_P50K_BASE_TIKTOKEN_KEYED_RESOURCE.into(),
+                    TextSpanningConfig::<u32>::from(OA_P50K_BASE_PATTERN.to_pattern())
+                        .with_special_words(oa_p50k_base_special_tokens::<u32>()),
+                )
+            }
+        )
+    }
+
+    inventory::submit! {
+        BuiltinPretrainedVocabHook::new(
+            "openai:p50k_edit",
+            |id| VocabDescription::new(
+                id,
+                &["openai", "p50k_base"],
+                "GPT-2 `p50k_base` vocabulary; remote",
+            ),
+            |_, loader| {
+                load_tiktoken_vocab(
+                    loader,
+                     &OA_P50K_BASE_TIKTOKEN_KEYED_RESOURCE.into(),
+                    TextSpanningConfig::<u32>::from(OA_P50K_BASE_PATTERN.to_pattern())
+                        .with_special_words(oa_p50k_edit_special_tokens::<u32>()),
+                )
+            }
+        )
+    }
+
+    inventory::submit! {
+        BuiltinPretrainedVocabHook::new(
+            "openai:cl100k_base",
+            |id| VocabDescription::new(
+                id,
+                &["openai", "cl100k_base"],
+                "GPT-3 `cl100k_base` vocabulary; remote",
+            ),
+            |_, loader| {
+                load_tiktoken_vocab(
+                    loader,
+                     &OA_CL100K_BASE_TIKTOKEN_KEYED_RESOURCE.into(),
+                    TextSpanningConfig::<u32>::from(OA_CL100K_BASE_PATTERN.to_pattern())
+                        .with_special_words(oa_cl100k_base_special_tokens::<u32>()),
+                )
+            }
+        )
+    }
+
+    inventory::submit! {
+        BuiltinPretrainedVocabHook::new(
+            "openai:o200k_base",
+            |id| VocabDescription::new(
+                id,
+                &["openai", "o200k_base"],
+                "GPT-3 `o200k_base` vocabulary; remote",
+            ),
+            |_, loader| {
+                load_tiktoken_vocab(
+                    loader,
+                     &OA_O200K_BASE_TIKTOKEN_KEYED_RESOURCE.into(),
+                    TextSpanningConfig::<u32>::from(OA_O200K_BASE_PATTERN.to_pattern())
+                        .with_special_words(oa_o200k_base_special_tokens::<u32>()),
+                )
+            }
+        )
+    }
+
+    inventory::submit! {
+        BuiltinPretrainedVocabHook::new(
+            "openai:o200k_harmony",
+            |id| VocabDescription::new(
+                id,
+                &["openai", "o200k_harmony"],
+                "GPT-3 `o200k_harmony` vocabulary; remote",
+            ),
+            |_, loader| {
+                load_tiktoken_vocab(
+                    loader,
+                     &OA_O200K_BASE_TIKTOKEN_KEYED_RESOURCE.into(),
+                    TextSpanningConfig::<u32>::from(OA_O200K_BASE_PATTERN.to_pattern())
+                        .with_special_words(oa_o200k_harmony_special_tokens::<u32>()),
+                )
+            }
+        )
+    }
+}
 
 /// `OpenAI` Pretrained Tokenizer types.
 #[derive(Clone, Copy, Debug, PartialEq, strum::EnumString, strum::EnumIter, strum::Display)]
@@ -190,101 +339,6 @@ impl OATokenizer {
     }
 }
 
-/// Shared download context key.
-const OA_KEY: &str = "openai";
-
-#[cfg(feature = "std")]
-mod builtin_loaders {
-    use super::*;
-    use crate::{
-        VocabDescription,
-        pretrained::factory::BuiltinPretrainedVocabHook,
-    };
-
-    inventory::submit! {
-        BuiltinPretrainedVocabHook::new(
-            "openai:r50k_base",
-            |id| VocabDescription::new(
-                id,
-                &["openai", "r50k_base"],
-                "GPT-2 `p50k_base` vocabulary; remote",
-            ),
-            |_, loader| {
-                OA_R50K_BASE_VOCAB_FACTORY.load_vocab(loader)
-            }
-        )
-    }
-
-    inventory::submit! {
-        BuiltinPretrainedVocabHook::new(
-            "openai:p50k_base",
-            |id| VocabDescription::new(
-                id,
-                &["openai", "p50k_base"],
-                "GPT-2 `p50k_base` vocabulary; remote",
-            ),
-            |_, loader| {
-                OA_P50K_BASE_VOCAB_FACTORY.load_vocab(loader)
-            }
-        )
-    }
-
-    inventory::submit! {
-        BuiltinPretrainedVocabHook::new(
-            "openai:p50k_edit",
-            |id| VocabDescription::new(
-                id,
-                &["openai", "p50k_base"],
-                "GPT-2 `p50k_base` vocabulary; remote",
-            ),
-            |_, loader| {
-                OA_P50K_EDIT_VOCAB_FACTORY.load_vocab(loader)
-            }
-        )
-    }
-
-    inventory::submit! {
-        BuiltinPretrainedVocabHook::new(
-            "openai:cl100k_base",
-            |id| VocabDescription::new(
-                id,
-                &["openai", "cl100k_base"],
-                "GPT-3 `cl100k_base` vocabulary; remote",
-            ),
-            |_, loader| {
-                OA_CL100K_BASE_VOCAB_FACTORY.load_vocab(loader)
-            }
-        )
-    }
-
-    inventory::submit! {
-        BuiltinPretrainedVocabHook::new(
-            "openai:o200k_base",
-            |id| VocabDescription::new(
-                id,
-                &["openai", "o200k_base"],
-                "GPT-3 `o200k_base` vocabulary; remote",
-            ),
-            |_, loader| {
-                OA_O200K_BASE_VOCAB_FACTORY.load_vocab(loader)
-            }
-        )
-    }
-
-    inventory::submit! {
-        BuiltinPretrainedVocabHook::new(
-            "openai:o200k_harmony",
-            |id| VocabDescription::new(
-                id,
-                &["openai", "o200k_harmony"],
-                "GPT-3 `o200k_harmony` vocabulary; remote",
-            ),
-            |_, loader| {
-                OA_O200K_HARMONY_VOCAB_FACTORY.load_vocab(loader)
-            }
-        )
-    }
-}
 /// The "`r50k_base`" tokenizer.
 pub const OA_R50K_BASE_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabularyFactory {
     name: "r50k_base",
@@ -323,7 +377,7 @@ pub const OA_CL100K_BASE_VOCAB_FACTORY: ConstVocabularyFactory = ConstVocabulary
         resource: OA_CL100K_BASE_TIKTOKEN_RESOURCE,
     },
     pattern: OA_CL100K_BASE_PATTERN,
-    special_builder: &oa_cl100k_edit_special_tokens,
+    special_builder: &oa_cl100k_base_special_tokens,
 };
 
 /// The "`o200k_base`" tokenizer.
