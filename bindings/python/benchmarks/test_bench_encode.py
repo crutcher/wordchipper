@@ -15,10 +15,12 @@ import pytest
 
 import wordchipper
 
-MODELS = ["cl100k_base", "o200k_base"]
+MODELS = ["gpt2", "r50k_base", "cl100k_base", "o200k_base"]
 
 # HuggingFace model identifiers (matching the Rust benchmarks)
 HF_MODELS = {
+    "gpt2": "Xenova/gpt2",
+    "r50k_base": "Xenova/gpt-3",
     "cl100k_base": "Xenova/text-embedding-ada-002",
     "o200k_base": "Xenova/gpt-4o",
 }
