@@ -313,6 +313,33 @@ mod tests {
     }
 
     #[test]
+    fn test_find_span_iter_empty() {
+        use crate::spanners::span_lexers::SpanLexer;
+
+        let rw = RegexPattern::Basic(r"\w+".to_string()).compile().unwrap();
+        let spans: crate::alloc::vec::Vec<_> = rw.find_span_iter("").collect();
+        assert!(spans.is_empty());
+    }
+
+    #[test]
+    fn test_find_span_iter_basic() {
+        use crate::spanners::span_lexers::SpanLexer;
+
+        let rw = RegexPattern::Basic(r"\w+".to_string()).compile().unwrap();
+        let spans: crate::alloc::vec::Vec<_> = rw.find_span_iter("hello world").collect();
+        assert_eq!(spans, crate::alloc::vec![0..5, 6..11]);
+    }
+
+    #[test]
+    fn test_find_span_iter_whitespace_only() {
+        use crate::spanners::span_lexers::SpanLexer;
+
+        let rw = RegexPattern::Basic(r"\w+".to_string()).compile().unwrap();
+        let spans: crate::alloc::vec::Vec<_> = rw.find_span_iter("   ").collect();
+        assert!(spans.is_empty());
+    }
+
+    #[test]
     fn test_adaptive_pattern_fallback() {
         let pattern: RegexPattern = FANCY_PATTERN.into();
         assert!(matches!(pattern, RegexPattern::Adaptive(_)));
