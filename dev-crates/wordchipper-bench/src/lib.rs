@@ -1,5 +1,3 @@
-pub mod divan_parser;
-
 use std::sync::{
     Arc,
     Mutex,

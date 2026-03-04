@@ -1,7 +1,7 @@
 pub mod commands;
-pub mod util;
 
 use clap::Parser;
+pub use wordchipper_cli_util as util;
 
 /// Text tokenizer multi-tool.
 #[derive(clap::Parser, Debug)]

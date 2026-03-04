@@ -5,26 +5,16 @@ use wordchipper::{
     VocabIndex,
     vocab::io::write_base64_span_map,
 };
+use wordchipper_cli_util::io::{
+    input_batcher::BatchedInputArgs,
+    input_output::OutputArgs,
+};
 use wordchipper_training::BPETRainerOptions;
 
-use crate::{
-    commands::lexers::LexerSelectorArgs,
-    util::{
-        input_batcher::BatchedInputArgs,
-        input_output::OutputArgs,
-        logging::LogArgs,
-    },
+use crate::util::{
+    lexers::LexerSelectorArgs,
+    logging::LogArgs,
 };
-
-/// File formats for the train command.
-#[derive(Debug, Clone, Copy, clap::ValueEnum)]
-pub enum FileFormat {
-    /// Simple text files.
-    Text,
-
-    /// Parquet files.
-    Parquet,
-}
 
 /// Args for the train command.
 #[derive(clap::Args, Debug)]
@@ -33,7 +23,7 @@ pub struct TrainArgs {
     batched_input: BatchedInputArgs,
 
     #[clap(flatten)]
-    pub logging: LogArgs,
+    logging: LogArgs,
 
     /// Max vocab size.
     #[arg(long, default_value = "50281")]

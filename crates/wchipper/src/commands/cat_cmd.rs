@@ -11,13 +11,13 @@ use wordchipper::{
     TokenEncoder,
     Tokenizer,
 };
+use wordchipper_cli_util::io::input_output::{
+    InputArgs,
+    OutputArgs,
+};
 
 use crate::util::{
     disk_cache,
-    input_output::{
-        InputArgs,
-        OutputArgs,
-    },
     model_selector::ModelSelectorArgs,
     tokenizer_mode::{
         TokenizerMode,

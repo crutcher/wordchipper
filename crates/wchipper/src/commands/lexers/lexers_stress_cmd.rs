@@ -17,13 +17,11 @@ use wordchipper::{
         RegexWrapper,
     },
 };
+use wordchipper_cli_util::io::input_batcher::BatchedInputArgs;
 
-use crate::{
-    commands::lexers::LexerSelectorArgs,
-    util::{
-        input_batcher::BatchedInputArgs,
-        logging::LogArgs,
-    },
+use crate::util::{
+    lexers::LexerSelectorArgs,
+    logging::LogArgs,
 };
 
 #[derive(clap::Args, Debug)]

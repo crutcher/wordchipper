@@ -1,0 +1,24 @@
+[package]
+name = "report-tool"
+repository.workspace = true
+rust-version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+
+[dependencies]
+# wordchipper = { path = "../../crates/wordchipper" }
+wordchipper-cli-util = { path = "../../crates/wordchipper-cli-util" }
+divan-parser = { path = "../divan-parser" }
+
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+humansize = { workspace = true }
+plotters = { workspace = true }
+clap = { workspace = true, features = ["derive"] }
+regex = { workspace = true }
+log = { workspace = true }
+
+[lints]
+workspace = true

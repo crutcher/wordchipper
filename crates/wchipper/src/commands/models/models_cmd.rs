@@ -1,4 +1,4 @@
-use crate::commands::models::models_list_cmd::ListModelsArgs;
+use crate::commands::models::ListModelsArgs;
 
 /// Subcommands for the models command.
 #[derive(clap::Subcommand, Debug)]
