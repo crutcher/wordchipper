@@ -17,6 +17,7 @@ wordchipper-training = { version = "0.8.0", path = "../wordchipper-training" }
 stderrlog = { workspace = true }
 log = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
+clap-markdown = { workspace = true }
 
 rayon = { workspace = true }
 arrow = { workspace = true }

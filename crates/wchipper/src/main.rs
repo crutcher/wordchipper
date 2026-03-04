@@ -32,6 +32,9 @@ pub enum Commands {
 
     /// Train a new model.
     Train(commands::train_cmd::TrainArgs),
+
+    /// Markdown documentation.
+    Doc(commands::doc_cmd::DocArgs),
 }
 
 impl Commands {
@@ -42,6 +45,7 @@ impl Commands {
             Commands::Lexers(cmd) => cmd.run(),
             Commands::Models(cmd) => cmd.run(),
             Commands::Train(cmd) => cmd.run(),
+            Commands::Doc(cmd) => cmd.run(),
         }
     }
 }
