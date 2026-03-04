@@ -34,6 +34,9 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/wchipper/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/dev-crates/lexer-equivalence/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/dev-crates/lexer-equivalence/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/wordchipper-cli-util/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/dev-crates/divan-parser/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/dev-crates/report-tool/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/crates/nanochat/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/crates/wordchipper/target" />

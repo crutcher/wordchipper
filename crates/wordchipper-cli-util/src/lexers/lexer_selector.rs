@@ -1,4 +1,4 @@
-use crate::commands::lexers::LexerInventory;
+use crate::lexers::LexerInventory;
 
 #[derive(clap::Args, Debug)]
 #[group(required = true, multiple = false)]

@@ -9,7 +9,15 @@ use arrow::array::{
 };
 use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
 
-use crate::commands::train_cmd::FileFormat;
+/// File formats for the train command.
+#[derive(Debug, Clone, Copy, clap::ValueEnum)]
+pub enum FileFormat {
+    /// Simple text files.
+    Text,
+
+    /// Parquet files.
+    Parquet,
+}
 
 /// Args for batched input.
 #[derive(clap::Args, Debug)]

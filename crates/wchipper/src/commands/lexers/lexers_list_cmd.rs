@@ -1,4 +1,4 @@
-use crate::commands::lexers::LexerInventory;
+use crate::util::lexers::LexerInventory;
 
 #[derive(clap::Args, Debug)]
 pub struct ListLexersArgs {

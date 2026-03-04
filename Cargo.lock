@@ -904,6 +904,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "divan-parser"
+version = "0.8.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "document-features"
 version = "0.2.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2485,6 +2492,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "report-tool"
+version = "0.0.0"
+dependencies = [
+ "clap",
+ "divan-parser",
+ "humansize",
+ "log",
+ "regex",
+ "serde",
+ "serde_json",
+ "wordchipper-cli-util",
+]
+
+[[package]]
 name = "reqwest"
 version = "0.12.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3621,14 +3642,12 @@ dependencies = [
 name = "wchipper"
 version = "0.8.0"
 dependencies = [
- "arrow",
  "clap",
  "clap-markdown",
  "log",
- "parquet",
  "rayon",
- "stderrlog",
  "wordchipper",
+ "wordchipper-cli-util",
  "wordchipper-training",
 ]
 
@@ -4053,6 +4072,7 @@ dependencies = [
  "bpe-openai",
  "clap",
  "divan",
+ "divan-parser",
  "rayon",
  "serde",
  "serde_json",
@@ -4060,6 +4080,18 @@ dependencies = [
  "tokenizers",
  "wordchipper",
  "wordchipper-data",
+]
+
+[[package]]
+name = "wordchipper-cli-util"
+version = "0.8.0"
+dependencies = [
+ "arrow",
+ "clap",
+ "log",
+ "parquet",
+ "stderrlog",
+ "wordchipper",
 ]
 
 [[package]]

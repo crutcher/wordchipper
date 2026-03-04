@@ -12,6 +12,7 @@ workspace = true
 [dependencies]
 wordchipper = { path = "../../crates/wordchipper", features = ["default", "download"] }
 wordchipper-data = { path = "../wordchipper-data" }
+divan-parser = { path = "../divan-parser" }
 
 arrow = { workspace = true }
 bpe-openai = { workspace = true }

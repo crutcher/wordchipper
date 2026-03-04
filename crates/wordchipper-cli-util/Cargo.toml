@@ -1,6 +1,6 @@
 [package]
-name = "wchipper"
-description = "A command-line interface for the Wordchipper tokenizer library."
+name = "wordchipper-cli-util"
+description = "Utilities for the Wordchipper CLI"
 version.workspace = true
 repository.workspace = true
 rust-version.workspace = true
@@ -13,10 +13,9 @@ workspace = true
 
 [dependencies]
 wordchipper = { version = "0.8.0", path = "../wordchipper", features = ["client"] }
-wordchipper-training = { version = "0.8.0", path = "../wordchipper-training" }
-wordchipper-cli-util = { version = "0.8.0", path = "../wordchipper-cli-util" }
+stderrlog = { workspace = true }
 log = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
-clap-markdown = { workspace = true }
 
-rayon = { workspace = true }
+arrow = { workspace = true }
+parquet = { workspace = true, features = ["arrow"] }

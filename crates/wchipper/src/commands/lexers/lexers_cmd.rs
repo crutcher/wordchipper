@@ -1,6 +1,6 @@
 use crate::commands::lexers::{
-    lexers_list_cmd,
-    lexers_stress_cmd,
+    ListLexersArgs,
+    StressLexerArgs,
 };
 
 /// Subcommands for the lexers command.
@@ -8,10 +8,10 @@ use crate::commands::lexers::{
 pub enum LexersSubcommand {
     /// List available lexers.
     #[clap(visible_alias = "ls")]
-    List(lexers_list_cmd::ListLexersArgs),
+    List(ListLexersArgs),
 
     /// Stress test a regex accelerator.
-    Stress(lexers_stress_cmd::StressLexerArgs),
+    Stress(StressLexerArgs),
 }
 
 /// Args for the lexers menu.

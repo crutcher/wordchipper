@@ -15,7 +15,7 @@ use std::{
 };
 
 use clap::Parser;
-use wordchipper_bench::divan_parser::DivanParser;
+use divan_parser::DivanParser;
 
 /// Run divan benchmarks and output results as JSON.
 #[derive(Parser)]
