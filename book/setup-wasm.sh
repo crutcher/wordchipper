@@ -7,11 +7,9 @@ REPO_ROOT="$(cd "$DIR/.." && pwd)"
 PKG="$REPO_ROOT/bindings/wasm/pkg"
 DEST="$DIR/src/wasm"
 
-# 1. Build WASM if needed.
-if [ ! -f "$PKG/wordchipper_wasm.js" ]; then
-  echo "Building WASM package..."
-  wasm-pack build "$REPO_ROOT/bindings/wasm" --target web
-fi
+# 1. Build WASM (cargo/wasm-pack will skip if unchanged).
+echo "Building WASM package..."
+wasm-pack build "$REPO_ROOT/bindings/wasm" --target web
 
 # 2. Copy WASM artifacts.
 mkdir -p "$DEST"
