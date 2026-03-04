@@ -123,6 +123,17 @@ class TestTiktokenEncoding:
         with pytest.raises(NotImplementedError, match="disallowed_special"):
             enc.encode_batch(["hello"], disallowed_special=())
 
+    def test_encode_accepts_tiktoken_defaults(self, enc):
+        # tiktoken's real defaults: allowed_special=set(), disallowed_special="all"
+        tokens = enc.encode("hello", allowed_special=set(), disallowed_special="all")
+        assert enc.decode(tokens) == "hello"
+
+    def test_encode_batch_accepts_tiktoken_defaults(self, enc):
+        results = enc.encode_batch(
+            ["hello"], allowed_special=set(), disallowed_special="all"
+        )
+        assert enc.decode(results[0]) == "hello"
+
 
 class TestTiktokenProperties:
     @pytest.fixture(scope="class")
@@ -301,7 +312,7 @@ class TestHFTokenizerMatchesWordchipper:
 # Cross-validation against real tiktoken
 # ===================================================================
 
-import tiktoken as _real_tiktoken
+_real_tiktoken = pytest.importorskip("tiktoken")
 
 
 _CROSS_VALIDATION_TEXTS = [

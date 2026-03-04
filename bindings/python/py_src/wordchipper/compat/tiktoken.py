@@ -17,6 +17,8 @@ from typing import Any
 
 from wordchipper import Tokenizer
 
+_SENTINEL = object()
+
 # ---------------------------------------------------------------------------
 # Model-to-encoding mappings (based on tiktoken, excluding gpt-2 entries)
 # ---------------------------------------------------------------------------
@@ -139,18 +141,18 @@ class Encoding:
         self,
         text: str,
         *,
-        allowed_special: Any = None,
-        disallowed_special: Any = None,
+        allowed_special: Any = _SENTINEL,
+        disallowed_special: Any = _SENTINEL,
     ) -> list[int]:
         """Encode text to token IDs.
 
         ``allowed_special`` and ``disallowed_special`` are accepted for API
-        compatibility but raise :class:`NotImplementedError` if set to
-        non-default values.
+        compatibility. Passing tiktoken's own defaults (``set()`` and
+        ``"all"``) is allowed; other values raise :class:`NotImplementedError`.
         """
-        if allowed_special is not None:
+        if allowed_special is not _SENTINEL and allowed_special != set():
             raise NotImplementedError("allowed_special is not supported")
-        if disallowed_special is not None:
+        if disallowed_special is not _SENTINEL and disallowed_special != "all":
             raise NotImplementedError("disallowed_special is not supported")
         return self._tok.encode(text)
 
@@ -161,12 +163,12 @@ class Encoding:
         self,
         text: list[str],
         *,
-        allowed_special: Any = None,
-        disallowed_special: Any = None,
+        allowed_special: Any = _SENTINEL,
+        disallowed_special: Any = _SENTINEL,
     ) -> list[list[int]]:
-        if allowed_special is not None:
+        if allowed_special is not _SENTINEL and allowed_special != set():
             raise NotImplementedError("allowed_special is not supported")
-        if disallowed_special is not None:
+        if disallowed_special is not _SENTINEL and disallowed_special != "all":
             raise NotImplementedError("disallowed_special is not supported")
         return self._tok.encode_batch(text)
 
