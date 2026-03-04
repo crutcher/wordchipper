@@ -8,8 +8,29 @@ use logos::{
     SpannedIter,
 };
 use ringbuffer::RingBuffer;
+use unicode_general_category::{
+    GeneralCategory,
+    get_general_category,
+};
 
 use crate::spanners::SpanRef;
+
+/// Returns true if `c` has Unicode general category Letter (`\p{L}`).
+///
+/// Rust core's `char::is_alphabetic()` checks the derived `Alphabetic`
+/// property, which is a superset that includes some Mark characters
+/// (Mc with `Other_Alphabetic`). This function checks the actual
+/// general category, matching `\p{L}` in regex.
+fn is_unicode_letter(c: char) -> bool {
+    matches!(
+        get_general_category(c),
+        GeneralCategory::UppercaseLetter
+            | GeneralCategory::LowercaseLetter
+            | GeneralCategory::TitlecaseLetter
+            | GeneralCategory::ModifierLetter
+            | GeneralCategory::OtherLetter
+    )
+}
 
 /// How a logos token interacts with whitespace splitting.
 ///
@@ -103,6 +124,13 @@ pub struct Gpt2FamilySpanIter<'source, I> {
     last: usize,
     pending_ws: Option<Range<usize>>,
     pending_newline: Option<Range<usize>>,
+    /// Buffered punctuation span from mark-extension that may absorb
+    /// trailing `[\r\n/]*` and adjacent `[^\s\p{L}\p{N}]+` body chars
+    /// from subsequent DFA tokens.
+    pending_punct: Option<Range<usize>>,
+    /// When true, `pending_punct` has already absorbed a `\r`/`\n` byte,
+    /// so only `[\r\n/]` chars can continue the trailer.
+    punct_in_trailer: bool,
 
     /// Capacity 8 (next power-of-2 above the 5 slots needed) because
     /// `ConstGenericRingBuffer` requires power-of-2 for bitmask indexing.
@@ -125,6 +153,8 @@ where
             last: 0,
             pending_ws: None,
             pending_newline: None,
+            pending_punct: None,
+            punct_in_trailer: false,
             ring: ringbuffer::ConstGenericRingBuffer::new(),
             iter: Some(iter),
         }
@@ -229,6 +259,10 @@ where
                 return Some(range);
             }
             if self.iter.is_none() {
+                if let Some(pp) = self.pending_punct.take() {
+                    self.punct_in_trailer = false;
+                    return Some(pp);
+                }
                 // End of stream: merge pending_newline + pending_ws
                 // into one span (matching regex `\s++$`).
                 if let Some(nl) = self.pending_newline.take() {
@@ -244,6 +278,86 @@ where
             }
 
             if let Some((role, Range { start, end })) = self.next_tok() {
+                // Try to absorb the next token into pending_punct.
+                // The regex punct branch ` ?[^\s\p{L}\p{N}]+[\r\n/]*`
+                // has a body that greedily matches non-L/N/ws chars, then
+                // a trailer that matches `[\r\n/]`. Mark-extension creates
+                // pending_punct for the initial body (punct + marks). Here
+                // we continue matching body chars from PunctuationBare
+                // tokens and trailer chars from Newline tokens.
+                if let Some(pp) = self.pending_punct.take() {
+                    if pp.end == start {
+                        let first = bytes[start];
+                        let absorb = if self.punct_in_trailer {
+                            // Trailer mode: only continue with pure
+                            // [\r\n/] content.
+                            bytes[start..end]
+                                .iter()
+                                .all(|&b| matches!(b, b'\r' | b'\n' | b'/'))
+                        } else if matches!(role, Gpt2FamilyTokenRole::Punctuation) {
+                            // Body mode: absorb bare punctuation
+                            // (not PunctuationSpaced which starts
+                            // a new regex match with its ` ?` prefix).
+                            first != b' '
+                        } else {
+                            // Body mode: absorb a newline-starting
+                            // token (the [\r\n/]* trailer).
+                            matches!(first, b'\r' | b'\n')
+                        };
+                        if absorb {
+                            if !self.punct_in_trailer
+                                && bytes[start..end]
+                                    .iter()
+                                    .any(|&b| matches!(b, b'\r' | b'\n'))
+                            {
+                                self.punct_in_trailer = true;
+                            }
+                            self.pending_punct = Some(pp.start..end);
+                            self.last = end;
+                            continue;
+                        }
+                        // Body mode: PrefixedWord adjacent to pending
+                        // punct. The regex `[^\s\p{L}\p{N}]+` keeps
+                        // matching non-L/N/ws chars, so the non-letter
+                        // prefix and marks belong in pending_punct.
+                        if !self.punct_in_trailer
+                            && let Gpt2FamilyTokenRole::Word {
+                                first_char_is_letter: false,
+                                check_contraction,
+                            } = role
+                        {
+                            let token_str =
+                                core::str::from_utf8(&bytes[start..end]).expect("valid UTF-8");
+                            let mut chars = token_str.chars();
+                            let first_char = chars.next();
+                            // Only absorb if prefix is in the punct
+                            // class [^\s\p{L}\p{N}]. Whitespace
+                            // prefixes start a new regex match.
+                            if first_char.is_some_and(|c| !c.is_whitespace()) {
+                                let mut prefix_len = first_char.unwrap().len_utf8();
+                                for c in chars {
+                                    if is_unicode_letter(c) {
+                                        break;
+                                    }
+                                    prefix_len += c.len_utf8();
+                                }
+                                if start + prefix_len >= end {
+                                    self.pending_punct = Some(pp.start..end);
+                                    self.last = end;
+                                    continue;
+                                }
+                                emit!(pp.start..start + prefix_len);
+                                emit_absorbing!(start + prefix_len, end, check_contraction);
+                                self.last = end;
+                                continue;
+                            }
+                        }
+                    }
+                    // Not absorbed: flush pending_punct.
+                    self.punct_in_trailer = false;
+                    emit!(pp);
+                }
+
                 if self.last < start {
                     // We skipped over a gap.
                     if let Some(nl) = self.pending_newline.take() {
@@ -324,13 +438,37 @@ where
                                 // 2+ ws chars ending in ASCII space: merge
                                 // space + non-letter prefix into one span
                                 // (like Punctuation ` ?X`), then emit rest.
-                                let prefix_len = core::str::from_utf8(&bytes[start..end])
-                                    .expect("text is &str bytes, always valid UTF-8")
-                                    .chars()
-                                    .next()
-                                    .map_or(1, char::len_utf8);
-                                emit!(trim..start + prefix_len);
-                                emit_absorbing!(start + prefix_len, end, check_contraction);
+                                //
+                                // Start with the first char as prefix (the
+                                // non-letter char from the DFA pattern). Then
+                                // extend past any combining marks: the regex
+                                // punctuation branch `[^\s\p{L}\p{N}]+`
+                                // captures marks after punctuation chars, but
+                                // the DFA's PrefixedWord absorbs them into the
+                                // word part instead.
+                                let token_str = core::str::from_utf8(&bytes[start..end])
+                                    .expect("text is &str bytes, always valid UTF-8");
+                                let mut chars = token_str.chars();
+                                let mut prefix_len = chars.next().map_or(1, char::len_utf8);
+                                for c in chars {
+                                    if is_unicode_letter(c) {
+                                        break;
+                                    }
+                                    prefix_len += c.len_utf8();
+                                }
+                                if start + prefix_len < end {
+                                    // Mark-extension found letters after
+                                    // marks; emit punct prefix + word.
+                                    emit!(trim..start + prefix_len);
+                                    emit_absorbing!(start + prefix_len, end, check_contraction);
+                                } else {
+                                    // Entire token is marks, no letters.
+                                    // Buffer as punctuation to absorb
+                                    // trailing body/newline chars from
+                                    // subsequent DFA tokens.
+                                    self.pending_punct = Some(trim..start + prefix_len);
+                                    self.punct_in_trailer = false;
+                                }
                             } else {
                                 // 2+ ws chars ending in non-space (NBSP, tab):
                                 // don't absorb; emit last ws char standalone.

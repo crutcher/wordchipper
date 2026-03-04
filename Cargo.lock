@@ -1632,6 +1632,7 @@ checksum = "09edd9e8b54e49e587e4f6295a7d29c3ea94d469cb40ab8ca70b288248a81db2"
 name = "lexer-equivalence"
 version = "0.0.0"
 dependencies = [
+ "rayon",
  "regex",
  "wordchipper",
 ]
@@ -3369,6 +3370,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eaea85b334db583fe3274d12b4cd1880032beab409c0d774be044d4480ab9a94"
 
 [[package]]
+name = "unicode-general-category"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b993bddc193ae5bd0d623b49ec06ac3e9312875fdae725a975c51db1cc1677f"
+
+[[package]]
 name = "unicode-ident"
 version = "1.0.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4090,6 +4097,7 @@ dependencies = [
  "tiktoken-rs",
  "tokenizers",
  "tracing",
+ "unicode-general-category",
  "wordchipper-disk-cache",
 ]
 

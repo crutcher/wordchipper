@@ -16,6 +16,13 @@ pub(crate) enum R50kToken {
     #[regex(r"'([sdtm]|re|ve|ll)")]
     Contraction,
 
+    // Contraction suffix followed by more letters. Beats Contraction by
+    // longest-match. When preceded by whitespace, the apostrophe is absorbed
+    // as punctuation and the suffix+letters become one span. Without
+    // whitespace, contraction_split separates the contraction prefix.
+    #[regex(r"'([sdtm]|re|ve|ll)\p{Letter}+")]
+    ContractionLetters,
+
     #[regex(r" ?\p{Letter}+")]
     Letters,
 
@@ -38,13 +45,17 @@ impl Gpt2FamilyLogos<'_> for R50kToken {
             // All three r50k content patterns use ` ?X` which absorbs only
             // literal ASCII space. This matches the Punctuation role behavior.
             Self::Letters | Self::Digits | Self::Punctuation => Gpt2FamilyTokenRole::Punctuation,
-            // When preceded by whitespace ending in ASCII space, the regex
-            // ` ?[^\s\p{L}\p{N}]+` absorbs the space + apostrophe as punctuation,
-            // leaving the suffix letter(s) as a separate span. The Word role's
-            // non-letter-prefix path replicates this: it merges the last ws char
-            // with the apostrophe and emits the suffix separately.
             Self::Contraction => Gpt2FamilyTokenRole::Word {
                 check_contraction: false,
+                first_char_is_letter: false,
+            },
+            // With whitespace: apostrophe is absorbed as punctuation prefix,
+            // contraction_split on the suffix finds no apostrophe, so the
+            // remaining letters emit as one span.
+            // Without whitespace: contraction_split separates the contraction
+            // prefix from trailing letters (e.g. "'tA" -> "'t" + "A").
+            Self::ContractionLetters => Gpt2FamilyTokenRole::Word {
+                check_contraction: true,
                 first_char_is_letter: false,
             },
         }
@@ -177,5 +188,51 @@ mod tests {
         // r50k uses \p{L}+ so CamelCase is one token.
         assert_eq!(s.split_spans("CamelCase"), vec![SpanRef::Word(0..9)]);
         assert_eq!(s.split_spans("getElementById"), vec![SpanRef::Word(0..14)]);
+    }
+
+    // Regression: contraction suffix must merge with trailing letters
+    // when whitespace absorbs the apostrophe as punctuation.
+    #[test]
+    fn test_contraction_letters_after_whitespace() {
+        let s = spanner(R50kLexer);
+
+        // "  'sA": ws split -> " ", punct absorbs " '", letters "sA"
+        assert_eq!(
+            s.split_spans("  'sA"),
+            vec![
+                SpanRef::Word(0..1), // " "
+                SpanRef::Word(1..3), // " '"
+                SpanRef::Word(3..5), // "sA"
+            ]
+        );
+
+        // "  'llA": same pattern with two-char contraction suffix
+        assert_eq!(
+            s.split_spans("  'llA"),
+            vec![
+                SpanRef::Word(0..1), // " "
+                SpanRef::Word(1..3), // " '"
+                SpanRef::Word(3..6), // "llA"
+            ]
+        );
+    }
+
+    // Without whitespace, contraction_split separates the contraction.
+    #[test]
+    fn test_contraction_letters_without_whitespace() {
+        let s = spanner(R50kLexer);
+
+        // "don'tA": contraction split -> "don", "'t", "A"
+        let text = "don'tA";
+        let words: Vec<&str> = s
+            .split_spans(text)
+            .iter()
+            .filter_map(|s| match s {
+                SpanRef::Word(r) => Some(&text[r.clone()]),
+                _ => None,
+            })
+            .collect();
+
+        assert_eq!(words, vec!["don", "'t", "A"]);
     }
 }

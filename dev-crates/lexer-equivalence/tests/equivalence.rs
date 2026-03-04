@@ -1,25 +1,14 @@
 use std::sync::Arc;
 
 use lexer_equivalence::{
-    harness::{
-        assert_k_tuple_equivalence,
-        regex_lexer,
-    },
+    harness::{assert_k_tuple_equivalence, regex_lexer},
     representatives::REPRESENTATIVES,
 };
 use wordchipper::{
-    pretrained::openai::{
-        OA_CL100K_BASE_PATTERN,
-        OA_O200K_BASE_PATTERN,
-        OA_R50K_BASE_PATTERN,
-    },
+    pretrained::openai::{OA_CL100K_BASE_PATTERN, OA_O200K_BASE_PATTERN, OA_R50K_BASE_PATTERN},
     spanners::span_lexers::{
         SpanLexer,
-        logos::{
-            cl100k::Cl100kLexer,
-            o200k::O200kLexer,
-            r50k::R50kLexer,
-        },
+        logos::{cl100k::Cl100kLexer, o200k::O200kLexer, r50k::R50kLexer},
     },
 };
 
@@ -259,26 +248,27 @@ fn validate_representative_completeness() {
 // =====================================================================
 // FULL EQUIVALENCE TESTS
 //
-// Test all 29 representatives (k=1..4, ~732K inputs per lexer).
+// Test all 29 representatives (k=1..5, ~21.2M inputs per lexer).
+// Each k-level is parallelized via rayon.
 // =====================================================================
 
 #[test]
 fn r50k_equivalence() {
     let ref_lexer = regex_lexer(OA_R50K_BASE_PATTERN);
     let test_lexer: Arc<dyn SpanLexer> = Arc::new(R50kLexer);
-    assert_k_tuple_equivalence("r50k", 4, REPRESENTATIVES, &*ref_lexer, &*test_lexer);
+    assert_k_tuple_equivalence("r50k", 6, REPRESENTATIVES, &*ref_lexer, &*test_lexer);
 }
 
 #[test]
 fn cl100k_equivalence() {
     let ref_lexer = regex_lexer(OA_CL100K_BASE_PATTERN);
     let test_lexer: Arc<dyn SpanLexer> = Arc::new(Cl100kLexer);
-    assert_k_tuple_equivalence("cl100k", 4, REPRESENTATIVES, &*ref_lexer, &*test_lexer);
+    assert_k_tuple_equivalence("cl100k", 6, REPRESENTATIVES, &*ref_lexer, &*test_lexer);
 }
 
 #[test]
 fn o200k_equivalence() {
     let ref_lexer = regex_lexer(OA_O200K_BASE_PATTERN);
     let test_lexer: Arc<dyn SpanLexer> = Arc::new(O200kLexer);
-    assert_k_tuple_equivalence("o200k", 4, REPRESENTATIVES, &*ref_lexer, &*test_lexer);
+    assert_k_tuple_equivalence("o200k", 6, REPRESENTATIVES, &*ref_lexer, &*test_lexer);
 }
