@@ -182,4 +182,22 @@ mod tests {
 
         assert_eq!(spans, vec![SpanRef::Word(0..3)]);
     }
+
+    #[test]
+    fn test_logos_camel_case() {
+        let s = spanner(Cl100kLexer);
+        // cl100k uses \p{L}+ so CamelCase is one token.
+        assert_eq!(
+            s.split_spans("CamelCase"),
+            vec![SpanRef::Word(0..9)]
+        );
+        assert_eq!(
+            s.split_spans("getElementById"),
+            vec![SpanRef::Word(0..14)]
+        );
+        assert_eq!(
+            s.split_spans("HTMLParser"),
+            vec![SpanRef::Word(0..10)]
+        );
+    }
 }

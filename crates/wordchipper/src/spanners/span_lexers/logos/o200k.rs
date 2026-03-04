@@ -153,4 +153,45 @@ mod tests {
             words
         );
     }
+
+    #[test]
+    fn test_o200k_camel_case() {
+        let s = spanner(O200kLexer);
+
+        // o200k splits on case boundaries: UPPER*LOWER+ and UPPER+LOWER*.
+        // "CamelCase" -> "Camel" + "Case"
+        let spans = s.split_spans("CamelCase");
+        let words: Vec<&str> = spans
+            .iter()
+            .filter_map(|s| match s {
+                SpanRef::Word(r) => Some(&"CamelCase"[r.clone()]),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(words, &["Camel", "Case"]);
+
+        // "getElementById" -> "get" + "Element" + "By" + "Id"
+        let text = "getElementById";
+        let spans = s.split_spans(text);
+        let words: Vec<&str> = spans
+            .iter()
+            .filter_map(|s| match s {
+                SpanRef::Word(r) => Some(&text[r.clone()]),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(words, &["get", "Element", "By", "Id"]);
+
+        // "HTMLParser" -> all-upper run uses UPPER+LOWER* branch.
+        let text = "HTMLParser";
+        let spans = s.split_spans(text);
+        let words: Vec<&str> = spans
+            .iter()
+            .filter_map(|s| match s {
+                SpanRef::Word(r) => Some(&text[r.clone()]),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(words, &["HTMLParser"]);
+    }
 }
