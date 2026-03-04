@@ -30,14 +30,22 @@ The three OpenAI patterns (r50k, cl100k, o200k) use a finite set of Unicode pred
 codepoints in the same cell are indistinguishable to every regex predicate in the patterns, so
 testing one representative per cell covers the full Unicode space.
 
-The test generates all k-character strings (k=1..5) from 29 representative codepoints (22 cells + 7
-sub-cell extras for logos DFA edge cases) and compares the span output of each logos lexer against
-the regex reference. Each k-level is parallelized via rayon.
+The test generates all k-character strings from 29 representative codepoints (22 cells + 7 sub-cell
+extras for logos DFA edge cases) and compares the span output of each logos lexer against the regex
+reference. Each k-level is parallelized via rayon.
+
+The max k is controlled by the `LEXER_EQUIV_K` env var (default 4):
+
+| k | Cases | Time (release) | Use |
+|---|-------|----------------|-----|
+| 4 | ~708K | instant | local dev (default) |
+| 5 | ~20.5M | ~2 min | CI |
+| 6 | ~594M | ~15 min | nightly |
 
 ### Tests
 
 Each lexer (r50k, cl100k, o200k) has a single equivalence test that runs all 29 representatives at
-k=1..5 and panics on any divergence from the regex reference.
+k=1..=`LEXER_EQUIV_K` and panics on any divergence from the regex reference.
 
 ### Representative validation
 
@@ -48,8 +56,11 @@ codepoint and checking that no uncovered bit-signature exists.
 ## Running
 
 ```
-cargo test -p lexer-equivalence
+cargo test -p lexer-equivalence --release --test equivalence
 ```
 
-The full suite tests ~21,243,690 inputs per lexer (29^1 + 29^2 + 29^3 + 29^4 + 29^5) and runs
-parallelized via rayon.
+Override the depth with:
+
+```
+LEXER_EQUIV_K=5 cargo test -p lexer-equivalence --release --test equivalence
+```

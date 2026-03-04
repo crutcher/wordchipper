@@ -59,7 +59,9 @@ pub fn run_k_tuple_equivalence(
     test_lexer: &dyn SpanLexer,
 ) -> (usize, Vec<Divergence>) {
     let n = representatives.len();
-    let total = n.pow(k as u32);
+    let total = n
+        .checked_pow(k as u32)
+        .expect("k-tuple count overflows usize");
 
     let divergences: Vec<Divergence> = (0..total)
         .into_par_iter()

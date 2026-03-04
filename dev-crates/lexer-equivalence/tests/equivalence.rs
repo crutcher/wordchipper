@@ -269,10 +269,12 @@ fn validate_representative_completeness() {
 // =====================================================================
 
 fn max_k() -> usize {
-    std::env::var("LEXER_EQUIV_K")
+    let k = std::env::var("LEXER_EQUIV_K")
         .ok()
         .and_then(|v| v.parse().ok())
-        .unwrap_or(4)
+        .unwrap_or(4);
+    assert!(k >= 1, "LEXER_EQUIV_K must be at least 1, got {k}");
+    k
 }
 
 #[test]

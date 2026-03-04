@@ -12,6 +12,8 @@ jobs:
   lexer-equivalence-k6:
     name: Lexer Equivalence (k=6)
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     steps:
       - uses: actions/checkout@v4
       - run: rustup toolchain install stable --profile minimal
@@ -22,9 +24,14 @@ jobs:
       - name: File bug on failure
         if: failure()
         run: |
-          gh issue create \
-            --title "Nightly lexer equivalence failure (k=6)" \
-            --body "The nightly k=6 lexer equivalence test failed. See [run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})." \
-            --label bug
+          TITLE="Nightly lexer equivalence failure (k=6)"
+          BODY="The nightly k=6 lexer equivalence test failed. See [run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})."
+
+          existing=$(gh issue list --state open --search "${TITLE} in:title" --json number --jq '.[0].number' || true)
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$BODY"
+          else
+            gh issue create --title "$TITLE" --body "$BODY" --label bug
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
