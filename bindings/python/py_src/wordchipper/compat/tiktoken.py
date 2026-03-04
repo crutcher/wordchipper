@@ -91,9 +91,9 @@ MODEL_PREFIX_TO_ENCODING: dict[str, str] = {
 }
 
 _ENCODING_NAMES = [
-    m.split("::", 1)[-1]
+    m.split(":", 1)[-1]
     for m in Tokenizer.available_models()
-    if not m.endswith("::gpt2")
+    if not m.endswith(":gpt2")
 ]
 
 # Encoding cache (keyed by encoding name)
@@ -145,8 +145,13 @@ class Encoding:
         """Encode text to token IDs.
 
         ``allowed_special`` and ``disallowed_special`` are accepted for API
-        compatibility but have no effect.
+        compatibility but raise :class:`NotImplementedError` if set to
+        non-default values.
         """
+        if allowed_special is not None:
+            raise NotImplementedError("allowed_special is not supported")
+        if disallowed_special is not None:
+            raise NotImplementedError("disallowed_special is not supported")
         return self._tok.encode(text)
 
     def encode_ordinary(self, text: str) -> list[int]:
@@ -159,6 +164,10 @@ class Encoding:
         allowed_special: Any = None,
         disallowed_special: Any = None,
     ) -> list[list[int]]:
+        if allowed_special is not None:
+            raise NotImplementedError("allowed_special is not supported")
+        if disallowed_special is not None:
+            raise NotImplementedError("disallowed_special is not supported")
         return self._tok.encode_batch(text)
 
     def encode_ordinary_batch(self, text: list[str]) -> list[list[int]]:

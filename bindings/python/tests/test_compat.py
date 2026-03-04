@@ -107,10 +107,21 @@ class TestTiktokenEncoding:
     def test_decode_empty(self, enc):
         assert enc.decode([]) == ""
 
-    def test_encode_accepts_special_kwargs(self, enc):
-        # These kwargs are accepted silently for API compat
-        tokens = enc.encode("hello", allowed_special="all", disallowed_special=())
-        assert enc.decode(tokens) == "hello"
+    def test_encode_raises_on_allowed_special(self, enc):
+        with pytest.raises(NotImplementedError, match="allowed_special"):
+            enc.encode("hello", allowed_special="all")
+
+    def test_encode_raises_on_disallowed_special(self, enc):
+        with pytest.raises(NotImplementedError, match="disallowed_special"):
+            enc.encode("hello", disallowed_special=())
+
+    def test_encode_batch_raises_on_allowed_special(self, enc):
+        with pytest.raises(NotImplementedError, match="allowed_special"):
+            enc.encode_batch(["hello"], allowed_special="all")
+
+    def test_encode_batch_raises_on_disallowed_special(self, enc):
+        with pytest.raises(NotImplementedError, match="disallowed_special"):
+            enc.encode_batch(["hello"], disallowed_special=())
 
 
 class TestTiktokenProperties:
@@ -232,8 +243,43 @@ class TestHFTokenizer:
     def test_decode_empty(self, tok):
         assert tok.decode([]) == ""
 
-    def test_encode_accepts_extra_kwargs(self, tok):
-        # Extra params accepted silently for API compat
+    def test_encode_raises_on_pair(self, tok):
+        with pytest.raises(NotImplementedError, match="pair"):
+            tok.encode("hello", pair="world")
+
+    def test_encode_raises_on_is_pretokenized(self, tok):
+        with pytest.raises(NotImplementedError, match="is_pretokenized"):
+            tok.encode("hello", is_pretokenized=True)
+
+    def test_encode_raises_on_add_special_tokens_false(self, tok):
+        with pytest.raises(NotImplementedError, match="add_special_tokens"):
+            tok.encode("hello", add_special_tokens=False)
+
+    def test_encode_batch_raises_on_is_pretokenized(self, tok):
+        with pytest.raises(NotImplementedError, match="is_pretokenized"):
+            tok.encode_batch(["hello"], is_pretokenized=True)
+
+    def test_encode_batch_raises_on_add_special_tokens_false(self, tok):
+        with pytest.raises(NotImplementedError, match="add_special_tokens"):
+            tok.encode_batch(["hello"], add_special_tokens=False)
+
+    def test_decode_raises_on_skip_special_tokens_false(self, tok):
+        with pytest.raises(NotImplementedError, match="skip_special_tokens"):
+            tok.decode([1, 2], skip_special_tokens=False)
+
+    def test_decode_batch_raises_on_skip_special_tokens_false(self, tok):
+        with pytest.raises(NotImplementedError, match="skip_special_tokens"):
+            tok.decode_batch([[1, 2]], skip_special_tokens=False)
+
+    def test_from_pretrained_raises_on_extra_kwargs(self):
+        with pytest.raises(NotImplementedError, match="extra keyword"):
+            HFTokenizer.from_pretrained("cl100k_base", revision="main")
+
+    def test_get_vocab_size_raises_on_with_added_tokens_false(self, tok):
+        with pytest.raises(NotImplementedError, match="with_added_tokens"):
+            tok.get_vocab_size(with_added_tokens=False)
+
+    def test_encode_default_kwargs_still_work(self, tok):
         result = tok.encode("hello", pair=None, is_pretokenized=False)
         assert len(result.ids) > 0
 
@@ -249,3 +295,70 @@ class TestHFTokenizerMatchesWordchipper:
         hf = HFTokenizer.from_pretrained("cl100k_base")
         wc = Tokenizer.from_pretrained("cl100k_base")
         assert hf.get_vocab_size() == wc.vocab_size
+
+
+# ===================================================================
+# Cross-validation against real tiktoken
+# ===================================================================
+
+import tiktoken as _real_tiktoken
+
+
+_CROSS_VALIDATION_TEXTS = [
+    "hello world",
+    "The quick brown fox jumps over the lazy dog.",
+    "  leading and trailing spaces  ",
+    "line\nbreaks\n\nand\ttabs",
+    "Unicode: \u00e9\u00e0\u00fc \u4f60\u597d \U0001f680",
+    "",
+    "a" * 1000,
+    "contractions: I'm can't won't they're",
+    "code: def foo(x): return x + 1",
+    "numbers 12345 and symbols !@#$%^&*()",
+]
+
+
+class TestTiktokenCrossValidation:
+    """Compare our tiktoken compat layer against real tiktoken output."""
+
+    @pytest.fixture(
+        scope="class",
+        params=["cl100k_base", "o200k_base"],
+    )
+    def encoding_pair(self, request):
+        name = request.param
+        ours = tiktoken.get_encoding(name)
+        real = _real_tiktoken.get_encoding(name)
+        return ours, real
+
+    @pytest.mark.parametrize("text", _CROSS_VALIDATION_TEXTS)
+    def test_encode_matches(self, encoding_pair, text):
+        ours, real = encoding_pair
+        assert ours.encode(text) == real.encode(text)
+
+    @pytest.mark.parametrize("text", _CROSS_VALIDATION_TEXTS)
+    def test_encode_ordinary_matches(self, encoding_pair, text):
+        ours, real = encoding_pair
+        assert ours.encode_ordinary(text) == real.encode_ordinary(text)
+
+    @pytest.mark.parametrize("text", _CROSS_VALIDATION_TEXTS)
+    def test_decode_matches(self, encoding_pair, text):
+        ours, real = encoding_pair
+        tokens = real.encode(text)
+        assert ours.decode(tokens) == real.decode(tokens)
+
+    def test_n_vocab_close(self, encoding_pair):
+        ours, real = encoding_pair
+        # wordchipper may not expose all special tokens that tiktoken includes,
+        # so our n_vocab can be slightly smaller
+        assert ours.n_vocab <= real.n_vocab
+        assert ours.n_vocab >= real.n_vocab - 100
+
+    @pytest.mark.parametrize(
+        "model_name",
+        ["gpt-4o", "gpt-4", "gpt-3.5-turbo", "o3-mini"],
+    )
+    def test_encoding_for_model_matches(self, model_name):
+        ours = tiktoken.encoding_for_model(model_name)
+        real = _real_tiktoken.encoding_for_model(model_name)
+        assert ours.name == real.name

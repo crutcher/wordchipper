@@ -47,8 +47,12 @@ class Tokenizer:
         self._tok = inner
 
     @classmethod
-    def from_pretrained(cls, identifier: str, **_kwargs: Any) -> Tokenizer:
+    def from_pretrained(cls, identifier: str, **kwargs: Any) -> Tokenizer:
         """Load a tokenizer by HuggingFace identifier or bare encoding name."""
+        if kwargs:
+            raise NotImplementedError(
+                f"extra keyword arguments are not supported: {', '.join(kwargs)}"
+            )
         name = HF_TO_WORDCHIPPER.get(identifier, identifier)
         return cls(_WCTokenizer.from_pretrained(name))
 
@@ -64,8 +68,15 @@ class Tokenizer:
         """Encode a string, returning an :class:`Encoding` with ids and tokens.
 
         ``pair``, ``is_pretokenized``, and ``add_special_tokens`` are accepted
-        for API compatibility but have no effect.
+        for API compatibility but raise :class:`NotImplementedError` if set to
+        non-default values.
         """
+        if pair is not None:
+            raise NotImplementedError("pair encoding is not supported")
+        if is_pretokenized:
+            raise NotImplementedError("is_pretokenized is not supported")
+        if not add_special_tokens:
+            raise NotImplementedError("add_special_tokens=False is not supported")
         ids = self._tok.encode(sequence)
         tokens = [self._tok.id_to_token(i) or "" for i in ids]
         return Encoding(ids=ids, tokens=tokens)
@@ -76,6 +87,10 @@ class Tokenizer:
         is_pretokenized: bool = False,
         add_special_tokens: bool = True,
     ) -> list[Encoding]:
+        if is_pretokenized:
+            raise NotImplementedError("is_pretokenized is not supported")
+        if not add_special_tokens:
+            raise NotImplementedError("add_special_tokens=False is not supported")
         all_ids = self._tok.encode_batch(input)
         result = []
         for ids in all_ids:
@@ -90,9 +105,11 @@ class Tokenizer:
     ) -> str:
         """Decode token IDs to a string.
 
-        ``skip_special_tokens`` is accepted for API compatibility but has no
-        effect.
+        ``skip_special_tokens`` is accepted for API compatibility but raises
+        :class:`NotImplementedError` if set to ``False``.
         """
+        if not skip_special_tokens:
+            raise NotImplementedError("skip_special_tokens=False is not supported")
         return self._tok.decode(ids)
 
     def decode_batch(
@@ -100,11 +117,15 @@ class Tokenizer:
         sequences: list[list[int]],
         skip_special_tokens: bool = True,
     ) -> list[str]:
+        if not skip_special_tokens:
+            raise NotImplementedError("skip_special_tokens=False is not supported")
         return self._tok.decode_batch(sequences)
 
     # -- vocab inspection ----------------------------------------------------
 
     def get_vocab_size(self, with_added_tokens: bool = True) -> int:
+        if not with_added_tokens:
+            raise NotImplementedError("with_added_tokens=False is not supported")
         return self._tok.vocab_size
 
     def token_to_id(self, token: str) -> int | None:

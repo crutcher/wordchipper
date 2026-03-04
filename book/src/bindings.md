@@ -85,7 +85,9 @@ enc = tiktoken.encoding_for_model("gpt-4o")
 
 The `Encoding` class exposes `encode`, `encode_ordinary`, `encode_batch`, `decode`,
 `decode_batch`, and properties `name`, `n_vocab`, `max_token_value`, `eot_token`, and
-`special_tokens_set`.
+`special_tokens_set`. Parameters accepted for API compatibility but not implemented
+(`allowed_special`, `disallowed_special`) raise `NotImplementedError` when set to
+non-default values.
 
 **HuggingFace tokenizers**
 
@@ -106,7 +108,9 @@ text = tok.decode(output.ids)
 The `Tokenizer` class exposes `encode`, `encode_batch`, `decode`, `decode_batch`,
 `get_vocab_size`, `token_to_id`, and `id_to_token`. Known HuggingFace identifiers
 (e.g. `Xenova/gpt-4o`) are mapped automatically; bare encoding names like `cl100k_base`
-also work.
+also work. Parameters accepted for API compatibility but not implemented (e.g.
+`pair`, `is_pretokenized`, `add_special_tokens=False`, `skip_special_tokens=False`)
+raise `NotImplementedError` when set to non-default values.
 
 ### Building from source
 
