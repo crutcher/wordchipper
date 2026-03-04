@@ -183,6 +183,24 @@ mod tests {
     }
 
     #[test]
+    fn test_find_span_iter_empty() {
+        let lexer = R50kLexer;
+        let spans: Vec<_> = lexer.find_span_iter("").collect();
+        assert!(spans.is_empty());
+    }
+
+    #[test]
+    fn test_find_span_iter_basic() {
+        let lexer = R50kLexer;
+        let spans: Vec<_> = lexer.find_span_iter("hello world").collect();
+        assert!(!spans.is_empty());
+        assert_eq!(spans[0].start, 0);
+        for pair in spans.windows(2) {
+            assert!(pair[0].end <= pair[1].start);
+        }
+    }
+
+    #[test]
     fn test_logos_camel_case() {
         let s = spanner(R50kLexer);
         // r50k uses \p{L}+ so CamelCase is one token.
