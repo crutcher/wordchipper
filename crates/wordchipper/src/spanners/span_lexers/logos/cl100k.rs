@@ -1,10 +1,4 @@
-//! # cl100k Logos Lexer
-//!
-//! Compile-time DFA lexer for the `cl100k_base` pattern (GPT-4, GPT-3.5).
-//!
-//! This serves as a reference implementation showing how to build an
-//! accelerated lexer using [`Gpt2FamilyTokenRole`] and
-//! [`for_each_classified_span`].
+//! Logos DFA lexer for the `cl100k_base` pattern (GPT-4, GPT-3.5).
 
 use logos::Logos;
 
@@ -14,17 +8,7 @@ use super::gpt2_family::{
 };
 use crate::pretrained::openai::OA_CL100K_BASE_PATTERN;
 
-/// Logos token for the `cl100k_base` pattern.
-///
-/// | Regex branch                      | Logos variant  |
-/// |-----------------------------------|----------------|
-/// | `'(?i:[sdmt]\|ll\|ve\|re)`        | Contraction      |
-/// | `\p{L}+`                          | Letters          |
-/// | `[^\r\n\p{L}\p{N}]\p{L}+`        | PrefixedLetters  |
-/// | `\p{N}{1,3}`                      | Digits         |
-/// | ` ?[^\s\p{L}\p{N}]+[\r\n]*`       | Punctuation    |
-/// | `\s*[\r\n]`                       | Newline        |
-/// | `\s+(?!\S)` / `\s`                | Whitespace     |
+/// Logos token variants for `cl100k_base`.
 #[derive(Logos, Debug, PartialEq, Clone)]
 pub(crate) enum Cl100kToken {
     #[regex(r"'[sStTdDmM]|'[rR][eE]|'[vV][eE]|'[lL][lL]", priority = 5)]
@@ -76,12 +60,7 @@ impl Gpt2FamilyLogos<'_> for Cl100kToken {
 }
 
 logos_lexer! {
-    /// A [`SpanLexer`](crate::spanners::span_lexers::SpanLexer) for the
-    /// `cl100k_base` pattern (GPT-4, GPT-3.5).
-    ///
-    /// Uses a compile-time logos DFA for word scanning.
-    ///
-    /// Only matches the regex spans; does not match the special tokens.
+    /// Logos DFA word scanner for `cl100k_base` (GPT-4, GPT-3.5).
     pub struct Cl100kLexer;
     token = Cl100kToken;
     pattern = OA_CL100K_BASE_PATTERN;

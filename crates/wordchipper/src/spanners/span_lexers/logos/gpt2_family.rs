@@ -1,10 +1,5 @@
-//! # Implementation Utils for GPT-2 family regex patterns.
-//!
-//! Classification of logos tokens for whitespace post-processing.
-//!
-//! When building a custom accelerated lexer, each logos token variant maps
-//! to a [`Gpt2FamilyTokenRole`] that tells the post-processing engine how the
-//! token interacts with preceding whitespace.
+//! Token classification and whitespace post-processing for GPT-2 family
+//! regex patterns.
 
 use core::ops::Range;
 
@@ -21,24 +16,11 @@ use crate::spanners::SpanRef;
 
 /// How a logos token interacts with whitespace splitting.
 ///
-/// The `OpenAI` regex patterns use `\s+(?!\S)` which backtracks so the last
-/// whitespace character can be absorbed as a prefix by the next pattern
-/// (e.g. `[^\r\n\p{L}\p{N}]?\p{L}+`). Logos DFA can't express lookaheads,
-/// so we post-process the token stream: when a [`Whitespace`](Self::Whitespace)
-/// token precedes certain token kinds, the last character merges into the
-/// next span; before other tokens, it becomes a standalone word.
-///
-/// # Example
-///
-/// ```
-/// use wordchipper::spanners::span_lexers::logos::gpt2_family::Gpt2FamilyTokenRole;
-///
-/// // Map your logos token to a role:
-/// let role = Gpt2FamilyTokenRole::Word {
-///     check_contraction: false,
-///     first_char_is_letter: true,
-/// };
-/// ```
+/// The OpenAI regex patterns use `\s+(?!\S)` which backtracks so the last
+/// whitespace character can be absorbed as a prefix by the next pattern.
+/// Logos DFA can't express lookaheads, so we post-process: when a
+/// [`Whitespace`](Self::Whitespace) token precedes certain token kinds,
+/// the last character merges into the next span.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Gpt2FamilyTokenRole {
     /// Horizontal whitespace. Buffered; last char may split to next token.
@@ -51,60 +33,43 @@ pub enum Gpt2FamilyTokenRole {
     Word {
         /// Whether to check for and split contraction prefixes.
         check_contraction: bool,
-        /// Whether the first character is a Unicode Letter (`\p{L}`).
-        ///
-        /// When true, preceding whitespace is merged into this span.
-        /// When false, the token starts with a non-letter prefix (e.g. Mark,
-        /// apostrophe, symbol) so whitespace stays separate.
-        ///
-        /// This replaces the runtime `char::is_alphabetic` check which is
-        /// incorrect for combining marks (Mc/Mn) that have the Unicode
-        /// Alphabetic derived property but are NOT in `\p{L}`.
+        /// Whether the first character is `\p{L}`. When true, preceding
+        /// whitespace merges into this span. When false (non-letter prefix),
+        /// whitespace stays separate.
         first_char_is_letter: bool,
     },
     /// Token that never absorbs whitespace (digits, standalone punctuation).
     Standalone,
-    /// Newline-containing whitespace (e.g. `\s*[\r\n]+`).
-    ///
-    /// Buffered separately from [`Whitespace`](Self::Whitespace). At end of
-    /// string, adjacent Newline + Whitespace merge into one span (matching
-    /// the regex `\s++$` behavior). Mid-string, the newline is emitted as
-    /// its own span (matching `\s*[\r\n]`).
+    /// Newline-containing whitespace (`\s*[\r\n]+`). Buffered separately;
+    /// at end of string, adjacent Newline + Whitespace merge (regex `\s++$`).
     Newline,
     /// Unrecognized bytes.
     Gap,
 }
 
-/// Public trait for DFA's which have a `TokenRole`.
+/// Maps a logos token enum to [`Gpt2FamilyTokenRole`].
 pub trait Gpt2FamilyLogos<'a>: Logos<'a> {
-    /// The role of this token.
+    /// Returns the role for this token variant.
     fn family_role(&self) -> Gpt2FamilyTokenRole;
 }
 
-/// Check if a byte slice starts with a cl100k contraction pattern
-/// (`'s`, `'t`, `'d`, `'m`, `'re`, `'ve`, `'ll`, case-insensitive)
-/// followed by additional bytes. Returns the split point
-/// (contraction length) if there are trailing bytes after the
-/// contraction, or `None` if the input is just the contraction alone.
+/// If `bytes` starts with a contraction prefix (`'s`, `'t`, `'d`, `'m`,
+/// `'re`, `'ve`, `'ll`, case-insensitive) followed by more bytes, returns
+/// the split point. Returns `None` if there are no trailing bytes or no
+/// contraction prefix.
 ///
-/// This function does not verify that trailing bytes are letters;
-/// callers are expected to only pass word/letter tokens (as the
-/// engine does via `TokenRole::Word`).
-///
-/// This is useful when building cl100k-compatible lexers where logos
-/// longest-match picks `'The` as one Letters token, but the regex
-/// first-match would pick Contraction `'T` then Letters `he`.
+/// Used for cl100k where logos longest-match picks `'The` as one token
+/// but the regex first-match would split it as `'T` + `he`.
 ///
 /// # Examples
 ///
 /// ```
 /// use wordchipper::spanners::span_lexers::logos::gpt2_family::contraction_split;
 ///
-/// assert_eq!(contraction_split(b"'There"), Some(2)); // split after 'T
-/// assert_eq!(contraction_split(b"'llama"), Some(3)); // split after 'll
-/// assert_eq!(contraction_split(b"'t"), None); // just 't, nothing after
-/// assert_eq!(contraction_split(b"'re"), None); // just 're, nothing after
-/// assert_eq!(contraction_split(b"hello"), None); // no apostrophe
+/// assert_eq!(contraction_split(b"'There"), Some(2));
+/// assert_eq!(contraction_split(b"'llama"), Some(3));
+/// assert_eq!(contraction_split(b"'t"), None);
+/// assert_eq!(contraction_split(b"hello"), None);
 /// ```
 pub fn contraction_split(bytes: &[u8]) -> Option<usize> {
     if bytes.len() < 3 || bytes[0] != b'\'' {
@@ -412,34 +377,10 @@ where
     }
 }
 
-/// Iterate classified logos tokens and emit Word/Gap spans with
-/// post-processing corrections for regex compatibility:
+/// Emit `SpanRef::Word` and `SpanRef::Gap` spans from classified tokens.
 ///
-/// 1. **Whitespace splitting**: the regex `\s+(?!\S)` backtracks so the last
-///    whitespace byte becomes a prefix of the next word. We buffer Whitespace
-///    tokens and split off the last byte when followed by certain tokens.
-///
-/// 2. **Prefix handling**: with 2+ whitespace chars before a token starting
-///    with a non-letter, we merge the last whitespace byte + the non-letter
-///    prefix into one span (matching how Punctuation's ` ?` absorbs a space in
-///    the regex). With 1 whitespace char, it stays standalone.
-///
-/// 3. **Contraction splitting** (when `check_contraction` is true): regex
-///    first-match picks Contraction `'T` over Letters `'The`, but logos
-///    longest-match picks Letters. We detect the contraction prefix and split
-///    the token.
-///
-/// # Arguments
-///
-/// * `iter` - iterator of `(TokenRole, Range<usize>)` pairs from logos
-/// * `text` - the text being scanned (ranges index into this)
-/// * `offset` - byte offset added to emitted span ranges
-/// * `f` - callback; return `false` to halt early
-///
-/// # Returns
-///
-/// `(completed, consumed)` where `consumed` is the byte count of accepted
-/// spans and `completed` indicates all spans were accepted.
+/// Thin wrapper over [`Gpt2FamilySpanIter`]: iterates word ranges and fills
+/// uncovered byte ranges with `Gap` spans. Returns `(completed, consumed)`.
 ///
 /// # Example
 ///
@@ -460,15 +401,15 @@ where
 ///             first_char_is_letter: true,
 ///         },
 ///         0..5,
-///     ), // "hello"
-///     (Gpt2FamilyTokenRole::Whitespace, 5..6), // " "
+///     ),
+///     (Gpt2FamilyTokenRole::Whitespace, 5..6),
 ///     (
 ///         Gpt2FamilyTokenRole::Word {
 ///             check_contraction: false,
 ///             first_char_is_letter: true,
 ///         },
 ///         6..11,
-///     ), // "world"
+///     ),
 /// ];
 ///
 /// let mut spans = Vec::new();
@@ -477,7 +418,7 @@ where
 ///     true
 /// });
 ///
-/// assert_eq!(spans, vec![SpanRef::Word(0..5), SpanRef::Word(5..11),]);
+/// assert_eq!(spans, vec![SpanRef::Word(0..5), SpanRef::Word(5..11)]);
 /// ```
 pub fn for_each_classified_span(
     iter: impl Iterator<Item = (Gpt2FamilyTokenRole, Range<usize>)>,

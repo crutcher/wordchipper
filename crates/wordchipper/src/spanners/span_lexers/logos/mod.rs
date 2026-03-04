@@ -1,22 +1,11 @@
-//! # Logos-based lexers
+//! Compile-time DFA word scanners using [`logos`](https://docs.rs/logos).
 //!
-//! Composable building blocks for compile-time DFA word scanners using
-//! the [`logos`](https://docs.rs/logos) crate.
-//!
-//! ## Building a custom lexer
-//!
-//! 1. Define a `#[derive(Logos)]` enum with your token patterns.
-//! 2. Map each variant to a [`Gpt2FamilyTokenRole`] (via a `role()` method or
-//!    similar).
-//! 3. Implement [`SpanLexer`](super::SpanLexer) by feeding the token stream to
-//!    [`for_each_classified_span`].
-//!
-//! See [`Cl100kLexer`] and [`O200kLexer`] for reference implementations.
+//! Each lexer module defines a `#[derive(Logos)]` token enum, maps variants
+//! to [`gpt2_family::Gpt2FamilyTokenRole`], and uses the `logos_lexer!` macro
+//! to generate the `SpanLexer` impl.
 
-/// Define a [`SpanLexer`](super::SpanLexer) backed by a logos token enum.
-///
-/// Generates a struct, its `SpanLexer` impl (using [`logos_span_iter`]),
-/// and an [`inventory::submit!`] registration for the regex accelerator.
+/// Generate a `SpanLexer` struct + `inventory` registration from a logos
+/// token enum and a pattern constant.
 macro_rules! logos_lexer {
     (
         $(#[$meta:meta])*

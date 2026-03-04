@@ -1,10 +1,4 @@
-//! # r50k Logos Lexer
-//!
-//! Compile-time DFA lexer for the `r50k_base` pattern (GPT-2).
-//!
-//! This serves as a reference implementation showing how to build an
-//! accelerated lexer using [`Gpt2FamilyTokenRole`] and
-//! [`for_each_classified_span`].
+//! Logos DFA lexer for the `r50k_base` pattern (GPT-2).
 
 use logos::Logos;
 
@@ -14,17 +8,7 @@ use super::gpt2_family::{
 };
 use crate::pretrained::openai::OA_R50K_BASE_PATTERN;
 
-/// Logos token for the `r50k_base` pattern.
-///
-/// | Regex branch           | Logos variant |
-/// |------------------------|---------------|
-/// | `'(?:[sdmt]|ll|ve|re)` | Contraction   |
-/// | ` ?\p{L}++`            | Letters       |
-/// | ` ?\p{N}++`            | Digits        |
-/// | ` ?[^\s\p{L}\p{N}]++`  | Punctuation   |
-/// | `\s++$`                | Whitespace    |
-/// | `\s+(?!\S)`            |               |
-/// | `\s`                   |               |
+/// Logos token variants for `r50k_base`.
 #[derive(Logos, Debug, PartialEq, Clone)]
 pub(crate) enum R50kToken {
     // Case-sensitive: the r50k regex `'(?:[sdmt]|ll|ve|re)` only matches
@@ -68,12 +52,7 @@ impl Gpt2FamilyLogos<'_> for R50kToken {
 }
 
 logos_lexer! {
-    /// A [`SpanLexer`](crate::spanners::span_lexers::SpanLexer) for the
-    /// `r50k_base` pattern (GPT-2).
-    ///
-    /// Uses a compile-time logos DFA for word scanning.
-    ///
-    /// Only matches the regex spans; does not match the special tokens.
+    /// Logos DFA word scanner for `r50k_base` (GPT-2).
     pub struct R50kLexer;
     token = R50kToken;
     pattern = OA_R50K_BASE_PATTERN;

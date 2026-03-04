@@ -1,10 +1,4 @@
-//! # o200k Logos Lexer
-//!
-//! Compile-time DFA lexer for the `o200k_base` pattern (GPT-4o).
-//!
-//! This serves as a reference implementation showing how to build an
-//! accelerated lexer using [`Gpt2FamilyTokenRole`] and
-//! [`for_each_classified_span`].
+//! Logos DFA lexer for the `o200k_base` pattern (GPT-4o).
 
 use logos::Logos;
 
@@ -21,34 +15,13 @@ use crate::pretrained::openai::OA_O200K_BASE_PATTERN;
 //
 // These are inlined below because logos derive macros require string literals.
 
-/// Logos token for the `o200k_base` pattern.
+/// Logos token variants for `o200k_base`.
 ///
-/// Key difference from cl100k: contractions are attached to the preceding word.
-/// The two word regex branches are split into separate variants (`WordLower`
-/// and `WordUpper`) to avoid DFA longest-match merging characters like `º` (Lo)
-/// with following uppercase letters. `WordUpper` restricts its leading chars to
-/// `[\p{Lu}\p{Lt}]` so Lo/Lm/M chars can only match via `WordLower`.
-///
-/// For o200k parity, mark chars (`\p{M}`) are excluded from the "prefix"
-/// entrypoint of prefixed-word/punctuation variants. In the regex alternation,
-/// a leading mark is consumed by branch 1 (`...[\p{Ll}\p{Lm}\p{Lo}\p{M}]+`)
-/// before later branches, but Logos chooses longest-match. Excluding `\p{M}`
-/// from those entrypoints preserves regex branch precedence while keeping DFA
-/// tokenization fast.
-///
-/// | Regex branch                                         | Logos variant  |
-/// |------------------------------------------------------|----------------|
-/// | `[^\r\n\p{L}\p{N}]?[UPPER]*[LOWER]+CONTRACTION?`     | `WordLower`      |
-/// | `[^\r\n\p{L}\p{N}]?[Lu,Lt]+[LOWER]*CONTRACTION?`     | `WordUpper`      |
-/// | `\p{N}{1,3}`                                         | Digits         |
-/// | ` ?[^\s\p{L}\p{N}]+[\r\n/]*`                         | Punctuation*   |
-/// | `\s*[\r\n]+`                                         | Newline        |
-/// | `\s+`                                                | Whitespace     |
-///
-/// `*` Implemented as two DFA variants:
-/// - `PunctuationSpaced`: leading ASCII space + punctuation body.
-/// - `PunctuationBare`: no leading space with non-Mark 2nd-core-char path.
-/// - `PunctuationBareMark`: no leading space, `punct + mark+` path.
+/// Unlike cl100k, contractions attach to the preceding word. Word branches
+/// are split into `WordLower`/`WordUpper` to prevent DFA longest-match from
+/// merging Lo/Lm chars (e.g. `º`) with following uppercase letters.
+/// `\p{M}` is excluded from prefix entrypoints to preserve regex branch
+/// precedence.
 #[derive(Logos, Debug, PartialEq, Clone)]
 pub(crate) enum O200kToken {
     // Regex Branch 1: UPPER*LOWER+ (no prefix, first char is letter/mark).
@@ -126,12 +99,7 @@ impl Gpt2FamilyLogos<'_> for O200kToken {
 }
 
 logos_lexer! {
-    /// A [`SpanLexer`](crate::spanners::span_lexers::SpanLexer) for the
-    /// `o200k_base` pattern (GPT-4o).
-    ///
-    /// Uses a compile-time logos DFA for word scanning.
-    ///
-    /// Only matches the regex spans; does not match the special tokens.
+    /// Logos DFA word scanner for `o200k_base` (GPT-4o).
     pub struct O200kLexer;
     token = O200kToken;
     pattern = OA_O200K_BASE_PATTERN;
