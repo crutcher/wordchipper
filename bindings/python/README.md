@@ -43,6 +43,29 @@ tok.get_special_tokens()
 tok.save_base64_vocab("vocab.tiktoken")
 ```
 
+## Compatibility wrappers
+
+Drop-in replacements for `tiktoken` and HuggingFace `tokenizers`. Change one import
+line and the rest of your code stays the same:
+
+```python
+# tiktoken compat
+from wordchipper.compat import tiktoken
+enc = tiktoken.get_encoding("cl100k_base")
+enc = tiktoken.encoding_for_model("gpt-4o")
+tokens = enc.encode("hello world")
+
+# HuggingFace tokenizers compat
+from wordchipper.compat.tokenizers import Tokenizer
+tok = Tokenizer.from_pretrained("Xenova/gpt-4o")
+output = tok.encode("hello world")
+output.ids      # [24912, 2375]
+```
+
+Parameters that are accepted for API compatibility but not implemented (e.g.
+`allowed_special`, `disallowed_special`, `is_pretokenized`) will raise
+`NotImplementedError` when set to non-default values.
+
 ## Development
 
 Requires [Rust](https://rustup.rs/) and [uv](https://docs.astral.sh/uv/).
