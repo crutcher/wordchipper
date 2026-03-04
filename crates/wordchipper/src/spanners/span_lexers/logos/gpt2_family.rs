@@ -134,7 +134,7 @@ where
         &mut self,
         range: Range<usize>,
     ) {
-        self.ring.push(range);
+        self.ring.enqueue(range);
     }
 
     fn pop(&mut self) -> Option<Range<usize>> {
