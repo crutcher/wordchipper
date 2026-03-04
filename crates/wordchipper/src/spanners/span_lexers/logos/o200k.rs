@@ -111,6 +111,7 @@ mod tests {
     use crate::{
         alloc::{
             sync::Arc,
+            vec,
             vec::Vec,
         },
         spanners::{
