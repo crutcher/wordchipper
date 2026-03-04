@@ -6,26 +6,13 @@
 //! accelerated lexer using [`Gpt2FamilyTokenRole`] and
 //! [`for_each_classified_span`].
 
-use core::ops::Range;
-
 use logos::Logos;
 
-use crate::{
-    alloc::{
-        boxed::Box,
-        sync::Arc,
-    },
-    pretrained::openai::OA_O200K_BASE_PATTERN,
-    spanners::span_lexers::{
-        SpanLexer,
-        accelerators::RegexAcceleratorHook,
-        logos::gpt2_family::{
-            Gpt2FamilyLogos,
-            Gpt2FamilySpanIter,
-            Gpt2FamilyTokenRole,
-        },
-    },
+use super::gpt2_family::{
+    Gpt2FamilyLogos,
+    Gpt2FamilyTokenRole,
 };
+use crate::pretrained::openai::OA_O200K_BASE_PATTERN;
 // Shorthand aliases for the character classes used in o200k:
 //   UPPER      = [\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]
 //   LOWER      = [\p{Ll}\p{Lm}\p{Lo}\p{M}]
@@ -138,28 +125,16 @@ impl Gpt2FamilyLogos<'_> for O200kToken {
     }
 }
 
-/// A [`SpanLexer`] for the `o200k_base` pattern (GPT-4o).
-///
-/// Uses a compile-time logos DFA for word scanning.
-///
-/// Only matches the regex spans; does not match the special tokens.
-#[derive(Clone, Debug)]
-pub struct O200kLexer;
-
-inventory::submit! {
-    RegexAcceleratorHook::new(OA_O200K_BASE_PATTERN,|| Arc::new(O200kLexer))
-}
-
-impl SpanLexer for O200kLexer {
-    fn find_span_iter<'a>(
-        &'a self,
-        text: &'a str,
-    ) -> Box<dyn Iterator<Item = Range<usize>> + 'a> {
-        Box::new(Gpt2FamilySpanIter::new(
-            text,
-            O200kToken::lexer(text).spanned(),
-        ))
-    }
+logos_lexer! {
+    /// A [`SpanLexer`](crate::spanners::span_lexers::SpanLexer) for the
+    /// `o200k_base` pattern (GPT-4o).
+    ///
+    /// Uses a compile-time logos DFA for word scanning.
+    ///
+    /// Only matches the regex spans; does not match the special tokens.
+    pub struct O200kLexer;
+    token = O200kToken;
+    pattern = OA_O200K_BASE_PATTERN;
 }
 
 #[cfg(test)]
@@ -167,13 +142,17 @@ mod tests {
     use super::*;
     use crate::{
         alloc::{
+            boxed::Box,
             sync::Arc,
             vec::Vec,
         },
         spanners::{
             SpanRef,
             TextSpanner,
-            span_lexers::LexerTextSpanner,
+            span_lexers::{
+                LexerTextSpanner,
+                SpanLexer,
+            },
         },
     };
 
@@ -374,13 +353,10 @@ mod tests {
     // -------------------------------------------------------------------
 
     /// Collect Word ranges from for_each_classified_span (the oracle).
-    fn oracle_word_ranges(text: &str) -> Vec<Range<usize>> {
-        use crate::spanners::span_lexers::logos::gpt2_family::{
-            Gpt2FamilyTokenRole,
-            for_each_classified_span,
-        };
+    fn oracle_word_ranges(text: &str) -> Vec<core::ops::Range<usize>> {
+        use crate::spanners::span_lexers::logos::gpt2_family::for_each_classified_span;
 
-        let tokens: Vec<(Gpt2FamilyTokenRole, Range<usize>)> = O200kToken::lexer(text)
+        let tokens: Vec<_> = O200kToken::lexer(text)
             .spanned()
             .map(|(res, range)| {
                 let role = match res {
@@ -408,10 +384,10 @@ mod tests {
         /// the for_each_classified_span oracle for any input.
         #[test]
         fn iter_matches_oracle(text in "\\PC{0,200}") {
-            use crate::spanners::span_lexers::logos::gpt2_family::Gpt2FamilySpanIter;
+            use crate::spanners::span_lexers::logos::gpt2_family::logos_span_iter;
 
-            let iter_ranges: Vec<Range<usize>> =
-                Gpt2FamilySpanIter::new(text.as_str(), O200kToken::lexer(&text).spanned())
+            let iter_ranges: Vec<core::ops::Range<usize>> =
+                logos_span_iter(text.as_str(), O200kToken::lexer(&text).spanned())
                     .collect();
             let oracle_ranges = oracle_word_ranges(&text);
             proptest::prop_assert_eq!(
