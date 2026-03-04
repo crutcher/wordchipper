@@ -3,9 +3,15 @@
 
 use core::ops::Range;
 
-use logos::{Logos, SpannedIter};
+use logos::{
+    Logos,
+    SpannedIter,
+};
 use ringbuffer::RingBuffer;
-use unicode_general_category::{GeneralCategory, get_general_category};
+use unicode_general_category::{
+    GeneralCategory,
+    get_general_category,
+};
 
 use crate::spanners::SpanRef;
 
@@ -116,7 +122,7 @@ pub fn contraction_split(bytes: &[u8]) -> Option<usize> {
 ///
 /// Uses `ConstGenericRingBuffer` (power-of-2 bitmask indexing, ~10% faster
 /// than `ringbuf::StaticRb` which uses atomics). Max spans per iteration is
-/// 5 (pending_newline flush + ws_split prefix + punct/word emit +
+/// 5 (`pending_newline` flush + `ws_split` prefix + punct/word emit +
 /// contraction split = 1+1+1+2).
 pub struct Gpt2FamilySpanIter<'source, I> {
     text: &'source str,
@@ -555,7 +561,10 @@ mod tests {
     use proptest::prelude::*;
 
     use super::*;
-    use crate::{alloc::vec::Vec, spanners::span_lexers::logos::gpt2_family::Gpt2FamilyTokenRole};
+    use crate::{
+        alloc::vec::Vec,
+        spanners::span_lexers::logos::gpt2_family::Gpt2FamilyTokenRole,
+    };
 
     /// Collect spans from for_each_classified_span for testing.
     fn collect_spans(

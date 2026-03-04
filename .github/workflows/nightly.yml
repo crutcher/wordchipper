@@ -1,0 +1,30 @@
+name: Nightly Lexer Equivalence
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  lexer-equivalence-k6:
+    name: Lexer Equivalence (k=6)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup toolchain install stable --profile minimal
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test -p lexer-equivalence --release --test equivalence
+        env:
+          LEXER_EQUIV_K: "6"
+      - name: File bug on failure
+        if: failure()
+        run: |
+          gh issue create \
+            --title "Nightly lexer equivalence failure (k=6)" \
+            --body "The nightly k=6 lexer equivalence test failed. See [run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})." \
+            --label bug
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

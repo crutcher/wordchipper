@@ -259,27 +259,45 @@ fn validate_representative_completeness() {
 // =====================================================================
 // FULL EQUIVALENCE TESTS
 //
-// Test all 29 representatives (k=1..5, ~21.2M inputs per lexer).
+// Test all 29 representatives up to k = LEXER_EQUIV_K (default 4).
 // Each k-level is parallelized via rayon.
+//
+// Recommended values:
+//   4  local dev   (~708K cases, instant)
+//   5  CI          (~20.5M cases, ~2 min release)
+//   6  nightly     (~594M cases, ~15 min release)
 // =====================================================================
+
+fn max_k() -> usize {
+    std::env::var("LEXER_EQUIV_K")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(4)
+}
 
 #[test]
 fn r50k_equivalence() {
     let ref_lexer = regex_lexer(OA_R50K_BASE_PATTERN);
     let test_lexer: Arc<dyn SpanLexer> = Arc::new(R50kLexer);
-    assert_k_tuple_equivalence("r50k", 6, REPRESENTATIVES, &*ref_lexer, &*test_lexer);
+    assert_k_tuple_equivalence("r50k", max_k(), REPRESENTATIVES, &*ref_lexer, &*test_lexer);
 }
 
 #[test]
 fn cl100k_equivalence() {
     let ref_lexer = regex_lexer(OA_CL100K_BASE_PATTERN);
     let test_lexer: Arc<dyn SpanLexer> = Arc::new(Cl100kLexer);
-    assert_k_tuple_equivalence("cl100k", 6, REPRESENTATIVES, &*ref_lexer, &*test_lexer);
+    assert_k_tuple_equivalence(
+        "cl100k",
+        max_k(),
+        REPRESENTATIVES,
+        &*ref_lexer,
+        &*test_lexer,
+    );
 }
 
 #[test]
 fn o200k_equivalence() {
     let ref_lexer = regex_lexer(OA_O200K_BASE_PATTERN);
     let test_lexer: Arc<dyn SpanLexer> = Arc::new(O200kLexer);
-    assert_k_tuple_equivalence("o200k", 6, REPRESENTATIVES, &*ref_lexer, &*test_lexer);
+    assert_k_tuple_equivalence("o200k", max_k(), REPRESENTATIVES, &*ref_lexer, &*test_lexer);
 }
