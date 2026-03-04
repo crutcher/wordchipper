@@ -1,14 +1,25 @@
 use std::sync::Arc;
 
 use lexer_equivalence::{
-    harness::{assert_k_tuple_equivalence, regex_lexer},
+    harness::{
+        assert_k_tuple_equivalence,
+        regex_lexer,
+    },
     representatives::REPRESENTATIVES,
 };
 use wordchipper::{
-    pretrained::openai::{OA_CL100K_BASE_PATTERN, OA_O200K_BASE_PATTERN, OA_R50K_BASE_PATTERN},
+    pretrained::openai::{
+        OA_CL100K_BASE_PATTERN,
+        OA_O200K_BASE_PATTERN,
+        OA_R50K_BASE_PATTERN,
+    },
     spanners::span_lexers::{
         SpanLexer,
-        logos::{cl100k::Cl100kLexer, o200k::O200kLexer, r50k::R50kLexer},
+        logos::{
+            cl100k::Cl100kLexer,
+            o200k::O200kLexer,
+            r50k::R50kLexer,
+        },
     },
 };
 

@@ -32,6 +32,23 @@ fn is_unicode_letter(c: char) -> bool {
     )
 }
 
+/// Byte length of the leading non-letter prefix in `token`.
+///
+/// Scans characters until finding `\p{L}` or end of string. Used for
+/// mark-extension: the DFA's `PrefixedWord` absorbs combining marks into
+/// the word token, but the regex punct branch `[^\s\p{L}\p{N}]+` keeps
+/// them with punctuation.
+fn non_letter_prefix_len(token: &str) -> usize {
+    let mut len = 0;
+    for c in token.chars() {
+        if is_unicode_letter(c) {
+            break;
+        }
+        len += c.len_utf8();
+    }
+    len
+}
+
 /// How a logos token interacts with whitespace splitting.
 ///
 /// The `OpenAI` regex patterns use `\s+(?!\S)` which backtracks so the last
@@ -325,32 +342,18 @@ where
                                 first_char_is_letter: false,
                                 check_contraction,
                             } = role
+                            && !self.text[start..].starts_with(char::is_whitespace)
                         {
-                            let token_str =
-                                core::str::from_utf8(&bytes[start..end]).expect("valid UTF-8");
-                            let mut chars = token_str.chars();
-                            let first_char = chars.next();
-                            // Only absorb if prefix is in the punct
-                            // class [^\s\p{L}\p{N}]. Whitespace
-                            // prefixes start a new regex match.
-                            if first_char.is_some_and(|c| !c.is_whitespace()) {
-                                let mut prefix_len = first_char.unwrap().len_utf8();
-                                for c in chars {
-                                    if is_unicode_letter(c) {
-                                        break;
-                                    }
-                                    prefix_len += c.len_utf8();
-                                }
-                                if start + prefix_len >= end {
-                                    self.pending_punct = Some(pp.start..end);
-                                    self.last = end;
-                                    continue;
-                                }
-                                emit!(pp.start..start + prefix_len);
-                                emit_absorbing!(start + prefix_len, end, check_contraction);
+                            let prefix_len = non_letter_prefix_len(&self.text[start..end]);
+                            if start + prefix_len >= end {
+                                self.pending_punct = Some(pp.start..end);
                                 self.last = end;
                                 continue;
                             }
+                            emit!(pp.start..start + prefix_len);
+                            emit_absorbing!(start + prefix_len, end, check_contraction);
+                            self.last = end;
+                            continue;
                         }
                     }
                     // Not absorbed: flush pending_punct.
@@ -436,36 +439,16 @@ where
                                 emit_absorbing!(start, end, check_contraction);
                             } else if bytes[trim] == b' ' {
                                 // 2+ ws chars ending in ASCII space: merge
-                                // space + non-letter prefix into one span
-                                // (like Punctuation ` ?X`), then emit rest.
-                                //
-                                // Start with the first char as prefix (the
-                                // non-letter char from the DFA pattern). Then
-                                // extend past any combining marks: the regex
-                                // punctuation branch `[^\s\p{L}\p{N}]+`
-                                // captures marks after punctuation chars, but
-                                // the DFA's PrefixedWord absorbs them into the
-                                // word part instead.
-                                let token_str = core::str::from_utf8(&bytes[start..end])
-                                    .expect("text is &str bytes, always valid UTF-8");
-                                let mut chars = token_str.chars();
-                                let mut prefix_len = chars.next().map_or(1, char::len_utf8);
-                                for c in chars {
-                                    if is_unicode_letter(c) {
-                                        break;
-                                    }
-                                    prefix_len += c.len_utf8();
-                                }
+                                // space + non-letter prefix into one span.
+                                // Mark-extension extends past combining marks
+                                // that the DFA absorbed into the word token.
+                                let prefix_len = non_letter_prefix_len(&self.text[start..end]);
                                 if start + prefix_len < end {
-                                    // Mark-extension found letters after
-                                    // marks; emit punct prefix + word.
                                     emit!(trim..start + prefix_len);
                                     emit_absorbing!(start + prefix_len, end, check_contraction);
                                 } else {
-                                    // Entire token is marks, no letters.
-                                    // Buffer as punctuation to absorb
-                                    // trailing body/newline chars from
-                                    // subsequent DFA tokens.
+                                    // Entire token is non-letters. Buffer
+                                    // to absorb trailing body/newline chars.
                                     self.pending_punct = Some(trim..start + prefix_len);
                                     self.punct_in_trailer = false;
                                 }
