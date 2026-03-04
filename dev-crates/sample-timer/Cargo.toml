@@ -26,9 +26,10 @@ tokenizers = [
 
 [dependencies]
 wordchipper-data = { path = "../wordchipper-data" }
-wordchipper = { path = "../../crates/wordchipper", features = ["default"] }
+wordchipper = { path = "../../crates/wordchipper", features = ["default", "client"] }
 
 arrow = { workspace = true }
+strum = { workspace = true, features = ["derive"] }
 cfg-if = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 humansize = { workspace = true }

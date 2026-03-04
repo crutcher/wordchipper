@@ -28,14 +28,9 @@ The core additional user-facing crates are:
 
 ## Usage
 
-`wchipper <COMMAND>`
+See: [USAGE](USAGE.md) for detailed usage instructions.
 
-* `cat` - encode/decode text
-* `models <COMMAND>`
-    * `list`|`ls` - list available models
-* `train` - train a tokenizer
-
-### Usage: wchipper cat
+### Example: wchipper cat
 
 ```terminaloutput
 % echo "abc def" | wchipper cat --encode --model=openai::gpt2
@@ -46,9 +41,7 @@ The core additional user-facing crates are:
 abc def
 ```
 
-### Usage: wchipper models
-
-#### Usage: wchipper models list
+### Example: wchipper models list
 
 ```terminaloutput
  % wchipper models list                  
@@ -69,11 +62,14 @@ abc def
     GPT-5 `o200k_harmony` vocabulary
 ```
 
-### Usage: wchipper train
+### Example: wchipper train
 
 ```terminal
-% wchipper train --output=/tmp/tok.tokenizer \
-    --input-format=parquet  ~/Data/nanochat/dataset/*.parquet 
+% wchipper train \
+    --output=/tmp/tok.tokenizer \
+    --lexer-model=gpt2 \
+    --input-format=parquet \
+     ~/Data/nanochat/dataset/*.parquet 
 INFO Reading shards:
 INFO 0: /Users/crutcher/Data/nanochat/dataset/shard_00000.parquet
 INFO 1: /Users/crutcher/Data/nanochat/dataset/shard_00001.parquet

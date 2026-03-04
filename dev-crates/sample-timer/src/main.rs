@@ -1,7 +1,6 @@
 extern crate core;
 
 use std::{
-    fmt::{Display, Formatter},
     io,
     io::IsTerminal,
     iter::Iterator,
@@ -9,14 +8,29 @@ use std::{
     time::Duration,
 };
 
-use arrow::array::{Array, StringArray};
-use batch_stats::{BatchStats, EngineBatchTimes};
-use clap::{Parser, ValueEnum};
-use engines::{BoxError, EncDecEngine};
+use arrow::array::{
+    Array,
+    StringArray,
+};
+use batch_stats::{
+    BatchStats,
+    EngineBatchTimes,
+};
+use clap::{
+    Parser,
+    ValueEnum,
+};
+use engines::{
+    BoxError,
+    EncDecEngine,
+};
 use indicatif::ProgressBar;
 use rand::prelude::SliceRandom;
 use similar::TextDiff;
-use tiktoken_rs::{CoreBPE, Rank};
+use tiktoken_rs::{
+    CoreBPE,
+    Rank,
+};
 use tiktoken_support::TiktokenRsEngine;
 use wordchipper::{
     TokenEncoderOptions,
@@ -25,13 +39,18 @@ use wordchipper::{
     TokenizerOptions,
     UnifiedTokenVocab,
     disk_cache::WordchipperDiskCache,
-    pretrained::openai::OATokenizer,
     support::{
-        slices::{inner_slice_view, inner_str_view},
+        slices::{
+            inner_slice_view,
+            inner_str_view,
+        },
         timers::timeit,
     },
 };
-use wordchipper_data::dataset::{DatasetCache, DatasetCacheConfig};
+use wordchipper_data::dataset::{
+    DatasetCache,
+    DatasetCacheConfig,
+};
 use wordchipper_support::WordchipperEngine;
 
 mod engines;
@@ -43,7 +62,10 @@ mod wordchipper_support;
 #[cfg(feature = "tokenizers")]
 mod tokenizers_support;
 #[cfg(feature = "tokenizers")]
-use tokenizers_support::{TokenizersEngine, load_tokenizers_tok};
+use tokenizers_support::TokenizersEngine;
+#[cfg(feature = "tokenizers")]
+use tokenizers_support::load_tokenizers_tok;
+use wordchipper::spanners::span_lexers::accelerators::get_regex_accelerator;
 
 /// Wordchipper Encode/Decode Side-by-Side Benchmarks.
 #[derive(Parser, Debug)]
@@ -64,38 +86,38 @@ pub struct Args {
     pub batch_size: usize,
 
     /// The pretrained model to compare.
-    #[arg(long, default_value = "openai::o200k_harmony")]
+    #[arg(long, default_value = "openai:o200k_harmony")]
     pub model: ModelSelector,
 
     /// Ignore missing models?
-    /* hack: 3-state boolean */
+    // hack: 3-state boolean
     #[arg(long, num_args = 0..=1, default_value_t = true, default_missing_value = "true")]
     pub ignore_missing: bool,
 
     /// Test against tiktoken-rs?
-    /* hack: 3-state boolean */
+    // hack: 3-state boolean
     #[arg(long, num_args = 0..=1, default_value_t = true, default_missing_value = "true")]
     pub tiktoken: bool,
 
     #[cfg(feature = "tokenizers")]
     /// Test against HF tokenizers?
-    /* hack: 3-state boolean */
+    // hack: 3-state boolean
     #[arg(long, num_args = 0..=1, default_value_t = true, default_missing_value = "true")]
     pub tokenizers: bool,
 
     /// Time decoding as well.
-    /* hack: 3-state boolean */
+    // hack: 3-state boolean
     #[arg(long, num_args = 0..=1, default_value_t = false, default_missing_value = "true")]
     pub decode: bool,
 
     /// Validate encoders against each other, decoders against input.
-    /* hack: 3-state boolean */
+    // hack: 3-state boolean
     #[arg(long, num_args = 0..=1, default_value_t = true, default_missing_value = "true")]
     pub validate: bool,
 
     /// Re-span text when verifying?
     /// Slower, but works around span configs which leave gaps in the text.
-    /* hack: 3-state boolean */
+    // hack: 3-state boolean
     #[arg(long,
     num_args = 0..=1,
     default_value_t = false,
@@ -103,67 +125,57 @@ pub struct Args {
     pub respan_input_for_decode_check: bool,
 }
 
-#[derive(ValueEnum, Clone, Copy, Debug, PartialEq)]
+#[derive(ValueEnum, Clone, Copy, Debug, PartialEq, strum::EnumString, strum::Display)]
 pub enum ModelSelector {
     /// Select "`openai::gpt2`" model.
-    #[value(name = "openai::gpt2")]
+    #[value(name = "openai:gpt2")]
+    #[strum(serialize = "openai:gpt2")]
     OpenaiGpt2,
 
     /// Select "`openai::r50k_base`" model.
-    #[value(name = "openai::r50k_base")]
+    #[value(name = "openai:r50k_base")]
+    #[strum(serialize = "openai:r50k_base")]
     OpenaiR50kBase,
 
     /// Select "`openai::p50k_base`" model.
-    #[value(name = "openai::p50k_base")]
+    #[value(name = "openai:p50k_base")]
+    #[strum(serialize = "openai:p50k_base")]
     OpenaiP50kBase,
 
     /// Select "`openai::p50k_edit`" model.
-    #[value(name = "openai::p50k_edit")]
+    #[value(name = "openai:p50k_edit")]
+    #[strum(serialize = "openai:p50k_edit")]
     OpenaiP50kEdit,
 
     /// Select "`openai::cl100k_base`" model.
-    #[value(name = "openai::cl100k_base")]
+    #[value(name = "openai:cl100k_base")]
+    #[strum(serialize = "openai:cl100k_base")]
     OpenaiCl100kBase,
 
     /// Select "`openai::o200k_base`" model.
-    #[value(name = "openai::o200k_base")]
+    #[value(name = "openai:o200k_base")]
+    #[strum(serialize = "openai:o200k_base")]
     OpenaiO200kBase,
 
     /// Select "`openai::o200k_harmony`" model.
-    #[value(name = "openai::o200k_harmony")]
+    #[value(name = "openai:o200k_harmony")]
+    #[strum(serialize = "openai:o200k_harmony")]
     OpenaiO200kHarmony,
-}
-
-impl Display for ModelSelector {
-    fn fmt(
-        &self,
-        f: &mut Formatter<'_>,
-    ) -> std::fmt::Result {
-        write!(f, "{}", self.model())
-    }
 }
 
 impl ModelSelector {
     pub fn model(&self) -> String {
-        use ModelSelector::*;
-        use OATokenizer::*;
-        match self {
-            OpenaiGpt2 => "openai::gpt2".to_string(),
-            OpenaiR50kBase => format!("openai::{}", R50kBase),
-            OpenaiP50kBase => format!("openai::{}", P50kBase),
-            OpenaiP50kEdit => format!("openai::{}", P50kEdit),
-            OpenaiCl100kBase => format!("openai::{}", Cl100kBase),
-            OpenaiO200kBase => format!("openai::{}", O200kBase),
-            OpenaiO200kHarmony => format!("openai::{}", O200kHarmony),
-        }
+        self.to_string()
     }
 
     pub fn load_vocab<T: TokenType>(
         &self,
         disk_cache: &mut WordchipperDiskCache,
     ) -> Result<Arc<UnifiedTokenVocab<T>>, BoxError> {
-        let (_desc, vocab) = wordchipper::load_vocab(&self.model(), disk_cache)?;
-        let vocab = vocab.to_token_type().unwrap().into();
+        let vocab = wordchipper::load_vocab(&self.model(), disk_cache)?
+            .vocab()
+            .to_token_type()?
+            .into();
         Ok(vocab)
     }
 
@@ -193,9 +205,13 @@ fn main() -> Result<(), BoxError> {
 
     let mut disk_cache = WordchipperDiskCache::default();
     // println!("Loading wordchipper...");
-    let (_desc, vocab) = wordchipper::load_vocab(args.model.to_string().as_str(), &mut disk_cache)?;
+    let loaded = wordchipper::load_vocab(args.model.to_string().as_str(), &mut disk_cache)?;
 
-    // TODO: complete batch-observer inversion of control for additional tokenizer wrappers.
+    println!("Loaded: {:?}", loaded.description());
+    let vocab = loaded.vocab().clone();
+
+    // TODO: complete batch-observer inversion of control for additional tokenizer
+    // wrappers.
 
     let mut candidate_engines: Vec<Arc<dyn EncDecEngine<Rank>>> = Vec::new();
 
@@ -208,16 +224,7 @@ fn main() -> Result<(), BoxError> {
     ));
     candidate_engines.push(wc_engine.clone());
 
-    if [
-        ModelSelector::OpenaiR50kBase,
-        ModelSelector::OpenaiP50kBase,
-        ModelSelector::OpenaiP50kEdit,
-        ModelSelector::OpenaiCl100kBase,
-        ModelSelector::OpenaiO200kBase,
-        ModelSelector::OpenaiO200kHarmony,
-    ]
-    .contains(&args.model)
-    {
+    if get_regex_accelerator(vocab.spanning().pattern().as_str()).is_some() {
         let encoder = TokenEncoderOptions::default()
             .with_parallel(true)
             .with_accelerated_lexers(true)

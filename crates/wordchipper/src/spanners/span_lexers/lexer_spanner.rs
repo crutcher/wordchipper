@@ -1,8 +1,14 @@
 //! # Lexer Text Spanner
 
+use core::ops::Range;
+
 use crate::{
     alloc::sync::Arc,
-    spanners::{SpanRef, TextSpanner, span_lexers::SpanLexer},
+    spanners::{
+        SpanRef,
+        TextSpanner,
+        span_lexers::SpanLexer,
+    },
     support::ranges::offset_range,
 };
 
@@ -40,10 +46,60 @@ impl LexerTextSpanner {
     fn next_special_span(
         &self,
         text: &str,
-    ) -> Option<(usize, usize)> {
+    ) -> Option<Range<usize>> {
         self.special_lexer
             .as_ref()
-            .and_then(|s| s.next_span(text, 0))
+            .and_then(|s| s.find_span_iter(text).next())
+    }
+
+    /// Scan `text` into [`Word`](SpanRef::Word) and [`Gap`](SpanRef::Gap)
+    /// spans.
+    ///
+    /// Loops over [`next_span`](Self::next_span),
+    /// classifying matched regions as `Word` and unmatched regions as `Gap`.
+    /// Lexers with richer token classification override this directly.
+    ///
+    /// ## Arguments
+    /// * `text` - the text segment to scan (no special tokens).
+    /// * `offset` - byte offset to add to emitted span ranges.
+    /// * `f` - callback; return `false` to halt early.
+    ///
+    /// ## Returns
+    /// `(completed, consumed)` where `consumed` is the byte count of
+    /// accepted spans and `completed` indicates all spans were accepted.
+    fn for_each_word(
+        &self,
+        text: &str,
+        offset: usize,
+        f: &mut dyn FnMut(SpanRef) -> bool,
+    ) -> (bool, usize) {
+        let mut last = 0;
+
+        for Range { start, end } in self.word_lexer.find_span_iter(text) {
+            if last < start {
+                if !f(SpanRef::Gap(offset_range::<usize>(last..start, offset))) {
+                    return (false, last);
+                }
+                last = start;
+            }
+
+            if !f(SpanRef::Word(offset_range::<usize>(start..end, offset))) {
+                return (false, last);
+            }
+            last = end;
+        }
+
+        if last < text.len() {
+            if !f(SpanRef::Gap(offset_range::<usize>(
+                last..text.len(),
+                offset,
+            ))) {
+                return (false, last);
+            }
+            last = text.len();
+        }
+
+        (true, last)
     }
 }
 
@@ -56,10 +112,10 @@ impl TextSpanner for LexerTextSpanner {
         let mut current = text;
         let mut offset = 0;
 
-        while let Some((start, end)) = self.next_special_span(current) {
+        while let Some(Range { start, end }) = self.next_special_span(current) {
             let pre = &current[..start];
 
-            let (cont, used) = self.word_lexer.for_each_word(pre, offset, f);
+            let (cont, used) = self.for_each_word(pre, offset, f);
             if !cont {
                 return (false, offset + used);
             }
@@ -72,7 +128,7 @@ impl TextSpanner for LexerTextSpanner {
             offset += end;
         }
 
-        self.word_lexer.for_each_word(current, offset, f)
+        self.for_each_word(current, offset, f)
     }
 }
 
@@ -81,9 +137,16 @@ mod tests {
     use super::*;
     use crate::{
         TokenType,
-        alloc::{boxed::Box, vec, vec::Vec},
+        alloc::{
+            boxed::Box,
+            vec,
+            vec::Vec,
+        },
         pretrained::openai::OA_CL100K_BASE_PATTERN,
-        spanners::{SpanRef, TextSpanningConfig},
+        spanners::{
+            SpanRef,
+            TextSpanningConfig,
+        },
     };
 
     const _LEXER_SPANNER_BOX_CHECK: Option<Box<LexerTextSpanner>> = None;

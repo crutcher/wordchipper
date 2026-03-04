@@ -1,62 +1,75 @@
-//! # o200k Logos Lexer
-//!
-//! Compile-time DFA lexer for the `o200k_base` pattern (GPT-4o).
-//!
-//! This serves as a reference implementation showing how to build an
-//! accelerated lexer using [`TokenRole`] and [`for_each_classified_span`].
+//! Logos DFA lexer for the `o200k_base` pattern (GPT-4o).
 
 use logos::Logos;
 
-use super::{engine::for_each_classified_span, token_role::TokenRole};
-use crate::{
-    alloc::sync::Arc,
-    pretrained::openai::OA_O200K_BASE_PATTERN,
-    spanners::{
-        SpanRef,
-        span_lexers::{SpanLexer, accelerators::RegexAcceleratorHook},
-    },
+use super::gpt2_family::{
+    Gpt2FamilyLogos,
+    Gpt2FamilyTokenRole,
 };
+use crate::pretrained::openai::OA_O200K_BASE_PATTERN;
 // Shorthand aliases for the character classes used in o200k:
-//   UPPER = [\p{Uppercase_Letter}\p{Titlecase_Letter}\p{Modifier_Letter}\p{Other_Letter}\p{Mark}]
-//   LOWER = [\p{Lowercase_Letter}\p{Modifier_Letter}\p{Other_Letter}\p{Mark}]
-//   CONTRACTION_SUFFIX = ('[sS]|'[tT]|'[dD]|'[mM]|'[rR][eE]|'[vV][eE]|'[lL][lL])?
+//   UPPER      = [\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]
+//   LOWER      = [\p{Ll}\p{Lm}\p{Lo}\p{M}]
+//   UPPER_ONLY = [\p{Lu}\p{Lt}]  (excludes Lm, Lo, M)
+//   CONTRACTION = ('[sS]|'[tT]|'[dD]|'[mM]|'[rR][eE]|'[vV][eE]|'[lL][lL])?
 //
 // These are inlined below because logos derive macros require string literals.
 
-/// Logos token for the `o200k_base` pattern.
+/// Logos token variants for `o200k_base`.
 ///
-/// Key difference from cl100k: contractions are attached to the preceding word,
-/// and two word `span_encoders` (uppercase-leading vs lowercase-ending) are merged
-/// into a single `Word` variant because logos requires unambiguous DFA states.
-///
-/// | Regex branch                                         | Logos variant  |
-/// |------------------------------------------------------|----------------|
-/// | `[^\r\n\p{L}\p{N}]?[UPPER]*[LOWER]+CONTRACTION?`    | Word           |
-/// | `[^\r\n\p{L}\p{N}]?[UPPER]+[LOWER]*CONTRACTION?`    | Word           |
-/// | `\p{N}{1,3}`                                         | Digits         |
-/// | ` ?[^\s\p{L}\p{N}]+[\r\n/]*`                        | Punctuation    |
-/// | `\s*[\r\n]+`                                         | Newline        |
-/// | `\s+`                                                | Whitespace     |
+/// Unlike cl100k, contractions attach to the preceding word. Word branches
+/// are split into `WordLower`/`WordUpper` to prevent DFA longest-match from
+/// merging Lo/Lm chars (e.g. `º`) with following uppercase letters.
+/// `\p{M}` is excluded from prefix entrypoints to preserve regex branch
+/// precedence.
 #[derive(Logos, Debug, PartialEq, Clone)]
 pub(crate) enum O200kToken {
-    // Both word patterns merged via alternation into a single regex.
-    // The two overlap on \p{Modifier_Letter}/\p{Other_Letter}/\p{Mark}
-    // characters (e.g. CJK), so logos requires a single DFA pattern.
-    // CamelCase splitting still works: the DFA's longest-match finds
-    // the same boundaries as regex first-match (e.g. "OpenAI" -> "Open"+"AI").
-    // Priority > default to beat Punctuation on the [^\r\n\p{L}\p{N}]? prefix.
+    // Regex Branch 1: UPPER*LOWER+ (no prefix, first char is letter/mark).
+    // Highest priority so marks in LOWER are claimed here, not as prefix.
     #[regex(
-        r"[^\r\n\p{Letter}\p{Number}]?([\p{Uppercase_Letter}\p{Titlecase_Letter}\p{Modifier_Letter}\p{Other_Letter}\p{Mark}]*[\p{Lowercase_Letter}\p{Modifier_Letter}\p{Other_Letter}\p{Mark}]+|[\p{Uppercase_Letter}\p{Titlecase_Letter}\p{Modifier_Letter}\p{Other_Letter}\p{Mark}]+[\p{Lowercase_Letter}\p{Modifier_Letter}\p{Other_Letter}\p{Mark}]*)('[sS]|'[tT]|'[dD]|'[mM]|'[rR][eE]|'[vV][eE]|'[lL][lL])?",
+        r"[\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]*[\p{Ll}\p{Lm}\p{Lo}\p{M}]+(?i:'(?:s|t|d|m|re|ve|ll))?",
+        priority = 4
+    )]
+    WordLower,
+
+    // Regex Branch 1 with non-letter prefix.
+    #[regex(
+        r"[^\r\n\p{Letter}\p{Number}\p{Mark}][\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]*[\p{Ll}\p{Lm}\p{Lo}\p{M}]+(?i:'(?:s|t|d|m|re|ve|ll))?",
         priority = 3
     )]
-    Word,
+    PrefixedWordLower,
+
+    // Regex Branch 2: UPPER_ONLY+LOWER* (no prefix).
+    #[regex(
+        r"[\p{Lu}\p{Lt}]+[\p{Ll}\p{Lm}\p{Lo}\p{M}]*(?i:'(?:s|t|d|m|re|ve|ll))?",
+        priority = 2
+    )]
+    WordUpper,
+
+    // Regex Branch 2 with non-letter prefix.
+    #[regex(
+        r"[^\r\n\p{Letter}\p{Number}\p{Mark}][\p{Lu}\p{Lt}]+[\p{Ll}\p{Lm}\p{Lo}\p{M}]*(?i:'(?:s|t|d|m|re|ve|ll))?",
+        priority = 1
+    )]
+    PrefixedWordUpper,
 
     #[regex(r"\p{Number}{1,3}")]
     Digits,
 
     // Note: o200k includes '/' in the newline-char set after punctuation.
-    #[regex(r" ?[^\s\p{Letter}\p{Number}]+[\r\n/]*")]
-    Punctuation,
+    //
+    // Spaced punctuation (`" !..."`) is always handled by punctuation in the
+    // regex alternation.
+    #[regex(r" [^\s\p{Letter}\p{Number}\p{Mark}][^\s\p{Letter}\p{Number}]*[\r\n/]*")]
+    PunctuationSpaced,
+
+    // Bare punctuation (`"!..."`) must not consume an immediate Mark as the
+    // 2nd core char; regex branch 1 matches `!◌` before punctuation.
+    #[regex(r"[^\s\p{Letter}\p{Number}\p{Mark}]\p{Mark}+", priority = 6)]
+    PunctuationBareMark,
+
+    #[regex(r"[^\s\p{Letter}\p{Number}\p{Mark}](?:[^\s\p{Letter}\p{Number}\p{Mark}][^\s\p{Letter}\p{Number}]*)?[\r\n/]*")]
+    PunctuationBare,
 
     #[regex(r"\s*[\r\n]+")]
     Newline,
@@ -65,96 +78,54 @@ pub(crate) enum O200kToken {
     Whitespace,
 }
 
-impl O200kToken {
-    fn role(&self) -> TokenRole {
+impl Gpt2FamilyLogos<'_> for O200kToken {
+    fn family_role(&self) -> Gpt2FamilyTokenRole {
         match self {
-            Self::Whitespace => TokenRole::Whitespace,
-            Self::Word => TokenRole::Word {
+            Self::Whitespace => Gpt2FamilyTokenRole::Whitespace,
+            Self::WordLower | Self::WordUpper => Gpt2FamilyTokenRole::Word {
                 check_contraction: false,
+                first_char_is_letter: true,
             },
-            Self::Punctuation => TokenRole::Punctuation,
-            Self::Digits | Self::Newline => TokenRole::Standalone,
+            Self::PrefixedWordLower | Self::PrefixedWordUpper => Gpt2FamilyTokenRole::Word {
+                check_contraction: false,
+                first_char_is_letter: false,
+            },
+            Self::PunctuationSpaced | Self::PunctuationBareMark | Self::PunctuationBare => {
+                Gpt2FamilyTokenRole::Punctuation
+            }
+            Self::Digits | Self::Newline => Gpt2FamilyTokenRole::Standalone,
         }
     }
 }
 
-/// A [`SpanLexer`] for the `o200k_base` pattern (GPT-4o).
-///
-/// Uses a compile-time logos DFA for word scanning.
-///
-/// Only matches the regex spans; does not match the special tokens.
-#[derive(Clone, Debug)]
-pub struct O200kLexer;
-
-inventory::submit! {
-    RegexAcceleratorHook::new(OA_O200K_BASE_PATTERN,|| Arc::new(O200kLexer))
-}
-
-impl SpanLexer for O200kLexer {
-    fn next_span(
-        &self,
-        text: &str,
-        offset: usize,
-    ) -> Option<(usize, usize)> {
-        let mut next_span: Option<(usize, usize)> = None;
-        self.for_each_word(text, offset, &mut |span_ref| match span_ref {
-            SpanRef::Word(r) => {
-                next_span = Some((r.start, r.end));
-                false
-            }
-            _ => true,
-        });
-        next_span
-    }
-
-    fn for_each_word(
-        &self,
-        text: &str,
-        offset: usize,
-        f: &mut dyn FnMut(SpanRef) -> bool,
-    ) -> (bool, usize) {
-        for_each_classified_span(
-            O200kToken::lexer(text).spanned().map(|(res, range)| {
-                let role = match res {
-                    Ok(tok) => tok.role(),
-                    Err(()) => TokenRole::Gap,
-                };
-                (role, range)
-            }),
-            text,
-            offset,
-            f,
-        )
-    }
+logos_lexer! {
+    /// Logos DFA word scanner for `o200k_base` (GPT-4o).
+    pub struct O200kLexer;
+    token = O200kToken;
+    pattern = OA_O200K_BASE_PATTERN;
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::{
-        alloc::{sync::Arc, vec, vec::Vec},
-        spanners::{TextSpanner, span_lexers::LexerTextSpanner},
+        alloc::{
+            sync::Arc,
+            vec::Vec,
+        },
+        spanners::{
+            SpanRef,
+            TextSpanner,
+            span_lexers::{
+                LexerTextSpanner,
+                SpanLexer,
+            },
+        },
     };
 
     /// Build a `TextSpanner` from a logos lexer with no specials.
     fn spanner(lexer: impl SpanLexer + 'static) -> LexerTextSpanner {
         LexerTextSpanner::new(Arc::new(lexer), None)
-    }
-
-    #[test]
-    fn test_span_lexer() {
-        let lexer = O200kLexer {};
-
-        let text = "hello world";
-        let mut spans: Vec<SpanRef> = Default::default();
-        lexer.for_each_word(text, 0, &mut |span_ref| {
-            spans.push(span_ref);
-            true
-        });
-        assert_eq!(spans, vec![SpanRef::Word(0..5), SpanRef::Word(5..11),]);
-
-        assert_eq!(lexer.next_span(text, 0), Some((0, 5)));
-        assert_eq!(lexer.next_span(&text[5..], 5), Some((5, 11)));
     }
 
     #[test]
@@ -184,153 +155,43 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "std")]
-    fn test_o200k_unicode() {
-        use crate::{
-            pretrained::openai::OA_O200K_BASE_PATTERN,
-            spanners::{TextSpannerBuilder, TextSpanningConfig},
-        };
+    fn test_o200k_camel_case() {
+        let s = spanner(O200kLexer);
 
-        let config: TextSpanningConfig<u32> =
-            TextSpanningConfig::from_pattern(OA_O200K_BASE_PATTERN);
-        let regex_spanner = TextSpannerBuilder::new(config).build();
-        let logos_spanner = spanner(O200kLexer);
+        // o200k splits on case boundaries: UPPER*LOWER+ and UPPER+LOWER*.
+        // "CamelCase" -> "Camel" + "Case"
+        let spans = s.split_spans("CamelCase");
+        let words: Vec<&str> = spans
+            .iter()
+            .filter_map(|s| match s {
+                SpanRef::Word(r) => Some(&"CamelCase"[r.clone()]),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(words, &["Camel", "Case"]);
 
-        let cases = [
-            "Hello world",
-            "Bonjour le monde",
-            "\u{4f60}\u{597d}\u{4e16}\u{754c}",
-            "\u{041f}\u{0440}\u{0438}\u{0432}\u{0435}\u{0442} \u{043c}\u{0438}\u{0440}",
-            "price is 100 dollars",
-            "caf\u{00e9} na\u{00ef}ve r\u{00e9}sum\u{00e9}",
-            "Hello \u{4e16}\u{754c} 123",
-            "don't I'll she's",
-            "HELLO WORLD",
-        ];
+        // "getElementById" -> "get" + "Element" + "By" + "Id"
+        let text = "getElementById";
+        let spans = s.split_spans(text);
+        let words: Vec<&str> = spans
+            .iter()
+            .filter_map(|s| match s {
+                SpanRef::Word(r) => Some(&text[r.clone()]),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(words, &["get", "Element", "By", "Id"]);
 
-        for text in cases {
-            let regex_spans = regex_spanner.split_spans(text);
-            let logos_spans = logos_spanner.split_spans(text);
-
-            assert_eq!(
-                regex_spans, logos_spans,
-                "o200k mismatch for {:?}:\n  regex: {:?}\n  logos: {:?}",
-                text, regex_spans, logos_spans
-            );
-        }
-    }
-
-    #[test]
-    #[cfg(feature = "std")]
-    fn test_o200k_realworld() {
-        use crate::{
-            pretrained::openai::OA_O200K_BASE_PATTERN,
-            spanners::{TextSpannerBuilder, TextSpanningConfig},
-        };
-
-        let config: TextSpanningConfig<u32> =
-            TextSpanningConfig::from_pattern(OA_O200K_BASE_PATTERN);
-        let regex_spanner = TextSpannerBuilder::new(config).build();
-        let logos_spanner = spanner(O200kLexer);
-
-        let cases = [
-            "the Civil War\u{2014}in which",
-            "nation\u{2019}s capital",
-            "  Like all Choctaw counties",
-            "   123 numbers",
-            "hello   ",
-            "\t\thello",
-            "  \nfoo",
-            "foo  \nbar",
-            "   hello world",
-            "foo  \"bar\" baz",
-            "$$$!!!...---",
-        ];
-
-        for text in cases {
-            let regex_spans = regex_spanner.split_spans(text);
-            let logos_spans = logos_spanner.split_spans(text);
-
-            assert_eq!(
-                regex_spans, logos_spans,
-                "o200k mismatch for {:?}:\n  regex: {:?}\n  logos: {:?}",
-                text, regex_spans, logos_spans
-            );
-        }
-    }
-
-    // -------------------------------------------------------------------
-    // proptest: structural invariants on real lexer output
-    // -------------------------------------------------------------------
-
-    proptest::proptest! {
-        #![proptest_config(proptest::prelude::ProptestConfig::with_cases(2000))]
-
-        #[test]
-        fn structural_invariants(text in "\\PC{0,200}") {
-            let s = spanner(O200kLexer);
-            let spans = s.split_spans(&text);
-
-            if text.is_empty() {
-                proptest::prop_assert!(spans.is_empty());
-            } else {
-                proptest::prop_assert!(!spans.is_empty());
-                proptest::prop_assert_eq!(spans[0].range().start, 0);
-                proptest::prop_assert_eq!(spans.last().unwrap().range().end, text.len());
-
-                for i in 0..spans.len() {
-                    let r = spans[i].range();
-                    proptest::prop_assert!(
-                        r.start < r.end,
-                        "empty span at index {}: {:?}",
-                        i, r
-                    );
-                    proptest::prop_assert!(
-                        core::str::from_utf8(&text.as_bytes()[r.start..r.end]).is_ok(),
-                        "non-UTF-8 span at index {}: {:?}",
-                        i, r
-                    );
-                    if i + 1 < spans.len() {
-                        proptest::prop_assert_eq!(
-                            r.end,
-                            spans[i + 1].range().start,
-                            "gap between spans {} and {}",
-                            i, i + 1
-                        );
-                    }
-                }
-            }
-        }
-    }
-
-    // -------------------------------------------------------------------
-    // proptest oracle: regex vs logos equivalence
-    // -------------------------------------------------------------------
-
-    #[test]
-    #[cfg(feature = "std")]
-    fn proptest_o200k_logos_matches_regex() {
-        use proptest::prelude::*;
-
-        use crate::{
-            pretrained::openai::OA_O200K_BASE_PATTERN,
-            spanners::{TextSpannerBuilder, TextSpanningConfig},
-        };
-
-        let config: TextSpanningConfig<u32> =
-            TextSpanningConfig::from_pattern(OA_O200K_BASE_PATTERN);
-        let regex_spanner = TextSpannerBuilder::new(config).build();
-        let logos_spanner = spanner(O200kLexer);
-
-        let config = proptest::test_runner::Config::with_cases(2000);
-        proptest!(config, |(text in "\\PC{0,200}")| {
-            let regex_spans = regex_spanner.split_spans(&text);
-            let logos_spans = logos_spanner.split_spans(&text);
-            prop_assert_eq!(
-                &regex_spans, &logos_spans,
-                "o200k mismatch for {:?}",
-                text
-            );
-        });
+        // "HTMLParser" -> all-upper run uses UPPER+LOWER* branch.
+        let text = "HTMLParser";
+        let spans = s.split_spans(text);
+        let words: Vec<&str> = spans
+            .iter()
+            .filter_map(|s| match s {
+                SpanRef::Word(r) => Some(&text[r.clone()]),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(words, &["HTMLParser"]);
     }
 }

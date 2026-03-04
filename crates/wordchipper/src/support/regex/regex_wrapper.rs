@@ -1,9 +1,16 @@
 //! # Regex Wrapper
 //! This modules provides mechanisms to mix `regex` and `fancy_regex` types.
 
-use core::fmt::Debug;
+use core::{
+    fmt::Debug,
+    ops::Range,
+};
 
-use crate::{alloc::boxed::Box, spanners::span_lexers::SpanLexer, support::regex::RegexPattern};
+use crate::{
+    alloc::boxed::Box,
+    spanners::span_lexers::SpanLexer,
+    support::regex::RegexPattern,
+};
 
 /// Error wrapper for regex patterns.
 #[non_exhaustive]
@@ -59,14 +66,11 @@ pub enum RegexWrapper {
 }
 
 impl SpanLexer for RegexWrapper {
-    fn next_span(
-        &self,
-        text: &str,
-        offset: usize,
-    ) -> Option<(usize, usize)> {
-        self.find_iter(&text[offset..])
-            .next()
-            .map(|m| (offset + m.start(), offset + m.end()))
+    fn find_span_iter<'a>(
+        &'a self,
+        text: &'a str,
+    ) -> Box<dyn Iterator<Item = Range<usize>> + 'a> {
+        Box::new(self.find_iter(text).map(|m| m.range()))
     }
 }
 
@@ -185,7 +189,10 @@ impl<'r, 'h> Iterator for MatchesWrapper<'r, 'h> {
 mod tests {
     use super::*;
     use crate::{
-        alloc::{format, string::ToString},
+        alloc::{
+            format,
+            string::ToString,
+        },
         join_patterns,
         support::regex::regex_pattern::ConstRegexPattern,
     };

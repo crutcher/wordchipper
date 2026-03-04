@@ -1,8 +1,14 @@
 //! # Regex Pattern Labeled Wrapper
 
 use crate::{
-    alloc::string::{String, ToString},
-    support::regex::{ErrorWrapper, RegexWrapper},
+    alloc::string::{
+        String,
+        ToString,
+    },
+    support::regex::{
+        ErrorWrapper,
+        RegexWrapper,
+    },
 };
 
 /// Const Regex Wrapper Pattern
@@ -14,6 +20,15 @@ pub enum ConstRegexPattern {
 
     /// This is a regex pattern that requires regex extensions.
     Fancy(&'static str),
+}
+
+impl core::fmt::Display for ConstRegexPattern {
+    fn fmt(
+        &self,
+        f: &mut core::fmt::Formatter<'_>,
+    ) -> core::fmt::Result {
+        write!(f, "{}", self.as_str())
+    }
 }
 
 impl ConstRegexPattern {

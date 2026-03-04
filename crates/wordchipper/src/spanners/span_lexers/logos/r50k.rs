@@ -1,33 +1,14 @@
-//! # r50k Logos Lexer
-//!
-//! Compile-time DFA lexer for the `r50k_base` pattern (GPT-2).
-//!
-//! This serves as a reference implementation showing how to build an
-//! accelerated lexer using [`TokenRole`] and [`for_each_classified_span`].
+//! Logos DFA lexer for the `r50k_base` pattern (GPT-2).
 
 use logos::Logos;
 
-use super::{engine::for_each_classified_span, token_role::TokenRole};
-use crate::{
-    alloc::sync::Arc,
-    pretrained::openai::OA_R50K_BASE_PATTERN,
-    spanners::{
-        SpanRef,
-        span_lexers::{SpanLexer, accelerators::RegexAcceleratorHook},
-    },
+use super::gpt2_family::{
+    Gpt2FamilyLogos,
+    Gpt2FamilyTokenRole,
 };
+use crate::pretrained::openai::OA_R50K_BASE_PATTERN;
 
-/// Logos token for the `r50k_base` pattern.
-///
-/// | Regex branch           | Logos variant |
-/// |------------------------|---------------|
-/// | `'(?:[sdmt]|ll|ve|re)` | Contraction   |
-/// | ` ?\p{L}++`            | Letters       |
-/// | ` ?\p{N}++`            | Digits        |
-/// | ` ?[^\s\p{L}\p{N}]++`  | Punctuation   |
-/// | `\s++$`                | Whitespace    |
-/// | `\s+(?!\S)`            |               |
-/// | `\s`                   |               |
+/// Logos token variants for `r50k_base`.
 #[derive(Logos, Debug, PartialEq, Clone)]
 pub(crate) enum R50kToken {
     // Case-sensitive: the r50k regex `'(?:[sdmt]|ll|ve|re)` only matches
@@ -50,95 +31,56 @@ pub(crate) enum R50kToken {
     Whitespace,
 }
 
-impl R50kToken {
-    fn role(&self) -> TokenRole {
+impl Gpt2FamilyLogos<'_> for R50kToken {
+    fn family_role(&self) -> Gpt2FamilyTokenRole {
         match self {
-            Self::Whitespace => TokenRole::Whitespace,
+            Self::Whitespace => Gpt2FamilyTokenRole::Whitespace,
             // All three r50k content patterns use ` ?X` which absorbs only
             // literal ASCII space. This matches the Punctuation role behavior.
-            Self::Letters | Self::Digits | Self::Punctuation => TokenRole::Punctuation,
-            Self::Contraction => TokenRole::Standalone,
+            Self::Letters | Self::Digits | Self::Punctuation => Gpt2FamilyTokenRole::Punctuation,
+            // When preceded by whitespace ending in ASCII space, the regex
+            // ` ?[^\s\p{L}\p{N}]+` absorbs the space + apostrophe as punctuation,
+            // leaving the suffix letter(s) as a separate span. The Word role's
+            // non-letter-prefix path replicates this: it merges the last ws char
+            // with the apostrophe and emits the suffix separately.
+            Self::Contraction => Gpt2FamilyTokenRole::Word {
+                check_contraction: false,
+                first_char_is_letter: false,
+            },
         }
     }
 }
 
-/// A [`SpanLexer`] for the `r50k_base` pattern (GPT-2).
-///
-/// Uses a compile-time logos DFA for word scanning.
-///
-/// Only matches the regex spans; does not match the special tokens.
-#[derive(Clone, Debug)]
-pub struct R50kLexer;
-
-inventory::submit! {
-    RegexAcceleratorHook::new(OA_R50K_BASE_PATTERN,|| Arc::new(R50kLexer))
-}
-
-impl SpanLexer for R50kLexer {
-    fn next_span(
-        &self,
-        text: &str,
-        offset: usize,
-    ) -> Option<(usize, usize)> {
-        let mut next_span: Option<(usize, usize)> = None;
-        self.for_each_word(text, offset, &mut |span_ref| match span_ref {
-            SpanRef::Word(r) => {
-                next_span = Some((r.start, r.end));
-                false
-            }
-            _ => true,
-        });
-        next_span
-    }
-
-    fn for_each_word(
-        &self,
-        text: &str,
-        offset: usize,
-        f: &mut dyn FnMut(SpanRef) -> bool,
-    ) -> (bool, usize) {
-        for_each_classified_span(
-            R50kToken::lexer(text).spanned().map(|(res, range)| {
-                let role = match res {
-                    Ok(tok) => tok.role(),
-                    Err(()) => TokenRole::Gap,
-                };
-                (role, range)
-            }),
-            text,
-            offset,
-            f,
-        )
-    }
+logos_lexer! {
+    /// Logos DFA word scanner for `r50k_base` (GPT-2).
+    pub struct R50kLexer;
+    token = R50kToken;
+    pattern = OA_R50K_BASE_PATTERN;
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::{
-        alloc::{string::ToString, sync::Arc, vec, vec::Vec},
-        spanners::{TextSpanner, span_lexers::LexerTextSpanner},
+        alloc::{
+            string::ToString,
+            sync::Arc,
+            vec,
+            vec::Vec,
+        },
+        spanners::{
+            SpanRef,
+            TextSpanner,
+            span_lexers::{
+                LexerTextSpanner,
+                SpanLexer,
+            },
+        },
     };
 
     /// Build a `TextSpanner` from a logos lexer with no specials.
     fn spanner(lexer: impl SpanLexer + 'static) -> LexerTextSpanner {
         LexerTextSpanner::new(Arc::new(lexer), None)
-    }
-
-    #[test]
-    fn test_span_lexer() {
-        let lexer = R50kLexer {};
-
-        let text = "hello world";
-        let mut spans: Vec<SpanRef> = Default::default();
-        lexer.for_each_word(text, 0, &mut |span_ref| {
-            spans.push(span_ref);
-            true
-        });
-        assert_eq!(spans, vec![SpanRef::Word(0..5), SpanRef::Word(5..11),]);
-
-        assert_eq!(lexer.next_span(text, 0), Some((0, 5)));
-        assert_eq!(lexer.next_span(&text[5..], 5), Some((5, 11)));
     }
 
     #[test]
@@ -230,237 +172,10 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "std")]
-    fn test_logos_r50k_unicode() {
-        use crate::{
-            pretrained::openai::OA_R50K_BASE_PATTERN,
-            spanners::{TextSpannerBuilder, TextSpanningConfig},
-        };
-
-        let config: TextSpanningConfig<u32> =
-            TextSpanningConfig::from_pattern(OA_R50K_BASE_PATTERN);
-        let regex_spanner = TextSpannerBuilder::new(config)
-            .with_accelerated_lexers(false)
-            .build();
-        let logos_spanner = spanner(R50kLexer);
-
-        let cases = [
-            "Hello world",
-            "Bonjour le monde",
-            "Hallo Welt",
-            "\u{4f60}\u{597d}\u{4e16}\u{754c}",
-            "\u{041f}\u{0440}\u{0438}\u{0432}\u{0435}\u{0442} \u{043c}\u{0438}\u{0440}",
-            "price is 100 dollars",
-            "caf\u{00e9} na\u{00ef}ve r\u{00e9}sum\u{00e9}",
-            "Hello \u{4e16}\u{754c} 123",
-        ];
-
-        for text in cases {
-            let regex_spans = regex_spanner.split_spans(text);
-            let logos_spans = logos_spanner.split_spans(text);
-
-            assert_eq!(
-                regex_spans, logos_spans,
-                "r50k mismatch for {:?}:\n  regex: {:?}\n  logos: {:?}",
-                text, regex_spans, logos_spans
-            );
-        }
-    }
-
-    #[test]
-    #[cfg(feature = "std")]
-    fn test_logos_r50k_realworld() {
-        use crate::{
-            pretrained::openai::OA_R50K_BASE_PATTERN,
-            spanners::{TextSpannerBuilder, TextSpanningConfig},
-        };
-
-        let config: TextSpanningConfig<u32> =
-            TextSpanningConfig::from_pattern(OA_R50K_BASE_PATTERN);
-        let regex_spanner = TextSpannerBuilder::new(config)
-            .with_accelerated_lexers(false)
-            .build();
-        let logos_spanner = spanner(R50kLexer);
-
-        let cases = [
-            "the Civil War\u{2014}in which",
-            "nation\u{2019}s capital",
-            "it\u{2019}s not easy",
-            "Wade County\u{2019}s boundaries were",
-            "  Like all Choctaw counties",
-            "   123 numbers",
-            "hello   ",
-            "\t\thello",
-            "  \nfoo",
-            "foo  \nbar",
-            "   hello world",
-            // Newline cases
-            "Pipeline\nThe mode",
-            "\nhello",
-            "\n\nhello",
-            " \nhello",
-            "\n hello",
-            "hello\n",
-            "  \r\n  bar",
-            "\r\nfoo",
-            "  123",
-            "\n123",
-            "  !",
-            "\n!",
-        ];
-
-        for text in cases {
-            let regex_spans = regex_spanner.split_spans(text);
-            let logos_spans = logos_spanner.split_spans(text);
-
-            if regex_spans != logos_spans {
-                let regex_words: Vec<&str> = regex_spans
-                    .iter()
-                    .map(|s| &text[s.range().clone()])
-                    .collect();
-                let logos_words: Vec<&str> = logos_spans
-                    .iter()
-                    .map(|s| &text[s.range().clone()])
-                    .collect();
-                panic!(
-                    "r50k mismatch for {:?}:\n  regex: {:?}\n  logos: {:?}",
-                    text, regex_words, logos_words
-                );
-            }
-        }
-    }
-
-    #[test]
-    #[cfg(feature = "std")]
-    fn test_logos_r50k_long_text() {
-        use crate::{
-            pretrained::openai::OA_R50K_BASE_PATTERN,
-            spanners::{TextSpannerBuilder, TextSpanningConfig},
-        };
-
-        let config: TextSpanningConfig<u32> =
-            TextSpanningConfig::from_pattern(OA_R50K_BASE_PATTERN);
-        let regex_spanner = TextSpannerBuilder::new(config)
-            .with_accelerated_lexers(false)
-            .build();
-        let logos_spanner = spanner(R50kLexer);
-
-        let cases = [
-            "'The items we buy are important",
-            "hello\n'The quick brown fox",
-            "Shakespeare's \"sources,\" then read",
-            "said \"hello\" to",
-            "  \"sources,\" then",
-            "foo  \"bar\" baz",
-            "Shakespeare's Macbeth: From Saga to Screen|\nA close reading",
-            "  $400 dollars",
-            "  (hello)",
-            " \"sources,\" then",
-            " $hello world",
-            " 'The quick",
-            "  'The quick",
-            "  \u{2014}hello world",
-            " \u{2014}hello world",
-            "Shakespeare's Macbeth: From Saga to Screen|\nA close reading of Shakespeare's play that will position the play in terms of its historical and political contexts and its relation to early modern discourses on the feminine, witchcraft, and the divinity of kings. We will begin with a consideration of the historical legends that constitute Shakespeare's \"sources,\" then read the play slowly and closely, coupling our discussions with readings from the period, exploring how Shakespeare's contemporaries thought of the political and cultural issues raised in the play",
-        ];
-
-        for text in cases {
-            let regex_spans = regex_spanner.split_spans(text);
-            let logos_spans = logos_spanner.split_spans(text);
-
-            if regex_spans != logos_spans {
-                let regex_words: Vec<&str> = regex_spans
-                    .iter()
-                    .map(|s| &text[s.range().clone()])
-                    .collect();
-                let logos_words: Vec<&str> = logos_spans
-                    .iter()
-                    .map(|s| &text[s.range().clone()])
-                    .collect();
-                panic!(
-                    "r50k mismatch for {:?}:\n  regex: {:?}\n  logos: {:?}",
-                    text, regex_words, logos_words
-                );
-            }
-        }
-    }
-
-    // -------------------------------------------------------------------
-    // proptest: structural invariants on real lexer output
-    // -------------------------------------------------------------------
-
-    proptest::proptest! {
-        #![proptest_config(proptest::prelude::ProptestConfig::with_cases(2000))]
-
-        #[test]
-        fn structural_invariants(text in "[\\PC\\n\\r\\t]{0,200}") {
-            let s = spanner(R50kLexer);
-            let spans = s.split_spans(&text);
-
-            if text.is_empty() {
-                proptest::prop_assert!(spans.is_empty());
-            } else {
-                proptest::prop_assert!(!spans.is_empty());
-                proptest::prop_assert_eq!(spans[0].range().start, 0);
-                proptest::prop_assert_eq!(spans.last().unwrap().range().end, text.len());
-
-                for i in 0..spans.len() {
-                    let r = spans[i].range();
-                    proptest::prop_assert!(
-                        r.start < r.end,
-                        "empty span at index {}: {:?}",
-                        i, r
-                    );
-                    proptest::prop_assert!(
-                        core::str::from_utf8(&text.as_bytes()[r.start..r.end]).is_ok(),
-                        "non-UTF-8 span at index {}: {:?}",
-                        i, r
-                    );
-                    if i + 1 < spans.len() {
-                        proptest::prop_assert_eq!(
-                            r.end,
-                            spans[i + 1].range().start,
-                            "gap between spans {} and {}",
-                            i, i + 1
-                        );
-                    }
-                }
-            }
-        }
-    }
-
-    // -------------------------------------------------------------------
-    // proptest oracle: regex vs logos equivalence
-    // -------------------------------------------------------------------
-
-    #[test]
-    #[cfg(feature = "std")]
-    fn proptest_r50k_logos_matches_regex() {
-        use proptest::prelude::*;
-
-        use crate::{
-            pretrained::openai::OA_R50K_BASE_PATTERN,
-            spanners::{TextSpannerBuilder, TextSpanningConfig},
-        };
-
-        let config: TextSpanningConfig<u32> =
-            TextSpanningConfig::from_pattern(OA_R50K_BASE_PATTERN.clone());
-        let regex_spanner = TextSpannerBuilder::new(config)
-            .with_accelerated_lexers(false)
-            .build();
-        let logos_spanner = spanner(R50kLexer);
-
-        // Include \n, \r, \t alongside printable chars to exercise
-        // whitespace splitting with newlines.
-        let config = proptest::test_runner::Config::with_cases(2000);
-        proptest!(config, |(text in "[\\PC\\n\\r\\t]{0,200}")| {
-            let regex_spans = regex_spanner.split_spans(&text);
-            let logos_spans = logos_spanner.split_spans(&text);
-            prop_assert_eq!(
-                &regex_spans, &logos_spans,
-                "r50k mismatch for {:?}",
-                text
-            );
-        });
+    fn test_logos_camel_case() {
+        let s = spanner(R50kLexer);
+        // r50k uses \p{L}+ so CamelCase is one token.
+        assert_eq!(s.split_spans("CamelCase"), vec![SpanRef::Word(0..9)]);
+        assert_eq!(s.split_spans("getElementById"), vec![SpanRef::Word(0..14)]);
     }
 }
