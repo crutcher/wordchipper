@@ -202,7 +202,7 @@ fn build_plot<P: AsRef<Path>>(
         )
         .margin(10)
         .x_label_area_size(40)
-        .y_label_area_size(90)
+        .y_label_area_size(70)
         .build_cartesian_2d(
             (min_threads..max_threads).log_scale().base(2.0),
             (min_bps..max_bps).log_scale().base(2.0),
