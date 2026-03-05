@@ -82,10 +82,21 @@ jobs:
           maturin develop
           pytest tests/ -v
 
+  lexer-equivalence:
+    name: Lexer Equivalence
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup toolchain install stable --profile minimal
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test -p lexer-equivalence --release --test equivalence
+        env:
+          LEXER_EQUIV_K: "5"
+
   ci:
     name: CI
     if: always()
-    needs: [ fmt, clippy, test, cross, wasm, python ]
+    needs: [ fmt, clippy, test, cross, wasm, python, lexer-equivalence ]
     runs-on: ubuntu-latest
     steps:
       - run: |
@@ -96,6 +107,7 @@ jobs:
             "${{ needs.cross.result }}"
             "${{ needs.wasm.result }}"
             "${{ needs.python.result }}"
+            "${{ needs.lexer-equivalence.result }}"
           )
           for r in "${results[@]}"; do
             if [[ "$r" != "success" ]]; then

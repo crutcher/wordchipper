@@ -8,6 +8,7 @@ use std::{
     sync::Arc,
 };
 
+use rayon::prelude::*;
 use wordchipper::{
     spanners::span_lexers::{
         SpanLexer,
@@ -48,6 +49,8 @@ pub struct Divergence {
 /// Generate all k-tuples from the representative set and test each
 /// against both `ref_lexer` (regex) and `test_lexer` (logos).
 ///
+/// Uses rayon to parallelize across the combinatorial space.
+///
 /// Returns `(total_cases, divergences)`.
 pub fn run_k_tuple_equivalence(
     k: usize,
@@ -56,26 +59,32 @@ pub fn run_k_tuple_equivalence(
     test_lexer: &dyn SpanLexer,
 ) -> (usize, Vec<Divergence>) {
     let n = representatives.len();
-    let total = n.pow(k as u32);
-    let mut divergences = Vec::new();
+    let total = n
+        .checked_pow(k as u32)
+        .expect("k-tuple count overflows usize");
 
-    for combo in 0..total {
-        let mut rep_indices = Vec::with_capacity(k);
-        let mut text = String::new();
-        let mut char_byte_starts = Vec::with_capacity(k);
-        let mut remainder = combo;
-        for _ in 0..k {
-            let idx = remainder % n;
-            rep_indices.push(idx);
-            char_byte_starts.push(text.len());
-            text.push(representatives[idx].0);
-            remainder /= n;
-        }
+    let divergences: Vec<Divergence> = (0..total)
+        .into_par_iter()
+        .filter_map(|combo| {
+            let mut rep_indices = Vec::with_capacity(k);
+            let mut text = String::new();
+            let mut char_byte_starts = Vec::with_capacity(k);
+            let mut remainder = combo;
+            for _ in 0..k {
+                let idx = remainder % n;
+                rep_indices.push(idx);
+                char_byte_starts.push(text.len());
+                text.push(representatives[idx].0);
+                remainder /= n;
+            }
 
-        let expected = collect_spans(ref_lexer, &text);
-        let observed = collect_spans(test_lexer, &text);
+            let expected = collect_spans(ref_lexer, &text);
+            let observed = collect_spans(test_lexer, &text);
 
-        if expected != observed {
+            if expected == observed {
+                return None;
+            }
+
             let to_groups = |spans: &[Range<usize>]| -> Vec<Vec<usize>> {
                 spans
                     .iter()
@@ -89,7 +98,7 @@ pub fn run_k_tuple_equivalence(
                     })
                     .collect()
             };
-            divergences.push(Divergence {
+            Some(Divergence {
                 rep_indices,
                 text: text.clone(),
                 regex_strs: expected
@@ -102,9 +111,9 @@ pub fn run_k_tuple_equivalence(
                     .collect(),
                 regex_groups: to_groups(&expected),
                 logos_groups: to_groups(&observed),
-            });
-        }
-    }
+            })
+        })
+        .collect();
 
     (total, divergences)
 }

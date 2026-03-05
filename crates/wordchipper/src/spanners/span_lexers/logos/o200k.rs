@@ -63,11 +63,13 @@ pub(crate) enum O200kToken {
     #[regex(r" [^\s\p{Letter}\p{Number}\p{Mark}][^\s\p{Letter}\p{Number}]*[\r\n/]*")]
     PunctuationSpaced,
 
-    // Bare punctuation (`"!..."`) must not consume an immediate Mark as the
-    // 2nd core char; regex branch 1 matches `!◌` before punctuation.
-    #[regex(r"[^\s\p{Letter}\p{Number}\p{Mark}]\p{Mark}+", priority = 6)]
-    PunctuationBareMark,
-
+    // Bare punctuation: requires a second non-mark char before the continuation
+    // can include marks. This prevents the DFA from grabbing `punct + marks`
+    // as punctuation when the regex word branch (first-match) would claim them
+    // as a word with the punct char as prefix. The optional group
+    // `(?:NON_MARK REST*)?` ensures that single-punct-then-marks inputs like
+    // `!\u{0300}` fall to PrefixedWordLower (matching the regex), while
+    // multi-punct inputs like `!@\u{0300}` still stay in punctuation.
     #[regex(r"[^\s\p{Letter}\p{Number}\p{Mark}](?:[^\s\p{Letter}\p{Number}\p{Mark}][^\s\p{Letter}\p{Number}]*)?[\r\n/]*")]
     PunctuationBare,
 
@@ -90,9 +92,7 @@ impl Gpt2FamilyLogos<'_> for O200kToken {
                 check_contraction: false,
                 first_char_is_letter: false,
             },
-            Self::PunctuationSpaced | Self::PunctuationBareMark | Self::PunctuationBare => {
-                Gpt2FamilyTokenRole::Punctuation
-            }
+            Self::PunctuationSpaced | Self::PunctuationBare => Gpt2FamilyTokenRole::Punctuation,
             Self::Digits | Self::Newline => Gpt2FamilyTokenRole::Standalone,
         }
     }
@@ -111,6 +111,7 @@ mod tests {
     use crate::{
         alloc::{
             sync::Arc,
+            vec,
             vec::Vec,
         },
         spanners::{
@@ -193,5 +194,63 @@ mod tests {
             })
             .collect();
         assert_eq!(words, &["HTMLParser"]);
+    }
+
+    // Regression: combining mark after punctuation must stay with the
+    // punctuation, not join the following word token.
+    #[test]
+    fn test_mark_groups_with_punctuation() {
+        let s = spanner(O200kLexer);
+
+        // "  !\u{0300}a": mark stays with punct, letter is separate
+        assert_eq!(
+            s.split_spans("  !\u{0300}a"),
+            vec![
+                SpanRef::Word(0..1), // " "
+                SpanRef::Word(1..5), // " !\u{0300}"
+                SpanRef::Word(5..6), // "a"
+            ]
+        );
+
+        // "  !\u{0300}\r": mark + CR stay with punct
+        assert_eq!(
+            s.split_spans("  !\u{0300}\r"),
+            vec![
+                SpanRef::Word(0..1), // " "
+                SpanRef::Word(1..6), // " !\u{0300}\r"
+            ]
+        );
+
+        // k=6 class 1: chained punct+mark tokens absorb into one span
+        // "  !\u{0300}!\u{0300}": both punct+mark groups merge
+        assert_eq!(
+            s.split_spans("  !\u{0300}!\u{0300}"),
+            vec![
+                SpanRef::Word(0..1), // " "
+                SpanRef::Word(1..8), // " !\u{0300}!\u{0300}"
+            ]
+        );
+
+        // k=6 class 2: punct+mark then punct+letter splits at letter
+        // "  !\u{0300}!A": prefix absorbed, letter separate
+        assert_eq!(
+            s.split_spans("  !\u{0300}!A"),
+            vec![
+                SpanRef::Word(0..1), // " "
+                SpanRef::Word(1..6), // " !\u{0300}!"
+                SpanRef::Word(6..7), // "A"
+            ]
+        );
+
+        // k=6 whitespace after punct+mark: space starts new match,
+        // not absorbed into pending punct
+        assert_eq!(
+            s.split_spans("  !\u{0300} A"),
+            vec![
+                SpanRef::Word(0..1), // " "
+                SpanRef::Word(1..5), // " !\u{0300}"
+                SpanRef::Word(5..7), // " A"
+            ]
+        );
     }
 }
