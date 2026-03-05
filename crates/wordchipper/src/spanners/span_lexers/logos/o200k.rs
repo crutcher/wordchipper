@@ -2,10 +2,7 @@
 
 use logos::Logos;
 
-use super::gpt2_family::{
-    Gpt2FamilyLogos,
-    Gpt2FamilyTokenRole,
-};
+use super::gpt2_family::{Gpt2FamilyLogos, Gpt2FamilyTokenRole};
 use crate::pretrained::openai::OA_O200K_BASE_PATTERN;
 // Shorthand aliases for the character classes used in o200k:
 //   UPPER      = [\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]
@@ -109,17 +106,10 @@ logos_lexer! {
 mod tests {
     use super::*;
     use crate::{
-        alloc::{
-            sync::Arc,
-            vec::Vec,
-        },
+        alloc::{sync::Arc, vec::Vec},
         spanners::{
-            SpanRef,
-            TextSpanner,
-            span_lexers::{
-                LexerTextSpanner,
-                SpanLexer,
-            },
+            SpanRef, TextSpanner,
+            span_lexers::{LexerTextSpanner, SpanLexer},
         },
     };
 
@@ -151,6 +141,13 @@ mod tests {
             words.contains(&" she's"),
             "expected \" she's\" as one token, got: {:?}",
             words
+        );
+    }
+
+    #[test]
+    fn test_o200k_common() {
+        crate::spanners::span_lexers::logos::testutil::common_lexer_tests(
+            crate::alloc::boxed::Box::new(O200kLexer),
         );
     }
 

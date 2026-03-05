@@ -2,10 +2,7 @@
 
 use logos::Logos;
 
-use super::gpt2_family::{
-    Gpt2FamilyLogos,
-    Gpt2FamilyTokenRole,
-};
+use super::gpt2_family::{Gpt2FamilyLogos, Gpt2FamilyTokenRole};
 use crate::pretrained::openai::OA_R50K_BASE_PATTERN;
 
 /// Logos token variants for `r50k_base`.
@@ -62,19 +59,10 @@ logos_lexer! {
 mod tests {
     use super::*;
     use crate::{
-        alloc::{
-            string::ToString,
-            sync::Arc,
-            vec,
-            vec::Vec,
-        },
+        alloc::{string::ToString, sync::Arc, vec, vec::Vec},
         spanners::{
-            SpanRef,
-            TextSpanner,
-            span_lexers::{
-                LexerTextSpanner,
-                SpanLexer,
-            },
+            SpanRef, TextSpanner,
+            span_lexers::{LexerTextSpanner, SpanLexer},
         },
     };
 
@@ -156,19 +144,10 @@ mod tests {
     }
 
     #[test]
-    fn test_logos_empty() {
-        let s = spanner(R50kLexer);
-        let spans = s.split_spans("");
-        assert!(spans.is_empty());
-    }
-
-    #[test]
-    fn test_logos_whitespace_only() {
-        let s = spanner(R50kLexer);
-        let text = "   ";
-        let spans = s.split_spans(text);
-
-        assert_eq!(spans, vec![SpanRef::Word(0..3)]);
+    fn test_r50k_common() {
+        crate::spanners::span_lexers::logos::testutil::common_lexer_tests(
+            crate::alloc::boxed::Box::new(R50kLexer),
+        );
     }
 
     #[test]
