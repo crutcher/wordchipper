@@ -588,7 +588,7 @@ fn build_external_tgraph<P: AsRef<Path>>(
         (
             "bpe_openai",
             base_style
-                .with_marker_type(MarkerType::Diamond)
+                .with_marker_type(MarkerType::Circle)
                 .with_fill_style(Some(colors::DEEPORANGE_100.into())),
         ),
         (
@@ -602,8 +602,8 @@ fn build_external_tgraph<P: AsRef<Path>>(
             "tokenizers",
             //   ("♦︎".to_string(), colors::PINK_200.filled()),
             base_style
-                .with_marker_type(MarkerType::Circle)
-                .with_fill_style(Some(colors::PINK_100.into())),
+                .with_marker_type(MarkerType::Diamond)
+                .with_fill_style(Some(colors::BLUEGREY_100.into())),
         ),
     ]
     .iter()
