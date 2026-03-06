@@ -95,10 +95,12 @@ struct Point {
     pub value: f64,
 }
 
+#[allow(unused)]
 struct Series {
     pub name: String,
     pub glyph: String,
     pub style: ShapeStyle,
+    pub marker_style: MarkerStyle,
     pub points: Vec<Point>,
 }
 impl Series {
@@ -329,6 +331,46 @@ fn build_demo_graph<P: AsRef<Path>>(output_dir: &P) -> Result<(), Box<dyn std::e
     Ok(())
 }
 
+fn span_styles() -> BTreeMap<&'static str, MarkerStyle> {
+    let base_style = MarkerStyle::default().with_stroke_style(colors::BLACK.stroke_width(2));
+
+    [
+        (
+            "buffer_sweep",
+            base_style
+                .with_marker_type(MarkerType::Square)
+                .with_fill_style(Some(colors::GREEN_A200.into())),
+        ),
+        (
+            "priority_merge",
+            base_style
+                .with_marker_type(MarkerType::CrossDiamond)
+                .with_fill_style(Some(colors::PINK_A200.into())),
+        ),
+        (
+            "tail_sweep",
+            base_style
+                .with_marker_type(MarkerType::CrossTriDown)
+                .with_fill_style(Some(colors::DEEPORANGE_A200.into())),
+        ),
+        (
+            "bpe_backtrack",
+            base_style
+                .with_marker_type(MarkerType::TriUp)
+                .with_fill_style(Some(colors::PURPLE_A200.into())),
+        ),
+        (
+            "merge_heap",
+            base_style
+                .with_marker_type(MarkerType::Diamond)
+                .with_fill_style(Some(colors::BLUE_A200.into())),
+        ),
+    ]
+    .iter()
+    .cloned()
+    .collect()
+}
+
 fn build_internal_rel_tgraph<P: AsRef<Path>>(
     model: &str,
     accel: bool,
@@ -339,17 +381,6 @@ fn build_internal_rel_tgraph<P: AsRef<Path>>(
 
     log::info!("Plotting to {}", plot_path.display());
 
-    let span_map: BTreeMap<&str, ShapeStyle> = [
-        ("bpe_backtrack", colors::GREY_A400.filled()),
-        ("buffer_sweep", colors::GREEN_A400.filled()),
-        ("merge_heap", colors::BLUE_A400.filled()),
-        ("priority_merge", colors::PINK_A700.filled()),
-        ("tail_sweep", colors::DEEPPURPLE_A400.filled()),
-    ]
-    .iter()
-    .cloned()
-    .collect();
-
     let span_key = |span: &str| {
         format!(
             "encoding_parallel::wordchipper::{span}::{model}{}",
@@ -358,14 +389,13 @@ fn build_internal_rel_tgraph<P: AsRef<Path>>(
     };
 
     let mut plot_series: Vec<Series> = Default::default();
-    for (span, style) in span_map.iter() {
+    for (span, &marker_style) in span_styles().iter() {
         if let Some(series_data) = data.select_series(&span_key(span)) {
-            let style = if accel { style.filled() } else { *style };
-
             plot_series.push(Series {
                 name: span.to_string(),
                 glyph: "X".to_string(),
-                style,
+                style: colors::GREY_A400.filled(),
+                marker_style,
                 points: as_points(&series_data, |_, br| median_bps(br)),
             })
         }
@@ -426,27 +456,26 @@ fn build_internal_rel_tgraph<P: AsRef<Path>>(
 
     for pseries in plot_series {
         let name = &pseries.name;
-        let style = pseries.style;
         let points: Vec<(u32, f64)> = pseries
             .points
             .iter()
             .map(|p| (p.threads, p.value))
             .collect();
 
-        let size = 4;
+        chart.draw_series(LineSeries::new(
+            pseries.points.iter().map(|p| (p.threads, p.value)),
+            pseries.marker_style.line_style().stroke_width(4),
+        ))?;
+
+        let size = 8;
         chart
             .draw_series(
                 points
                     .iter()
-                    .map(|coord| EmptyElement::at(*coord) + Circle::new((0, 0), size, style)),
+                    .map(|&coord| pseries.marker_style.marker(coord, size)),
             )?
             .label(name)
-            .legend(move |coord| EmptyElement::at(coord) + Circle::new((0, 0), size, style));
-
-        chart.draw_series(LineSeries::new(
-            pseries.points.iter().map(|p| (p.threads, p.value)),
-            style,
-        ))?;
+            .legend(move |coord| pseries.marker_style.marker(coord, size));
     }
 
     chart
@@ -470,32 +499,20 @@ fn build_internal_tgraph<P: AsRef<Path>>(
 
     log::info!("Plotting to {}", plot_path.display());
 
-    let span_map: BTreeMap<&str, ShapeStyle> = [
-        ("bpe_backtrack", colors::GREY_A400.filled()),
-        ("buffer_sweep", colors::GREEN_A400.filled()),
-        ("merge_heap", colors::BLUE_A400.filled()),
-        ("priority_merge", colors::PINK_A700.filled()),
-        ("tail_sweep", colors::DEEPPURPLE_A400.filled()),
-    ]
-    .iter()
-    .cloned()
-    .collect();
-
     let mut plot_series: Vec<Series> = Default::default();
 
-    for (span, style) in span_map.iter() {
+    for (span, &marker_style) in span_styles().iter() {
         let sname = format!(
             "encoding_parallel::wordchipper::{span}::{model}{}",
             if accel { "_fast" } else { "" },
         );
 
         if let Some(series_data) = data.select_series(&sname) {
-            let style = if accel { style.filled() } else { *style };
-
             plot_series.push(Series {
                 name: span.to_string(),
                 glyph: "X".to_string(),
-                style,
+                style: colors::GREY_A400.filled(),
+                marker_style,
                 points: as_points(&series_data, |_, br| median_bps(br)),
             })
         }
@@ -542,6 +559,8 @@ fn build_internal_tgraph<P: AsRef<Path>>(
         })
         .draw()?;
 
+    let size = 8;
+
     for pseries in plot_series {
         let name = &pseries.name;
         let style = pseries.style;
@@ -551,20 +570,19 @@ fn build_internal_tgraph<P: AsRef<Path>>(
             .map(|p| (p.threads, p.value))
             .collect();
 
-        let size = 4;
-        chart
-            .draw_series(
-                points
-                    .iter()
-                    .map(|coord| EmptyElement::at(*coord) + Circle::new((0, 0), size, style)),
-            )?
-            .label(name)
-            .legend(move |coord| EmptyElement::at(coord) + Circle::new((0, 0), size, style));
-
         chart.draw_series(LineSeries::new(
             pseries.points.iter().map(|p| (p.threads, p.value)),
             style,
         ))?;
+
+        chart
+            .draw_series(
+                points
+                    .iter()
+                    .map(|&coord| pseries.marker_style.marker(coord, size)),
+            )?
+            .label(name)
+            .legend(move |coord| pseries.marker_style.marker(coord, size));
     }
 
     chart
@@ -601,6 +619,7 @@ fn build_external_tgraph<P: AsRef<Path>>(
                 name: ext.to_string(),
                 glyph: glyph.to_string(),
                 style: *style,
+                marker_style: Default::default(),
                 points: as_points(&series_data, |_, br| median_bps(br)),
             })
         }
@@ -610,6 +629,7 @@ fn build_external_tgraph<P: AsRef<Path>>(
         name: "wordchipper:regex".to_string(),
         glyph: "✦".to_string(),
         style: colors::GREEN_200.filled(),
+        marker_style: Default::default(),
         points: as_points(
             &data
                 .select_series(&format!(
@@ -624,6 +644,7 @@ fn build_external_tgraph<P: AsRef<Path>>(
         name: "wordchipper:logos".to_string(),
         glyph: "★".to_string(),
         style: colors::LIGHTBLUE_200.filled(),
+        marker_style: MarkerStyle::default().with_fill_style(colors::LIGHTBLUE_200.filled()),
         points: as_points(
             &data
                 .select_series(&format!(

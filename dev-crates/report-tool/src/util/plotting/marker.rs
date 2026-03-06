@@ -240,6 +240,14 @@ impl MarkerStyle {
         }
     }
 
+    pub fn line_style(&self) -> ShapeStyle {
+        if let Some(fill) = &self.fill_style {
+            fill.clone()
+        } else {
+            self.stroke_style
+        }
+    }
+
     pub fn with_marker_type(
         mut self,
         marker_type: MarkerType,
@@ -264,6 +272,7 @@ impl MarkerStyle {
         stroke_style: S,
     ) -> Self {
         self.stroke_style = stroke_style.into();
+        self.stroke_style.filled = false;
         self
     }
 
@@ -272,6 +281,7 @@ impl MarkerStyle {
         fill_style: S,
     ) -> Self {
         self.fill_style = fill_style.into();
+        self.fill_style.as_mut().map(|s| s.filled = true);
         self
     }
 
