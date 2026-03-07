@@ -1,5 +1,6 @@
 use std::{
     collections::BTreeMap,
+    ops::Range,
     path::Path,
 };
 
@@ -12,11 +13,11 @@ use plotters::{
     },
     style::full_palette as colors,
 };
-use plotters_backend::BackendCoord;
 use wordchipper_cli_util::logging::LogArgs;
 
 use crate::util::{
     bench_data::par_bench::ParBenchData,
+    float_tools,
     plotting::{
         MarkerStyle,
         MarkerType,
@@ -89,14 +90,14 @@ impl RustBenchPlots {
 }
 
 #[derive(Debug, Clone)]
-struct Point {
+pub struct Point {
     pub threads: u32,
     pub value: f64,
 }
 
 #[allow(unused)]
 #[derive(Debug, Clone)]
-struct Series {
+pub struct Series {
     pub name: String,
     pub marker_style: MarkerStyle,
     pub points: Vec<Point>,
@@ -127,27 +128,6 @@ impl Series {
     }
 }
 
-fn fmin(
-    a: f64,
-    b: f64,
-) -> f64 {
-    match a.partial_cmp(&b).unwrap() {
-        std::cmp::Ordering::Less => a,
-        std::cmp::Ordering::Equal => a,
-        std::cmp::Ordering::Greater => b,
-    }
-}
-fn fmax(
-    a: f64,
-    b: f64,
-) -> f64 {
-    match a.partial_cmp(&b).unwrap() {
-        std::cmp::Ordering::Less => b,
-        std::cmp::Ordering::Equal => a,
-        std::cmp::Ordering::Greater => a,
-    }
-}
-
 fn median_bps(br: &BenchResult) -> f64 {
     br.throughput_bps.as_ref().unwrap().median.unwrap()
 }
@@ -165,37 +145,6 @@ where
             value: f(*threads, br),
         })
         .collect()
-}
-
-pub struct AbstractPath {
-    pub path: Vec<(f64, f64)>,
-}
-
-impl<I> From<I> for AbstractPath
-where
-    I: IntoIterator<Item = (f64, f64)>,
-{
-    fn from(value: I) -> Self {
-        Self {
-            path: value.into_iter().collect(),
-        }
-    }
-}
-
-impl AbstractPath {
-    pub fn to_size(
-        &self,
-        size: u32,
-    ) -> Vec<BackendCoord> {
-        self.path
-            .iter()
-            .map(|(x, y)| {
-                let x = (x * size as f64) as i32;
-                let y = (y * size as f64) as i32;
-                (x, y)
-            })
-            .collect()
-    }
 }
 
 fn span_styles() -> BTreeMap<&'static str, MarkerStyle> {
@@ -238,6 +187,41 @@ fn span_styles() -> BTreeMap<&'static str, MarkerStyle> {
     .collect()
 }
 
+pub struct SeriesLimits {
+    pub threads: (u32, u32),
+    pub value: (f64, f64),
+}
+
+impl SeriesLimits {
+    pub fn from_series(s: &[Series]) -> Self {
+        let min_threads = s.iter().map(|s| s.min_threads()).min().unwrap();
+        let max_threads = s.iter().map(|s| s.max_threads()).max().unwrap();
+        let min_bps = s
+            .iter()
+            .map(|s| s.min_bps())
+            .min_by(|a, b| a.partial_cmp(b).unwrap())
+            .unwrap();
+        let max_bps = s
+            .iter()
+            .map(|s| s.max_bps())
+            .max_by(|a, b| a.partial_cmp(b).unwrap())
+            .unwrap();
+
+        Self {
+            threads: (min_threads, max_threads),
+            value: (min_bps, max_bps),
+        }
+    }
+
+    pub fn thread_range(&self) -> Range<u32> {
+        self.threads.0..self.threads.1
+    }
+
+    pub fn value_range(&self) -> Range<f64> {
+        self.value.0..self.value.1
+    }
+}
+
 fn build_internal_rel_tgraph<P: AsRef<Path>>(
     model: &str,
     accel: bool,
@@ -271,7 +255,7 @@ fn build_internal_rel_tgraph<P: AsRef<Path>>(
     for series in plot_series.iter() {
         for point in series.points.iter() {
             let entry = baseline.entry(point.threads).or_default();
-            *entry = fmax(*entry, point.value);
+            *entry = float_tools::fmax(*entry, point.value);
         }
     }
     for series in plot_series.iter_mut() {
@@ -280,18 +264,7 @@ fn build_internal_rel_tgraph<P: AsRef<Path>>(
         })
     }
 
-    let min_threads = plot_series.iter().map(|s| s.min_threads()).min().unwrap();
-    let max_threads = plot_series.iter().map(|s| s.max_threads()).max().unwrap();
-    let min_bps = plot_series
-        .iter()
-        .map(|s| s.min_bps())
-        .min_by(|a, b| a.partial_cmp(b).unwrap())
-        .unwrap();
-    let max_bps = plot_series
-        .iter()
-        .map(|s| s.max_bps())
-        .max_by(|a, b| a.partial_cmp(b).unwrap())
-        .unwrap();
+    let series_limits = SeriesLimits::from_series(&plot_series);
 
     let root = SVGBackend::new(plot_path, (640, 480)).into_drawing_area();
     root.fill(&colors::WHITE)?;
@@ -309,8 +282,8 @@ fn build_internal_rel_tgraph<P: AsRef<Path>>(
         .x_label_area_size(40)
         .y_label_area_size(90)
         .build_cartesian_2d(
-            (min_threads..max_threads).log_scale().base(2.0),
-            min_bps..max_bps,
+            series_limits.thread_range().log_scale().base(2.0),
+            series_limits.value_range(),
         )?;
 
     chart
@@ -381,18 +354,7 @@ fn build_internal_tgraph<P: AsRef<Path>>(
         }
     }
 
-    let min_threads = plot_series.iter().map(|s| s.min_threads()).min().unwrap();
-    let max_threads = plot_series.iter().map(|s| s.max_threads()).max().unwrap();
-    let min_bps = plot_series
-        .iter()
-        .map(|s| s.min_bps())
-        .min_by(|a, b| a.partial_cmp(b).unwrap())
-        .unwrap();
-    let max_bps = plot_series
-        .iter()
-        .map(|s| s.max_bps())
-        .max_by(|a, b| a.partial_cmp(b).unwrap())
-        .unwrap();
+    let series_limits = SeriesLimits::from_series(&plot_series);
 
     let root = SVGBackend::new(plot_path, (640, 480)).into_drawing_area();
     root.fill(&colors::WHITE)?;
@@ -409,8 +371,8 @@ fn build_internal_tgraph<P: AsRef<Path>>(
         .x_label_area_size(40)
         .y_label_area_size(90)
         .build_cartesian_2d(
-            (min_threads..max_threads).log_scale().base(2.0),
-            min_bps..max_bps,
+            series_limits.thread_range().log_scale().base(2.0),
+            series_limits.value_range(),
         )?;
 
     chart
@@ -483,14 +445,12 @@ fn build_external_tgraph<P: AsRef<Path>>(
         ),
         (
             "tiktoken",
-            //   ("♥︎".to_string(), colors::PURPLE_200.filled()),
             base_style
                 .with_marker_type(MarkerType::Square)
                 .with_fill_style(Some(colors::PURPLE_100.into())),
         ),
         (
             "tokenizers",
-            //   ("♦︎".to_string(), colors::PINK_200.filled()),
             base_style
                 .with_marker_type(MarkerType::Diamond)
                 .with_fill_style(Some(colors::BLUEGREY_100.into())),
@@ -523,7 +483,7 @@ fn build_external_tgraph<P: AsRef<Path>>(
                 .select_series(&format!(
                     "encoding_parallel::wordchipper::{span_encoder}::{model}"
                 ))
-                .expect("Failed to select regex series"),
+                .expect("Failed to select series"),
             |_, br| median_bps(br),
         ),
     };
@@ -538,30 +498,10 @@ fn build_external_tgraph<P: AsRef<Path>>(
                 .select_series(&format!(
                     "encoding_parallel::wordchipper::{span_encoder}::{model}_fast"
                 ))
-                .expect("Failed to select regex series"),
+                .expect("Failed to select series"),
             |_, br| median_bps(br),
         ),
     };
-
-    let min_threads = brandx_group.iter().map(|s| s.min_threads()).min().unwrap();
-    let max_threads = brandx_group.iter().map(|s| s.max_threads()).max().unwrap();
-
-    let min_bps = fmin(
-        brandx_group
-            .iter()
-            .map(|s| s.min_bps())
-            .min_by(|a, b| a.partial_cmp(b).unwrap())
-            .unwrap(),
-        regex_series.min_bps(),
-    );
-    let max_bps = fmax(
-        brandx_group
-            .iter()
-            .map(|s| s.max_bps())
-            .max_by(|a, b| a.partial_cmp(b).unwrap())
-            .unwrap(),
-        regex_series.max_bps(),
-    );
 
     let human_opts = FormatSizeOptions::from(humansize::BINARY).decimal_places(0);
     let bps_formatter =
@@ -588,6 +528,8 @@ fn build_external_tgraph<P: AsRef<Path>>(
                 display_series.insert(0, logos_series.clone());
             }
 
+            let series_limits = SeriesLimits::from_series(&display_series);
+
             let caption = format!(
                 "wordchipper:{chart_name} {scale_desc} throughput, rust, model: \"{model}\"",
             );
@@ -605,7 +547,7 @@ fn build_external_tgraph<P: AsRef<Path>>(
                         .x_label_area_size(40)
                         .y_label_area_size(70)
                         .build_cartesian_2d(
-                            (min_threads..max_threads).log_scale().base(2.0),
+                            series_limits.thread_range().log_scale().base(2.0),
                             $y_axis,
                         )?;
 
@@ -643,21 +585,10 @@ fn build_external_tgraph<P: AsRef<Path>>(
                 }};
             }
 
-            let min_bps = if include_logos {
-                fmin(min_bps, logos_series.min_bps())
-            } else {
-                min_bps
-            };
-            let max_bps = if include_logos {
-                fmax(max_bps, logos_series.max_bps())
-            } else {
-                max_bps
-            };
-
             if log_scale {
-                draw_chart!((min_bps..max_bps).log_scale().base(2.0))?;
+                draw_chart!(series_limits.value_range().log_scale().base(2.0))?;
             } else {
-                draw_chart!(min_bps..max_bps)?;
+                draw_chart!(series_limits.value_range())?;
             }
 
             root.present()?;
