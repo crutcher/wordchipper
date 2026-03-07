@@ -1,6 +1,5 @@
 use std::{
     collections::BTreeMap,
-    ops::Range,
     path::Path,
 };
 
@@ -17,9 +16,11 @@ use wordchipper_cli_util::logging::LogArgs;
 use crate::util::{
     bench_data::par_bench::ParBenchData,
     float_tools,
+    float_tools::fiter_range,
     human_format,
     plotting::{
         MarkerLevel,
+        MarkerSeries,
         MarkerStyle,
         MarkerType,
     },
@@ -51,92 +52,59 @@ impl RustBenchPlots {
         log::info!("{:#?}", self);
 
         let data_dir = Path::new(&self.data_dir);
-
         let data = ParBenchData::load_data(data_dir.join("rust_parallel"))?;
 
         let output_dir = Path::new(&self.output_dir);
         std::fs::create_dir_all(output_dir)?;
 
         for model in self.models.iter() {
-            build_external_tgraph(model, "buffer_sweep", &output_dir, &data)?;
-
-            for accel in [false, true] {
-                let lexer = if accel { "logos" } else { "regex" };
-                build_internal_tgraph(
-                    model,
-                    accel,
-                    &output_dir.join(format!("span_encoder_vrs.{model}.{lexer}.log.svg")),
-                    &data,
-                )?;
-                build_internal_rel_tgraph(
-                    model,
-                    accel,
-                    &output_dir.join(format!("span_encoder_vrs.{model}.{lexer}.rel.svg")),
-                    &data,
-                )?;
-            }
+            build_model_graphs(model, &output_dir, &data)?;
         }
 
         Ok(())
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct Point {
-    pub threads: u32,
-    pub value: f64,
+fn build_model_graphs<P: AsRef<Path>>(
+    model: &str,
+    output_dir: &P,
+    data: &ParBenchData,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let output_dir = output_dir.as_ref();
+
+    build_external_graphs(model, "buffer_sweep", &output_dir, data)?;
+
+    build_internal_graphs(model, &output_dir, data)
 }
 
-#[allow(unused)]
-#[derive(Debug, Clone)]
-pub struct Series {
-    pub name: String,
-    pub marker_style: MarkerStyle,
-    pub points: Vec<Point>,
-}
-impl Series {
-    pub fn min_threads(&self) -> u32 {
-        self.points.iter().map(|p| p.threads).min().unwrap()
+fn build_internal_graphs<P: AsRef<Path>>(
+    model: &str,
+    output_dir: &P,
+    data: &ParBenchData,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let output_dir = output_dir.as_ref();
+
+    for accel in [false, true] {
+        let lexer = if accel { "logos" } else { "regex" };
+        build_internal_tgraph(
+            model,
+            accel,
+            &output_dir.join(format!("span_encoder_vrs.{model}.{lexer}.log.svg")),
+            data,
+        )?;
+        build_internal_rel_tgraph(
+            model,
+            accel,
+            &output_dir.join(format!("span_encoder_vrs.{model}.{lexer}.rel.svg")),
+            data,
+        )?;
     }
 
-    pub fn max_threads(&self) -> u32 {
-        self.points.iter().map(|p| p.threads).max().unwrap()
-    }
-
-    pub fn min_bps(&self) -> f64 {
-        self.points
-            .iter()
-            .map(|p| p.value)
-            .min_by(|a, b| a.partial_cmp(b).unwrap())
-            .unwrap()
-    }
-
-    pub fn max_bps(&self) -> f64 {
-        self.points
-            .iter()
-            .map(|p| p.value)
-            .max_by(|a, b| a.partial_cmp(b).unwrap())
-            .unwrap()
-    }
+    Ok(())
 }
 
 fn median_bps(br: &BenchResult) -> f64 {
     br.throughput_bps.as_ref().unwrap().median.unwrap()
-}
-
-fn as_points<F>(
-    obs: &[(u32, BenchResult)],
-    f: F,
-) -> Vec<Point>
-where
-    F: Fn(u32, &BenchResult) -> f64,
-{
-    obs.iter()
-        .map(|(threads, br)| Point {
-            threads: *threads,
-            value: f(*threads, br),
-        })
-        .collect()
 }
 
 fn span_styles() -> BTreeMap<&'static str, MarkerStyle> {
@@ -179,41 +147,6 @@ fn span_styles() -> BTreeMap<&'static str, MarkerStyle> {
     .collect()
 }
 
-pub struct SeriesLimits {
-    pub threads: (u32, u32),
-    pub value: (f64, f64),
-}
-
-impl SeriesLimits {
-    pub fn from_series(s: &[Series]) -> Self {
-        let min_threads = s.iter().map(|s| s.min_threads()).min().unwrap();
-        let max_threads = s.iter().map(|s| s.max_threads()).max().unwrap();
-        let min_bps = s
-            .iter()
-            .map(|s| s.min_bps())
-            .min_by(|a, b| a.partial_cmp(b).unwrap())
-            .unwrap();
-        let max_bps = s
-            .iter()
-            .map(|s| s.max_bps())
-            .max_by(|a, b| a.partial_cmp(b).unwrap())
-            .unwrap();
-
-        Self {
-            threads: (min_threads, max_threads),
-            value: (min_bps, max_bps),
-        }
-    }
-
-    pub fn thread_range(&self) -> Range<u32> {
-        self.threads.0..self.threads.1
-    }
-
-    pub fn value_range(&self) -> Range<f64> {
-        self.value.0..self.value.1
-    }
-}
-
 fn build_internal_rel_tgraph<P: AsRef<Path>>(
     model: &str,
     accel: bool,
@@ -231,35 +164,48 @@ fn build_internal_rel_tgraph<P: AsRef<Path>>(
         )
     };
 
-    let mut plot_series: Vec<Series> = Default::default();
-    for (span, &marker_style) in span_styles().iter() {
-        if let Some(series_data) = data.select_series(&span_key(span)) {
-            plot_series.push(Series {
-                name: span.to_string(),
-                marker_style,
-                points: as_points(&series_data, |_, br| median_bps(br)),
+    let mut plot_series: Vec<MarkerSeries<(u32, BenchResult)>> = Default::default();
+    for (name, &style) in span_styles().iter() {
+        if let Some(points) = data.select_series(&span_key(name)) {
+            plot_series.push(MarkerSeries {
+                name: name.to_string(),
+                style,
+                points,
             })
         }
     }
 
+    fn select((threads, bench_results): &(u32, BenchResult)) -> (u32, f64) {
+        (*threads, median_bps(bench_results))
+    }
+
+    let render: Vec<MarkerSeries<(u32, f64)>> = plot_series.iter().map(|s| s.map(select)).collect();
+
     // Normalize the points to the max value.
     let mut baseline: BTreeMap<u32, f64> = Default::default();
-    for series in plot_series.iter() {
-        for point in series.points.iter() {
-            let entry = baseline.entry(point.threads).or_default();
-            *entry = float_tools::fmax(*entry, point.value);
+    for ms in render.iter() {
+        for &(t, v) in ms.points.iter() {
+            let entry = baseline.entry(t).or_default();
+            *entry = float_tools::fmax(*entry, v);
         }
     }
-    for series in plot_series.iter_mut() {
-        series.points.iter_mut().for_each(|point| {
-            point.value /= baseline[&point.threads];
-        })
-    }
+    let render: Vec<MarkerSeries<(u32, f64)>> = render
+        .into_iter()
+        .map(|s| s.map(|&(t, v)| (t, v / baseline[&t])))
+        .collect();
 
-    let root = SVGBackend::new(plot_path, (640, 480)).into_drawing_area();
+    let threads = render.iter().flat_map(|s| s.xs()).collect::<Vec<_>>();
+    let x_min = *threads.iter().min().unwrap();
+    let x_max = *threads.iter().max().unwrap();
+    let x_range = x_min..x_max;
+
+    let values = render.iter().flat_map(|s| s.ys()).collect::<Vec<_>>();
+    let y_range = fiter_range(&values).unwrap();
+
+    const SHAPE: (u32, u32) = (640, 400);
+
+    let root = SVGBackend::new(plot_path, SHAPE).into_drawing_area();
     root.fill(&colors::WHITE)?;
-
-    let series_limits = SeriesLimits::from_series(&plot_series);
 
     let mut chart = ChartBuilder::on(&root)
         .caption(
@@ -273,10 +219,7 @@ fn build_internal_rel_tgraph<P: AsRef<Path>>(
         .margin(10)
         .x_label_area_size(40)
         .y_label_area_size(50)
-        .build_cartesian_2d(
-            series_limits.thread_range().log_scale().base(2.0),
-            series_limits.value_range(),
-        )?;
+        .build_cartesian_2d(x_range.log_scale().base(2.0), y_range)?;
 
     chart
         .configure_mesh()
@@ -284,28 +227,22 @@ fn build_internal_rel_tgraph<P: AsRef<Path>>(
         .y_desc("Median Throughput: max relative")
         .draw()?;
 
-    for pseries in plot_series {
-        let name = &pseries.name;
-        let points: Vec<(u32, f64)> = pseries
-            .points
-            .iter()
-            .map(|p| (p.threads, p.value))
-            .collect();
+    const SIZE: i32 = 8;
+    const LINE_WIDTH: u32 = 4;
 
+    // Render the lines under the markers.
+    for ms in render.iter() {
         chart.draw_series(LineSeries::new(
-            pseries.points.iter().map(|p| (p.threads, p.value)),
-            pseries.marker_style.line_style().stroke_width(4),
+            ms.points.clone(),
+            ms.style.line_style().stroke_width(LINE_WIDTH),
         ))?;
+    }
 
-        let size = 8;
+    for ms in render.iter() {
         chart
-            .draw_series(
-                points
-                    .iter()
-                    .map(|&coord| pseries.marker_style.marker(coord, size)),
-            )?
-            .label(name)
-            .legend(move |coord| pseries.marker_style.marker(coord, size));
+            .draw_series(ms.points.iter().map(|&coord| ms.style.marker(coord, SIZE)))?
+            .label(ms.name.clone())
+            .legend(move |coord| ms.style.marker(coord, SIZE));
     }
 
     chart
@@ -331,27 +268,41 @@ fn build_internal_tgraph<P: AsRef<Path>>(
 
     log::info!("Plotting to {}", plot_path.display());
 
-    let mut plot_series: Vec<Series> = Default::default();
+    let mut schedule: Vec<MarkerSeries<(u32, BenchResult)>> = Default::default();
 
-    for (span, &marker_style) in span_styles().iter() {
+    for (name, &marker_style) in span_styles().iter() {
         let sname = format!(
-            "encoding_parallel::wordchipper::{span}::{model}{}",
+            "encoding_parallel::wordchipper::{name}::{model}{}",
             if accel { "_fast" } else { "" },
         );
 
-        if let Some(series_data) = data.select_series(&sname) {
-            plot_series.push(Series {
-                name: span.to_string(),
-                marker_style,
-                points: as_points(&series_data, |_, br| median_bps(br)),
+        if let Some(points) = data.select_series(&sname) {
+            schedule.push(MarkerSeries {
+                name: name.to_string(),
+                style: marker_style,
+                points,
             })
         }
     }
 
-    let root = SVGBackend::new(plot_path, (640, 480)).into_drawing_area();
-    root.fill(&colors::WHITE)?;
+    fn select((threads, bench_results): &(u32, BenchResult)) -> (u32, f64) {
+        (*threads, median_bps(bench_results))
+    }
 
-    let series_limits = SeriesLimits::from_series(&plot_series);
+    let render: Vec<MarkerSeries<(u32, f64)>> = schedule.iter().map(|s| s.map(select)).collect();
+
+    let threads = render.iter().flat_map(|s| s.xs()).collect::<Vec<_>>();
+    let x_min = *threads.iter().min().unwrap();
+    let x_max = *threads.iter().max().unwrap();
+    let x_range = x_min..x_max;
+
+    let values = render.iter().flat_map(|s| s.ys()).collect::<Vec<_>>();
+    let y_range = fiter_range(&values).unwrap();
+
+    const SHAPE: (u32, u32) = (640, 400);
+
+    let root = SVGBackend::new(plot_path, SHAPE).into_drawing_area();
+    root.fill(&colors::WHITE)?;
 
     let mut chart = ChartBuilder::on(&root)
         .caption(
@@ -365,10 +316,7 @@ fn build_internal_tgraph<P: AsRef<Path>>(
         .margin(10)
         .x_label_area_size(40)
         .y_label_area_size(70)
-        .build_cartesian_2d(
-            series_limits.thread_range().log_scale().base(2.0),
-            series_limits.value_range().log_scale().base(2.0),
-        )?;
+        .build_cartesian_2d(x_range.log_scale().base(2.0), y_range.log_scale().base(2.0))?;
 
     chart
         .configure_mesh()
@@ -377,29 +325,22 @@ fn build_internal_tgraph<P: AsRef<Path>>(
         .y_label_formatter(&|&bps| human_format::format_bps(bps))
         .draw()?;
 
-    let size = 8;
+    const SIZE: i32 = 8;
+    const LINE_WIDTH: u32 = 4;
 
-    for pseries in plot_series {
-        let name = &pseries.name;
-        let points: Vec<(u32, f64)> = pseries
-            .points
-            .iter()
-            .map(|p| (p.threads, p.value))
-            .collect();
-
+    // Render the lines under the markers.
+    for ms in render.iter() {
         chart.draw_series(LineSeries::new(
-            pseries.points.iter().map(|p| (p.threads, p.value)),
-            pseries.marker_style.line_style().stroke_width(4),
+            ms.points.clone(),
+            ms.style.line_style().stroke_width(LINE_WIDTH),
         ))?;
+    }
 
+    for ms in render.iter() {
         chart
-            .draw_series(
-                points
-                    .iter()
-                    .map(|&coord| pseries.marker_style.marker(coord, size)),
-            )?
-            .label(name)
-            .legend(move |coord| pseries.marker_style.marker(coord, size));
+            .draw_series(ms.points.iter().map(|&coord| ms.style.marker(coord, SIZE)))?
+            .label(ms.name.clone())
+            .legend(move |coord| ms.style.marker(coord, SIZE));
     }
 
     chart
@@ -416,7 +357,7 @@ fn build_internal_tgraph<P: AsRef<Path>>(
     Ok(())
 }
 
-fn build_external_tgraph<P: AsRef<Path>>(
+fn build_external_graphs<P: AsRef<Path>>(
     model: &str,
     span_encoder: &str,
     output_dir: &P,
@@ -424,15 +365,9 @@ fn build_external_tgraph<P: AsRef<Path>>(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let output_dir = output_dir.as_ref();
 
-    let series_names = data
-        .series_names()
-        .into_iter()
-        .filter(|name| name.contains(model))
-        .collect::<Vec<_>>();
-
     let base_style = MarkerStyle::default().with_stroke_style(colors::BLACK.stroke_width(1));
 
-    let ext_styles: BTreeMap<&'static str, MarkerStyle> = [
+    let external: Vec<MarkerSeries<(u32, BenchResult)>> = vec![
         (
             "bpe_openai",
             base_style
@@ -452,57 +387,38 @@ fn build_external_tgraph<P: AsRef<Path>>(
                 .with_fill_style(Some(colors::BLUEGREY_200.into())),
         ),
     ]
-    .iter()
-    .cloned()
+    .into_iter()
+    .filter_map(|(name, style)| {
+        data.select_series(&format!("encoding_parallel::{name}::{model}"))
+            .map(|series_data| MarkerSeries::new(name, style, series_data))
+    })
     .collect();
 
-    let mut brandx_group: Vec<Series> = Default::default();
-    for (ext, &marker_style) in ext_styles.iter() {
-        if let Some(name) = series_names.iter().find(|name| name.contains(ext)) {
-            let series_data = data.select_series(name).unwrap();
-
-            brandx_group.push(Series {
-                name: ext.to_string(),
-                marker_style,
-                points: as_points(&series_data, |_, br| median_bps(br)),
-            })
-        }
-    }
-
-    let regex_series = Series {
-        name: "wordchipper:regex".to_string(),
-        marker_style: base_style
+    let regex_series = MarkerSeries::new(
+        "wordchipper:regex",
+        base_style
             .with_marker_type(MarkerType::TriUp)
             .with_marker_level(MarkerLevel::Para)
             .with_fill_style(colors::GREEN_A200.filled()),
-        points: as_points(
-            &data
-                .select_series(&format!(
-                    "encoding_parallel::wordchipper::{span_encoder}::{model}"
-                ))
-                .expect("Failed to select series"),
-            |_, br| median_bps(br),
-        ),
-    };
+        data.try_select_series(&format!(
+            "encoding_parallel::wordchipper::{span_encoder}::{model}"
+        ))?,
+    );
 
-    let logos_series = Series {
-        name: "wordchipper:logos".to_string(),
-        marker_style: base_style
+    let logos_series = MarkerSeries::new(
+        "wordchipper:logos",
+        base_style
             .with_marker_type(MarkerType::TriDown)
             .with_marker_level(MarkerLevel::Para)
             .with_fill_style(colors::LIGHTBLUE_A200.filled()),
-        points: as_points(
-            &data
-                .select_series(&format!(
-                    "encoding_parallel::wordchipper::{span_encoder}::{model}_fast"
-                ))
-                .expect("Failed to select series"),
-            |_, br| median_bps(br),
-        ),
-    };
+        data.try_select_series(&format!(
+            "encoding_parallel::wordchipper::{span_encoder}::{model}_fast"
+        ))?,
+    );
 
-    let size = 8;
-    let line_width = 4;
+    const SIZE: i32 = 8;
+    const LINE_WIDTH: u32 = 4;
+    const SHAPE: (u32, u32) = (640, 400);
 
     for include_logos in [false, true] {
         for log_scale in [false, true] {
@@ -514,16 +430,28 @@ fn build_external_tgraph<P: AsRef<Path>>(
             ));
             log::info!("Plotting to {}", plot_path.display());
 
-            let root = SVGBackend::new(&plot_path, (640, 480)).into_drawing_area();
+            let root = SVGBackend::new(&plot_path, SHAPE).into_drawing_area();
             root.fill(&colors::WHITE)?;
 
-            let mut display_series = brandx_group.clone();
-            display_series.push(regex_series.clone());
-            if include_logos {
-                display_series.push(logos_series.clone());
+            fn select((threads, bench_results): &(u32, BenchResult)) -> (u32, f64) {
+                (*threads, median_bps(bench_results))
             }
 
-            let series_limits = SeriesLimits::from_series(&display_series);
+            let mut schedule: Vec<MarkerSeries<(u32, f64)>> =
+                external.iter().map(|ms| ms.map(select)).collect();
+
+            schedule.push(regex_series.map(select));
+            if include_logos {
+                schedule.push(logos_series.map(select));
+            }
+
+            let threads = schedule.iter().flat_map(|s| s.xs()).collect::<Vec<_>>();
+            let x_min = *threads.iter().max().unwrap();
+            let x_max = *threads.iter().min().unwrap();
+            let x_range = x_min..x_max;
+
+            let values = schedule.iter().flat_map(|s| s.ys()).collect::<Vec<_>>();
+            let y_range = fiter_range(&values).unwrap();
 
             let caption = format!(
                 "wordchipper:{chart_name} {scale_desc} throughput, rust, model: \"{model}\"",
@@ -535,16 +463,13 @@ fn build_external_tgraph<P: AsRef<Path>>(
             //
             // As a result, the choice of range ends up polluting the base type.
             macro_rules! draw_chart {
-                ($y_axis:expr) => {{
+                ($y_range:expr) => {{
                     let mut chart = ChartBuilder::on(&root)
                         .caption(caption, ("sans-serif", 20).into_font())
                         .margin(10)
                         .x_label_area_size(40)
                         .y_label_area_size(70)
-                        .build_cartesian_2d(
-                            series_limits.thread_range().log_scale().base(2.0),
-                            $y_axis,
-                        )?;
+                        .build_cartesian_2d(x_range.log_scale().base(2.0), $y_range)?;
 
                     chart
                         .configure_mesh()
@@ -553,20 +478,23 @@ fn build_external_tgraph<P: AsRef<Path>>(
                         .y_label_formatter(&|&bps| human_format::format_bps(bps))
                         .draw()?;
 
-                    for series in display_series.iter() {
+                    // Render the lines under the markers.
+                    for ms in schedule.iter() {
                         chart.draw_series(LineSeries::new(
-                            series.points.iter().map(|p| (p.threads, p.value)),
-                            series.marker_style.line_style().stroke_width(line_width),
+                            ms.points.clone(),
+                            ms.style.line_style().stroke_width(LINE_WIDTH),
                         ))?;
+                    }
 
+                    for ms in schedule.iter() {
                         chart
                             .draw_series(
-                                series.points.iter().map(|p| {
-                                    series.marker_style.marker((p.threads, p.value), size)
-                                }),
+                                ms.points
+                                    .iter()
+                                    .map(|coords| ms.style.marker(*coords, SIZE)),
                             )?
-                            .label(&series.name)
-                            .legend(move |coord| series.marker_style.marker(coord, size));
+                            .label(ms.name.clone())
+                            .legend(move |coord| ms.style.marker(coord, SIZE));
                     }
 
                     chart
@@ -583,9 +511,9 @@ fn build_external_tgraph<P: AsRef<Path>>(
             }
 
             if log_scale {
-                draw_chart!(series_limits.value_range().log_scale().base(2.0))?;
+                draw_chart!(y_range.log_scale().base(2.0))?;
             } else {
-                draw_chart!(series_limits.value_range())?;
+                draw_chart!(y_range)?;
             }
 
             root.present()?;
