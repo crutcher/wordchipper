@@ -202,7 +202,9 @@ fn build_internal_rel_tgraph<P: AsRef<Path>>(
     let values = render.iter().flat_map(|s| s.ys()).collect::<Vec<_>>();
     let y_range = fiter_range(&values).unwrap();
 
-    let root = SVGBackend::new(plot_path, (640, 480)).into_drawing_area();
+    const SHAPE: (u32, u32) = (640, 400);
+
+    let root = SVGBackend::new(plot_path, SHAPE).into_drawing_area();
     root.fill(&colors::WHITE)?;
 
     let mut chart = ChartBuilder::on(&root)
@@ -228,15 +230,18 @@ fn build_internal_rel_tgraph<P: AsRef<Path>>(
     const SIZE: i32 = 8;
     const LINE_WIDTH: u32 = 4;
 
-    for ms in render {
+    // Render the lines under the markers.
+    for ms in render.iter() {
         chart.draw_series(LineSeries::new(
             ms.points.clone(),
             ms.style.line_style().stroke_width(LINE_WIDTH),
         ))?;
+    }
 
+    for ms in render.iter() {
         chart
             .draw_series(ms.points.iter().map(|&coord| ms.style.marker(coord, SIZE)))?
-            .label(ms.name)
+            .label(ms.name.clone())
             .legend(move |coord| ms.style.marker(coord, SIZE));
     }
 
@@ -294,7 +299,9 @@ fn build_internal_tgraph<P: AsRef<Path>>(
     let values = render.iter().flat_map(|s| s.ys()).collect::<Vec<_>>();
     let y_range = fiter_range(&values).unwrap();
 
-    let root = SVGBackend::new(plot_path, (640, 480)).into_drawing_area();
+    const SHAPE: (u32, u32) = (640, 400);
+
+    let root = SVGBackend::new(plot_path, SHAPE).into_drawing_area();
     root.fill(&colors::WHITE)?;
 
     let mut chart = ChartBuilder::on(&root)
@@ -321,15 +328,18 @@ fn build_internal_tgraph<P: AsRef<Path>>(
     const SIZE: i32 = 8;
     const LINE_WIDTH: u32 = 4;
 
-    for ms in render {
+    // Render the lines under the markers.
+    for ms in render.iter() {
         chart.draw_series(LineSeries::new(
             ms.points.clone(),
             ms.style.line_style().stroke_width(LINE_WIDTH),
         ))?;
+    }
 
+    for ms in render.iter() {
         chart
             .draw_series(ms.points.iter().map(|&coord| ms.style.marker(coord, SIZE)))?
-            .label(ms.name)
+            .label(ms.name.clone())
             .legend(move |coord| ms.style.marker(coord, SIZE));
     }
 
@@ -408,6 +418,7 @@ fn build_external_graphs<P: AsRef<Path>>(
 
     const SIZE: i32 = 8;
     const LINE_WIDTH: u32 = 4;
+    const SHAPE: (u32, u32) = (640, 400);
 
     for include_logos in [false, true] {
         for log_scale in [false, true] {
@@ -419,7 +430,7 @@ fn build_external_graphs<P: AsRef<Path>>(
             ));
             log::info!("Plotting to {}", plot_path.display());
 
-            let root = SVGBackend::new(&plot_path, (640, 480)).into_drawing_area();
+            let root = SVGBackend::new(&plot_path, SHAPE).into_drawing_area();
             root.fill(&colors::WHITE)?;
 
             fn select((threads, bench_results): &(u32, BenchResult)) -> (u32, f64) {
@@ -452,13 +463,13 @@ fn build_external_graphs<P: AsRef<Path>>(
             //
             // As a result, the choice of range ends up polluting the base type.
             macro_rules! draw_chart {
-                ($y_axis:expr) => {{
+                ($y_range:expr) => {{
                     let mut chart = ChartBuilder::on(&root)
                         .caption(caption, ("sans-serif", 20).into_font())
                         .margin(10)
                         .x_label_area_size(40)
                         .y_label_area_size(70)
-                        .build_cartesian_2d(x_range.log_scale().base(2.0), $y_axis)?;
+                        .build_cartesian_2d(x_range.log_scale().base(2.0), $y_range)?;
 
                     chart
                         .configure_mesh()
@@ -467,19 +478,22 @@ fn build_external_graphs<P: AsRef<Path>>(
                         .y_label_formatter(&|&bps| human_format::format_bps(bps))
                         .draw()?;
 
-                    for ms in schedule {
+                    // Render the lines under the markers.
+                    for ms in schedule.iter() {
                         chart.draw_series(LineSeries::new(
                             ms.points.clone(),
                             ms.style.line_style().stroke_width(LINE_WIDTH),
                         ))?;
+                    }
 
+                    for ms in schedule.iter() {
                         chart
                             .draw_series(
                                 ms.points
-                                    .into_iter()
-                                    .map(|coords| ms.style.marker(coords, SIZE)),
+                                    .iter()
+                                    .map(|coords| ms.style.marker(*coords, SIZE)),
                             )?
-                            .label(ms.name)
+                            .label(ms.name.clone())
                             .legend(move |coord| ms.style.marker(coord, SIZE));
                     }
 
