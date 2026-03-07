@@ -89,6 +89,11 @@ impl RustBenchPlots {
     }
 }
 
+fn format_bps(bps: f64) -> String {
+    let human_opts = FormatSizeOptions::from(humansize::BINARY).decimal_places(0);
+    format!("{}/s", humansize::format_size(bps as u64, human_opts))
+}
+
 #[derive(Debug, Clone)]
 pub struct Point {
     pub threads: u32,
@@ -379,9 +384,7 @@ fn build_internal_tgraph<P: AsRef<Path>>(
         .configure_mesh()
         .x_desc("Thread Count")
         .y_desc("Median Throughput")
-        .y_label_formatter(&|&bps| {
-            format!("{}/s", humansize::format_size_i(bps, humansize::BINARY))
-        })
+        .y_label_formatter(&|&bps| format_bps(bps))
         .draw()?;
 
     let size = 8;
@@ -503,10 +506,6 @@ fn build_external_tgraph<P: AsRef<Path>>(
         ),
     };
 
-    let human_opts = FormatSizeOptions::from(humansize::BINARY).decimal_places(0);
-    let bps_formatter =
-        move |bps: &f64| format!("{}/s", humansize::format_size(*bps as u64, human_opts));
-
     let size = 8;
     let line_width = 4;
 
@@ -555,7 +554,7 @@ fn build_external_tgraph<P: AsRef<Path>>(
                         .configure_mesh()
                         .x_desc("Thread Count")
                         .y_desc(format!("Median Throughput: {scale_desc} scale"))
-                        .y_label_formatter(&bps_formatter)
+                        .y_label_formatter(&|&bps| format_bps(bps))
                         .draw()?;
 
                     for series in display_series.iter() {
