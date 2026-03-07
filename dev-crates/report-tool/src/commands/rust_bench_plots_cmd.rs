@@ -17,6 +17,10 @@ use wordchipper_cli_util::logging::LogArgs;
 use crate::util::{
     bench_data::par_bench::ParBenchData,
     float_tools,
+    float_tools::{
+        fiter_max,
+        fiter_min,
+    },
     human_format,
     plotting::{
         MarkerLevel,
@@ -59,6 +63,8 @@ impl RustBenchPlots {
 
         for model in self.models.iter() {
             build_external_tgraph(model, "buffer_sweep", &output_dir, &data)?;
+
+            build_external_graphs(model, "buffer_sweep", &output_dir, &data)?;
 
             for accel in [false, true] {
                 let lexer = if accel { "logos" } else { "regex" };
@@ -416,6 +422,197 @@ fn build_internal_tgraph<P: AsRef<Path>>(
     Ok(())
 }
 
+fn build_external_graphs<P: AsRef<Path>>(
+    model: &str,
+    span_encoder: &str,
+    output_dir: &P,
+    data: &ParBenchData,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let output_dir = output_dir.as_ref();
+
+    let base_style = MarkerStyle::default().with_stroke_style(colors::BLACK.stroke_width(1));
+
+    let reference_series: Vec<(&str, MarkerStyle, Vec<(u32, BenchResult)>)> = vec![
+        (
+            "bpe_openai",
+            base_style
+                .with_marker_type(MarkerType::Circle)
+                .with_fill_style(Some(colors::DEEPORANGE_200.into())),
+        ),
+        (
+            "tiktoken",
+            base_style
+                .with_marker_type(MarkerType::Square)
+                .with_fill_style(Some(colors::PURPLE_200.into())),
+        ),
+        (
+            "tokenizers",
+            base_style
+                .with_marker_type(MarkerType::Diamond)
+                .with_fill_style(Some(colors::BLUEGREY_200.into())),
+        ),
+    ]
+    .into_iter()
+    .filter_map(|(ext, marker_style)| {
+        let series_name = format!("encoding_parallel::{ext}::{model}");
+        if let Some(series_data) = data.select_series(&series_name) {
+            Some((ext, marker_style, series_data))
+        } else {
+            None
+        }
+    })
+    .collect();
+
+    let regex_series = (
+        "wordchipper:regex",
+        base_style
+            .with_marker_type(MarkerType::TriUp)
+            .with_marker_level(MarkerLevel::Para)
+            .with_fill_style(colors::GREEN_A200.filled()),
+        data.select_series(&format!(
+            "encoding_parallel::wordchipper::{span_encoder}::{model}"
+        ))
+        .expect("Failed to select series"),
+    );
+
+    let logos_series = (
+        "wordchipper:logos",
+        base_style
+            .with_marker_type(MarkerType::TriDown)
+            .with_marker_level(MarkerLevel::Para)
+            .with_fill_style(colors::LIGHTBLUE_A200.filled()),
+        data.select_series(&format!(
+            "encoding_parallel::wordchipper::{span_encoder}::{model}_fast"
+        ))
+        .expect("Failed to select series"),
+    );
+
+    let size = 8;
+    let line_width = 4;
+
+    for include_logos in [false, true] {
+        for log_scale in [false, true] {
+            let chart_name = if include_logos { "logos" } else { "regex" };
+            let scale_desc = if log_scale { "log" } else { "linear" };
+
+            let plot_path = output_dir.join(format!(
+                "wc_{chart_name}_vrs_brandx.rust.{model}.{scale_desc}.svg"
+            ));
+            log::info!("Plotting to {}", plot_path.display());
+
+            let root = SVGBackend::new(&plot_path, (640, 480)).into_drawing_area();
+            root.fill(&colors::WHITE)?;
+
+            fn render(
+                (name, marker_style, thread_results): &(
+                    &'static str,
+                    MarkerStyle,
+                    Vec<(u32, BenchResult)>,
+                )
+            ) -> (&'static str, MarkerStyle, Vec<(u32, f64)>) {
+                (
+                    name,
+                    marker_style.clone(),
+                    thread_results
+                        .iter()
+                        .map(|(t, br)| (*t, median_bps(br)))
+                        .collect(),
+                )
+            }
+
+            let mut schedule: Vec<(&str, MarkerStyle, Vec<(u32, f64)>)> =
+                reference_series.iter().map(render).collect();
+
+            schedule.push(render(&regex_series));
+            if include_logos {
+                schedule.push(render(&logos_series));
+            }
+
+            let threads = schedule
+                .iter()
+                .flat_map(|(_, _, points)| points.iter())
+                .map(|(t, _)| *t)
+                .collect::<Vec<_>>();
+            let max_thread = *threads.iter().max().unwrap();
+            let min_thread = *threads.iter().min().unwrap();
+
+            let values = schedule
+                .iter()
+                .flat_map(|(_, _, points)| points.iter())
+                .map(|(_, v)| *v)
+                .collect::<Vec<_>>();
+            let max_value = fiter_max(&values);
+            let min_value = fiter_min(&values);
+
+            let caption = format!(
+                "wordchipper:{chart_name} {scale_desc} throughput, rust, model: \"{model}\"",
+            );
+
+            // ATTENTION: This is weird.
+            // The plotters chart machinery makes extensive and heavy use of specialized
+            // generic builders, *including* the management of the axis range type.
+            //
+            // As a result, the choice of range ends up polluting the base type.
+            macro_rules! draw_chart {
+                ($y_axis:expr) => {{
+                    let mut chart = ChartBuilder::on(&root)
+                        .caption(caption, ("sans-serif", 20).into_font())
+                        .margin(10)
+                        .x_label_area_size(40)
+                        .y_label_area_size(70)
+                        .build_cartesian_2d(
+                            (min_thread..max_thread).log_scale().base(2.0),
+                            $y_axis,
+                        )?;
+
+                    chart
+                        .configure_mesh()
+                        .x_desc("Thread Count")
+                        .y_desc(format!("Median Throughput: {scale_desc} scale"))
+                        .y_label_formatter(&|&bps| human_format::format_bps(bps))
+                        .draw()?;
+
+                    for (name, marker_style, points) in schedule {
+                        chart.draw_series(LineSeries::new(
+                            points.clone(),
+                            marker_style.line_style().stroke_width(line_width),
+                        ))?;
+
+                        chart
+                            .draw_series(
+                                points
+                                    .into_iter()
+                                    .map(|coords| marker_style.marker(coords, size)),
+                            )?
+                            .label(name)
+                            .legend(move |coord| marker_style.marker(coord, size));
+                    }
+
+                    chart
+                        .configure_series_labels()
+                        .position(SeriesLabelPosition::UpperLeft)
+                        .background_style(WHITE.mix(0.8))
+                        .margin(12)
+                        .legend_area_size(15)
+                        .border_style(BLACK)
+                        .draw()?;
+
+                    Ok::<_, Box<dyn std::error::Error>>(())
+                }};
+            }
+
+            if log_scale {
+                draw_chart!((min_value..max_value).log_scale().base(2.0))?;
+            } else {
+                draw_chart!(min_value..max_value)?;
+            }
+
+            root.present()?;
+        }
+    }
+
+    Ok(())
+}
 fn build_external_tgraph<P: AsRef<Path>>(
     model: &str,
     span_encoder: &str,

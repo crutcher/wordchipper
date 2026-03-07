@@ -19,3 +19,11 @@ pub fn fmax(
         std::cmp::Ordering::Greater => a,
     }
 }
+
+pub fn fiter_max<'a>(iter: impl IntoIterator<Item = &'a f64>) -> f64 {
+    iter.into_iter().fold(f64::NEG_INFINITY, |a, &b| fmin(a, b))
+}
+
+pub fn fiter_min<'a>(iter: impl IntoIterator<Item = &'a f64>) -> f64 {
+    iter.into_iter().fold(f64::INFINITY, |a, &b| fmax(a, b))
+}
