@@ -24,7 +24,7 @@ use crate::util::{
     },
 };
 
-/// Args for the cat command.
+/// Args for the rust-bench-plots command.
 #[derive(clap::Args, Debug)]
 pub struct RustBenchPlots {
     /// Path to the benchmark data.
@@ -44,7 +44,7 @@ pub struct RustBenchPlots {
 }
 
 impl RustBenchPlots {
-    /// Run the dev command.
+    /// Run the command.
     pub fn run(&self) -> Result<(), Box<dyn std::error::Error>> {
         self.logging.setup_logging(3)?;
         log::info!("{:#?}", self);
