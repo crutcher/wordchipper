@@ -140,7 +140,7 @@ class TestBatchEncode:
         benchmark.extra_info["input_bytes"] = total_bytes
         benchmark(tok.encode_batch, texts)
 
-    def test_wordchipper_threadpool(self, benchmark, model, fineweb_batch):
+    def test_wordchipper_threadpool(self, benchmark, model, fineweb_batch, max_threads):
         texts, total_bytes = fineweb_batch
 
         from concurrent.futures import ThreadPoolExecutor
@@ -154,7 +154,7 @@ class TestBatchEncode:
         benchmark.group = f"batch/{model}"
         benchmark.extra_info["input_bytes"] = total_bytes
 
-        pool = ThreadPoolExecutor()
+        pool = ThreadPoolExecutor(max_workers=max_threads)
 
         def encode_batch_threaded(texts):
             return list(pool.map(tok.encode, texts))
@@ -162,7 +162,7 @@ class TestBatchEncode:
         benchmark(encode_batch_threaded, texts)
         pool.shutdown(wait=False)
 
-    def test_wordchipper_threadpool_accel(self, benchmark, model, fineweb_batch):
+    def test_wordchipper_threadpool_accel(self, benchmark, model, fineweb_batch, max_threads):
         texts, total_bytes = fineweb_batch
 
         from concurrent.futures import ThreadPoolExecutor
@@ -176,7 +176,7 @@ class TestBatchEncode:
         benchmark.group = f"batch/{model}"
         benchmark.extra_info["input_bytes"] = total_bytes
 
-        pool = ThreadPoolExecutor()
+        pool = ThreadPoolExecutor(max_workers=max_threads)
 
         def encode_batch_threaded(texts):
             return list(pool.map(tok.encode, texts))
