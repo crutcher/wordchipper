@@ -25,14 +25,14 @@ use crate::util::{
 
 /// Args for the cat command.
 #[derive(clap::Args, Debug)]
-pub struct DevArgs {
+pub struct RustBenchPlots {
     /// Path to the benchmark data.
     #[clap(long, default_value = "dev-crates/wordchipper-bench/bench-data")]
     data_dir: String,
 
     /// Model name.
-    #[clap(long, default_value = "cl100k")]
-    model: String,
+    #[clap(long, value_delimiter = ',', default_value = "r50k,cl100k,o200k")]
+    models: Vec<String>,
 
     /// Path to the output directory.
     #[clap(long, default_value = "target/plots")]
@@ -42,12 +42,11 @@ pub struct DevArgs {
     logging: LogArgs,
 }
 
-impl DevArgs {
+impl RustBenchPlots {
     /// Run the dev command.
     pub fn run(&self) -> Result<(), Box<dyn std::error::Error>> {
         self.logging.setup_logging(3)?;
-
-        println!("{:?}", self);
+        log::info!("{:#?}", self);
 
         let data_dir = Path::new(&self.data_dir);
 
@@ -56,31 +55,33 @@ impl DevArgs {
         let output_dir = Path::new(&self.output_dir);
         std::fs::create_dir_all(output_dir)?;
 
-        build_external_tgraph(&self.model, "buffer_sweep", &output_dir, &data)?;
+        for model in self.models.iter() {
+            build_external_tgraph(model, "buffer_sweep", &output_dir, &data)?;
 
-        for accel in [false, true] {
-            build_internal_tgraph(
-                &self.model,
-                accel,
-                &output_dir.join(format!(
-                    "tgraph.{}.{}.svg",
-                    if accel { "logos" } else { "regex" },
-                    self.model
-                )),
-                &data,
-            )?;
-        }
-        for accel in [false, true] {
-            build_internal_rel_tgraph(
-                &self.model,
-                accel,
-                &output_dir.join(format!(
-                    "tgraph.rel.{}.{}.svg",
-                    if accel { "logos" } else { "regex" },
-                    self.model
-                )),
-                &data,
-            )?;
+            for accel in [false, true] {
+                build_internal_tgraph(
+                    model,
+                    accel,
+                    &output_dir.join(format!(
+                        "tgraph.{}.{}.svg",
+                        if accel { "logos" } else { "regex" },
+                        model,
+                    )),
+                    &data,
+                )?;
+            }
+            for accel in [false, true] {
+                build_internal_rel_tgraph(
+                    model,
+                    accel,
+                    &output_dir.join(format!(
+                        "tgraph.rel.{}.{}.svg",
+                        if accel { "logos" } else { "regex" },
+                        model,
+                    )),
+                    &data,
+                )?;
+            }
         }
 
         Ok(())
@@ -570,7 +571,7 @@ fn build_external_tgraph<P: AsRef<Path>>(
             let scale_desc = if log_scale { "log" } else { "linear" };
 
             let plot_path = output_dir.join(format!(
-                "wc_{chart_name}_vrs_brandx.rust.{scale_desc}.{model}.svg"
+                "wc_{chart_name}_vrs_brandx.rust.{model}.{scale_desc}.svg"
             ));
             log::info!("Plotting to {}", plot_path.display());
 
