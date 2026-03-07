@@ -19,6 +19,7 @@ use crate::util::{
     float_tools,
     human_format,
     plotting::{
+        MarkerLevel,
         MarkerStyle,
         MarkerType,
     },
@@ -60,26 +61,17 @@ impl RustBenchPlots {
             build_external_tgraph(model, "buffer_sweep", &output_dir, &data)?;
 
             for accel in [false, true] {
+                let lexer = if accel { "logos" } else { "regex" };
                 build_internal_tgraph(
                     model,
                     accel,
-                    &output_dir.join(format!(
-                        "tgraph.{}.{}.svg",
-                        if accel { "logos" } else { "regex" },
-                        model,
-                    )),
+                    &output_dir.join(format!("span_encoder_vrs.{model}.{lexer}.log.svg")),
                     &data,
                 )?;
-            }
-            for accel in [false, true] {
                 build_internal_rel_tgraph(
                     model,
                     accel,
-                    &output_dir.join(format!(
-                        "tgraph.rel.{}.{}.svg",
-                        if accel { "logos" } else { "regex" },
-                        model,
-                    )),
+                    &output_dir.join(format!("span_encoder_vrs.{model}.{lexer}.rel.svg")),
                     &data,
                 )?;
             }
@@ -154,32 +146,32 @@ fn span_styles() -> BTreeMap<&'static str, MarkerStyle> {
         (
             "buffer_sweep",
             base_style
-                .with_marker_type(MarkerType::Square)
-                .with_fill_style(Some(colors::GREEN_A200.into())),
+                .with_marker_type(MarkerType::Circle)
+                .with_fill_style(Some(colors::GREEN_200.into())),
         ),
         (
             "priority_merge",
             base_style
-                .with_marker_type(MarkerType::CrossDiamond)
-                .with_fill_style(Some(colors::PINK_A200.into())),
+                .with_marker_type(MarkerType::Square)
+                .with_fill_style(Some(colors::PURPLE_200.into())),
         ),
         (
             "tail_sweep",
             base_style
-                .with_marker_type(MarkerType::CrossTriDown)
-                .with_fill_style(Some(colors::DEEPORANGE_A200.into())),
+                .with_marker_type(MarkerType::Diamond)
+                .with_fill_style(Some(colors::DEEPORANGE_200.into())),
         ),
         (
             "bpe_backtrack",
             base_style
                 .with_marker_type(MarkerType::TriUp)
-                .with_fill_style(Some(colors::PURPLE_A200.into())),
+                .with_fill_style(Some(colors::LIGHTBLUE_200.into())),
         ),
         (
             "merge_heap",
             base_style
-                .with_marker_type(MarkerType::Diamond)
-                .with_fill_style(Some(colors::BLUE_A200.into())),
+                .with_marker_type(MarkerType::TriDown)
+                .with_fill_style(Some(colors::BLUEGREY_200.into())),
         ),
     ]
     .iter()
@@ -280,7 +272,7 @@ fn build_internal_rel_tgraph<P: AsRef<Path>>(
         )
         .margin(10)
         .x_label_area_size(40)
-        .y_label_area_size(90)
+        .y_label_area_size(50)
         .build_cartesian_2d(
             series_limits.thread_range().log_scale().base(2.0),
             series_limits.value_range(),
@@ -289,7 +281,7 @@ fn build_internal_rel_tgraph<P: AsRef<Path>>(
     chart
         .configure_mesh()
         .x_desc("Thread Count")
-        .y_desc("Relative Median Throughput")
+        .y_desc("Median Throughput: max relative")
         .draw()?;
 
     for pseries in plot_series {
@@ -319,6 +311,8 @@ fn build_internal_rel_tgraph<P: AsRef<Path>>(
     chart
         .configure_series_labels()
         .position(SeriesLabelPosition::LowerRight)
+        .margin(12)
+        .legend_area_size(15)
         .background_style(WHITE.mix(0.8))
         .border_style(BLACK)
         .draw()?;
@@ -370,16 +364,16 @@ fn build_internal_tgraph<P: AsRef<Path>>(
         )
         .margin(10)
         .x_label_area_size(40)
-        .y_label_area_size(90)
+        .y_label_area_size(70)
         .build_cartesian_2d(
             series_limits.thread_range().log_scale().base(2.0),
-            series_limits.value_range(),
+            series_limits.value_range().log_scale().base(2.0),
         )?;
 
     chart
         .configure_mesh()
         .x_desc("Thread Count")
-        .y_desc("Median Throughput")
+        .y_desc("Median Throughput: log scale")
         .y_label_formatter(&|&bps| human_format::format_bps(bps))
         .draw()?;
 
@@ -411,6 +405,8 @@ fn build_internal_tgraph<P: AsRef<Path>>(
     chart
         .configure_series_labels()
         .position(SeriesLabelPosition::LowerRight)
+        .margin(12)
+        .legend_area_size(15)
         .background_style(WHITE.mix(0.8))
         .border_style(BLACK)
         .draw()?;
@@ -441,19 +437,19 @@ fn build_external_tgraph<P: AsRef<Path>>(
             "bpe_openai",
             base_style
                 .with_marker_type(MarkerType::Circle)
-                .with_fill_style(Some(colors::DEEPORANGE_100.into())),
+                .with_fill_style(Some(colors::DEEPORANGE_200.into())),
         ),
         (
             "tiktoken",
             base_style
                 .with_marker_type(MarkerType::Square)
-                .with_fill_style(Some(colors::PURPLE_100.into())),
+                .with_fill_style(Some(colors::PURPLE_200.into())),
         ),
         (
             "tokenizers",
             base_style
                 .with_marker_type(MarkerType::Diamond)
-                .with_fill_style(Some(colors::BLUEGREY_100.into())),
+                .with_fill_style(Some(colors::BLUEGREY_200.into())),
         ),
     ]
     .iter()
@@ -477,6 +473,7 @@ fn build_external_tgraph<P: AsRef<Path>>(
         name: "wordchipper:regex".to_string(),
         marker_style: base_style
             .with_marker_type(MarkerType::TriUp)
+            .with_marker_level(MarkerLevel::Para)
             .with_fill_style(colors::GREEN_A200.filled()),
         points: as_points(
             &data
@@ -492,6 +489,7 @@ fn build_external_tgraph<P: AsRef<Path>>(
         name: "wordchipper:logos".to_string(),
         marker_style: base_style
             .with_marker_type(MarkerType::TriDown)
+            .with_marker_level(MarkerLevel::Para)
             .with_fill_style(colors::LIGHTBLUE_A200.filled()),
         points: as_points(
             &data
@@ -520,9 +518,9 @@ fn build_external_tgraph<P: AsRef<Path>>(
             root.fill(&colors::WHITE)?;
 
             let mut display_series = brandx_group.clone();
-            display_series.insert(0, regex_series.clone());
+            display_series.push(regex_series.clone());
             if include_logos {
-                display_series.insert(0, logos_series.clone());
+                display_series.push(logos_series.clone());
             }
 
             let series_limits = SeriesLimits::from_series(&display_series);
@@ -568,13 +566,15 @@ fn build_external_tgraph<P: AsRef<Path>>(
                                 }),
                             )?
                             .label(&series.name)
-                            .legend(move |coord| series.marker_style.marker(coord, size * 3 / 4));
+                            .legend(move |coord| series.marker_style.marker(coord, size));
                     }
 
                     chart
                         .configure_series_labels()
                         .position(SeriesLabelPosition::UpperLeft)
                         .background_style(WHITE.mix(0.8))
+                        .margin(12)
+                        .legend_area_size(15)
                         .border_style(BLACK)
                         .draw()?;
 
