@@ -563,7 +563,12 @@ fn build_external_tgraph<P: AsRef<Path>>(
         regex_series.max_bps(),
     );
 
+    let human_opts = FormatSizeOptions::from(humansize::BINARY).decimal_places(0);
+    let bps_formatter =
+        move |bps: &f64| format!("{}/s", humansize::format_size(*bps as u64, human_opts));
+
     let size = 8;
+    let line_width = 4;
 
     for include_logos in [false, true] {
         for log_scale in [false, true] {
@@ -574,18 +579,6 @@ fn build_external_tgraph<P: AsRef<Path>>(
                 "wc_{chart_name}_vrs_brandx.rust.{model}.{scale_desc}.svg"
             ));
             log::info!("Plotting to {}", plot_path.display());
-
-            let min_bps = if include_logos {
-                fmin(min_bps, logos_series.min_bps())
-            } else {
-                min_bps
-            };
-            let max_bps = if include_logos {
-                fmax(max_bps, logos_series.max_bps())
-            } else {
-                max_bps
-            };
-
             let root = SVGBackend::new(&plot_path, (640, 480)).into_drawing_area();
             root.fill(&colors::WHITE)?;
 
@@ -598,12 +591,6 @@ fn build_external_tgraph<P: AsRef<Path>>(
             let caption = format!(
                 "wordchipper:{chart_name} {scale_desc} throughput, rust, model: \"{model}\"",
             );
-
-            let human_opts = FormatSizeOptions::from(humansize::BINARY).decimal_places(0);
-            let bps_formatter =
-                move |bps: &f64| format!("{}/s", humansize::format_size(*bps as u64, human_opts));
-
-            let line_width = 4;
 
             // ATTENTION: This is weird.
             // The plotters chart machinery makes extensive and heavy use of specialized
@@ -655,6 +642,17 @@ fn build_external_tgraph<P: AsRef<Path>>(
                     Ok::<_, Box<dyn std::error::Error>>(())
                 }};
             }
+
+            let min_bps = if include_logos {
+                fmin(min_bps, logos_series.min_bps())
+            } else {
+                min_bps
+            };
+            let max_bps = if include_logos {
+                fmax(max_bps, logos_series.max_bps())
+            } else {
+                max_bps
+            };
 
             if log_scale {
                 draw_chart!((min_bps..max_bps).log_scale().base(2.0))?;
