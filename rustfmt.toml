@@ -10,7 +10,6 @@ newline_style = "Unix"
 # - it is the most diff-friendly style
 fn_params_layout = "Vertical"
 
-normalize_comments = true
 format_macro_matchers = true
 
 reorder_impl_items = true
