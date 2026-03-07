@@ -150,7 +150,7 @@ class TestBatchEncode:
         options.set_concurrent(True)
         options.set_accelerated_lexers(False)
 
-        tok = wordchipper.Tokenizer.from_pretrained(model)
+        tok = wordchipper.Tokenizer.from_pretrained(model, options)
         benchmark.group = f"batch/{model}"
         benchmark.extra_info["input_bytes"] = total_bytes
 
@@ -172,7 +172,7 @@ class TestBatchEncode:
         options.set_concurrent(True)
         options.set_accelerated_lexers(True)
 
-        tok = wordchipper.Tokenizer.from_pretrained(model)
+        tok = wordchipper.Tokenizer.from_pretrained(model, options)
         benchmark.group = f"batch/{model}"
         benchmark.extra_info["input_bytes"] = total_bytes
 

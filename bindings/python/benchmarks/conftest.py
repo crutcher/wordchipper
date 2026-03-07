@@ -19,9 +19,12 @@ BATCH_SIZE = 1024
 def max_threads():
     """Max thread count from RAYON_NUM_THREADS, or None (use system default)."""
     val = os.environ.get("RAYON_NUM_THREADS")
-    if val is not None:
-        return int(val)
-    return None
+    if not val:
+        return None
+    n = int(val)
+    if n < 1:
+        raise pytest.UsageError(f"RAYON_NUM_THREADS must be >= 1, got {val!r}")
+    return n
 
 
 @pytest.fixture(scope="session")
