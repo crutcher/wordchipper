@@ -22,6 +22,14 @@ pub fn regex_lexer(pattern: ConstRegexPattern) -> Arc<dyn SpanLexer> {
     build_regex_lexer(pattern.to_pattern(), false, false, None)
 }
 
+/// Build a `regex-automata`-backed [`SpanLexer`] from a [`ConstRegexPattern`].
+///
+/// Uses `build_regex_lexer` with `accelerated=false, concurrent=true` to hit
+/// the `regex-automata` path for known `OpenAI` patterns.
+pub fn regex_automata_lexer(pattern: ConstRegexPattern) -> Arc<dyn SpanLexer> {
+    build_regex_lexer(pattern.to_pattern(), false, true, None)
+}
+
 /// Collect all spans from a lexer into a `Vec`.
 pub fn collect_spans(
     lexer: &dyn SpanLexer,

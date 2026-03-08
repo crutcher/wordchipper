@@ -40,9 +40,11 @@ Enable rayon-based parallelism for batch encoding and decoding. Control the thre
 
 *Implies `std`.*
 
-Enable the thread pool (`PoolToy`) and concurrency utilities used for concurrent encoder access.
-The `parallel` feature enables this automatically; use `concurrent` directly if you want the thread
-pool without pulling in rayon.
+Enable the thread pool (`PoolToy`), pooled `regex-automata` caches, and concurrency utilities used
+for concurrent encoder access. The `regex-automata` spanning backend is always available (even
+without this feature, using a single mutex cache), but `concurrent` adds thread-distributed cache
+pools for ~4-8x faster spanning under multi-threaded workloads. The `parallel` feature enables this
+automatically; use `concurrent` directly if you want the thread pool without pulling in rayon.
 
 #### features = ["client"]
 

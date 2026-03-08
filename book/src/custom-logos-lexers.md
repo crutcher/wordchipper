@@ -8,11 +8,13 @@ subword tokens. The first phase is typically a big regex. OpenAI's `cl100k_base`
 example, uses alternations with Unicode property classes and lookaheads to segment "hello world"
 into `["hello", " world"]`.
 
-Regex is correct but slow. Each match backtracks through Unicode property tables, and the engine
-runs single-threaded. The [logos](https://logos.maciej.codes/) crate takes a different approach: it
-compiles regex patterns into a deterministic finite automaton (DFA) at build time via a derive
-macro. No backtracking, no runtime regex compilation. For wordchipper's cl100k and o200k patterns,
-this gives **30-50x speedups** (700+ MB/s).
+Regex is correct but slow. Each match backtracks through Unicode property tables. wordchipper has
+three spanning tiers: fancy-regex (fallback), `regex-automata` (middle tier, ~4-8x faster), and
+logos DFA (fastest, ~14-21x faster). The [logos](https://logos.maciej.codes/) crate compiles regex
+patterns into a deterministic finite automaton (DFA) at build time via a derive macro. No
+backtracking, no runtime regex compilation. For wordchipper's cl100k and o200k patterns, this gives
+**14-21x speedups** over regex (250-300 MB/s single-threaded). See
+[Performance](./performance.md) for full benchmarks across all three tiers.
 
 But logos DFA can't express everything a regex can. The OpenAI patterns use `\s+(?!\S)`, a negative
 lookahead that backtracks so the last whitespace character becomes a prefix of the next word. Logos

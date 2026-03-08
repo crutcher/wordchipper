@@ -154,8 +154,10 @@ The last space "leaks" into the next word. This is an intentional design choice 
 the model sees leading-space tokens as word starts, improving prediction.
 
 This lookahead is straightforward in a regex engine but impossible in a DFA (deterministic finite
-automaton), which is why wordchipper's logos-based lexers need a post-processing step. See
-[Building Custom Logos Lexers](./custom-logos-lexers.md) for details.
+automaton). wordchipper handles this differently at each spanning tier: the logos DFA lexer uses a
+multi-rule post-processing engine (see [Building Custom Logos Lexers](./custom-logos-lexers.md)),
+while the `regex-automata` backend uses a simpler approach of truncating multi-character whitespace
+matches to split off the last character.
 
 ## The wordchipper pipeline
 
@@ -166,7 +168,7 @@ Input:     "Hello, world!"
              |
              v
   ┌─────────────────────┐
-  │   1. Pre-tokenize   │  (regex or DFA lexer)
+  │   1. Pre-tokenize   │  (logos DFA / regex-automata / fancy-regex)
   │   Split into spans  │
   └──────────┬──────────┘
              |
@@ -186,9 +188,10 @@ Input:     "Hello, world!"
 
 In wordchipper's architecture:
 
-- **Step 1** is handled by a `TextSpanner` (the `spanners` module). The default uses regex. For
-  known patterns (cl100k, o200k, r50k), a compile-time DFA lexer is used automatically for 30-50x
-  faster spanning.
+- **Step 1** is handled by a `TextSpanner` (the `spanners` module). Three backend tiers are
+  available, selected automatically: compile-time DFA via logos (fastest, 14-21x over regex),
+  `regex-automata` hybrid engine (middle tier, 4-8x over regex), and fancy-regex (fallback). See
+  [Performance](./performance.md) for benchmarks.
 - **Step 2** is handled by a `SpanEncoder` (the `encoders` module). Multiple BPE algorithms are
   available, optimized for different use cases.
 

@@ -20,9 +20,13 @@ use wordchipper::{
         span_lexers::{
             LexerTextSpanner,
             SpanLexer,
+            build_regex_lexer,
         },
     },
-    support::regex::RegexWrapper,
+    support::regex::{
+        ConstRegexPattern,
+        RegexWrapper,
+    },
 };
 
 #[global_allocator]
@@ -50,6 +54,11 @@ fn build_regex_only_spanner(
     Arc::new(LexerTextSpanner::new(lexer, None))
 }
 
+fn build_regex_automata_spanner(pattern: ConstRegexPattern) -> Arc<dyn TextSpanner> {
+    let lexer = build_regex_lexer(pattern.to_pattern(), false, true, None);
+    Arc::new(LexerTextSpanner::new(lexer, None))
+}
+
 fn build_default_spanner(
     pattern: impl Into<wordchipper::support::regex::RegexPattern>
 ) -> Arc<dyn TextSpanner> {
@@ -66,6 +75,15 @@ mod english {
     fn r50k_regex(bencher: Bencher) {
         let text = english_text();
         let spanner = build_regex_only_spanner(OA_R50K_BASE_PATTERN);
+        bencher
+            .counter(BytesCount::new(text.len()))
+            .bench(|| spanner.split_spans(black_box(&text)));
+    }
+
+    #[divan::bench]
+    fn r50k_regex_automata(bencher: Bencher) {
+        let text = english_text();
+        let spanner = build_regex_automata_spanner(OA_R50K_BASE_PATTERN);
         bencher
             .counter(BytesCount::new(text.len()))
             .bench(|| spanner.split_spans(black_box(&text)));
@@ -90,6 +108,15 @@ mod english {
     }
 
     #[divan::bench]
+    fn cl100k_regex_automata(bencher: Bencher) {
+        let text = english_text();
+        let spanner = build_regex_automata_spanner(OA_CL100K_BASE_PATTERN);
+        bencher
+            .counter(BytesCount::new(text.len()))
+            .bench(|| spanner.split_spans(black_box(&text)));
+    }
+
+    #[divan::bench]
     fn cl100k_default(bencher: Bencher) {
         let text = english_text();
         let spanner = build_default_spanner(OA_CL100K_BASE_PATTERN);
@@ -102,6 +129,15 @@ mod english {
     fn o200k_regex(bencher: Bencher) {
         let text = english_text();
         let spanner = build_regex_only_spanner(OA_O200K_BASE_PATTERN);
+        bencher
+            .counter(BytesCount::new(text.len()))
+            .bench(|| spanner.split_spans(black_box(&text)));
+    }
+
+    #[divan::bench]
+    fn o200k_regex_automata(bencher: Bencher) {
+        let text = english_text();
+        let spanner = build_regex_automata_spanner(OA_O200K_BASE_PATTERN);
         bencher
             .counter(BytesCount::new(text.len()))
             .bench(|| spanner.split_spans(black_box(&text)));
@@ -130,6 +166,15 @@ mod diverse {
     }
 
     #[divan::bench]
+    fn r50k_regex_automata(bencher: Bencher) {
+        let text = diverse_text();
+        let spanner = build_regex_automata_spanner(OA_R50K_BASE_PATTERN);
+        bencher
+            .counter(BytesCount::new(text.len()))
+            .bench(|| spanner.split_spans(black_box(&text)));
+    }
+
+    #[divan::bench]
     fn r50k_default(bencher: Bencher) {
         let text = diverse_text();
         let spanner = build_default_spanner(OA_R50K_BASE_PATTERN);
@@ -148,6 +193,15 @@ mod diverse {
     }
 
     #[divan::bench]
+    fn cl100k_regex_automata(bencher: Bencher) {
+        let text = diverse_text();
+        let spanner = build_regex_automata_spanner(OA_CL100K_BASE_PATTERN);
+        bencher
+            .counter(BytesCount::new(text.len()))
+            .bench(|| spanner.split_spans(black_box(&text)));
+    }
+
+    #[divan::bench]
     fn cl100k_default(bencher: Bencher) {
         let text = diverse_text();
         let spanner = build_default_spanner(OA_CL100K_BASE_PATTERN);
@@ -160,6 +214,15 @@ mod diverse {
     fn o200k_regex(bencher: Bencher) {
         let text = diverse_text();
         let spanner = build_regex_only_spanner(OA_O200K_BASE_PATTERN);
+        bencher
+            .counter(BytesCount::new(text.len()))
+            .bench(|| spanner.split_spans(black_box(&text)));
+    }
+
+    #[divan::bench]
+    fn o200k_regex_automata(bencher: Bencher) {
+        let text = diverse_text();
+        let spanner = build_regex_automata_spanner(OA_O200K_BASE_PATTERN);
         bencher
             .counter(BytesCount::new(text.len()))
             .bench(|| spanner.split_spans(black_box(&text)));

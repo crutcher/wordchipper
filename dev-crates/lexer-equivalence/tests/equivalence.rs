@@ -3,6 +3,7 @@ use std::sync::Arc;
 use lexer_equivalence::{
     harness::{
         assert_k_tuple_equivalence,
+        regex_automata_lexer,
         regex_lexer,
     },
     representatives::REPRESENTATIVES,
@@ -302,4 +303,47 @@ fn o200k_equivalence() {
     let ref_lexer = regex_lexer(OA_O200K_BASE_PATTERN);
     let test_lexer: Arc<dyn SpanLexer> = Arc::new(O200kLexer);
     assert_k_tuple_equivalence("o200k", max_k(), REPRESENTATIVES, &*ref_lexer, &*test_lexer);
+}
+
+// =====================================================================
+// REGEX-AUTOMATA EQUIVALENCE TESTS
+// =====================================================================
+
+#[test]
+fn r50k_regex_automata_equivalence() {
+    let ref_lexer = regex_lexer(OA_R50K_BASE_PATTERN);
+    let test_lexer = regex_automata_lexer(OA_R50K_BASE_PATTERN);
+    assert_k_tuple_equivalence(
+        "r50k_ra",
+        max_k(),
+        REPRESENTATIVES,
+        &*ref_lexer,
+        &*test_lexer,
+    );
+}
+
+#[test]
+fn cl100k_regex_automata_equivalence() {
+    let ref_lexer = regex_lexer(OA_CL100K_BASE_PATTERN);
+    let test_lexer = regex_automata_lexer(OA_CL100K_BASE_PATTERN);
+    assert_k_tuple_equivalence(
+        "cl100k_ra",
+        max_k(),
+        REPRESENTATIVES,
+        &*ref_lexer,
+        &*test_lexer,
+    );
+}
+
+#[test]
+fn o200k_regex_automata_equivalence() {
+    let ref_lexer = regex_lexer(OA_O200K_BASE_PATTERN);
+    let test_lexer = regex_automata_lexer(OA_O200K_BASE_PATTERN);
+    assert_k_tuple_equivalence(
+        "o200k_ra",
+        max_k(),
+        REPRESENTATIVES,
+        &*ref_lexer,
+        &*test_lexer,
+    );
 }
