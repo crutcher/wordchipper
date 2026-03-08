@@ -1,6 +1,7 @@
 //! # [`SpanLexer`] mechanics for [`TextSpanner`](`crate::spanners::TextSpanner`) implementations.
 
 pub mod logos;
+pub(crate) mod regex_automata;
 
 pub mod accelerators;
 mod lexer_builder;

@@ -67,6 +67,42 @@ pub const OA_O200K_BASE_PATTERN: ConstRegexPattern = ConstRegexPattern::Fancy(jo
     r"\s+"
 ));
 
+// Transformed patterns for `regex-automata` (no lookaheads, no possessive
+// quantifiers). Used by the `RegexAutomataLexer`; whitespace branches are
+// collapsed to `\s+` with post-processing to split off the last character
+// (matching lookahead semantics).
+
+/// Transformed `r50k_base`/`gpt2` pattern for `regex-automata`.
+pub(crate) const OA_R50K_BASE_PATTERN_RA: &str = join_patterns!(
+    r"'(?:[sdmt]|ll|ve|re)",
+    r" ?\p{L}+",
+    r" ?\p{N}+",
+    r" ?[^\s\p{L}\p{N}]+",
+    r"\s+$",
+    r"\s+",
+);
+
+/// Transformed `cl100k_base` pattern for `regex-automata`.
+pub(crate) const OA_CL100K_BASE_PATTERN_RA: &str = join_patterns!(
+    r"'(?i:[sdmt]|ll|ve|re)",
+    r"[^\r\n\p{L}\p{N}]?\p{L}+",
+    r"\p{N}{1,3}",
+    r" ?[^\s\p{L}\p{N}]+[\r\n]*",
+    r"\s+$",
+    r"\s*[\r\n]",
+    r"\s+",
+);
+
+/// Transformed `o200k_base` pattern for `regex-automata`.
+pub(crate) const OA_O200K_BASE_PATTERN_RA: &str = join_patterns!(
+    r"[^\r\n\p{L}\p{N}]?[\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]*[\p{Ll}\p{Lm}\p{Lo}\p{M}]+(?i:'s|'t|'re|'ve|'m|'ll|'d)?",
+    r"[^\r\n\p{L}\p{N}]?[\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]+[\p{Ll}\p{Lm}\p{Lo}\p{M}]*(?i:'s|'t|'re|'ve|'m|'ll|'d)?",
+    r"\p{N}{1,3}",
+    r" ?[^\s\p{L}\p{N}]+[\r\n/]*",
+    r"\s*[\r\n]+",
+    r"\s+",
+);
+
 #[cfg(test)]
 mod test {
     use super::*;

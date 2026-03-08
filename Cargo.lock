@@ -4088,6 +4088,7 @@ dependencies = [
  "proptest",
  "rayon",
  "regex",
+ "regex-automata",
  "ringbuffer",
  "serde_json",
  "serial_test",

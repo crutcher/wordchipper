@@ -35,6 +35,15 @@ pub fn build_regex_lexer(
         return lexer;
     }
 
+    // regex-automata: when concurrent feature is active, respect the concurrent
+    // flag (so benchmarks can isolate the regex fallback). Without the feature,
+    // always try it since it's faster than fancy-regex even single-threaded.
+    if (cfg!(not(feature = "concurrent")) || concurrent)
+        && let Some(lexer) = super::regex_automata::try_build(pattern.as_str(), max_pool)
+    {
+        return lexer;
+    }
+
     let re: RegexWrapper = pattern.into();
 
     #[cfg(feature = "concurrent")]

@@ -15,34 +15,69 @@ Tokenization has two phases, and each can be the bottleneck:
 For short texts, BPE dominates. For long texts with many spans, pre-tokenization matters more.
 wordchipper optimizes both.
 
-## DFA-accelerated spanning (logos)
+## Spanning backends
 
-The biggest single optimization is replacing the regex engine with a compile-time DFA. wordchipper
-uses the [logos](https://logos.maciej.codes/) crate to compile pre-tokenization patterns into
-deterministic finite automata at build time.
+Pre-tokenization (spanning) has three backend tiers. wordchipper automatically selects the fastest
+available backend for a given pattern and feature configuration.
 
-This is enabled by default. When you load a vocabulary whose regex pattern matches a known logos
-lexer (cl100k, o200k, r50k), the DFA lexer is used automatically.
+### Tier 1: Logos DFA (fastest)
+
+The [logos](https://logos.maciej.codes/) crate compiles pre-tokenization patterns into deterministic
+finite automata at build time. No backtracking, no runtime regex compilation. This is the fastest
+tier but requires hand-written lexer definitions and post-processing to handle regex features that
+DFA cannot express (like `\s+(?!\S)` lookaheads). See
+[Building Custom Logos Lexers](./custom-logos-lexers.md) for details.
+
+Enabled by default for known patterns (cl100k, o200k, r50k).
+
+### Tier 2: regex-automata (middle tier)
+
+The [`regex-automata`](https://docs.rs/regex-automata) crate provides a hybrid NFA/DFA engine with
+external cache management. wordchipper transforms OpenAI patterns to remove lookaheads, replacing
+them with a single whitespace post-processing fixup (truncate multi-character whitespace matches to
+split off the last character). This gives near-regex-correct semantics with much less post-processing
+than logos.
+
+Each thread gets its own regex cache via `PoolToy<Mutex<Cache>>`, avoiding the internal pool
+contention that limits `regex-automata`'s built-in pool to ~8 threads.
+
+Enabled when the `concurrent` feature is active and no logos accelerator matches.
+
+### Tier 3: fancy-regex (fallback)
+
+The standard `fancy-regex` engine handles any pattern, including lookaheads and possessive
+quantifiers. Correct but slow due to per-match allocations and backtracking.
 
 ### Benchmarks
 
-Spanning throughput on a single thread:
+Spanning throughput on a single thread (English corpus, 73 KB repeated 10x):
 
-| Model       | Regex    | Logos DFA | Speedup |
-|-------------|----------|-----------|---------|
-| cl100k_base | ~25 MB/s | ~732 MB/s | **29x** |
-| o200k_base  | ~15 MB/s | ~765 MB/s | **52x** |
+| Model       | Regex     | regex-automata | Logos DFA | RA/Regex | Logos/Regex |
+|-------------|-----------|----------------|-----------|----------|-------------|
+| r50k_base   | ~21 MB/s  | ~89 MB/s       | ~296 MB/s | **4x**   | **14x**     |
+| cl100k_base | ~19 MB/s  | ~90 MB/s       | ~269 MB/s | **5x**   | **14x**     |
+| o200k_base  | ~12 MB/s  | ~91 MB/s       | ~255 MB/s | **7x**   | **21x**     |
 
-### Disabling DFA acceleration
+Parallel encoding throughput (1024-document batch, `bpe_backtrack` encoder):
 
-If you want to force regex-based spanning (e.g., for testing or debugging):
+| Model       | Regex     | regex-automata | Logos DFA    | RA/Regex | Logos/Regex |
+|-------------|-----------|----------------|--------------|----------|-------------|
+| cl100k_base | ~60 MB/s  | ~643 MB/s      | ~1,154 MB/s  | **11x**  | **19x**     |
+| o200k_base  | ~21 MB/s  | ~593 MB/s      | ~1,049 MB/s  | **28x**  | **50x**     |
+
+The regex-automata tier is most impactful on o200k, where fancy-regex is slowest due to complex
+Unicode character class alternations.
+
+### Controlling the backend
 
 ```rust,no_run
 # use wordchipper::{TokenizerOptions, load_vocab, disk_cache::WordchipperDiskCache};
 # let mut cache = WordchipperDiskCache::default();
 # let (_, vocab) = load_vocab("openai:cl100k_base", &mut cache).unwrap();
+// Force regex-only spanning (disable both logos and regex-automata):
 let tok = TokenizerOptions::default()
     .with_accelerated_lexers(false)
+    .with_concurrent(false)
     .build(vocab);
 ```
 

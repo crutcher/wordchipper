@@ -40,9 +40,11 @@ Enable rayon-based parallelism for batch encoding and decoding. Control the thre
 
 *Implies `std`.*
 
-Enable the thread pool (`PoolToy`) and concurrency utilities used for concurrent encoder access.
-The `parallel` feature enables this automatically; use `concurrent` directly if you want the thread
-pool without pulling in rayon.
+Enable the thread pool (`PoolToy`), the `regex-automata` spanning backend, and concurrency
+utilities used for concurrent encoder access. When active, known OpenAI patterns are automatically
+upgraded from fancy-regex to a `regex-automata::meta::Regex` with external cache management,
+providing 4-7x faster spanning. The `parallel` feature enables this automatically; use `concurrent`
+directly if you want the thread pool and regex-automata backend without pulling in rayon.
 
 #### features = ["client"]
 
