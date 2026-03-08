@@ -57,8 +57,10 @@ impl RustBenchPlots {
         let output_dir = Path::new(&self.output_dir);
         std::fs::create_dir_all(output_dir)?;
 
+        let shape = (800, 600);
+
         for model in self.models.iter() {
-            build_model_graphs(model, &output_dir, &data)?;
+            build_model_graphs(model, &output_dir, shape, &data)?;
         }
 
         Ok(())
@@ -72,17 +74,19 @@ fn lexer_levels() -> &'static [(&'static str, &'static str)] {
 fn build_model_graphs<P: AsRef<Path>>(
     model: &str,
     output_dir: &P,
+    shape: (u32, u32),
     data: &ParBenchData,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let output_dir = output_dir.as_ref();
 
-    build_external_graphs(model, "buffer_sweep", &output_dir, data)?;
+    build_external_graphs(model, "buffer_sweep", shape.clone(), &output_dir, data)?;
 
-    build_internal_graphs(model, &output_dir, data)
+    build_internal_graphs(model, shape.clone(), &output_dir, data)
 }
 
 fn build_internal_graphs<P: AsRef<Path>>(
     model: &str,
+    shape: (u32, u32),
     output_dir: &P,
     data: &ParBenchData,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -96,6 +100,7 @@ fn build_internal_graphs<P: AsRef<Path>>(
                 model,
                 lexer,
                 suffix,
+                shape.clone(),
                 &output_dir.join(format!("span_encoder_vrs.{model}.{lexer}.log.svg")),
                 data,
             )?;
@@ -103,6 +108,7 @@ fn build_internal_graphs<P: AsRef<Path>>(
                 model,
                 lexer,
                 suffix,
+                shape.clone(),
                 &output_dir.join(format!("span_encoder_vrs.{model}.{lexer}.rel.svg")),
                 data,
             )?;
@@ -160,6 +166,7 @@ fn build_internal_rel_tgraph<P: AsRef<Path>>(
     model: &str,
     lexer: &str,
     suffix: &str,
+    shape: (u32, u32),
     plot_path: &P,
     data: &ParBenchData,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -215,9 +222,7 @@ fn build_internal_rel_tgraph<P: AsRef<Path>>(
     let values = render.iter().flat_map(|s| s.ys()).collect::<Vec<_>>();
     let y_range = fiter_range(&values).unwrap();
 
-    const SHAPE: (u32, u32) = (640, 400);
-
-    let root = SVGBackend::new(plot_path, SHAPE).into_drawing_area();
+    let root = SVGBackend::new(plot_path, shape.clone()).into_drawing_area();
     root.fill(&colors::WHITE)?;
 
     let mut chart = ChartBuilder::on(&root)
@@ -271,6 +276,7 @@ fn build_internal_tgraph<P: AsRef<Path>>(
     model: &str,
     lexer: &str,
     suffix: &str,
+    shape: (u32, u32),
     plot_path: &P,
     data: &ParBenchData,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -313,9 +319,7 @@ fn build_internal_tgraph<P: AsRef<Path>>(
     let values = render.iter().flat_map(|s| s.ys()).collect::<Vec<_>>();
     let y_range = fiter_range(&values).unwrap();
 
-    const SHAPE: (u32, u32) = (640, 400);
-
-    let root = SVGBackend::new(plot_path, SHAPE).into_drawing_area();
+    let root = SVGBackend::new(plot_path, shape.clone()).into_drawing_area();
     root.fill(&colors::WHITE)?;
 
     let mut chart = ChartBuilder::on(&root)
@@ -370,6 +374,7 @@ fn build_internal_tgraph<P: AsRef<Path>>(
 fn build_external_graphs<P: AsRef<Path>>(
     model: &str,
     span_encoder: &str,
+    shape: (u32, u32),
     output_dir: &P,
     data: &ParBenchData,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -439,7 +444,6 @@ fn build_external_graphs<P: AsRef<Path>>(
 
     const SIZE: i32 = 8;
     const LINE_WIDTH: u32 = 4;
-    const SHAPE: (u32, u32) = (640, 400);
 
     for (chart_name, group) in [
         ("fast_regex", vec![&fr_series]),
@@ -454,7 +458,7 @@ fn build_external_graphs<P: AsRef<Path>>(
             ));
             log::info!("Plotting to {}", plot_path.display());
 
-            let root = SVGBackend::new(&plot_path, SHAPE).into_drawing_area();
+            let root = SVGBackend::new(&plot_path, shape.clone()).into_drawing_area();
             root.fill(&colors::WHITE)?;
 
             fn select((threads, bench_results): &(u32, BenchResult)) -> (u32, f64) {
