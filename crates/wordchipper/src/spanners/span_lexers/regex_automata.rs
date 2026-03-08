@@ -115,20 +115,28 @@ fn needs_ws_truncate(
     span: &Range<usize>,
     has_newline_branch: bool,
 ) -> bool {
-    let s = &text[span.clone()];
-    // Must be multi-char whitespace, not at end of text.
-    // Use char count (not byte len) since multi-byte whitespace like NBSP
-    // could be a single char but multiple bytes.
-    if s.chars().count() <= 1 || span.end >= text.len() {
+    if span.end >= text.len() {
         return false;
     }
-    // Must be all whitespace.
-    if !s.chars().all(|c| c.is_whitespace()) {
+    let s = &text[span.clone()];
+    // Single pass: check multi-char, all-whitespace, and newline presence.
+    let mut char_count = 0u32;
+    let mut has_newline = false;
+    for c in s.chars() {
+        if !c.is_whitespace() {
+            return false;
+        }
+        char_count += 1;
+        if c == '\r' || c == '\n' {
+            has_newline = true;
+        }
+    }
+    if char_count <= 1 {
         return false;
     }
     // For patterns with a newline branch, skip spans containing \r or \n
     // (those are handled by the newline branch, not the \s+ branch).
-    if has_newline_branch && s.bytes().any(|b| b == b'\r' || b == b'\n') {
+    if has_newline_branch && has_newline {
         return false;
     }
     true
