@@ -22,9 +22,9 @@ pub fn fmax(
     }
 }
 
-pub fn fiter_min_max<'a>(iter: impl IntoIterator<Item = &'a f64>) -> Option<(f64, f64)> {
+pub fn fiter_min_max(iter: impl IntoIterator<Item = f64>) -> Option<(f64, f64)> {
     let mut acc = None;
-    for &b in iter {
+    for b in iter {
         acc = Some(match acc {
             Some((low, high)) => (fmin(low, b), fmax(high, b)),
             None => (b, b),
@@ -33,13 +33,13 @@ pub fn fiter_min_max<'a>(iter: impl IntoIterator<Item = &'a f64>) -> Option<(f64
     acc
 }
 
-pub fn fiter_range<'a>(iter: impl IntoIterator<Item = &'a f64>) -> Option<Range<f64>> {
+pub fn iter_frange(iter: impl IntoIterator<Item = f64>) -> Option<Range<f64>> {
     fiter_min_max(iter).map(|(a, b)| a..b)
 }
 
-pub fn fiter_max<'a>(iter: impl IntoIterator<Item = &'a f64>) -> Option<f64> {
+pub fn fiter_max(iter: impl IntoIterator<Item = f64>) -> Option<f64> {
     let mut acc = None;
-    for &b in iter {
+    for b in iter {
         acc = Some(match acc {
             Some(a) => fmax(a, b),
             None => b,
@@ -48,9 +48,9 @@ pub fn fiter_max<'a>(iter: impl IntoIterator<Item = &'a f64>) -> Option<f64> {
     acc
 }
 
-pub fn fiter_min<'a>(iter: impl IntoIterator<Item = &'a f64>) -> Option<f64> {
+pub fn fiter_min(iter: impl IntoIterator<Item = f64>) -> Option<f64> {
     let mut acc = None;
-    for &b in iter {
+    for b in iter {
         acc = Some(match acc {
             Some(a) => fmin(a, b),
             None => b,

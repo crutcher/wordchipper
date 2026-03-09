@@ -1,5 +1,6 @@
 use std::{
     collections::BTreeMap,
+    ops::Range,
     path::Path,
 };
 
@@ -16,7 +17,7 @@ use wordchipper_cli_util::logging::LogArgs;
 use crate::util::{
     bench_data::par_bench::ParBenchData,
     float_tools,
-    float_tools::fiter_range,
+    float_tools::iter_frange,
     human_format,
     plotting::{
         MarkerLevel,
@@ -69,6 +70,17 @@ impl RustBenchPlots {
 
 fn lexer_levels() -> &'static [(&'static str, &'static str)] {
     &[("regex", ""), ("ra", "_ra"), ("logos", "fast")]
+}
+
+fn iter_min_max<T: Copy + Ord>(iter: impl Iterator<Item = T>) -> Option<(T, T)> {
+    iter.fold(None, |acc, x| match acc {
+        None => Some((x, x)),
+        Some((low, high)) => Some((std::cmp::min(low, x), std::cmp::max(high, x))),
+    })
+}
+
+fn iter_range<T: Copy + Ord>(iter: impl Iterator<Item = T>) -> Option<Range<T>> {
+    iter_min_max(iter).map(|(low, high)| low..high)
 }
 
 fn build_model_graphs<P: AsRef<Path>>(
@@ -208,19 +220,15 @@ fn build_internal_rel_tgraph<P: AsRef<Path>>(
         .map(|s| s.map(|&(t, v)| (t, v / baseline[&t])))
         .collect();
 
-    let threads = render.iter().flat_map(|s| s.xs()).collect::<Vec<_>>();
+    let x_range = match iter_range(render.iter().flat_map(|s| s.xs())) {
+        Some(r) => r,
+        None => {
+            log::warn!("No data for {}::{}::{}", model, lexer, suffix);
+            return Ok(());
+        }
+    };
 
-    if threads.is_empty() {
-        log::warn!("No data for {}::{}::{}", model, lexer, suffix);
-        return Ok(());
-    }
-
-    let x_min = *threads.iter().min().unwrap();
-    let x_max = *threads.iter().max().unwrap();
-    let x_range = x_min..x_max;
-
-    let values = render.iter().flat_map(|s| s.ys()).collect::<Vec<_>>();
-    let y_range = fiter_range(&values).unwrap();
+    let y_range = iter_frange(render.iter().flat_map(|s| s.ys())).unwrap();
 
     let root = SVGBackend::new(plot_path, shape).into_drawing_area();
     root.fill(&colors::WHITE)?;
@@ -300,24 +308,21 @@ fn build_internal_tgraph<P: AsRef<Path>>(
         }
     }
 
-    if schedule.is_empty() {
-        log::warn!("No data for {}::{}::{}", model, lexer, suffix);
-        return Ok(());
-    }
-
     fn select((threads, bench_results): &(u32, BenchResult)) -> (u32, f64) {
         (*threads, median_bps(bench_results))
     }
 
     let render: Vec<MarkerSeries<(u32, f64)>> = schedule.iter().map(|s| s.map(select)).collect();
 
-    let threads = render.iter().flat_map(|s| s.xs()).collect::<Vec<_>>();
-    let x_min = *threads.iter().min().unwrap();
-    let x_max = *threads.iter().max().unwrap();
-    let x_range = x_min..x_max;
+    let x_range = match iter_range(render.iter().flat_map(|s| s.xs())) {
+        Some(r) => r,
+        None => {
+            log::warn!("No data for {}::{}::{}", model, lexer, suffix);
+            return Ok(());
+        }
+    };
 
-    let values = render.iter().flat_map(|s| s.ys()).collect::<Vec<_>>();
-    let y_range = fiter_range(&values).unwrap();
+    let y_range = iter_frange(render.iter().flat_map(|s| s.ys())).unwrap();
 
     let root = SVGBackend::new(plot_path, shape).into_drawing_area();
     root.fill(&colors::WHITE)?;
@@ -472,14 +477,8 @@ fn build_external_graphs<P: AsRef<Path>>(
                 schedule.push(s.map(select));
             }
 
-            let threads = schedule.iter().flat_map(|s| s.xs()).collect::<Vec<_>>();
-            let x_min = *threads.iter().min().unwrap();
-            let x_max = *threads.iter().max().unwrap();
-            let x_range = x_min..x_max;
-
-            let values = schedule.iter().flat_map(|s| s.ys()).collect::<Vec<_>>();
-            let y_range = fiter_range(&values).unwrap();
-            log::info!("y_range: {:?}", y_range);
+            let x_range = iter_range(schedule.iter().flat_map(|s| s.xs())).unwrap();
+            let y_range = iter_frange(schedule.iter().flat_map(|s| s.ys())).unwrap();
 
             let caption = format!(
                 "wordchipper:{chart_name} {scale_desc} throughput, rust, model: \"{model}\"",
