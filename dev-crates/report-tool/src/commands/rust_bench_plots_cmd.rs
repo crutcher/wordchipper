@@ -479,6 +479,7 @@ fn build_external_graphs<P: AsRef<Path>>(
 
             let values = schedule.iter().flat_map(|s| s.ys()).collect::<Vec<_>>();
             let y_range = fiter_range(&values).unwrap();
+            log::info!("y_range: {:?}", y_range);
 
             let caption = format!(
                 "wordchipper:{chart_name} {scale_desc} throughput, rust, model: \"{model}\"",

@@ -26,7 +26,7 @@ pub fn fiter_min_max<'a>(iter: impl IntoIterator<Item = &'a f64>) -> Option<(f64
     let mut acc = None;
     for &b in iter {
         acc = Some(match acc {
-            Some((a, _)) => (fmin(a, b), fmax(a, b)),
+            Some((low, high)) => (fmin(low, b), fmax(high, b)),
             None => (b, b),
         })
     }
