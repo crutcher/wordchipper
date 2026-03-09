@@ -57,47 +57,62 @@ impl RustBenchPlots {
         let output_dir = Path::new(&self.output_dir);
         std::fs::create_dir_all(output_dir)?;
 
+        let shape = (800, 600);
+
         for model in self.models.iter() {
-            build_model_graphs(model, &output_dir, &data)?;
+            build_model_graphs(model, &output_dir, shape, &data)?;
         }
 
         Ok(())
     }
 }
 
+fn lexer_levels() -> &'static [(&'static str, &'static str)] {
+    &[("regex", ""), ("ra", "_ra"), ("logos", "fast")]
+}
+
 fn build_model_graphs<P: AsRef<Path>>(
     model: &str,
     output_dir: &P,
+    shape: (u32, u32),
     data: &ParBenchData,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let output_dir = output_dir.as_ref();
 
-    build_external_graphs(model, "buffer_sweep", &output_dir, data)?;
+    build_external_graphs(model, "buffer_sweep", shape, &output_dir, data)?;
 
-    build_internal_graphs(model, &output_dir, data)
+    build_internal_graphs(model, shape, &output_dir, data)
 }
 
 fn build_internal_graphs<P: AsRef<Path>>(
     model: &str,
+    shape: (u32, u32),
     output_dir: &P,
     data: &ParBenchData,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let output_dir = output_dir.as_ref();
 
-    for accel in [false, true] {
-        let lexer = if accel { "logos" } else { "regex" };
-        build_internal_tgraph(
-            model,
-            accel,
-            &output_dir.join(format!("span_encoder_vrs.{model}.{lexer}.log.svg")),
-            data,
-        )?;
-        build_internal_rel_tgraph(
-            model,
-            accel,
-            &output_dir.join(format!("span_encoder_vrs.{model}.{lexer}.rel.svg")),
-            data,
-        )?;
+    let names = data.series_names();
+
+    for (lexer, suffix) in lexer_levels() {
+        if suffix.is_empty() || names.iter().any(|n| n.ends_with(suffix)) {
+            build_internal_tgraph(
+                model,
+                lexer,
+                suffix,
+                shape,
+                &output_dir.join(format!("span_encoder_vrs.{model}.{lexer}.log.svg")),
+                data,
+            )?;
+            build_internal_rel_tgraph(
+                model,
+                lexer,
+                suffix,
+                shape,
+                &output_dir.join(format!("span_encoder_vrs.{model}.{lexer}.rel.svg")),
+                data,
+            )?;
+        }
     }
 
     Ok(())
@@ -149,7 +164,9 @@ fn span_styles() -> BTreeMap<&'static str, MarkerStyle> {
 
 fn build_internal_rel_tgraph<P: AsRef<Path>>(
     model: &str,
-    accel: bool,
+    lexer: &str,
+    suffix: &str,
+    shape: (u32, u32),
     plot_path: &P,
     data: &ParBenchData,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -157,12 +174,9 @@ fn build_internal_rel_tgraph<P: AsRef<Path>>(
 
     log::info!("Plotting to {}", plot_path.display());
 
-    let span_key = |span: &str| {
-        format!(
-            "encoding_parallel::wordchipper::{span}::{model}{}",
-            if accel { "_fast" } else { "" },
-        )
-    };
+    let sel_model = format!("{model}{suffix}");
+
+    let span_key = |span: &str| format!("encoding_parallel::wordchipper::{span}::{sel_model}",);
 
     let mut plot_series: Vec<MarkerSeries<(u32, BenchResult)>> = Default::default();
     for (name, &style) in span_styles().iter() {
@@ -195,6 +209,12 @@ fn build_internal_rel_tgraph<P: AsRef<Path>>(
         .collect();
 
     let threads = render.iter().flat_map(|s| s.xs()).collect::<Vec<_>>();
+
+    if threads.is_empty() {
+        log::warn!("No data for {}::{}::{}", model, lexer, suffix);
+        return Ok(());
+    }
+
     let x_min = *threads.iter().min().unwrap();
     let x_max = *threads.iter().max().unwrap();
     let x_range = x_min..x_max;
@@ -202,18 +222,12 @@ fn build_internal_rel_tgraph<P: AsRef<Path>>(
     let values = render.iter().flat_map(|s| s.ys()).collect::<Vec<_>>();
     let y_range = fiter_range(&values).unwrap();
 
-    const SHAPE: (u32, u32) = (640, 400);
-
-    let root = SVGBackend::new(plot_path, SHAPE).into_drawing_area();
+    let root = SVGBackend::new(plot_path, shape).into_drawing_area();
     root.fill(&colors::WHITE)?;
 
     let mut chart = ChartBuilder::on(&root)
         .caption(
-            format!(
-                "encoder vrs max, {} lexer, model: \"{}\"",
-                if accel { "logos" } else { "regex" },
-                model
-            ),
+            format!("encoder vrs max, {lexer} lexer, model: \"{}\"", model),
             ("sans-serif", 20).into_font(),
         )
         .margin(10)
@@ -260,7 +274,9 @@ fn build_internal_rel_tgraph<P: AsRef<Path>>(
 }
 fn build_internal_tgraph<P: AsRef<Path>>(
     model: &str,
-    accel: bool,
+    lexer: &str,
+    suffix: &str,
+    shape: (u32, u32),
     plot_path: &P,
     data: &ParBenchData,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -270,11 +286,10 @@ fn build_internal_tgraph<P: AsRef<Path>>(
 
     let mut schedule: Vec<MarkerSeries<(u32, BenchResult)>> = Default::default();
 
+    let sel_model = format!("{model}{suffix}");
+
     for (name, &marker_style) in span_styles().iter() {
-        let sname = format!(
-            "encoding_parallel::wordchipper::{name}::{model}{}",
-            if accel { "_fast" } else { "" },
-        );
+        let sname = format!("encoding_parallel::wordchipper::{name}::{sel_model}",);
 
         if let Some(points) = data.select_series(&sname) {
             schedule.push(MarkerSeries {
@@ -283,6 +298,11 @@ fn build_internal_tgraph<P: AsRef<Path>>(
                 points,
             })
         }
+    }
+
+    if schedule.is_empty() {
+        log::warn!("No data for {}::{}::{}", model, lexer, suffix);
+        return Ok(());
     }
 
     fn select((threads, bench_results): &(u32, BenchResult)) -> (u32, f64) {
@@ -299,18 +319,12 @@ fn build_internal_tgraph<P: AsRef<Path>>(
     let values = render.iter().flat_map(|s| s.ys()).collect::<Vec<_>>();
     let y_range = fiter_range(&values).unwrap();
 
-    const SHAPE: (u32, u32) = (640, 400);
-
-    let root = SVGBackend::new(plot_path, SHAPE).into_drawing_area();
+    let root = SVGBackend::new(plot_path, shape).into_drawing_area();
     root.fill(&colors::WHITE)?;
 
     let mut chart = ChartBuilder::on(&root)
         .caption(
-            format!(
-                "encoder vrs, {} lexer, model: \"{}\"",
-                if accel { "logos" } else { "regex" },
-                model
-            ),
+            format!("encoder vrs, {lexer} lexer, model: \"{}\"", model),
             ("sans-serif", 20).into_font(),
         )
         .margin(10)
@@ -360,6 +374,7 @@ fn build_internal_tgraph<P: AsRef<Path>>(
 fn build_external_graphs<P: AsRef<Path>>(
     model: &str,
     span_encoder: &str,
+    shape: (u32, u32),
     output_dir: &P,
     data: &ParBenchData,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -394,7 +409,7 @@ fn build_external_graphs<P: AsRef<Path>>(
     })
     .collect();
 
-    let regex_series = MarkerSeries::new(
+    let fr_series = MarkerSeries::new(
         "wordchipper:regex",
         base_style
             .with_marker_type(MarkerType::TriUp)
@@ -402,6 +417,17 @@ fn build_external_graphs<P: AsRef<Path>>(
             .with_fill_style(colors::GREEN_A200.filled()),
         data.try_select_series(&format!(
             "encoding_parallel::wordchipper::{span_encoder}::{model}"
+        ))?,
+    );
+
+    let ra_series = MarkerSeries::new(
+        "wordchipper:ra",
+        base_style
+            .with_marker_type(MarkerType::CrossDiamond)
+            .with_marker_level(MarkerLevel::Para)
+            .with_fill_style(colors::AMBER_A200.filled()),
+        data.try_select_series(&format!(
+            "encoding_parallel::wordchipper::{span_encoder}::{model}_ra"
         ))?,
     );
 
@@ -418,11 +444,13 @@ fn build_external_graphs<P: AsRef<Path>>(
 
     const SIZE: i32 = 8;
     const LINE_WIDTH: u32 = 4;
-    const SHAPE: (u32, u32) = (640, 400);
 
-    for include_logos in [false, true] {
+    for (chart_name, group) in [
+        ("fast_regex", vec![&fr_series]),
+        ("ra", vec![&fr_series, &ra_series]),
+        ("logos", vec![&fr_series, &ra_series, &logos_series]),
+    ] {
         for log_scale in [false, true] {
-            let chart_name = if include_logos { "logos" } else { "regex" };
             let scale_desc = if log_scale { "log" } else { "linear" };
 
             let plot_path = output_dir.join(format!(
@@ -430,7 +458,7 @@ fn build_external_graphs<P: AsRef<Path>>(
             ));
             log::info!("Plotting to {}", plot_path.display());
 
-            let root = SVGBackend::new(&plot_path, SHAPE).into_drawing_area();
+            let root = SVGBackend::new(&plot_path, shape).into_drawing_area();
             root.fill(&colors::WHITE)?;
 
             fn select((threads, bench_results): &(u32, BenchResult)) -> (u32, f64) {
@@ -440,18 +468,18 @@ fn build_external_graphs<P: AsRef<Path>>(
             let mut schedule: Vec<MarkerSeries<(u32, f64)>> =
                 external.iter().map(|ms| ms.map(select)).collect();
 
-            schedule.push(regex_series.map(select));
-            if include_logos {
-                schedule.push(logos_series.map(select));
+            for s in group.iter() {
+                schedule.push(s.map(select));
             }
 
             let threads = schedule.iter().flat_map(|s| s.xs()).collect::<Vec<_>>();
-            let x_min = *threads.iter().max().unwrap();
-            let x_max = *threads.iter().min().unwrap();
+            let x_min = *threads.iter().min().unwrap();
+            let x_max = *threads.iter().max().unwrap();
             let x_range = x_min..x_max;
 
             let values = schedule.iter().flat_map(|s| s.ys()).collect::<Vec<_>>();
             let y_range = fiter_range(&values).unwrap();
+            log::info!("y_range: {:?}", y_range);
 
             let caption = format!(
                 "wordchipper:{chart_name} {scale_desc} throughput, rust, model: \"{model}\"",
