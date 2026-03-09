@@ -11,12 +11,18 @@ use plotters::{
     },
     style::full_palette as colors,
 };
+use plotters_backend::text_anchor::{
+    HPos,
+    Pos,
+    VPos,
+};
 use wordchipper_cli_util::logging::LogArgs;
 
 use crate::util::{
+    bench_data,
     bench_data::par_bench::ParBenchData,
-    float_tools,
-    float_tools::fiter_range,
+    bounds_tools,
+    bounds_tools::iter_frange,
     human_format,
     plotting::{
         MarkerLevel,
@@ -52,23 +58,19 @@ impl RustBenchPlots {
         log::info!("{:#?}", self);
 
         let data_dir = Path::new(&self.data_dir);
-        let data = ParBenchData::load_data(data_dir.join("rust_parallel"))?;
-
         let output_dir = Path::new(&self.output_dir);
-        std::fs::create_dir_all(output_dir)?;
 
         let shape = (800, 600);
 
+        let par_data = ParBenchData::load_data(data_dir.join("rust_parallel"))?;
+        let par_output = output_dir.join("rust_parallel");
+        std::fs::create_dir_all(&par_output)?;
         for model in self.models.iter() {
-            build_model_graphs(model, &output_dir, shape, &data)?;
+            build_model_graphs(model, &par_output, shape, &par_data)?;
         }
 
         Ok(())
     }
-}
-
-fn lexer_levels() -> &'static [(&'static str, &'static str)] {
-    &[("regex", ""), ("ra", "_ra"), ("logos", "fast")]
 }
 
 fn build_model_graphs<P: AsRef<Path>>(
@@ -79,12 +81,16 @@ fn build_model_graphs<P: AsRef<Path>>(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let output_dir = output_dir.as_ref();
 
-    build_external_graphs(model, "buffer_sweep", shape, &output_dir, data)?;
+    let (w, h) = shape;
 
-    build_internal_graphs(model, shape, &output_dir, data)
+    let tall_shape = (w, h * 3 / 2);
+
+    build_throughput_graph(model, "buffer_sweep", tall_shape, &output_dir, data)?;
+
+    build_rel_span_encoder_graphs(model, tall_shape, &output_dir, data)
 }
 
-fn build_internal_graphs<P: AsRef<Path>>(
+fn build_rel_span_encoder_graphs<P: AsRef<Path>>(
     model: &str,
     shape: (u32, u32),
     output_dir: &P,
@@ -92,286 +98,179 @@ fn build_internal_graphs<P: AsRef<Path>>(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let output_dir = output_dir.as_ref();
 
-    let names = data.series_names();
+    const SIZE: i32 = 6;
+    const LINE_WIDTH: u32 = 4;
 
-    for (lexer, suffix) in lexer_levels() {
-        if suffix.is_empty() || names.iter().any(|n| n.ends_with(suffix)) {
-            build_internal_tgraph(
-                model,
-                lexer,
-                suffix,
-                shape,
-                &output_dir.join(format!("span_encoder_vrs.{model}.{lexer}.log.svg")),
-                data,
-            )?;
-            build_internal_rel_tgraph(
-                model,
-                lexer,
-                suffix,
-                shape,
-                &output_dir.join(format!("span_encoder_vrs.{model}.{lexer}.rel.svg")),
-                data,
-            )?;
-        }
-    }
+    let plot_path = output_dir.join(format!("span_encoder_relative.rust.{model}.svg"));
+    log::info!("Plotting to {}", plot_path.display());
+    let root = SVGBackend::new(&plot_path, shape).into_drawing_area();
+    root.fill(&colors::WHITE)?;
+    let (title_area, chart_area) = root.split_vertically(60);
+    let title_style = TextStyle {
+        font: ("sans-serif", 24).into_font(),
+        color: BLACK.to_backend_color(),
+        pos: Pos::new(HPos::Center, VPos::Top),
+    };
+    let subtitle_style = TextStyle {
+        font: ("sans-serif", 18).into_font(),
+        color: BLACK.to_backend_color(),
+        pos: Pos::new(HPos::Center, VPos::Top),
+    };
 
-    Ok(())
-}
+    title_area.draw(&Text::new(
+        "SpanEncoder Relative Throughput",
+        (title_area.dim_in_pixel().0 as i32 / 2, 10),
+        title_style,
+    ))?;
+    title_area.draw(&Text::new(
+        format!("model: \"{model}\"",),
+        (title_area.dim_in_pixel().0 as i32 / 2, 40),
+        subtitle_style,
+    ))?;
 
-fn median_bps(br: &BenchResult) -> f64 {
-    br.throughput_bps.as_ref().unwrap().median.unwrap()
-}
+    let charts = chart_area.margin(10, 10, 10, 10);
 
-fn span_styles() -> BTreeMap<&'static str, MarkerStyle> {
-    let base_style = MarkerStyle::default().with_stroke_style(colors::BLACK.stroke_width(2));
+    let sub_charts = charts.split_evenly((3, 1));
 
-    [
-        (
-            "buffer_sweep",
-            base_style
-                .with_marker_type(MarkerType::Circle)
-                .with_fill_style(Some(colors::GREEN_200.into())),
-        ),
-        (
-            "priority_merge",
-            base_style
-                .with_marker_type(MarkerType::Square)
-                .with_fill_style(Some(colors::PURPLE_200.into())),
-        ),
-        (
-            "tail_sweep",
-            base_style
-                .with_marker_type(MarkerType::Diamond)
-                .with_fill_style(Some(colors::DEEPORANGE_200.into())),
-        ),
-        (
-            "bpe_backtrack",
-            base_style
-                .with_marker_type(MarkerType::TriUp)
-                .with_fill_style(Some(colors::LIGHTBLUE_200.into())),
-        ),
-        (
-            "merge_heap",
-            base_style
-                .with_marker_type(MarkerType::TriDown)
-                .with_fill_style(Some(colors::BLUEGREY_200.into())),
-        ),
+    for (idx, (lexer_label, model_suffix)) in [
+        ("fast-regex", ""),
+        ("regex-automata", "_ra"),
+        ("logos", "_fast"),
     ]
-    .iter()
-    .cloned()
-    .collect()
-}
+    .into_iter()
+    .enumerate()
+    {
+        let drawing_area = &sub_charts[idx];
 
-fn build_internal_rel_tgraph<P: AsRef<Path>>(
-    model: &str,
-    lexer: &str,
-    suffix: &str,
-    shape: (u32, u32),
-    plot_path: &P,
-    data: &ParBenchData,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let plot_path = plot_path.as_ref();
+        let sel_model = format!("{model}{model_suffix}");
 
-    log::info!("Plotting to {}", plot_path.display());
+        let span_key = |span: &str| format!("encoding_parallel::wordchipper::{span}::{sel_model}",);
 
-    let sel_model = format!("{model}{suffix}");
+        let base_style = MarkerStyle::default().with_stroke_style(colors::BLACK.stroke_width(2));
+        let span_styles = [
+            (
+                "buffer_sweep",
+                base_style
+                    .with_marker_type(MarkerType::Circle)
+                    .with_fill_style(Some(colors::GREEN_200.into())),
+            ),
+            (
+                "priority_merge",
+                base_style
+                    .with_marker_type(MarkerType::Square)
+                    .with_fill_style(Some(colors::PURPLE_200.into())),
+            ),
+            (
+                "tail_sweep",
+                base_style
+                    .with_marker_type(MarkerType::Diamond)
+                    .with_fill_style(Some(colors::DEEPORANGE_200.into())),
+            ),
+            (
+                "bpe_backtrack",
+                base_style
+                    .with_marker_type(MarkerType::TriUp)
+                    .with_fill_style(Some(colors::LIGHTBLUE_200.into())),
+            ),
+            (
+                "merge_heap",
+                base_style
+                    .with_marker_type(MarkerType::TriDown)
+                    .with_fill_style(Some(colors::BLUEGREY_200.into())),
+            ),
+        ];
 
-    let span_key = |span: &str| format!("encoding_parallel::wordchipper::{span}::{sel_model}",);
+        let mut plot_series: Vec<MarkerSeries<(u32, BenchResult)>> = Default::default();
+        for (name, style) in span_styles.iter() {
+            if let Some(points) = data.select_series(&span_key(name)) {
+                plot_series.push(MarkerSeries {
+                    name: name.to_string(),
+                    style: *style,
+                    points,
+                })
+            }
+        }
 
-    let mut plot_series: Vec<MarkerSeries<(u32, BenchResult)>> = Default::default();
-    for (name, &style) in span_styles().iter() {
-        if let Some(points) = data.select_series(&span_key(name)) {
-            plot_series.push(MarkerSeries {
-                name: name.to_string(),
-                style,
-                points,
-            })
+        fn select((threads, bench_results): &(u32, BenchResult)) -> (u32, f64) {
+            (*threads, bench_data::median_bps(bench_results))
+        }
+
+        let render: Vec<MarkerSeries<(u32, f64)>> =
+            plot_series.iter().map(|s| s.map(select)).collect();
+
+        // Normalize the points to the max value.
+        let mut baseline: BTreeMap<u32, f64> = Default::default();
+        for ms in render.iter() {
+            for &(t, v) in ms.points.iter() {
+                let entry = baseline.entry(t).or_default();
+                *entry = bounds_tools::fmax(*entry, v);
+            }
+        }
+        let render: Vec<MarkerSeries<(u32, f64)>> = render
+            .into_iter()
+            .map(|s| s.map(|&(t, v)| (t, v / baseline[&t])))
+            .collect();
+
+        let x_range = match bounds_tools::iter_range(render.iter().flat_map(|s| s.xs())) {
+            Some(r) => r,
+            None => {
+                log::warn!("No data for {}::{}::{}", model, lexer_label, model_suffix);
+                return Ok(());
+            }
+        };
+
+        let mut chart = ChartBuilder::on(drawing_area)
+            .caption(lexer_label, ("sans-serif", 20).into_font())
+            .x_label_area_size(40)
+            .y_label_area_size(50)
+            .build_cartesian_2d(x_range.log_scale().base(2.0), 0.8..1.0)?;
+
+        if idx == sub_charts.len() - 1 {
+            chart
+                .configure_mesh()
+                .x_desc("Thread Count")
+                .y_desc("Relative Median Throughput")
+                .draw()?;
+        } else {
+            chart
+                .configure_mesh()
+                .y_desc("Relative Median Throughput")
+                .draw()?;
+        }
+
+        // Render the lines under the markers.
+        for ms in render.iter() {
+            chart.draw_series(LineSeries::new(
+                ms.points.clone(),
+                ms.style.line_style().stroke_width(LINE_WIDTH),
+            ))?;
+        }
+
+        for ms in render.iter() {
+            chart
+                .draw_series(ms.points.iter().map(|&coord| ms.style.marker(coord, SIZE)))?
+                .label(ms.name.clone())
+                .legend(move |coord| ms.style.marker(coord, SIZE));
+        }
+
+        if idx == 0 {
+            chart
+                .configure_series_labels()
+                .position(SeriesLabelPosition::LowerLeft)
+                .margin(12)
+                .legend_area_size(15)
+                .background_style(WHITE.mix(0.8))
+                .border_style(BLACK)
+                .draw()?;
         }
     }
-
-    fn select((threads, bench_results): &(u32, BenchResult)) -> (u32, f64) {
-        (*threads, median_bps(bench_results))
-    }
-
-    let render: Vec<MarkerSeries<(u32, f64)>> = plot_series.iter().map(|s| s.map(select)).collect();
-
-    // Normalize the points to the max value.
-    let mut baseline: BTreeMap<u32, f64> = Default::default();
-    for ms in render.iter() {
-        for &(t, v) in ms.points.iter() {
-            let entry = baseline.entry(t).or_default();
-            *entry = float_tools::fmax(*entry, v);
-        }
-    }
-    let render: Vec<MarkerSeries<(u32, f64)>> = render
-        .into_iter()
-        .map(|s| s.map(|&(t, v)| (t, v / baseline[&t])))
-        .collect();
-
-    let threads = render.iter().flat_map(|s| s.xs()).collect::<Vec<_>>();
-
-    if threads.is_empty() {
-        log::warn!("No data for {}::{}::{}", model, lexer, suffix);
-        return Ok(());
-    }
-
-    let x_min = *threads.iter().min().unwrap();
-    let x_max = *threads.iter().max().unwrap();
-    let x_range = x_min..x_max;
-
-    let values = render.iter().flat_map(|s| s.ys()).collect::<Vec<_>>();
-    let y_range = fiter_range(&values).unwrap();
-
-    let root = SVGBackend::new(plot_path, shape).into_drawing_area();
-    root.fill(&colors::WHITE)?;
-
-    let mut chart = ChartBuilder::on(&root)
-        .caption(
-            format!("encoder vrs max, {lexer} lexer, model: \"{}\"", model),
-            ("sans-serif", 20).into_font(),
-        )
-        .margin(10)
-        .x_label_area_size(40)
-        .y_label_area_size(50)
-        .build_cartesian_2d(x_range.log_scale().base(2.0), y_range)?;
-
-    chart
-        .configure_mesh()
-        .x_desc("Thread Count")
-        .y_desc("Median Throughput: max relative")
-        .draw()?;
-
-    const SIZE: i32 = 8;
-    const LINE_WIDTH: u32 = 4;
-
-    // Render the lines under the markers.
-    for ms in render.iter() {
-        chart.draw_series(LineSeries::new(
-            ms.points.clone(),
-            ms.style.line_style().stroke_width(LINE_WIDTH),
-        ))?;
-    }
-
-    for ms in render.iter() {
-        chart
-            .draw_series(ms.points.iter().map(|&coord| ms.style.marker(coord, SIZE)))?
-            .label(ms.name.clone())
-            .legend(move |coord| ms.style.marker(coord, SIZE));
-    }
-
-    chart
-        .configure_series_labels()
-        .position(SeriesLabelPosition::LowerRight)
-        .margin(12)
-        .legend_area_size(15)
-        .background_style(WHITE.mix(0.8))
-        .border_style(BLACK)
-        .draw()?;
-
-    root.present()?;
-
-    Ok(())
-}
-fn build_internal_tgraph<P: AsRef<Path>>(
-    model: &str,
-    lexer: &str,
-    suffix: &str,
-    shape: (u32, u32),
-    plot_path: &P,
-    data: &ParBenchData,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let plot_path = plot_path.as_ref();
-
-    log::info!("Plotting to {}", plot_path.display());
-
-    let mut schedule: Vec<MarkerSeries<(u32, BenchResult)>> = Default::default();
-
-    let sel_model = format!("{model}{suffix}");
-
-    for (name, &marker_style) in span_styles().iter() {
-        let sname = format!("encoding_parallel::wordchipper::{name}::{sel_model}",);
-
-        if let Some(points) = data.select_series(&sname) {
-            schedule.push(MarkerSeries {
-                name: name.to_string(),
-                style: marker_style,
-                points,
-            })
-        }
-    }
-
-    if schedule.is_empty() {
-        log::warn!("No data for {}::{}::{}", model, lexer, suffix);
-        return Ok(());
-    }
-
-    fn select((threads, bench_results): &(u32, BenchResult)) -> (u32, f64) {
-        (*threads, median_bps(bench_results))
-    }
-
-    let render: Vec<MarkerSeries<(u32, f64)>> = schedule.iter().map(|s| s.map(select)).collect();
-
-    let threads = render.iter().flat_map(|s| s.xs()).collect::<Vec<_>>();
-    let x_min = *threads.iter().min().unwrap();
-    let x_max = *threads.iter().max().unwrap();
-    let x_range = x_min..x_max;
-
-    let values = render.iter().flat_map(|s| s.ys()).collect::<Vec<_>>();
-    let y_range = fiter_range(&values).unwrap();
-
-    let root = SVGBackend::new(plot_path, shape).into_drawing_area();
-    root.fill(&colors::WHITE)?;
-
-    let mut chart = ChartBuilder::on(&root)
-        .caption(
-            format!("encoder vrs, {lexer} lexer, model: \"{}\"", model),
-            ("sans-serif", 20).into_font(),
-        )
-        .margin(10)
-        .x_label_area_size(40)
-        .y_label_area_size(70)
-        .build_cartesian_2d(x_range.log_scale().base(2.0), y_range.log_scale().base(2.0))?;
-
-    chart
-        .configure_mesh()
-        .x_desc("Thread Count")
-        .y_desc("Median Throughput: log scale")
-        .y_label_formatter(&|&bps| human_format::format_bps(bps))
-        .draw()?;
-
-    const SIZE: i32 = 8;
-    const LINE_WIDTH: u32 = 4;
-
-    // Render the lines under the markers.
-    for ms in render.iter() {
-        chart.draw_series(LineSeries::new(
-            ms.points.clone(),
-            ms.style.line_style().stroke_width(LINE_WIDTH),
-        ))?;
-    }
-
-    for ms in render.iter() {
-        chart
-            .draw_series(ms.points.iter().map(|&coord| ms.style.marker(coord, SIZE)))?
-            .label(ms.name.clone())
-            .legend(move |coord| ms.style.marker(coord, SIZE));
-    }
-
-    chart
-        .configure_series_labels()
-        .position(SeriesLabelPosition::LowerRight)
-        .margin(12)
-        .legend_area_size(15)
-        .background_style(WHITE.mix(0.8))
-        .border_style(BLACK)
-        .draw()?;
 
     root.present()?;
 
     Ok(())
 }
 
-fn build_external_graphs<P: AsRef<Path>>(
+fn build_throughput_graph<P: AsRef<Path>>(
     model: &str,
     span_encoder: &str,
     shape: (u32, u32),
@@ -398,8 +297,8 @@ fn build_external_graphs<P: AsRef<Path>>(
         (
             "tokenizers",
             base_style
-                .with_marker_type(MarkerType::Diamond)
-                .with_fill_style(Some(colors::BLUEGREY_200.into())),
+                .with_marker_type(MarkerType::CrossDiamond)
+                .with_fill_style(Some(colors::BLUEGREY_100.into())),
         ),
     ]
     .into_iter()
@@ -410,7 +309,7 @@ fn build_external_graphs<P: AsRef<Path>>(
     .collect();
 
     let fr_series = MarkerSeries::new(
-        "wordchipper:regex",
+        "wordchipper:fancy-regex",
         base_style
             .with_marker_type(MarkerType::TriUp)
             .with_marker_level(MarkerLevel::Para)
@@ -421,9 +320,9 @@ fn build_external_graphs<P: AsRef<Path>>(
     );
 
     let ra_series = MarkerSeries::new(
-        "wordchipper:ra",
+        "wordchipper:regex-automata",
         base_style
-            .with_marker_type(MarkerType::CrossDiamond)
+            .with_marker_type(MarkerType::Diamond)
             .with_marker_level(MarkerLevel::Para)
             .with_fill_style(colors::AMBER_A200.filled()),
         data.try_select_series(&format!(
@@ -442,7 +341,7 @@ fn build_external_graphs<P: AsRef<Path>>(
         ))?,
     );
 
-    const SIZE: i32 = 8;
+    const SIZE: i32 = 6;
     const LINE_WIDTH: u32 = 4;
 
     for (chart_name, group) in [
@@ -450,40 +349,67 @@ fn build_external_graphs<P: AsRef<Path>>(
         ("ra", vec![&fr_series, &ra_series]),
         ("logos", vec![&fr_series, &ra_series, &logos_series]),
     ] {
-        for log_scale in [false, true] {
+        let plot_path = output_dir.join(format!("wc_{chart_name}_vrs_brandx.rust.{model}.svg"));
+        log::info!("Plotting to {}", plot_path.display());
+
+        let root = SVGBackend::new(&plot_path, shape).into_drawing_area();
+        root.fill(&colors::WHITE)?;
+        let (title_area, chart_area) = root.split_vertically(60);
+
+        let charts = chart_area.margin(10, 10, 10, 10);
+
+        let title_style = TextStyle {
+            font: ("sans-serif", 24).into_font(),
+            color: BLACK.to_backend_color(),
+            pos: Pos::new(HPos::Center, VPos::Top),
+        };
+        let subtitle_style = TextStyle {
+            font: ("sans-serif", 18).into_font(),
+            color: BLACK.to_backend_color(),
+            pos: Pos::new(HPos::Center, VPos::Top),
+        };
+
+        title_area.draw(&Text::new(
+            "wordchipper rust throughput",
+            (title_area.dim_in_pixel().0 as i32 / 2, 10),
+            title_style,
+        ))?;
+        title_area.draw(&Text::new(
+            format!("model: \"{model}\"",),
+            (title_area.dim_in_pixel().0 as i32 / 2, 40),
+            subtitle_style,
+        ))?;
+
+        /*
+        let caption = format!(
+            "wordchipper:{chart_name} {scale_desc} throughput, rust, model: \"{model}\"",
+        );
+         */
+        let (top, bottom) = charts.split_vertically(root.dim_in_pixel().1 / 3);
+
+        for (is_top, log_scale, da) in [(true, false, top), (false, true, bottom)] {
             let scale_desc = if log_scale { "log" } else { "linear" };
 
-            let plot_path = output_dir.join(format!(
-                "wc_{chart_name}_vrs_brandx.rust.{model}.{scale_desc}.svg"
-            ));
-            log::info!("Plotting to {}", plot_path.display());
-
-            let root = SVGBackend::new(&plot_path, shape).into_drawing_area();
-            root.fill(&colors::WHITE)?;
-
             fn select((threads, bench_results): &(u32, BenchResult)) -> (u32, f64) {
-                (*threads, median_bps(bench_results))
+                (*threads, bench_data::median_bps(bench_results))
             }
 
-            let mut schedule: Vec<MarkerSeries<(u32, f64)>> =
-                external.iter().map(|ms| ms.map(select)).collect();
-
-            for s in group.iter() {
-                schedule.push(s.map(select));
+            let mut schedule: Vec<MarkerSeries<(u32, BenchResult)>> = Default::default();
+            for &g in &group {
+                schedule.push(g.clone());
             }
+            schedule.extend(external.clone());
 
-            let threads = schedule.iter().flat_map(|s| s.xs()).collect::<Vec<_>>();
-            let x_min = *threads.iter().min().unwrap();
-            let x_max = *threads.iter().max().unwrap();
-            let x_range = x_min..x_max;
-
-            let values = schedule.iter().flat_map(|s| s.ys()).collect::<Vec<_>>();
-            let y_range = fiter_range(&values).unwrap();
-            log::info!("y_range: {:?}", y_range);
-
-            let caption = format!(
-                "wordchipper:{chart_name} {scale_desc} throughput, rust, model: \"{model}\"",
-            );
+            // Range over all thread values.
+            let x_range = bounds_tools::iter_range(schedule.iter().flat_map(|s| s.xs())).unwrap();
+            // Range over all bps values.
+            let y_range = iter_frange(schedule.iter().flat_map(|s| {
+                s.ys()
+                    .iter()
+                    .map(bench_data::median_bps)
+                    .collect::<Vec<f64>>()
+            }))
+            .unwrap();
 
             // ATTENTION: This is weird.
             // The plotters chart machinery makes extensive and heavy use of specialized
@@ -492,47 +418,80 @@ fn build_external_graphs<P: AsRef<Path>>(
             // As a result, the choice of range ends up polluting the base type.
             macro_rules! draw_chart {
                 ($y_range:expr) => {{
-                    let mut chart = ChartBuilder::on(&root)
-                        .caption(caption, ("sans-serif", 20).into_font())
-                        .margin(10)
+                    let mut chart = ChartBuilder::on(&da)
+                        //               .caption(caption, ("sans-serif", 20).into_font())
+                        .margin(0)
                         .x_label_area_size(40)
                         .y_label_area_size(70)
                         .build_cartesian_2d(x_range.log_scale().base(2.0), $y_range)?;
 
-                    chart
-                        .configure_mesh()
-                        .x_desc("Thread Count")
-                        .y_desc(format!("Median Throughput: {scale_desc} scale"))
-                        .y_label_formatter(&|&bps| human_format::format_bps(bps))
-                        .draw()?;
+                    if is_top {
+                        chart
+                            .configure_mesh()
+                            .y_desc(format!("Median Throughput: {scale_desc}"))
+                            .y_label_formatter(&|&bps| human_format::format_bps(bps))
+                            .draw()?;
+                    } else {
+                        chart
+                            .configure_mesh()
+                            .x_desc("Thread Count")
+                            .y_desc(format!("Median Throughput: {scale_desc}"))
+                            .y_label_formatter(&|&bps| human_format::format_bps(bps))
+                            .draw()?;
+                    }
 
                     // Render the lines under the markers.
                     for ms in schedule.iter() {
                         chart.draw_series(LineSeries::new(
-                            ms.points.clone(),
+                            ms.map_points(select),
                             ms.style.line_style().stroke_width(LINE_WIDTH),
                         ))?;
                     }
 
                     for ms in schedule.iter() {
                         chart
-                            .draw_series(
-                                ms.points
-                                    .iter()
-                                    .map(|coords| ms.style.marker(*coords, SIZE)),
-                            )?
+                            .draw_series(ms.points.iter().map(|(threads, bench_results)| {
+                                let bps = bench_data::median_bps(bench_results);
+                                let coord = (*threads, bps);
+                                ms.style.marker(coord, SIZE)
+                            }))?
                             .label(ms.name.clone())
                             .legend(move |coord| ms.style.marker(coord, SIZE));
                     }
 
-                    chart
-                        .configure_series_labels()
-                        .position(SeriesLabelPosition::UpperLeft)
-                        .background_style(WHITE.mix(0.8))
-                        .margin(12)
-                        .legend_area_size(15)
-                        .border_style(BLACK)
-                        .draw()?;
+                    /*
+                    if log_scale {
+                        for ms in schedule.iter() {
+                            chart
+                                .draw_series(ms.points.iter().map(|(threads, bench_results)| {
+                                    let bps = median_bps(bench_results);
+                                    let coord = (*threads, bps);
+                                    let allocs = alloc_count(bench_results).unwrap_or(0);
+                                    let deallocs = dealloc_count(bench_results).unwrap_or(0);
+
+                                    EmptyElement::at(coord)
+                                        + Text::new(
+                                            format!("{}:{}", allocs, deallocs),
+                                            (5, 10),
+                                            ("sans-serif", 12).into_font(),
+                                        )
+                                }))?
+                                .label(ms.name.clone())
+                                .legend(move |coord| ms.style.marker(coord, SIZE));
+                        }
+                    }
+                     */
+
+                    if is_top {
+                        chart
+                            .configure_series_labels()
+                            .position(SeriesLabelPosition::UpperLeft)
+                            .background_style(WHITE.mix(0.8))
+                            .margin(SIZE * 2)
+                            .legend_area_size(15)
+                            .border_style(BLACK)
+                            .draw()?;
+                    }
 
                     Ok::<_, Box<dyn std::error::Error>>(())
                 }};
@@ -543,9 +502,9 @@ fn build_external_graphs<P: AsRef<Path>>(
             } else {
                 draw_chart!(y_range)?;
             }
-
-            root.present()?;
         }
+
+        root.present()?;
     }
 
     Ok(())
