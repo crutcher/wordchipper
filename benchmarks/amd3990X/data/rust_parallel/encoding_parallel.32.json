@@ -1,20 +1,20 @@
 [
   {
-    "name": "encoding_parallel::bpe_openai::cl100k",
+    "name": "encoding_parallel::cl100k::bpe_openai",
     "bench": "encoding_parallel",
     "samples": 100,
     "iters": 100,
     "time_ns": {
-      "fastest": 52590000.0,
-      "slowest": 63270000.0,
-      "median": 55960000.0,
-      "mean": 56340000.0
+      "fastest": 61590000.0,
+      "slowest": 71490000.0,
+      "median": 67170000.0,
+      "mean": 66870000.00000001
     },
     "throughput_bps": {
-      "fastest": 79990000.0,
-      "slowest": 66489999.99999999,
-      "median": 75180000.0,
-      "mean": 74670000.0
+      "fastest": 68300000.0,
+      "slowest": 58840000.0,
+      "median": 62630000.0,
+      "mean": 62910000.0
     },
     "allocs": {
       "alloc_bytes": {
@@ -56,21 +56,21 @@
     }
   },
   {
-    "name": "encoding_parallel::bpe_openai::o200k",
+    "name": "encoding_parallel::cl100k::tiktoken",
     "bench": "encoding_parallel",
     "samples": 100,
     "iters": 100,
     "time_ns": {
-      "fastest": 63610000.0,
-      "slowest": 80460000.0,
-      "median": 67830000.0,
-      "mean": 68170000.0
+      "fastest": 33950000.0,
+      "slowest": 46300000.0,
+      "median": 37410000.0,
+      "mean": 37520000.0
     },
     "throughput_bps": {
-      "fastest": 66129999.99999999,
-      "slowest": 52280000.0,
-      "median": 62020000.0,
-      "mean": 61710000.0
+      "fastest": 123900000.0,
+      "slowest": 90850000.0,
+      "median": 112400000.0,
+      "mean": 112100000.0
     },
     "allocs": {
       "alloc_bytes": {
@@ -100,40 +100,52 @@
     }
   },
   {
-    "name": "encoding_parallel::tiktoken::cl100k",
+    "name": "encoding_parallel::cl100k::tokenizers",
     "bench": "encoding_parallel",
     "samples": 100,
     "iters": 100,
     "time_ns": {
-      "fastest": 29760000.0,
-      "slowest": 43840000.0,
-      "median": 32880000.000000004,
-      "mean": 33240000.000000004
+      "fastest": 122600000.0,
+      "slowest": 160100000.0,
+      "median": 125000000.0,
+      "mean": 125900000.0
     },
     "throughput_bps": {
-      "fastest": 141300000.0,
-      "slowest": 95970000.0,
-      "median": 127900000.0,
-      "mean": 126500000.0
+      "fastest": 34290000.0,
+      "slowest": 26270000.0,
+      "median": 33650000.0,
+      "mean": 33409999.999999996
     },
     "allocs": {
       "alloc_bytes": {
-        "fastest": 24570.0,
-        "slowest": 24570.0,
-        "median": 24570.0,
-        "mean": 24590.0
+        "fastest": 278500.0,
+        "slowest": 278500.0,
+        "median": 278500.0,
+        "mean": 278500.0
       },
       "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.01
+        "fastest": 2.0,
+        "slowest": 2.0,
+        "median": 2.0,
+        "mean": 2.01
+      },
+      "dealloc_bytes": {
+        "fastest": 1054000.0,
+        "slowest": 1067000.0,
+        "median": 1069000.0,
+        "mean": 1066000.0
+      },
+      "dealloc_count": {
+        "fastest": 1953.0,
+        "slowest": 1977.0,
+        "median": 1981.0,
+        "mean": 1975.0
       },
       "max_alloc_bytes": {
-        "fastest": 24570.0,
-        "slowest": 24570.0,
-        "median": 24570.0,
-        "mean": 24590.0
+        "fastest": 262100.00000000003,
+        "slowest": 262100.00000000003,
+        "median": 262100.00000000003,
+        "mean": 262100.00000000003
       },
       "max_alloc_count": {
         "fastest": 1.0,
@@ -144,21 +156,861 @@
     }
   },
   {
-    "name": "encoding_parallel::tiktoken::o200k",
+    "name": "encoding_parallel::cl100k::wordchipper::logos::bpe_backtrack",
     "bench": "encoding_parallel",
     "samples": 100,
     "iters": 100,
     "time_ns": {
-      "fastest": 30130000.0,
-      "slowest": 40920000.0,
-      "median": 34570000.0,
-      "mean": 34960000.0
+      "fastest": 2620000.0,
+      "slowest": 5429000.0,
+      "median": 2877000.0,
+      "mean": 3179000.0
     },
     "throughput_bps": {
-      "fastest": 139600000.0,
-      "slowest": 102800000.0,
-      "median": 121600000.0,
-      "mean": 120300000.0
+      "fastest": 1605000000.0,
+      "slowest": 774900000.0,
+      "median": 1462000000.0,
+      "mean": 1323000000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::cl100k::wordchipper::logos::buffer_sweep",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 2215000.0,
+      "slowest": 4650000.0,
+      "median": 2415000.0,
+      "mean": 2710000.0
+    },
+    "throughput_bps": {
+      "fastest": 1898000000.0,
+      "slowest": 904600000.0,
+      "median": 1741000000.0,
+      "mean": 1552000000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32780.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.01
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32780.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.01
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::cl100k::wordchipper::logos::merge_heap",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 2296000.0,
+      "slowest": 4900000.0,
+      "median": 2491000.0,
+      "mean": 2751000.0
+    },
+    "throughput_bps": {
+      "fastest": 1831000000.0,
+      "slowest": 858500000.0,
+      "median": 1688000000.0,
+      "mean": 1529000000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::cl100k::wordchipper::logos::priority_merge",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 2843000.0,
+      "slowest": 5431000.0,
+      "median": 3059000.0,
+      "mean": 3349000.0
+    },
+    "throughput_bps": {
+      "fastest": 1479000000.0,
+      "slowest": 774600000.0,
+      "median": 1375000000.0,
+      "mean": 1256000000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::cl100k::wordchipper::logos::tail_sweep",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 2212000.0,
+      "slowest": 4427000.0,
+      "median": 2418000.0,
+      "mean": 2691000.0
+    },
+    "throughput_bps": {
+      "fastest": 1902000000.0,
+      "slowest": 950300000.0,
+      "median": 1739000000.0,
+      "mean": 1563000000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32780.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.01
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32780.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.01
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::cl100k::wordchipper::regex::bpe_backtrack",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 95860000.0,
+      "slowest": 116800000.0,
+      "median": 100400000.0,
+      "mean": 101000000.0
+    },
+    "throughput_bps": {
+      "fastest": 43880000.0,
+      "slowest": 36020000.0,
+      "median": 41900000.0,
+      "mean": 41610000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 33520.0,
+        "mean": 32790.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.5,
+        "mean": 1.02
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 33520.0,
+        "mean": 32790.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.5,
+        "mean": 1.02
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::cl100k::wordchipper::regex::buffer_sweep",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 106900000.0,
+      "slowest": 130600000.0,
+      "median": 110900000.0,
+      "mean": 111900000.0
+    },
+    "throughput_bps": {
+      "fastest": 39340000.0,
+      "slowest": 32210000.0,
+      "median": 37930000.0,
+      "mean": 37570000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32780.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.01
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32780.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.01
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::cl100k::wordchipper::regex::merge_heap",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 104200000.0,
+      "slowest": 131000000.0,
+      "median": 108200000.0,
+      "mean": 108600000.0
+    },
+    "throughput_bps": {
+      "fastest": 40360000.0,
+      "slowest": 32110000.0,
+      "median": 38850000.0,
+      "mean": 38700000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::cl100k::wordchipper::regex::priority_merge",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 108200000.0,
+      "slowest": 126900000.0,
+      "median": 111300000.0,
+      "mean": 111500000.0
+    },
+    "throughput_bps": {
+      "fastest": 38880000.0,
+      "slowest": 33150000.0,
+      "median": 37780000.0,
+      "mean": 37700000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::cl100k::wordchipper::regex::tail_sweep",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 102200000.0,
+      "slowest": 124300000.0,
+      "median": 105500000.0,
+      "mean": 106300000.0
+    },
+    "throughput_bps": {
+      "fastest": 41140000.0,
+      "slowest": 33820000.0,
+      "median": 39840000.0,
+      "mean": 39560000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32780.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.01
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32780.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.01
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::cl100k::wordchipper::regex_automata::bpe_backtrack",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 3968000.0,
+      "slowest": 11910000.0,
+      "median": 4363000.0,
+      "mean": 4780000.0
+    },
+    "throughput_bps": {
+      "fastest": 1060000000.0,
+      "slowest": 353000000.0,
+      "median": 964300000.0,
+      "mean": 880200000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::cl100k::wordchipper::regex_automata::buffer_sweep",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 3592000.0,
+      "slowest": 10250000.0,
+      "median": 3939000.0,
+      "mean": 4363000.0
+    },
+    "throughput_bps": {
+      "fastest": 1171000000.0,
+      "slowest": 410100000.0,
+      "median": 1068000000.0000001,
+      "mean": 964200000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32780.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.01
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32780.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.01
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::cl100k::wordchipper::regex_automata::merge_heap",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 3567000.0,
+      "slowest": 10740000.0,
+      "median": 3946000.0,
+      "mean": 4347000.0
+    },
+    "throughput_bps": {
+      "fastest": 1179000000.0,
+      "slowest": 391500000.0,
+      "median": 1066000000.0,
+      "mean": 967700000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::cl100k::wordchipper::regex_automata::priority_merge",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 4419000.0,
+      "slowest": 12110000.0,
+      "median": 4792000.0,
+      "mean": 5151000.0
+    },
+    "throughput_bps": {
+      "fastest": 952000000.0,
+      "slowest": 347300000.0,
+      "median": 877900000.0,
+      "mean": 816700000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32780.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.01
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32780.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.01
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::cl100k::wordchipper::regex_automata::tail_sweep",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 3559000.0,
+      "slowest": 9903000.0,
+      "median": 3902000.0,
+      "mean": 4284000.0
+    },
+    "throughput_bps": {
+      "fastest": 1182000000.0,
+      "slowest": 424800000.0,
+      "median": 1078000000.0,
+      "mean": 981900000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 34280.0,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 2.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 34280.0,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 2.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::o200k::bpe_openai",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 74020000.0,
+      "slowest": 85090000.0,
+      "median": 75410000.0,
+      "mean": 75650000.0
+    },
+    "throughput_bps": {
+      "fastest": 56830000.0,
+      "slowest": 49440000.0,
+      "median": 55790000.0,
+      "mean": 55610000.0
     },
     "allocs": {
       "alloc_bytes": {
@@ -188,21 +1040,21 @@
     }
   },
   {
-    "name": "encoding_parallel::tiktoken::r50k",
+    "name": "encoding_parallel::o200k::tiktoken",
     "bench": "encoding_parallel",
     "samples": 100,
     "iters": 100,
     "time_ns": {
-      "fastest": 21960000.0,
-      "slowest": 31880000.0,
-      "median": 25450000.0,
-      "mean": 25760000.0
+      "fastest": 23220000.0,
+      "slowest": 32530000.0,
+      "median": 25200000.0,
+      "mean": 25540000.0
     },
     "throughput_bps": {
-      "fastest": 191500000.0,
-      "slowest": 131900000.0,
-      "median": 165200000.0,
-      "mean": 163300000.0
+      "fastest": 181100000.0,
+      "slowest": 129300000.00000001,
+      "median": 166900000.0,
+      "mean": 164700000.0
     },
     "allocs": {
       "alloc_bytes": {
@@ -232,21 +1084,21 @@
     }
   },
   {
-    "name": "encoding_parallel::tokenizers::cl100k",
+    "name": "encoding_parallel::o200k::tokenizers",
     "bench": "encoding_parallel",
     "samples": 100,
     "iters": 100,
     "time_ns": {
-      "fastest": 89520000.0,
-      "slowest": 128699999.99999999,
-      "median": 95900000.0,
-      "mean": 96730000.0
+      "fastest": 122600000.0,
+      "slowest": 159700000.0,
+      "median": 125100000.0,
+      "mean": 125600000.0
     },
     "throughput_bps": {
-      "fastest": 46990000.0,
-      "slowest": 32670000.0,
-      "median": 43870000.0,
-      "mean": 43490000.0
+      "fastest": 34300000.0,
+      "slowest": 26330000.0,
+      "median": 33610000.0,
+      "mean": 33490000.000000004
     },
     "allocs": {
       "alloc_bytes": {
@@ -262,15 +1114,15 @@
         "mean": 2.02
       },
       "dealloc_bytes": {
-        "fastest": 1068000.0,
-        "slowest": 1078000.0,
-        "median": 1066000.0,
+        "fastest": 1071000.0,
+        "slowest": 1067000.0,
+        "median": 1050000.0,
         "mean": 1065000.0
       },
       "dealloc_count": {
-        "fastest": 1979.0,
-        "slowest": 1997.0,
-        "median": 1974.0,
+        "fastest": 1985.0,
+        "slowest": 1977.0,
+        "median": 1945.0,
         "mean": 1973.0
       },
       "max_alloc_bytes": {
@@ -288,21 +1140,905 @@
     }
   },
   {
-    "name": "encoding_parallel::tokenizers::o200k",
+    "name": "encoding_parallel::o200k::wordchipper::logos::bpe_backtrack",
     "bench": "encoding_parallel",
     "samples": 100,
     "iters": 100,
     "time_ns": {
-      "fastest": 89600000.0,
-      "slowest": 111800000.0,
-      "median": 96860000.0,
-      "mean": 97290000.0
+      "fastest": 2962000.0,
+      "slowest": 5482000.0,
+      "median": 3222000.0,
+      "mean": 3493000.0
     },
     "throughput_bps": {
-      "fastest": 46950000.0,
-      "slowest": 37610000.0,
-      "median": 43430000.0,
-      "mean": 43240000.0
+      "fastest": 1420000000.0,
+      "slowest": 767300000.0,
+      "median": 1305000000.0,
+      "mean": 1204000000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32780.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.01
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32780.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.01
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::o200k::wordchipper::logos::buffer_sweep",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 2469000.0,
+      "slowest": 4962000.0,
+      "median": 2662000.0,
+      "mean": 2979000.0
+    },
+    "throughput_bps": {
+      "fastest": 1703000000.0,
+      "slowest": 847900000.0,
+      "median": 1580000000.0,
+      "mean": 1411000000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::o200k::wordchipper::logos::merge_heap",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 2527000.0,
+      "slowest": 4924000.0,
+      "median": 2718000.0,
+      "mean": 3026000.0
+    },
+    "throughput_bps": {
+      "fastest": 1664000000.0,
+      "slowest": 854300000.0,
+      "median": 1547000000.0,
+      "mean": 1390000000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::o200k::wordchipper::logos::priority_merge",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 2808000.0,
+      "slowest": 5537000.0,
+      "median": 3094000.0,
+      "mean": 3343000.0
+    },
+    "throughput_bps": {
+      "fastest": 1498000000.0,
+      "slowest": 759800000.0,
+      "median": 1359000000.0,
+      "mean": 1258000000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32780.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.01
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32780.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.01
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::o200k::wordchipper::logos::tail_sweep",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 2393000.0,
+      "slowest": 5110000.0,
+      "median": 2643000.0,
+      "mean": 2932000.0
+    },
+    "throughput_bps": {
+      "fastest": 1758000000.0,
+      "slowest": 823300000.0,
+      "median": 1591000000.0,
+      "mean": 1434000000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::o200k::wordchipper::regex::bpe_backtrack",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 243600000.0,
+      "slowest": 293800000.0,
+      "median": 266399999.99999997,
+      "mean": 266600000.00000003
+    },
+    "throughput_bps": {
+      "fastest": 17260000.0,
+      "slowest": 14310000.0,
+      "median": 15780000.0,
+      "mean": 15770000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32780.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.01
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32780.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.01
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::o200k::wordchipper::regex::buffer_sweep",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 247700000.0,
+      "slowest": 291200000.0,
+      "median": 267100000.00000003,
+      "mean": 267600000.00000003
+    },
+    "throughput_bps": {
+      "fastest": 16980000.0,
+      "slowest": 14440000.0,
+      "median": 15740000.0,
+      "mean": 15710000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::o200k::wordchipper::regex::merge_heap",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 255900000.0,
+      "slowest": 291700000.0,
+      "median": 271800000.0,
+      "mean": 272400000.0
+    },
+    "throughput_bps": {
+      "fastest": 16430000.0,
+      "slowest": 14420000.0,
+      "median": 15470000.0,
+      "mean": 15440000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::o200k::wordchipper::regex::priority_merge",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 248900000.0,
+      "slowest": 289300000.0,
+      "median": 264200000.0,
+      "mean": 265200000.0
+    },
+    "throughput_bps": {
+      "fastest": 16900000.0,
+      "slowest": 14530000.0,
+      "median": 15920000.0,
+      "mean": 15860000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32780.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.01
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32780.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.01
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::o200k::wordchipper::regex::tail_sweep",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 245000000.0,
+      "slowest": 281800000.0,
+      "median": 264700000.0,
+      "mean": 263899999.99999997
+    },
+    "throughput_bps": {
+      "fastest": 17160000.0,
+      "slowest": 14920000.0,
+      "median": 15890000.0,
+      "mean": 15940000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::o200k::wordchipper::regex_automata::bpe_backtrack",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 4471000.0,
+      "slowest": 19220000.0,
+      "median": 4938000.0,
+      "mean": 5539000.0
+    },
+    "throughput_bps": {
+      "fastest": 940900000.0,
+      "slowest": 218800000.0,
+      "median": 851900000.0,
+      "mean": 759500000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32780.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.01
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32780.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.01
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::o200k::wordchipper::regex_automata::buffer_sweep",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 3881000.0,
+      "slowest": 20270000.0,
+      "median": 4403000.0,
+      "mean": 5141000.0
+    },
+    "throughput_bps": {
+      "fastest": 1083000000.0,
+      "slowest": 207500000.0,
+      "median": 955500000.0,
+      "mean": 818300000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::o200k::wordchipper::regex_automata::merge_heap",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 3881000.0,
+      "slowest": 20210000.0,
+      "median": 4397000.0,
+      "mean": 5040000.0
+    },
+    "throughput_bps": {
+      "fastest": 1084000000.0,
+      "slowest": 208100000.0,
+      "median": 956800000.0,
+      "mean": 834600000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32780.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.01
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32780.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.01
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::o200k::wordchipper::regex_automata::priority_merge",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 4476000.0,
+      "slowest": 19530000.0,
+      "median": 4965000.0,
+      "mean": 5672000.0
+    },
+    "throughput_bps": {
+      "fastest": 939900000.0,
+      "slowest": 215300000.0,
+      "median": 847300000.0,
+      "mean": 741700000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::o200k::wordchipper::regex_automata::tail_sweep",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 3879000.0,
+      "slowest": 18490000.0,
+      "median": 4377000.0,
+      "mean": 4969000.0
+    },
+    "throughput_bps": {
+      "fastest": 1084000000.0,
+      "slowest": 227400000.0,
+      "median": 961200000.0,
+      "mean": 846700000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 34280.0,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "alloc_count": {
+        "fastest": 2.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "max_alloc_bytes": {
+        "fastest": 34280.0,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "max_alloc_count": {
+        "fastest": 2.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::r50k::tiktoken",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 24780000.0,
+      "slowest": 41360000.0,
+      "median": 28390000.0,
+      "mean": 28900000.0
+    },
+    "throughput_bps": {
+      "fastest": 169700000.0,
+      "slowest": 101700000.0,
+      "median": 148100000.0,
+      "mean": 145500000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 24570.0,
+        "slowest": 24570.0,
+        "median": 24570.0,
+        "mean": 24590.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.01
+      },
+      "max_alloc_bytes": {
+        "fastest": 24570.0,
+        "slowest": 24570.0,
+        "median": 24570.0,
+        "mean": 24590.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.01
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::r50k::tokenizers",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 123200000.0,
+      "slowest": 153500000.0,
+      "median": 125200000.0,
+      "mean": 125900000.0
+    },
+    "throughput_bps": {
+      "fastest": 34130000.0,
+      "slowest": 27400000.0,
+      "median": 33580000.0,
+      "mean": 33390000.0
     },
     "allocs": {
       "alloc_bytes": {
@@ -318,15 +2054,15 @@
         "mean": 2.02
       },
       "dealloc_bytes": {
-        "fastest": 1055000.0,
+        "fastest": 1063000.0,
         "slowest": 1071000.0,
-        "median": 1074000.0,
+        "median": 1062000.0,
         "mean": 1066000.0
       },
       "dealloc_count": {
-        "fastest": 1955.0,
+        "fastest": 1969.0,
         "slowest": 1985.0,
-        "median": 1990.0,
+        "median": 1968.0,
         "mean": 1974.0
       },
       "max_alloc_bytes": {
@@ -344,21 +2080,21 @@
     }
   },
   {
-    "name": "encoding_parallel::wordchipper::bpe_backtrack::cl100k",
+    "name": "encoding_parallel::r50k::wordchipper::logos::bpe_backtrack",
     "bench": "encoding_parallel",
     "samples": 100,
     "iters": 100,
     "time_ns": {
-      "fastest": 96590000.0,
-      "slowest": 132300000.00000001,
-      "median": 111400000.0,
-      "mean": 110500000.0
+      "fastest": 2410000.0,
+      "slowest": 4961000.0,
+      "median": 2627000.0,
+      "mean": 2903000.0
     },
     "throughput_bps": {
-      "fastest": 43550000.0,
-      "slowest": 31790000.0,
-      "median": 37740000.0,
-      "mean": 38060000.0
+      "fastest": 1745000000.0,
+      "slowest": 847900000.0,
+      "median": 1601000000.0,
+      "mean": 1449000000.0
     },
     "allocs": {
       "alloc_bytes": {
@@ -400,21 +2136,21 @@
     }
   },
   {
-    "name": "encoding_parallel::wordchipper::bpe_backtrack::cl100k_fast",
+    "name": "encoding_parallel::r50k::wordchipper::logos::buffer_sweep",
     "bench": "encoding_parallel",
     "samples": 100,
     "iters": 100,
     "time_ns": {
-      "fastest": 2869000.0,
-      "slowest": 5879000.0,
-      "median": 3983000.0,
-      "mean": 3992000.0
+      "fastest": 2225000.0,
+      "slowest": 4671000.0,
+      "median": 2447000.0,
+      "mean": 2711000.0
     },
     "throughput_bps": {
-      "fastest": 1466000000.0,
-      "slowest": 715600000.0,
-      "median": 1056000000.0,
-      "mean": 1052999999.9999999
+      "fastest": 1890000000.0,
+      "slowest": 900700000.0,
+      "median": 1718000000.0,
+      "mean": 1551000000.0
     },
     "allocs": {
       "alloc_bytes": {
@@ -456,21 +2192,77 @@
     }
   },
   {
-    "name": "encoding_parallel::wordchipper::bpe_backtrack::cl100k_ra",
+    "name": "encoding_parallel::r50k::wordchipper::logos::merge_heap",
     "bench": "encoding_parallel",
     "samples": 100,
     "iters": 100,
     "time_ns": {
-      "fastest": 4304000.0,
-      "slowest": 10860000.0,
-      "median": 5549000.0,
-      "mean": 5724000.0
+      "fastest": 2391000.0,
+      "slowest": 4992000.0,
+      "median": 2582000.0,
+      "mean": 2856000.0
     },
     "throughput_bps": {
-      "fastest": 977400000.0,
-      "slowest": 387300000.0,
-      "median": 758200000.0,
-      "mean": 734900000.0
+      "fastest": 1759000000.0,
+      "slowest": 842800000.0,
+      "median": 1629000000.0,
+      "mean": 1473000000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::r50k::wordchipper::logos::priority_merge",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 2608000.0,
+      "slowest": 5249000.0,
+      "median": 2852000.0,
+      "mean": 3100000.0
+    },
+    "throughput_bps": {
+      "fastest": 1613000000.0,
+      "slowest": 801400000.0,
+      "median": 1474000000.0,
+      "mean": 1357000000.0
     },
     "allocs": {
       "alloc_bytes": {
@@ -512,21 +2304,21 @@
     }
   },
   {
-    "name": "encoding_parallel::wordchipper::bpe_backtrack::o200k",
+    "name": "encoding_parallel::r50k::wordchipper::logos::tail_sweep",
     "bench": "encoding_parallel",
     "samples": 100,
     "iters": 100,
     "time_ns": {
-      "fastest": 215000000.0,
-      "slowest": 273400000.0,
-      "median": 247500000.0,
-      "mean": 246700000.0
+      "fastest": 2195000.0,
+      "slowest": 4381000.0,
+      "median": 2384000.0,
+      "mean": 2645000.0
     },
     "throughput_bps": {
-      "fastest": 19560000.0,
-      "slowest": 15380000.0,
-      "median": 16990000.0,
-      "mean": 17050000.0
+      "fastest": 1916000000.0,
+      "slowest": 960200000.0,
+      "median": 1764000000.0,
+      "mean": 1590000000.0
     },
     "allocs": {
       "alloc_bytes": {
@@ -568,77 +2360,21 @@
     }
   },
   {
-    "name": "encoding_parallel::wordchipper::bpe_backtrack::o200k_fast",
+    "name": "encoding_parallel::r50k::wordchipper::regex::bpe_backtrack",
     "bench": "encoding_parallel",
     "samples": 100,
     "iters": 100,
     "time_ns": {
-      "fastest": 3408000.0,
-      "slowest": 6164000.0,
-      "median": 3887000.0,
-      "mean": 4091000.0
+      "fastest": 77790000.0,
+      "slowest": 96100000.0,
+      "median": 81220000.0,
+      "mean": 81720000.0
     },
     "throughput_bps": {
-      "fastest": 1234000000.0,
-      "slowest": 682500000.0,
-      "median": 1082000000.0,
-      "mean": 1028000000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::bpe_backtrack::o200k_ra",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 4618000.0,
-      "slowest": 21920000.0,
-      "median": 5714000.0,
-      "mean": 6218000.0
-    },
-    "throughput_bps": {
-      "fastest": 910900000.0,
-      "slowest": 191800000.0,
-      "median": 736200000.0,
-      "mean": 676600000.0
+      "fastest": 54080000.0,
+      "slowest": 43770000.0,
+      "median": 51790000.0,
+      "mean": 51480000.0
     },
     "allocs": {
       "alloc_bytes": {
@@ -680,21 +2416,21 @@
     }
   },
   {
-    "name": "encoding_parallel::wordchipper::buffer_sweep::cl100k",
+    "name": "encoding_parallel::r50k::wordchipper::regex::buffer_sweep",
     "bench": "encoding_parallel",
     "samples": 100,
     "iters": 100,
     "time_ns": {
-      "fastest": 77400000.0,
-      "slowest": 121800000.0,
-      "median": 104500000.0,
-      "mean": 103500000.0
+      "fastest": 76780000.0,
+      "slowest": 98160000.0,
+      "median": 80610000.0,
+      "mean": 80920000.0
     },
     "throughput_bps": {
-      "fastest": 54350000.0,
-      "slowest": 34540000.0,
-      "median": 40240000.0,
-      "mean": 40630000.0
+      "fastest": 54790000.0,
+      "slowest": 42850000.0,
+      "median": 52190000.0,
+      "mean": 51990000.0
     },
     "allocs": {
       "alloc_bytes": {
@@ -736,21 +2472,77 @@
     }
   },
   {
-    "name": "encoding_parallel::wordchipper::buffer_sweep::cl100k_fast",
+    "name": "encoding_parallel::r50k::wordchipper::regex::merge_heap",
     "bench": "encoding_parallel",
     "samples": 100,
     "iters": 100,
     "time_ns": {
-      "fastest": 2676000.0,
-      "slowest": 4346000.0,
-      "median": 3321000.0,
-      "mean": 3357000.0
+      "fastest": 77920000.0,
+      "slowest": 96590000.0,
+      "median": 81500000.0,
+      "mean": 81780000.0
     },
     "throughput_bps": {
-      "fastest": 1571000000.0,
-      "slowest": 967900000.0,
-      "median": 1266000000.0,
-      "mean": 1253000000.0
+      "fastest": 53990000.0,
+      "slowest": 43550000.0,
+      "median": 51620000.0,
+      "mean": 51440000.0
+    },
+    "allocs": {
+      "alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "max_alloc_bytes": {
+        "fastest": 32759.999999999996,
+        "slowest": 32759.999999999996,
+        "median": 32759.999999999996,
+        "mean": 32790.0
+      },
+      "max_alloc_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.02
+      },
+      "shrink_bytes": {
+        "fastest": 8.0,
+        "slowest": 8.0,
+        "median": 8.0,
+        "mean": 8.0
+      },
+      "shrink_count": {
+        "fastest": 1.0,
+        "slowest": 1.0,
+        "median": 1.0,
+        "mean": 1.0
+      }
+    }
+  },
+  {
+    "name": "encoding_parallel::r50k::wordchipper::regex::priority_merge",
+    "bench": "encoding_parallel",
+    "samples": 100,
+    "iters": 100,
+    "time_ns": {
+      "fastest": 77750000.0,
+      "slowest": 96220000.0,
+      "median": 79980000.0,
+      "mean": 80410000.0
+    },
+    "throughput_bps": {
+      "fastest": 54110000.0,
+      "slowest": 43720000.0,
+      "median": 52600000.0,
+      "mean": 52320000.0
     },
     "allocs": {
       "alloc_bytes": {
@@ -792,21 +2584,21 @@
     }
   },
   {
-    "name": "encoding_parallel::wordchipper::buffer_sweep::cl100k_ra",
+    "name": "encoding_parallel::r50k::wordchipper::regex::tail_sweep",
     "bench": "encoding_parallel",
     "samples": 100,
     "iters": 100,
     "time_ns": {
-      "fastest": 4256000.0,
-      "slowest": 11740000.0,
-      "median": 5156000.0,
-      "mean": 5358000.0
+      "fastest": 79190000.0,
+      "slowest": 96460000.0,
+      "median": 82150000.0,
+      "mean": 82560000.0
     },
     "throughput_bps": {
-      "fastest": 988400000.0,
-      "slowest": 358200000.0,
-      "median": 816000000.0,
-      "mean": 785100000.0
+      "fastest": 53120000.0,
+      "slowest": 43610000.0,
+      "median": 51210000.0,
+      "mean": 50960000.0
     },
     "allocs": {
       "alloc_bytes": {
@@ -848,21 +2640,21 @@
     }
   },
   {
-    "name": "encoding_parallel::wordchipper::buffer_sweep::o200k",
+    "name": "encoding_parallel::r50k::wordchipper::regex_automata::bpe_backtrack",
     "bench": "encoding_parallel",
     "samples": 100,
     "iters": 100,
     "time_ns": {
-      "fastest": 202800000.0,
-      "slowest": 269100000.0,
-      "median": 234000000.0,
-      "mean": 235300000.0
+      "fastest": 3834000.0,
+      "slowest": 8899000.0,
+      "median": 4134000.0000000005,
+      "mean": 4489000.0
     },
     "throughput_bps": {
-      "fastest": 20740000.0,
-      "slowest": 15630000.0,
-      "median": 17980000.0,
-      "mean": 17870000.0
+      "fastest": 1097000000.0,
+      "slowest": 472700000.0,
+      "median": 1016999999.9999999,
+      "mean": 937200000.0
     },
     "allocs": {
       "alloc_bytes": {
@@ -904,21 +2696,21 @@
     }
   },
   {
-    "name": "encoding_parallel::wordchipper::buffer_sweep::o200k_fast",
+    "name": "encoding_parallel::r50k::wordchipper::regex_automata::buffer_sweep",
     "bench": "encoding_parallel",
     "samples": 100,
     "iters": 100,
     "time_ns": {
-      "fastest": 2749000.0,
-      "slowest": 4834000.0,
-      "median": 3293000.0,
-      "mean": 3411000.0
+      "fastest": 3636000.0,
+      "slowest": 8443000.0,
+      "median": 4017000.0000000005,
+      "mean": 4344000.0
     },
     "throughput_bps": {
-      "fastest": 1530000000.0,
-      "slowest": 870200000.0,
-      "median": 1277000000.0,
-      "mean": 1233000000.0
+      "fastest": 1157000000.0,
+      "slowest": 498300000.0,
+      "median": 1046999999.9999999,
+      "mean": 968300000.0
     },
     "allocs": {
       "alloc_bytes": {
@@ -960,77 +2752,21 @@
     }
   },
   {
-    "name": "encoding_parallel::wordchipper::buffer_sweep::o200k_ra",
+    "name": "encoding_parallel::r50k::wordchipper::regex_automata::merge_heap",
     "bench": "encoding_parallel",
     "samples": 100,
     "iters": 100,
     "time_ns": {
-      "fastest": 4093000.0,
-      "slowest": 22520000.0,
-      "median": 5227000.0,
-      "mean": 5836000.0
+      "fastest": 3703000.0,
+      "slowest": 7838000.0,
+      "median": 4073000.0000000005,
+      "mean": 4351000.0
     },
     "throughput_bps": {
-      "fastest": 1026999999.9999999,
-      "slowest": 186700000.0,
-      "median": 804900000.0,
-      "mean": 720800000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::buffer_sweep::r50k",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 71110000.0,
-      "slowest": 96340000.0,
-      "median": 81580000.0,
-      "mean": 81450000.0
-    },
-    "throughput_bps": {
-      "fastest": 59160000.0,
-      "slowest": 43670000.0,
-      "median": 51570000.0,
-      "mean": 51650000.0
+      "fastest": 1136000000.0,
+      "slowest": 536700000.00000006,
+      "median": 1032999999.9999999,
+      "mean": 966900000.0
     },
     "allocs": {
       "alloc_bytes": {
@@ -1072,21 +2808,21 @@
     }
   },
   {
-    "name": "encoding_parallel::wordchipper::buffer_sweep::r50k_fast",
+    "name": "encoding_parallel::r50k::wordchipper::regex_automata::priority_merge",
     "bench": "encoding_parallel",
     "samples": 100,
     "iters": 100,
     "time_ns": {
-      "fastest": 2550000.0,
-      "slowest": 4114000.0,
-      "median": 3097000.0,
-      "mean": 3134000.0
+      "fastest": 4008000.0,
+      "slowest": 9699000.0,
+      "median": 4354000.0,
+      "mean": 4646000.0
     },
     "throughput_bps": {
-      "fastest": 1649000000.0,
-      "slowest": 1022000000.0,
-      "median": 1358000000.0,
-      "mean": 1342000000.0
+      "fastest": 1048999999.9999999,
+      "slowest": 433700000.0,
+      "median": 966300000.0,
+      "mean": 905500000.0
     },
     "allocs": {
       "alloc_bytes": {
@@ -1128,77 +2864,21 @@
     }
   },
   {
-    "name": "encoding_parallel::wordchipper::buffer_sweep::r50k_ra",
+    "name": "encoding_parallel::r50k::wordchipper::regex_automata::tail_sweep",
     "bench": "encoding_parallel",
     "samples": 100,
     "iters": 100,
     "time_ns": {
-      "fastest": 3848000.0,
-      "slowest": 9617000.0,
-      "median": 4294000.0,
-      "mean": 4583000.0
+      "fastest": 3656000.0,
+      "slowest": 9647000.0,
+      "median": 3949000.0,
+      "mean": 4219000.0
     },
     "throughput_bps": {
-      "fastest": 1093000000.0,
-      "slowest": 437400000.0,
-      "median": 979800000.0,
-      "mean": 917800000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32780.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.01
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32780.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.01
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::merge_heap::cl100k",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 87320000.0,
-      "slowest": 129500000.0,
-      "median": 103500000.0,
-      "mean": 102600000.0
-    },
-    "throughput_bps": {
-      "fastest": 48180000.0,
-      "slowest": 32470000.0,
-      "median": 40630000.0,
-      "mean": 40980000.0
+      "fastest": 1150000000.0,
+      "slowest": 436100000.0,
+      "median": 1065000000.0,
+      "mean": 997200000.0
     },
     "allocs": {
       "alloc_bytes": {
@@ -1224,1462 +2904,6 @@
         "slowest": 1.0,
         "median": 1.0,
         "mean": 1.02
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::merge_heap::cl100k_fast",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 2585000.0,
-      "slowest": 4214000.0,
-      "median": 3092000.0,
-      "mean": 3269000.0
-    },
-    "throughput_bps": {
-      "fastest": 1627000000.0,
-      "slowest": 998300000.0,
-      "median": 1360000000.0,
-      "mean": 1286000000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::merge_heap::cl100k_ra",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 3943000.0,
-      "slowest": 11680000.0,
-      "median": 4831000.0,
-      "mean": 5037000.0
-    },
-    "throughput_bps": {
-      "fastest": 1066000000.0,
-      "slowest": 360200000.0,
-      "median": 870700000.0,
-      "mean": 835300000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32780.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.01
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32780.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.01
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::merge_heap::o200k",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 205700000.0,
-      "slowest": 263500000.0,
-      "median": 241400000.0,
-      "mean": 239600000.0
-    },
-    "throughput_bps": {
-      "fastest": 20440000.0,
-      "slowest": 15960000.0,
-      "median": 17420000.0,
-      "mean": 17550000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::merge_heap::o200k_fast",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 2945000.0,
-      "slowest": 4607000.0,
-      "median": 3728000.0,
-      "mean": 3726000.0
-    },
-    "throughput_bps": {
-      "fastest": 1428000000.0,
-      "slowest": 913200000.0,
-      "median": 1128000000.0,
-      "mean": 1129000000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32780.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.01
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32780.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.01
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::merge_heap::o200k_ra",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 4516000.0,
-      "slowest": 23180000.0,
-      "median": 5657000.0,
-      "mean": 6155000.0
-    },
-    "throughput_bps": {
-      "fastest": 931500000.0,
-      "slowest": 181400000.0,
-      "median": 743600000.0,
-      "mean": 683500000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::merge_heap::r50k",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 66010000.00000001,
-      "slowest": 92800000.0,
-      "median": 80040000.0,
-      "mean": 79000000.0
-    },
-    "throughput_bps": {
-      "fastest": 63730000.0,
-      "slowest": 45330000.0,
-      "median": 52560000.0,
-      "mean": 53250000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::merge_heap::r50k_fast",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 2746000.0,
-      "slowest": 4787000.0,
-      "median": 3351000.0,
-      "mean": 3399000.0
-    },
-    "throughput_bps": {
-      "fastest": 1531000000.0,
-      "slowest": 878700000.0,
-      "median": 1255000000.0,
-      "mean": 1237000000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32780.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.01
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32780.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.01
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::merge_heap::r50k_ra",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 4021000.0,
-      "slowest": 9658000.0,
-      "median": 5218000.0,
-      "mean": 5374000.0
-    },
-    "throughput_bps": {
-      "fastest": 1046000000.0,
-      "slowest": 435600000.0,
-      "median": 806200000.0,
-      "mean": 782900000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::priority_merge::cl100k",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 80080000.0,
-      "slowest": 128699999.99999999,
-      "median": 105400000.0,
-      "mean": 104200000.0
-    },
-    "throughput_bps": {
-      "fastest": 52530000.0,
-      "slowest": 32670000.0,
-      "median": 39880000.0,
-      "mean": 40360000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32780.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.01
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32780.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.01
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::priority_merge::cl100k_fast",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 2913000.0,
-      "slowest": 5418000.0,
-      "median": 3838000.0,
-      "mean": 3886000.0
-    },
-    "throughput_bps": {
-      "fastest": 1444000000.0,
-      "slowest": 776400000.0,
-      "median": 1096000000.0,
-      "mean": 1082000000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::priority_merge::cl100k_ra",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 4618000.0,
-      "slowest": 12890000.0,
-      "median": 5400000.0,
-      "mean": 5625000.0
-    },
-    "throughput_bps": {
-      "fastest": 910900000.0,
-      "slowest": 326300000.0,
-      "median": 779000000.0,
-      "mean": 747900000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32780.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.01
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32780.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.01
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::priority_merge::o200k",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 216400000.0,
-      "slowest": 283000000.0,
-      "median": 245700000.0,
-      "mean": 246800000.0
-    },
-    "throughput_bps": {
-      "fastest": 19430000.0,
-      "slowest": 14860000.0,
-      "median": 17110000.0,
-      "mean": 17040000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::priority_merge::o200k_fast",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 3123000.0,
-      "slowest": 5804000.0,
-      "median": 3908000.0,
-      "mean": 4006999.9999999995
-    },
-    "throughput_bps": {
-      "fastest": 1347000000.0,
-      "slowest": 724900000.0,
-      "median": 1076000000.0,
-      "mean": 1050000000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::priority_merge::o200k_ra",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 4677000.0,
-      "slowest": 22830000.0,
-      "median": 5769000.0,
-      "mean": 6213000.0
-    },
-    "throughput_bps": {
-      "fastest": 899400000.0,
-      "slowest": 184200000.0,
-      "median": 729200000.0,
-      "mean": 677100000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32780.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.01
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32780.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.01
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::priority_merge::r50k",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 69790000.0,
-      "slowest": 89190000.0,
-      "median": 79660000.0,
-      "mean": 79610000.0
-    },
-    "throughput_bps": {
-      "fastest": 60280000.0,
-      "slowest": 47170000.0,
-      "median": 52810000.0,
-      "mean": 52840000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::priority_merge::r50k_fast",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 2762000.0,
-      "slowest": 5937000.0,
-      "median": 4032000.0,
-      "mean": 3966000.0
-    },
-    "throughput_bps": {
-      "fastest": 1522000000.0,
-      "slowest": 708600000.0,
-      "median": 1042999999.9999999,
-      "mean": 1060000000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32780.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.01
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32780.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.01
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::priority_merge::r50k_ra",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 4501000.0,
-      "slowest": 9988000.0,
-      "median": 5177000.0,
-      "mean": 5437000.0
-    },
-    "throughput_bps": {
-      "fastest": 934500000.0,
-      "slowest": 421200000.0,
-      "median": 812600000.0,
-      "mean": 773800000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::tail_sweep::cl100k",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 85490000.0,
-      "slowest": 123400000.0,
-      "median": 100900000.0,
-      "mean": 101900000.0
-    },
-    "throughput_bps": {
-      "fastest": 49210000.0,
-      "slowest": 34070000.0,
-      "median": 41650000.0,
-      "mean": 41270000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::tail_sweep::cl100k_fast",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 2421000.0,
-      "slowest": 4165000.0,
-      "median": 3227000.0,
-      "mean": 3217000.0
-    },
-    "throughput_bps": {
-      "fastest": 1737000000.0,
-      "slowest": 1010000000.0,
-      "median": 1303000000.0,
-      "mean": 1307000000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32780.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.01
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32780.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.01
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::tail_sweep::cl100k_ra",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 4024000.0,
-      "slowest": 12450000.0,
-      "median": 4859000.0,
-      "mean": 5146000.0
-    },
-    "throughput_bps": {
-      "fastest": 1044999999.9999999,
-      "slowest": 337700000.0,
-      "median": 865700000.0,
-      "mean": 817500000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::tail_sweep::o200k",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 212500000.0,
-      "slowest": 268700000.0,
-      "median": 245900000.0,
-      "mean": 245200000.0
-    },
-    "throughput_bps": {
-      "fastest": 19790000.0,
-      "slowest": 15650000.0,
-      "median": 17100000.0,
-      "mean": 17150000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32780.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.01
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32780.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.01
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::tail_sweep::o200k_fast",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 3148000.0,
-      "slowest": 5429000.0,
-      "median": 3778000.0,
-      "mean": 3849000.0
-    },
-    "throughput_bps": {
-      "fastest": 1336000000.0,
-      "slowest": 774800000.0,
-      "median": 1113000000.0,
-      "mean": 1092000000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::tail_sweep::o200k_ra",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 4481000.0,
-      "slowest": 22040000.0,
-      "median": 5483000.0,
-      "mean": 5975000.0
-    },
-    "throughput_bps": {
-      "fastest": 938800000.0,
-      "slowest": 190800000.0,
-      "median": 767200000.0,
-      "mean": 704100000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::tail_sweep::r50k",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 56830000.0,
-      "slowest": 104100000.0,
-      "median": 77560000.0,
-      "mean": 77040000.0
-    },
-    "throughput_bps": {
-      "fastest": 74020000.0,
-      "slowest": 40390000.0,
-      "median": 54240000.0,
-      "mean": 54610000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32780.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.01
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32780.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.01
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::tail_sweep::r50k_fast",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 2595000.0,
-      "slowest": 4268000.0,
-      "median": 3307000.0,
-      "mean": 3327000.0
-    },
-    "throughput_bps": {
-      "fastest": 1621000000.0,
-      "slowest": 985600000.0,
-      "median": 1272000000.0,
-      "mean": 1264000000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32790.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.02
-      },
-      "shrink_bytes": {
-        "fastest": 8.0,
-        "slowest": 8.0,
-        "median": 8.0,
-        "mean": 8.0
-      },
-      "shrink_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.0
-      }
-    }
-  },
-  {
-    "name": "encoding_parallel::wordchipper::tail_sweep::r50k_ra",
-    "bench": "encoding_parallel",
-    "samples": 100,
-    "iters": 100,
-    "time_ns": {
-      "fastest": 3763000.0,
-      "slowest": 8945000.0,
-      "median": 4738000.0,
-      "mean": 4898000.0
-    },
-    "throughput_bps": {
-      "fastest": 1117000000.0,
-      "slowest": 470300000.0,
-      "median": 887900000.0,
-      "mean": 858800000.0
-    },
-    "allocs": {
-      "alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32780.0
-      },
-      "alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.01
-      },
-      "max_alloc_bytes": {
-        "fastest": 32759.999999999996,
-        "slowest": 32759.999999999996,
-        "median": 32759.999999999996,
-        "mean": 32780.0
-      },
-      "max_alloc_count": {
-        "fastest": 1.0,
-        "slowest": 1.0,
-        "median": 1.0,
-        "mean": 1.01
       },
       "shrink_bytes": {
         "fastest": 8.0,
