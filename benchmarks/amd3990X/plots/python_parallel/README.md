@@ -1,4 +1,4 @@
-# Rust Parallel Benchmarks
+# Python Parallel Benchmarks
 
 ## Model: "gpt2"
 
