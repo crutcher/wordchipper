@@ -905,7 +905,7 @@ dependencies = [
 
 [[package]]
 name = "divan-parser"
-version = "0.8.1"
+version = "0.0.0"
 dependencies = [
  "serde",
 ]

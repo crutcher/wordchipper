@@ -17,6 +17,7 @@ edition = "2024"
 license = "MIT"
 authors = [
     "Crutcher Dunnavant <crutcher@gmail.com>",
+    "Dilshod Tadjibaev",
 ]
 
 
