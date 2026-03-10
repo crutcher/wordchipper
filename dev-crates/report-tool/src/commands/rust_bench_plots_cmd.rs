@@ -135,19 +135,18 @@ fn build_rel_span_encoder_graphs<P: AsRef<Path>>(
 
     let sub_charts = charts.split_evenly((3, 1));
 
-    for (idx, (lexer_label, model_suffix)) in [
-        ("logos", "_fast"),
-        ("regex-automata", "_ra"),
-        ("fast-regex", ""),
+    for (idx, (lexer_label, lexer_key)) in [
+        ("logos", "logos"),
+        ("regex-automata", "regex_automata"),
+        ("fast-regex", "regex"),
     ]
     .into_iter()
     .enumerate()
     {
         let drawing_area = &sub_charts[idx];
 
-        let sel_model = format!("{model}{model_suffix}");
-
-        let span_key = |span: &str| format!("encoding_parallel::wordchipper::{span}::{sel_model}",);
+        let span_key =
+            |span: &str| format!("encoding_parallel::{model}::wordchipper::{lexer_key}::{span}");
 
         let span_styles = [
             (
@@ -216,7 +215,7 @@ fn build_rel_span_encoder_graphs<P: AsRef<Path>>(
         let x_range = match iter_range(render.iter().flat_map(|s| s.xs())) {
             Some(r) => r,
             None => {
-                log::warn!("No data for {}::{}::{}", model, lexer_label, model_suffix);
+                log::warn!("No data for {}::{}", model, lexer_label);
                 return Ok(());
             }
         };
@@ -224,7 +223,7 @@ fn build_rel_span_encoder_graphs<P: AsRef<Path>>(
         let y_range = match iter_frange(render.iter().flat_map(|s| s.ys())) {
             Some(r) => r,
             None => {
-                log::warn!("No data for {}::{}::{}", model, lexer_label, model_suffix);
+                log::warn!("No data for {}::{}", model, lexer_label);
                 return Ok(());
             }
         };
@@ -313,7 +312,7 @@ fn build_throughput_graph<P: AsRef<Path>>(
     ]
     .into_iter()
     .filter_map(|(name, style)| {
-        data.select_series(&format!("encoding_parallel::{name}::{model}"))
+        data.select_series(&format!("encoding_parallel::{model}::{name}"))
             .map(|series_data| MarkerSeries::new(name, style, series_data))
     })
     .collect();
@@ -325,7 +324,7 @@ fn build_throughput_graph<P: AsRef<Path>>(
             .with_marker_level(MarkerLevel::Para)
             .with_fill_style(colors::GREEN_A200.filled()),
         data.try_select_series(&format!(
-            "encoding_parallel::wordchipper::{span_encoder}::{model}"
+            "encoding_parallel::{model}::wordchipper::regex::{span_encoder}"
         ))?,
     );
 
@@ -336,7 +335,7 @@ fn build_throughput_graph<P: AsRef<Path>>(
             .with_marker_level(MarkerLevel::Para)
             .with_fill_style(colors::AMBER_A200.filled()),
         data.try_select_series(&format!(
-            "encoding_parallel::wordchipper::{span_encoder}::{model}_ra"
+            "encoding_parallel::{model}::wordchipper::regex_automata::{span_encoder}"
         ))?,
     );
 
@@ -347,7 +346,7 @@ fn build_throughput_graph<P: AsRef<Path>>(
             .with_marker_level(MarkerLevel::Para)
             .with_fill_style(colors::LIGHTBLUE_A200.filled()),
         data.try_select_series(&format!(
-            "encoding_parallel::wordchipper::{span_encoder}::{model}_fast"
+            "encoding_parallel::{model}::wordchipper::logos::{span_encoder}"
         ))?,
     );
 
