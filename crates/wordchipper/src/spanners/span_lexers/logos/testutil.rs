@@ -5,10 +5,18 @@
 //! input ordering, and whitespace handling.
 
 use crate::{
-    alloc::{boxed::Box, sync::Arc, vec::Vec},
+    alloc::{
+        boxed::Box,
+        sync::Arc,
+        vec::Vec,
+    },
     spanners::{
-        SpanRef, TextSpanner,
-        span_lexers::{LexerTextSpanner, SpanLexer},
+        SpanRef,
+        TextSpanner,
+        span_lexers::{
+            LexerTextSpanner,
+            SpanLexer,
+        },
     },
 };
 
@@ -19,7 +27,8 @@ use crate::{
 /// - `find_span_iter` on `"hello world"` returns ordered, non-overlapping spans
 ///   starting at byte 0
 /// - `split_spans` on empty input returns no spans
-/// - `split_spans` on whitespace-only input returns spans (whitespace is content)
+/// - `split_spans` on whitespace-only input returns spans (whitespace is
+///   content)
 pub fn common_lexer_tests(lexer: Box<dyn SpanLexer>) {
     // ── find_span_iter: empty input ──
     let spans: Vec<_> = lexer.find_span_iter("").collect();

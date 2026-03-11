@@ -70,7 +70,9 @@ mod tests {
 
     #[test]
     fn test_unknown_pattern_returns_none() {
-        assert!(get_regex_accelerator("not_a_real_pattern_that_would_ever_be_registered").is_none());
+        assert!(
+            get_regex_accelerator("not_a_real_pattern_that_would_ever_be_registered").is_none()
+        );
     }
 }
 

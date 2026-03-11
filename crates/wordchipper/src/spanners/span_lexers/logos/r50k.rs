@@ -2,7 +2,10 @@
 
 use logos::Logos;
 
-use super::gpt2_family::{Gpt2FamilyLogos, Gpt2FamilyTokenRole};
+use super::gpt2_family::{
+    Gpt2FamilyLogos,
+    Gpt2FamilyTokenRole,
+};
 use crate::pretrained::openai::OA_R50K_BASE_PATTERN;
 
 /// Logos token variants for `r50k_base`.
@@ -70,10 +73,19 @@ logos_lexer! {
 mod tests {
     use super::*;
     use crate::{
-        alloc::{string::ToString, sync::Arc, vec, vec::Vec},
+        alloc::{
+            string::ToString,
+            sync::Arc,
+            vec,
+            vec::Vec,
+        },
         spanners::{
-            SpanRef, TextSpanner,
-            span_lexers::{LexerTextSpanner, SpanLexer},
+            SpanRef,
+            TextSpanner,
+            span_lexers::{
+                LexerTextSpanner,
+                SpanLexer,
+            },
         },
     };
 
