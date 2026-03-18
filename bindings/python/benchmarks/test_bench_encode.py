@@ -184,7 +184,7 @@ class TestBatchEncode:
 
             benchmark(encode_batch_threaded, texts)
 
-    def test_tiktoken(self, benchmark, model, fineweb_batch):
+    def test_tiktoken(self, benchmark, model, fineweb_batch, max_threads):
         texts, total_bytes = fineweb_batch
 
         import tiktoken
@@ -192,7 +192,8 @@ class TestBatchEncode:
         tok = tiktoken.get_encoding(model)
         benchmark.group = f"batch/{model}"
         benchmark.extra_info["input_bytes"] = total_bytes
-        benchmark(tok.encode_batch, texts, allowed_special="all")
+        num_threads = max_threads or 8
+        benchmark(tok.encode_batch, texts, num_threads=num_threads, allowed_special="all")
 
     def test_tokenizers(self, benchmark, model, fineweb_batch):
         texts, total_bytes = fineweb_batch
