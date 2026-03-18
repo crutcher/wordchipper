@@ -5,13 +5,15 @@ use wordchipper_cli_util::logging::LogArgs;
 
 use crate::{
     commands::benchmark_plots::{
-        graph_style::GraphStyleOptions,
-        python_bench_plots_cmd,
-        rust_bench_plots_cmd,
+        python_bench_plots,
+        rust_bench_plots,
     },
-    util::bench_data::{
-        PythonParBenchData,
-        RustParBenchData,
+    util::{
+        bench_data::{
+            PythonParBenchData,
+            RustParBenchData,
+        },
+        plotting::GraphStyleOptions,
     },
 };
 
@@ -75,7 +77,7 @@ impl BenchmarkPlots {
                     std::fs::create_dir_all(&rust_par_output)?;
 
                     for model in self.rust_models.iter() {
-                        rust_bench_plots_cmd::build_rust_benchmark_plots(
+                        rust_bench_plots::build_rust_benchmark_plots(
                             &arch_name,
                             model,
                             &rust_par_output,
@@ -93,7 +95,7 @@ impl BenchmarkPlots {
                     std::fs::create_dir_all(&python_par_output)?;
 
                     for model in self.python_models.iter() {
-                        python_bench_plots_cmd::build_python_benchmark_plots(
+                        python_bench_plots::build_python_benchmark_plots(
                             &arch_name,
                             model,
                             &python_par_output,
