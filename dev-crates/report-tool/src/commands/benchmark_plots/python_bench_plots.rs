@@ -4,10 +4,7 @@ use plotters::style::full_palette as colors;
 use serde_json::Value;
 
 use crate::{
-    commands::benchmark_plots::{
-        graph_style::GraphStyleOptions,
-        plots::build_throughput_plot,
-    },
+    commands::benchmark_plots::common_plots::build_throughput_plot,
     util::{
         bench_data::{
             PythonParBenchData,
@@ -15,6 +12,7 @@ use crate::{
         },
         plotting::{
             DashStyle,
+            GraphStyleOptions,
             MarkerLevel,
             MarkerSeries,
             MarkerStyle,
@@ -71,7 +69,7 @@ fn build_python_throughput_graph<P: AsRef<Path>>(
 
     if let Some(series) = data.select_series(&format!("wordchipper_parallel_accel[{model}]")) {
         groups.push(MarkerSeries::new(
-            "wc::rayon::logos (custom per pattern)",
+            "wc::rayon::logos",
             MarkerStyle::default()
                 .with_marker_type(MarkerType::TriDown)
                 .with_marker_level(MarkerLevel::Para)
@@ -85,7 +83,7 @@ fn build_python_throughput_graph<P: AsRef<Path>>(
     }
     if let Some(series) = data.select_series(&format!("wordchipper_parallel[{model}]")) {
         groups.push(MarkerSeries::new(
-            "wc::rayon::regex-automata (default)",
+            "wc::rayon::regex-automata",
             MarkerStyle::default()
                 .with_marker_type(MarkerType::TriUp)
                 .with_marker_level(MarkerLevel::Para)
@@ -95,7 +93,7 @@ fn build_python_throughput_graph<P: AsRef<Path>>(
     }
     if let Some(series) = data.select_series(&format!("wordchipper_threadpool_accel[{model}]")) {
         groups.push(MarkerSeries::new(
-            "wc::threadpool::logos (custom per pattern)",
+            "wc::threadpool::logos",
             MarkerStyle::default()
                 .with_marker_type(MarkerType::TriDown)
                 .with_fill_style(Some(colors::BLUEGREY_A200.into()))
@@ -108,10 +106,14 @@ fn build_python_throughput_graph<P: AsRef<Path>>(
     }
     if let Some(series) = data.select_series(&format!("wordchipper_threadpool[{model}]")) {
         groups.push(MarkerSeries::new(
-            "wc::threadpool::regex-automata (default)",
+            "wc::threadpool::regex-automata",
             MarkerStyle::default()
                 .with_marker_type(MarkerType::TriUp)
-                .with_fill_style(Some(colors::LIGHTGREEN_A200.into())),
+                .with_fill_style(Some(colors::LIGHTGREEN_A200.into()))
+                .with_dash_style(DashStyle {
+                    size: 4,
+                    spacing: 8,
+                }),
             series,
         ));
     }

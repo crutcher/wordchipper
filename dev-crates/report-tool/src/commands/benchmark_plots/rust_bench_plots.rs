@@ -7,10 +7,7 @@ use plotters::{
 };
 
 use crate::{
-    commands::benchmark_plots::{
-        graph_style::GraphStyleOptions,
-        plots,
-    },
+    commands::benchmark_plots::common_plots,
     util::{
         bench_data::{
             RustParBenchData,
@@ -18,6 +15,7 @@ use crate::{
         },
         plotting::{
             DashStyle,
+            GraphStyleOptions,
             MarkerLevel,
             MarkerSeries,
             MarkerStyle,
@@ -122,7 +120,7 @@ fn build_rust_relative_span_encoder_plots<P: AsRef<Path>>(
 
     let plot_path_stem = output_dir.join(format!("span_encoder_relative.rust.{model}"));
 
-    plots::build_relative_span_encoder_plot(
+    common_plots::build_relative_span_encoder_plot(
         "SpanEncoder Relative Throughput",
         &format!("arch: \"{arch}\", model: \"{model}\""),
         options,
@@ -171,18 +169,22 @@ fn build_rust_throughput_plots<P: AsRef<Path>>(
     .collect();
 
     let fr_series = MarkerSeries::new(
-        "wc:fancy-regex (fallback)",
+        "wc:fancy-regex",
         base_style
             .with_marker_type(MarkerType::TriUp)
             .with_marker_level(MarkerLevel::Para)
-            .with_fill_style(colors::AMBER_A200.filled()),
+            .with_fill_style(colors::RED_A200.filled())
+            .with_dash_style(DashStyle {
+                size: 4,
+                spacing: 8,
+            }),
         data.try_select_series(&format!(
             "encoding_parallel::{model}::wordchipper::regex::{span_encoder}"
         ))?,
     );
 
     let ra_series = MarkerSeries::new(
-        "wc:regex-automata (default)",
+        "wc:regex-automata",
         base_style
             .with_marker_type(MarkerType::Diamond)
             .with_marker_level(MarkerLevel::Para)
@@ -193,7 +195,7 @@ fn build_rust_throughput_plots<P: AsRef<Path>>(
     );
 
     let logos_series = MarkerSeries::new(
-        "wc:logos (custom per pattern)",
+        "wc:logos",
         base_style
             .with_marker_type(MarkerType::TriDown)
             .with_marker_level(MarkerLevel::Para)
@@ -222,7 +224,7 @@ fn build_rust_throughput_plots<P: AsRef<Path>>(
             .collect();
 
         let plot_path_stem = output_dir.join(format!("wc_{chart_name}_vrs_brandx.rust.{model}"));
-        plots::build_throughput_plot(
+        common_plots::build_throughput_plot(
             "wordchipper rust throughput",
             &format!("arch: \"{arch}\", model: \"{model}\""),
             options,

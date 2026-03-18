@@ -34,16 +34,16 @@ use plotters_backend::text_anchor::{
     VPos,
 };
 
-use crate::{
-    commands::benchmark_plots::graph_style::GraphStyleOptions,
-    util::{
-        bounds_tools,
-        bounds_tools::{
-            iter_frange,
-            iter_range,
-        },
-        human_format,
-        plotting::MarkerSeries,
+use crate::util::{
+    bounds_tools,
+    bounds_tools::{
+        iter_frange,
+        iter_range,
+    },
+    human_format,
+    plotting::{
+        GraphStyleOptions,
+        MarkerSeries,
     },
 };
 
@@ -361,13 +361,13 @@ pub fn build_throughput_plot<P: AsRef<Path>>(
                         .legend(move |coord| ms.style.marker(coord, options.size));
                 }
 
-                if is_top {
+                if !is_top {
                     chart
                         .configure_series_labels()
-                        .label_font(("sans-serif", 22).into_font())
-                        .position(SeriesLabelPosition::UpperLeft)
-                        .background_style(WHITE.mix(0.8))
+                        .label_font(("sans-serif", 20).into_font())
+                        .position(SeriesLabelPosition::LowerRight)
                         .margin(options.size * 2)
+                        .background_style(WHITE.mix(0.4))
                         .border_style(BLACK)
                         .draw()?;
                 }
