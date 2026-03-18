@@ -1,4 +1,4 @@
-"""Python encode/encode_batch benchmarks: wordchipper vs tiktoken vs tokenizers.
+"""Python encode/encode_batch benchmarks: wordchipper vs tiktoken vs tokenizers vs bpe-openai.
 
 Matches encoding_single.rs and encoding_parallel.rs:
   - Single-string: english.txt / multilingual.txt repeated 10x
@@ -24,6 +24,9 @@ HF_MODELS = {
     "cl100k_base": "Xenova/text-embedding-ada-002",
     "o200k_base": "Xenova/gpt-4o",
 }
+
+# bpe-openai only supports modern encodings
+BPE_OPENAI_MODELS = {"cl100k_base", "o200k_base"}
 
 
 def _utf8_len(text):
@@ -108,6 +111,26 @@ class TestSingleEncode:
         from tokenizers import Tokenizer
 
         tok = Tokenizer.from_pretrained(HF_MODELS[model])
+        benchmark.group = f"single/diverse/{model}"
+        benchmark.extra_info["input_bytes"] = _utf8_len(diverse_text)
+        benchmark(tok.encode, diverse_text)
+
+    def test_bpe_openai_english(self, benchmark, model, english_text):
+        if model not in BPE_OPENAI_MODELS:
+            pytest.skip(f"bpe-openai does not support {model}")
+        import bpe_openai as bpe
+
+        tok = bpe.get_encoding(model)
+        benchmark.group = f"single/english/{model}"
+        benchmark.extra_info["input_bytes"] = _utf8_len(english_text)
+        benchmark(tok.encode, english_text)
+
+    def test_bpe_openai_diverse(self, benchmark, model, diverse_text):
+        if model not in BPE_OPENAI_MODELS:
+            pytest.skip(f"bpe-openai does not support {model}")
+        import bpe_openai as bpe
+
+        tok = bpe.get_encoding(model)
         benchmark.group = f"single/diverse/{model}"
         benchmark.extra_info["input_bytes"] = _utf8_len(diverse_text)
         benchmark(tok.encode, diverse_text)
@@ -204,3 +227,16 @@ class TestBatchEncode:
         benchmark.group = f"batch/{model}"
         benchmark.extra_info["input_bytes"] = total_bytes
         benchmark(tok.encode_batch, texts)
+
+    def test_bpe_openai(self, benchmark, model, fineweb_batch, max_threads):
+        if model not in BPE_OPENAI_MODELS:
+            pytest.skip(f"bpe-openai does not support {model}")
+        texts, total_bytes = fineweb_batch
+
+        import bpe_openai as bpe
+
+        tok = bpe.get_encoding(model)
+        benchmark.group = f"batch/{model}"
+        benchmark.extra_info["input_bytes"] = total_bytes
+        num_threads = max_threads or 8
+        benchmark(tok.encode_batch, texts, num_threads=num_threads)
