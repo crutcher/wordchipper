@@ -77,9 +77,9 @@ pub fn bench_wc(
     }
 
     let spanner = builder.build();
-    let encoder: Arc<dyn TokenEncoder<u32>> = Arc::new(
-        TokenSpanEncoder::<u32>::new_with_selector(spanner, vocab, selector),
-    );
+    let encoder: Arc<dyn TokenEncoder<u32>> = Arc::new(TokenSpanEncoder::<u32>::new_with_selector(
+        spanner, vocab, selector,
+    ));
 
     bencher
         .counter(BytesCount::new(text.len()))
@@ -717,7 +717,6 @@ mod english {
             }
         }
     }
-
 }
 
 mod diverse {
@@ -1320,6 +1319,4 @@ mod diverse {
             }
         }
     }
-
 }
-
