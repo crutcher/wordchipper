@@ -7,7 +7,10 @@ use plotters::{
 };
 
 use crate::{
-    commands::benchmark_plots::common_plots,
+    commands::benchmark_plots::{
+        common_plots,
+        common_plots::LegendLocation,
+    },
     util::{
         bench_data::{
             RustParBenchData,
@@ -33,7 +36,7 @@ pub fn build_rust_benchmark_plots<P: AsRef<Path>>(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let output_dir = output_dir.as_ref();
 
-    build_rust_throughput_plots(arch, model, "priority_merge", options, &output_dir, data)?;
+    build_rust_throughput_plots(arch, model, "tail_sweep", options, &output_dir, data)?;
 
     build_rust_relative_span_encoder_plots(arch, model, options, &output_dir, data)
 }
@@ -230,6 +233,10 @@ fn build_rust_throughput_plots<P: AsRef<Path>>(
             options,
             &plot_path_stem,
             &series,
+            LegendLocation {
+                top: true,
+                label_pos: SeriesLabelPosition::UpperLeft,
+            },
         )?;
     }
 

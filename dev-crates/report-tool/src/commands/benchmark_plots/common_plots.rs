@@ -245,12 +245,28 @@ pub fn build_throughput_table<P: AsRef<Path>>(
     Ok(())
 }
 
+#[derive(Debug, Clone)]
+pub struct LegendLocation {
+    pub top: bool,
+    pub label_pos: SeriesLabelPosition,
+}
+
+impl Default for LegendLocation {
+    fn default() -> Self {
+        Self {
+            top: true,
+            label_pos: SeriesLabelPosition::UpperRight,
+        }
+    }
+}
+
 pub fn build_throughput_plot<P: AsRef<Path>>(
     title: &str,
     caption: &str,
     options: GraphStyleOptions,
     stem_path: &P,
     series: &[MarkerSeries<(u32, f64)>],
+    legend_loc: LegendLocation,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let stem_path = stem_path.as_ref();
 
@@ -361,11 +377,11 @@ pub fn build_throughput_plot<P: AsRef<Path>>(
                         .legend(move |coord| ms.style.marker(coord, options.size));
                 }
 
-                if !is_top {
+                if is_top == legend_loc.top {
                     chart
                         .configure_series_labels()
                         .label_font(("sans-serif", 20).into_font())
-                        .position(SeriesLabelPosition::LowerRight)
+                        .position(legend_loc.label_pos.clone())
                         .margin(options.size * 2)
                         .background_style(WHITE.mix(0.4))
                         .border_style(BLACK)

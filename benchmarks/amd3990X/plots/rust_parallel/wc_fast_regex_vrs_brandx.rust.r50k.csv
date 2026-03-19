@@ -1,4 +1,4 @@
 Name, Thread 4, Thread 8, Thread 16, Thread 32, Thread 64
-wc:fancy-regex, 54.6 MiB/s, 109.4 MiB/s, 211.3 MiB/s, 372.6 MiB/s, 566.0 MiB/s
+wc:fancy-regex, 57.6 MiB/s, 115.4 MiB/s, 223.6 MiB/s, 383.9 MiB/s, 605.8 MiB/s
 tiktoken, 37.2 MiB/s, 74.0 MiB/s, 141.6 MiB/s, 249.0 MiB/s, 380.5 MiB/s
 tokenizers, 12.9 MiB/s, 22.0 MiB/s, 24.6 MiB/s, 34.0 MiB/s, 46.5 MiB/s
