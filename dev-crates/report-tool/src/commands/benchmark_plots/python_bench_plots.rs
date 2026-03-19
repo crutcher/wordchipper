@@ -1,10 +1,16 @@
 use std::path::Path;
 
-use plotters::style::full_palette as colors;
+use plotters::{
+    chart::SeriesLabelPosition,
+    style::full_palette as colors,
+};
 use serde_json::Value;
 
 use crate::{
-    commands::benchmark_plots::common_plots::build_throughput_plot,
+    commands::benchmark_plots::common_plots::{
+        LegendLocation,
+        build_throughput_plot,
+    },
     util::{
         bench_data::{
             PythonParBenchData,
@@ -166,5 +172,9 @@ fn build_python_throughput_graph<P: AsRef<Path>>(
         options,
         &plot_path_stem,
         &series,
+        LegendLocation {
+            top: false,
+            label_pos: SeriesLabelPosition::LowerRight,
+        },
     )
 }
