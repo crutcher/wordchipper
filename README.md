@@ -123,6 +123,6 @@ A Number of internal crates are used for development.
 * Thank you to [@karpathy](https://github.com/karpathy)
   and [nanochat](https://github.com/karpathy/nanochat)
   for the work on `rustbpe`.
-* Thank you to [tiktoken](https://github.com/openai/tiktoken) for their initial work in the rust
+* Thank you to [tiktoken](https://github.com/openai/tiktoken) for their work in the rust
   tokenizer space.
 
