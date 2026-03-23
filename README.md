@@ -13,20 +13,11 @@ ZSpaceLabs:
 * [zspacelabs.ai](https://zspacelabs.ai)
 
 `wordchipper` is a high-performance Rust byte-pair encoder tokenizer for the OpenAI GPT-2 tokenizer
-family. Through a
-combination of strict allocation discipline, factoring along the implementation lines of the
-pre-tokenization and BPE
-merge algorithm choices, thread-local resources, and extensive metrics; we were able to achieve
-throughput speedups
-relative to [tiktoken-rs](https://github.com/zurawiki/tiktoken-rs) in rust on a 64 core machine of ~
-4.3-5.7x
-(4 to 64 cores) for general regex BPE vocabularies, and ~6.9x-9.2x when using custom DFA lexers for
-specific OpenAI
-vocabularies. Under python wrappers, we see a range of ~2x-4x (4 to 64 cores) speedups
-over [tiktoken](https://github.com/openai/tiktoken). The substitutable design yields a benchmark
-cross-product that
-reveals workload-dependent encoder selection and corpus-modulated performance inversion between
-algorithm families.
+family. It achieves throughput speedups relative to [tiktoken-rs](https://github.com/zurawiki/tiktoken-rs)
+in rust on a 64 core machine of ~4.3-5.7x (4 to 64 cores) for general regex BPE vocabularies,
+and ~6.9x-9.2x when using custom DFA lexers for specific OpenAI vocabularies.
+Under python wrappers, we see a range of ~2x-4x (4 to 64 cores) speedups over
+[tiktoken](https://github.com/openai/tiktoken).
 
 ## Status
 
@@ -36,13 +27,28 @@ tracked in the [Alpha Release Tracking Issue](https://github.com/zspacelabs/word
 ## Encode/Decode Side-by-Side Benchmarks
 
 <div style="text-align:center">
+
 <a href="benchmarks/amd3990X/plots/rust_parallel/wc_logos_vrs_brandx.rust.o200k.svg">
 <img src="benchmarks/amd3990X/plots/rust_parallel/wc_logos_vrs_brandx.rust.o200k.svg" width="45%"/>
 </a>
 <a href="benchmarks/amd3990X/plots/python_parallel/wc_vrs_brandx.py.o200k_base.svg">
 <img src="benchmarks/amd3990X/plots/python_parallel/wc_vrs_brandx.py.o200k_base.svg" width="45%"/>
 </a>
+<br/>
 </div>
+
+| x 64 Core         | r50k rust   | gpt2 python | o200k rust  | o200k python |
+|-------------------|-------------|-------------|-------------|--------------|
+| wordchipper:logos | 2.7 GiB/s   | 114.1 MiB/s | 2.4 GiB/s   | 123.7 MiB/s  |
+| wordchipper       | 1.7 GiB/s   | 110.5 MiB/s | 1.5 GiB/s   | 106.5 MiB/s  |
+| tiktoken*         | 386.0 MiB/s | 25.5 MiB/s  | 265.2 MiB/s | 32.7 MiB/s   |
+| bpe-openai        |             |             | 60.9 MiB/s  | 11.1 MiB/s   |
+| tokenizers        | 49.7 MiB/s  | 20.8 MiB/s  | 50.2 MiB/s  | 23.2 MiB/s   |
+
+Read the full performance paper:
+
+* [wordchipper: Fast BPE Tokenization with Substitutable Internals](https://zspacelabs.ai/wordchipper/articles/substitutable/)
+*
 
 ## `no_std` Support
 
