@@ -45,10 +45,7 @@ tracked in the [Alpha Release Tracking Issue](https://github.com/zspacelabs/word
 | bpe-openai        |             |             | 60.9 MiB/s  | 11.1 MiB/s   |
 | tokenizers        | 49.7 MiB/s  | 20.8 MiB/s  | 50.2 MiB/s  | 23.2 MiB/s   |
 
-Read the full performance paper:
-
-* [wordchipper: Fast BPE Tokenization with Substitutable Internals](https://zspacelabs.ai/wordchipper/articles/substitutable/)
-*
+Read the full performance paper: [wordchipper: Fast BPE Tokenization with Substitutable Internals](https://zspacelabs.ai/wordchipper/articles/substitutable/)
 
 ## `no_std` Support
 
