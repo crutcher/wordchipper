@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: "Dunnavant"
+    given-names: "Crutcher"
+    email: "crutcher@zspacelabs.ai"
+  - family-names: "Tadjibaev"
+    given-names: "Dilshod"
+    email: "dilshod@gmail.com"
+title: "Wordchipper"
+version: 0.9.0
+url: "https://github.com/zspacelabs/wordchipper"
+repository-code: "https://github.com/zspacelabs/wordchipper"
+license: MIT
+abstract: "A high-performance tokenizer library for large language models."
+keywords:
+  - tokenization
+  - bpe
+  - large-language-models
+  - rust
+  - high-performance
+  - no-std
