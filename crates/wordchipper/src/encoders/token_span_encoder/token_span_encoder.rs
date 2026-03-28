@@ -1,5 +1,3 @@
-use std::prelude::rust_2015::String;
-
 use crate::{
     TokenEncoder,
     TokenType,
@@ -15,6 +13,7 @@ use crate::{
         SpanEncoder,
         SpanEncoderSelector,
     },
+    prelude::*,
     spanners::TextSpanner,
     vocab::SpecialVocab,
 };
