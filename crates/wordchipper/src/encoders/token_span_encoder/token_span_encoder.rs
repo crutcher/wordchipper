@@ -2,6 +2,7 @@ use crate::{
     TokenEncoder,
     TokenType,
     UnifiedTokenVocab,
+    WCHashSet,
     WCResult,
     alloc::{
         boxed::Box,
@@ -12,6 +13,7 @@ use crate::{
         SpanEncoder,
         SpanEncoderSelector,
     },
+    prelude::*,
     spanners::TextSpanner,
     vocab::SpecialVocab,
 };
@@ -95,6 +97,7 @@ impl<T: TokenType> TokenEncoder<T> for TokenSpanEncoder<T> {
         &self,
         text: &str,
         tokens: &mut Vec<T>,
+        allowed_specials: Option<&WCHashSet<String>>,
     ) -> WCResult<()> {
         cfg_if::cfg_if! {
             if #[cfg(feature = "concurrent")] {
@@ -104,10 +107,11 @@ impl<T: TokenType> TokenEncoder<T> for TokenSpanEncoder<T> {
             }
         }
 
-        self.spanner.for_each_split_span(text, &mut |span_ref| {
-            se.encode_append_span_ref(&self.vocab, text, span_ref, tokens);
-            true
-        });
+        self.spanner
+            .for_each_split_span(text, allowed_specials, &mut |span_ref| {
+                se.encode_append_span_ref(&self.vocab, text, span_ref, tokens);
+                true
+            });
 
         Ok(())
     }
