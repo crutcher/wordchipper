@@ -1,3 +1,3 @@
-mod special_filter;
+mod py_special_filter;
 
-pub use special_filter::*;
+pub use py_special_filter::*;
