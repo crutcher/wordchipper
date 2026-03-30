@@ -55,6 +55,28 @@ impl<T: TokenType> Tokenizer<T> {
     pub fn decoder(&self) -> &Arc<dyn TokenDecoder<T>> {
         &self.decoder
     }
+
+    /// Tokenize text, and return the decoded tokens as individual strings.
+    ///
+    /// ## Compat
+    /// This is added for compatibility for `tiktoken` users.
+    ///
+    /// ## Arguments
+    /// * `text` - The text to split.
+    /// * `allowed_specials` - a set of special tokens to accept. If `None`, all
+    ///   special tokens are accepted; if `Some(set)` is empty, no special
+    ///   tokens are accepted.
+    pub fn split_by_token(
+        &self,
+        text: &str,
+        allowed_specials: Option<&WCHashSet<String>>,
+    ) -> WCResult<Vec<String>> {
+        let tokens = self.try_encode(text, allowed_specials)?;
+        tokens
+            .into_iter()
+            .map(|t| self.try_decode_to_string(&[t])?.try_result())
+            .collect()
+    }
 }
 
 impl<T: TokenType> TokenEncoder<T> for Tokenizer<T> {
@@ -153,5 +175,11 @@ mod tests {
         common_encoder_tests(vocab.clone(), tokenizer.clone());
 
         common_decoder_tests(vocab.clone(), tokenizer.clone());
+
+        let sample = "hell the world";
+        assert_eq!(
+            &tokenizer.split_by_token(sample, None).unwrap(),
+            &vec!["hell", " ", "the", " ", "world"],
+        );
     }
 }
