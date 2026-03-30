@@ -5,6 +5,7 @@ use pyo3::{
 
 pub(crate) mod wc {
     pub use wordchipper::{
+        SpecialFilter,
         Tokenizer,
         TokenizerOptions,
         disk_cache::WordchipperDiskCache,
@@ -22,10 +23,12 @@ pub(crate) mod wc {
 
 mod support;
 mod tokenizer;
+mod vocab;
 
 #[pymodule]
 fn _wordchipper(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<tokenizer::TokenizerOptions>()?;
     m.add_class::<tokenizer::Tokenizer>()?;
+    m.add_class::<vocab::SpecialFilter>()?;
     Ok(())
 }

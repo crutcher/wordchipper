@@ -2,13 +2,15 @@
 
 use crate::{
     TokenType,
-    WCHashSet,
     WCResult,
     alloc::sync::Arc,
     encoders::TokenEncoder,
     prelude::*,
     spanners::TextSpanner,
-    vocab::SpecialVocab,
+    vocab::{
+        SpecialFilter,
+        SpecialVocab,
+    },
 };
 
 /// Batch-Level Parallel Encoder Wrapper.
@@ -56,21 +58,21 @@ where
         &self,
         text: &str,
         tokens: &mut Vec<T>,
-        allowed_specials: Option<&WCHashSet<String>>,
+        special_filter: Option<&SpecialFilter>,
     ) -> WCResult<()> {
-        self.inner.try_encode_append(text, tokens, allowed_specials)
+        self.inner.try_encode_append(text, tokens, special_filter)
     }
 
     fn try_encode_batch(
         &self,
         batch: &[&str],
-        _allowed_specials: Option<&WCHashSet<String>>,
+        special_filter: Option<&SpecialFilter>,
     ) -> WCResult<Vec<Vec<T>>> {
         use rayon::prelude::*;
 
         let results: Vec<WCResult<Vec<T>>> = batch
             .par_iter()
-            .map(|text| self.inner.try_encode(text, None))
+            .map(|text| self.inner.try_encode(text, special_filter))
             .collect();
 
         results.into_iter().collect()

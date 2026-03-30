@@ -147,6 +147,8 @@ pub use tokenizer::*;
 #[doc(inline)]
 pub use types::*;
 #[doc(inline)]
-pub use vocab::UnifiedTokenVocab;
-#[doc(inline)]
-pub use vocab::VocabIndex;
+pub use vocab::{
+    SpecialFilter,
+    UnifiedTokenVocab,
+    VocabIndex,
+};

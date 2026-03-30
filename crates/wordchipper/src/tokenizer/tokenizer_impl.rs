@@ -3,7 +3,6 @@ use crate::{
     TokenEncoder,
     TokenType,
     UnifiedTokenVocab,
-    WCHashSet,
     WCResult,
     alloc::sync::Arc,
     decoders::{
@@ -12,6 +11,7 @@ use crate::{
     },
     prelude::*,
     spanners::TextSpanner,
+    vocab::SpecialFilter,
 };
 
 /// Unified Tokenizer.
@@ -63,15 +63,14 @@ impl<T: TokenType> Tokenizer<T> {
     ///
     /// ## Arguments
     /// * `text` - The text to split.
-    /// * `allowed_specials` - a set of special tokens to accept. If `None`, all
-    ///   special tokens are accepted; if `Some(set)` is empty, no special
-    ///   tokens are accepted.
+    /// * `special_filter` - an optional [`SpecialFilter`]. If `None`, all
+    ///   special tokens are accepted.
     pub fn split_by_token(
         &self,
         text: &str,
-        allowed_specials: Option<&WCHashSet<String>>,
+        special_filter: Option<&SpecialFilter>,
     ) -> WCResult<Vec<String>> {
-        let tokens = self.try_encode(text, allowed_specials)?;
+        let tokens = self.try_encode(text, special_filter)?;
         tokens
             .into_iter()
             .map(|t| self.try_decode_to_string(&[t])?.try_result())
@@ -92,26 +91,25 @@ impl<T: TokenType> TokenEncoder<T> for Tokenizer<T> {
         &self,
         text: &str,
         tokens: &mut Vec<T>,
-        allowed_specials: Option<&WCHashSet<String>>,
+        special_filter: Option<&SpecialFilter>,
     ) -> WCResult<()> {
-        self.encoder
-            .try_encode_append(text, tokens, allowed_specials)
+        self.encoder.try_encode_append(text, tokens, special_filter)
     }
 
     fn try_encode(
         &self,
         text: &str,
-        allowed_specials: Option<&WCHashSet<String>>,
+        special_filter: Option<&SpecialFilter>,
     ) -> WCResult<Vec<T>> {
-        self.encoder.try_encode(text, allowed_specials)
+        self.encoder.try_encode(text, special_filter)
     }
 
     fn try_encode_batch(
         &self,
         batch: &[&str],
-        allowed_specials: Option<&WCHashSet<String>>,
+        special_filter: Option<&SpecialFilter>,
     ) -> WCResult<Vec<Vec<T>>> {
-        self.encoder.try_encode_batch(batch, allowed_specials)
+        self.encoder.try_encode_batch(batch, special_filter)
     }
 }
 

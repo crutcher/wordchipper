@@ -1,13 +1,31 @@
 import os
 import tempfile
+import unittest
 
 import pytest
+import wordchipper
 from wordchipper import Tokenizer
 
 
 @pytest.fixture(scope="module")
 def tokenizer():
     return Tokenizer.from_pretrained("cl100k_base")
+
+
+class SpecialFilterTests(unittest.TestCase):
+    def test_all(self):
+        filter = wordchipper.SpecialFilter.all()
+        assert "hello" in filter
+
+    def test_none(self):
+        filter = wordchipper.SpecialFilter.none()
+        assert "hello" not in filter
+
+    def test_set(self):
+        filter = wordchipper.SpecialFilter.new(["hello", "world"])
+        assert "hello" in filter
+        assert "world" in filter
+        assert "foo" not in filter
 
 
 # Construction
@@ -286,6 +304,21 @@ def test_get_special_tokens(tokenizer):
     for name, token_id in specials:
         assert isinstance(name, str)
         assert isinstance(token_id, int)
+
+
+def test_special_tokens_filter(tokenizer):
+    specials = dict(tokenizer.get_special_tokens())
+
+    eot = "<|endoftext|>"
+    eot_token = specials["<|endoftext|>"]
+
+    sample = f"abc def {eot}"
+
+    tokens_with_special = tokenizer.encode(sample, special_filter=wordchipper.SpecialFilter.all())
+    assert eot_token in tokens_with_special
+
+    tokens_without_special = tokenizer.encode(sample, special_filter=wordchipper.SpecialFilter.none())
+    assert eot_token not in tokens_without_special
 
 
 def test_special_tokens_contain_endoftext():
