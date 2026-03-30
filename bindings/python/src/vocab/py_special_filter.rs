@@ -36,7 +36,7 @@ impl SpecialFilter {
     }
 
     #[staticmethod]
-    fn new(tokens: Vec<String>) -> PyResult<Self> {
+    fn include(tokens: Vec<String>) -> PyResult<Self> {
         Ok(SpecialFilter {
             inner: wc::SpecialFilter::Include(tokens.into_iter().collect()),
         })

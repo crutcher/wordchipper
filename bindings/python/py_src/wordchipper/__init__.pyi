@@ -14,7 +14,7 @@ class SpecialFilter:
         """Exclude all special tokens."""
         ...
 
-    def new(self, tokens: list[str]) -> "SpecialFilter":
+    def include(self, tokens: list[str]) -> "SpecialFilter":
         """Create a filter that includes only the specified special tokens."""
         ...
 

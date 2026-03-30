@@ -22,7 +22,7 @@ class SpecialFilterTests(unittest.TestCase):
         assert "hello" not in filter
 
     def test_set(self):
-        filter = wordchipper.SpecialFilter.new(["hello", "world"])
+        filter = wordchipper.SpecialFilter.include(["hello", "world"])
         assert "hello" in filter
         assert "world" in filter
         assert "foo" not in filter
