@@ -5,12 +5,12 @@ class SpecialFilter:
     """A filter for special tokens."""
 
     @staticmethod
-    def all() -> "SpecialFilter":
+    def include_all() -> "SpecialFilter":
         """Include all special tokens."""
         ...
 
     @staticmethod
-    def none() -> "SpecialFilter":
+    def include_none() -> "SpecialFilter":
         """Exclude all special tokens."""
         ...
 

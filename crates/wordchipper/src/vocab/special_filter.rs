@@ -8,10 +8,10 @@ use crate::{
 pub enum SpecialFilter {
     /// Include all special tokens.
     #[default]
-    All,
+    IncludeAll,
 
     /// Exclude all special tokens.
-    None,
+    IncludeNone,
 
     /// Only include the specified special tokens.
     Include(WCHashSet<String>),
@@ -24,8 +24,8 @@ impl SpecialFilter {
         token: &str,
     ) -> bool {
         match self {
-            SpecialFilter::All => true,
-            SpecialFilter::None => false,
+            SpecialFilter::IncludeAll => true,
+            SpecialFilter::IncludeNone => false,
             SpecialFilter::Include(set) => set.contains(token),
         }
     }
@@ -36,19 +36,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_special_all() {
-        let filter = SpecialFilter::All;
+    fn test_include_all() {
+        let filter = SpecialFilter::IncludeAll;
         assert!(filter.contains("foo"));
     }
 
     #[test]
-    fn test_special_none() {
-        let filter = SpecialFilter::None;
+    fn test_include_none() {
+        let filter = SpecialFilter::IncludeNone;
         assert!(!filter.contains("foo"));
     }
 
     #[test]
-    fn test_special_include() {
+    fn test_include_some() {
         let filter = SpecialFilter::Include(["foo", "bar"].iter().map(|s| s.to_string()).collect());
         assert!(filter.contains("foo"));
         assert!(filter.contains("bar"));

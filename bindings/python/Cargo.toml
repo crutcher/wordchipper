@@ -14,9 +14,16 @@ workspace = true
 
 [lib]
 name = "_wordchipper"
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
 
+
+[features]
+default = []
+python-extension-module = ["pyo3/extension-module"]
 
 [dependencies]
-pyo3 = { workspace = true, features = ["extension-module"] }
+pyo3 = { workspace = true }
 wordchipper = { path = "../../crates/wordchipper", features = ["datagym", "rustls-tls"] }
+
+[dev-dependencies]
+pyo3 = { workspace = true, features = ["auto-initialize"] }

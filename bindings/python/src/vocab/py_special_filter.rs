@@ -22,16 +22,16 @@ impl SpecialFilter {
 #[pymethods]
 impl SpecialFilter {
     #[staticmethod]
-    fn all() -> Self {
+    fn include_all() -> Self {
         SpecialFilter {
-            inner: wc::SpecialFilter::All,
+            inner: wc::SpecialFilter::IncludeAll,
         }
     }
 
     #[staticmethod]
-    fn none() -> Self {
+    fn include_none() -> Self {
         SpecialFilter {
-            inner: wc::SpecialFilter::None,
+            inner: wc::SpecialFilter::IncludeNone,
         }
     }
 
@@ -48,5 +48,40 @@ impl SpecialFilter {
         token: &str,
     ) -> bool {
         self.inner.contains(token)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_all_filter() {
+        let filter = SpecialFilter::include_all();
+        assert_eq!(filter.inner(), &wc::SpecialFilter::IncludeAll);
+        assert!(filter.__contains__("foo"));
+    }
+
+    #[test]
+    fn test_none_filter() {
+        let filter = SpecialFilter::include_none();
+        assert_eq!(filter.inner(), &wc::SpecialFilter::IncludeNone);
+        assert!(!filter.__contains__("foo"));
+    }
+
+    #[test]
+    fn test_include_filter() {
+        let filter = SpecialFilter::include(vec!["foo".to_string(), "bar".to_string()]).unwrap();
+        assert_eq!(
+            filter.inner(),
+            &wc::SpecialFilter::Include(
+                vec!["foo".to_string(), "bar".to_string()]
+                    .into_iter()
+                    .collect()
+            )
+        );
+        assert!(filter.__contains__("foo"));
+        assert!(filter.__contains__("bar"));
+        assert!(!filter.__contains__("baz"));
     }
 }

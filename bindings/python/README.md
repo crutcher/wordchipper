@@ -14,7 +14,7 @@ family. Under Python wrappers, we see a range of ~2x-4x (4 to 64 cores) speedups
 [tiktoken](https://github.com/openai/tiktoken).
 
 | x 64 Core   | r50k python | o200k python |
-| ----------- | ----------- | ------------ |
+|-------------|-------------|--------------|
 | wordchipper | 110.5 MiB/s | 106.5 MiB/s  |
 | tiktoken    | 25.5 MiB/s  | 32.7 MiB/s   |
 | tokenizers  | 20.8 MiB/s  | 23.2 MiB/s   |
@@ -41,18 +41,18 @@ Tokenizer.available_models()
 tok = Tokenizer.from_pretrained("cl100k_base")
 
 # Encode / decode
-tokens = tok.encode("hello world")        # [15339, 1917]
-text = tok.decode(tokens)                  # "hello world"
+tokens = tok.encode("hello world")  # [15339, 1917]
+text = tok.decode(tokens)  # "hello world"
 
 # Batch encode / decode (parallel via rayon)
 results = tok.encode_batch(["hello", "world", "foo bar"])
 texts = tok.decode_batch(results)
 
 # Vocab inspection
-tok.vocab_size                             # 100256
-tok.token_to_id("hello")                   # 15339
-tok.id_to_token(15339)                     # "hello"
-tok.token_to_id("nonexistent")             # None
+tok.vocab_size  # 100256
+tok.token_to_id("hello")  # 15339
+tok.id_to_token(15339)  # "hello"
+tok.token_to_id("nonexistent")  # None
 
 # Special tokens
 tok.get_special_tokens()
@@ -70,15 +70,17 @@ rest of your code stays the same:
 ```python
 # tiktoken compat
 from wordchipper.compat import tiktoken
+
 enc = tiktoken.get_encoding("cl100k_base")
 enc = tiktoken.encoding_for_model("gpt-4o")
 tokens = enc.encode("hello world")
 
 # HuggingFace tokenizers compat
 from wordchipper.compat.tokenizers import Tokenizer
+
 tok = Tokenizer.from_pretrained("Xenova/gpt-4o")
 output = tok.encode("hello world")
-output.ids      # [24912, 2375]
+output.ids  # [24912, 2375]
 ```
 
 Parameters that are accepted for API compatibility but not implemented (e.g. `allowed_special`,
@@ -96,7 +98,7 @@ cd bindings/python
 uv venv .venv
 source .venv/bin/activate
 uv pip install maturin pytest
-maturin develop
+maturin develop --features python-extension-module
 
 # Run tests
 pytest tests/ -v
@@ -118,7 +120,7 @@ on cl100k_base and o200k_base. Uses the same corpora and methodology as the Rust
 uv pip install pytest-benchmark tiktoken tokenizers pyarrow
 
 # Build in release mode for meaningful numbers
-maturin develop --release
+maturin develop --release --features python-extension-module
 
 # Run all benchmarks
 pytest benchmarks/

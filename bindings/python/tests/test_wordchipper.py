@@ -13,15 +13,15 @@ def tokenizer():
 
 
 class SpecialFilterTests(unittest.TestCase):
-    def test_all(self):
-        filter = wordchipper.SpecialFilter.all()
+    def test_include_all(self):
+        filter = wordchipper.SpecialFilter.include_all()
         assert "hello" in filter
 
-    def test_none(self):
-        filter = wordchipper.SpecialFilter.none()
+    def test_include_none(self):
+        filter = wordchipper.SpecialFilter.include_none()
         assert "hello" not in filter
 
-    def test_set(self):
+    def test_include_some(self):
         filter = wordchipper.SpecialFilter.include(["hello", "world"])
         assert "hello" in filter
         assert "world" in filter
@@ -314,10 +314,10 @@ def test_special_tokens_filter(tokenizer):
 
     sample = f"abc def {eot}"
 
-    tokens_with_special = tokenizer.encode(sample, special_filter=wordchipper.SpecialFilter.all())
+    tokens_with_special = tokenizer.encode(sample, special_filter=wordchipper.SpecialFilter.include_all())
     assert eot_token in tokens_with_special
 
-    tokens_without_special = tokenizer.encode(sample, special_filter=wordchipper.SpecialFilter.none())
+    tokens_without_special = tokenizer.encode(sample, special_filter=wordchipper.SpecialFilter.include_none())
     assert eot_token not in tokens_without_special
 
 

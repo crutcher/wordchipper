@@ -223,7 +223,7 @@ mod tests {
         );
 
         assert_eq!(
-            spanner.split_spans(source, Some(&SpecialFilter::None)),
+            spanner.split_spans(source, Some(&SpecialFilter::IncludeNone)),
             vec![
                 Word(0..3),
                 Gap(3..4),
