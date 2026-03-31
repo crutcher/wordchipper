@@ -1,4 +1,4 @@
-name: Nightly Lexer Equivalence
+name: Nightly
 
 on:
   schedule:
@@ -9,6 +9,31 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  miri:
+    name: Miri
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup toolchain install nightly --component miri
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo +nightly miri test -p wordchipper
+      - name: File bug on failure
+        if: failure()
+        run: |
+          TITLE="Nightly Miri failure: undefined behavior detected"
+          BODY="The nightly Miri test found undefined behavior. See [run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})."
+
+          existing=$(gh issue list --state open --search "${TITLE} in:title" --json number --jq '.[0].number' || true)
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$BODY"
+          else
+            gh issue create --title "$TITLE" --body "$BODY" --label bug
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   lexer-equivalence-k6:
     name: Lexer Equivalence (k=6)
     runs-on: ubuntu-latest

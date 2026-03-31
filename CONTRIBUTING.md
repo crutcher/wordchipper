@@ -12,7 +12,7 @@ You need stable Rust (MSRV 1.93.0) and nightly `rustfmt`:
 
 ```sh
 rustup toolchain install stable nightly
-rustup component add --toolchain nightly rustfmt
+rustup component add --toolchain nightly rustfmt miri
 ```
 
 For WASM work: `cargo install wasm-pack`  
@@ -47,6 +47,9 @@ cargo clippy --no-deps
 cargo test --workspace
 cargo test -p wordchipper --no-default-features --features client,fast-hash
 cargo test -p wordchipper --no-default-features --tests
+
+# Miri (undefined behavior detection, requires nightly)
+cargo +nightly miri test -p wordchipper
 
 # no_std cross-check
 cargo check -p wordchipper --target wasm32-unknown-unknown --no-default-features
