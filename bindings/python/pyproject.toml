@@ -8,6 +8,9 @@ description = "Fast BPE tokenizer library with tiktoken and HuggingFace compatib
 readme = "README.md"
 license = "MIT OR Apache-2.0"
 requires-python = ">=3.9"
+dependencies = [
+    'frozendict; python_version < "3.15"',
+]
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",

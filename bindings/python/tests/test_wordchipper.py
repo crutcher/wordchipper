@@ -3,8 +3,15 @@ import tempfile
 import unittest
 
 import pytest
-import wordchipper
-from wordchipper import Tokenizer
+from wordchipper import (SpecialFilter, Tokenizer)
+
+try:
+    frozendict
+except NameError:
+    try:
+        from frozendict import frozendict
+    except ImportError:
+        frozendict = dict
 
 
 @pytest.fixture(scope="module")
@@ -14,15 +21,15 @@ def tokenizer():
 
 class SpecialFilterTests(unittest.TestCase):
     def test_include_all(self):
-        filter = wordchipper.SpecialFilter.include_all()
+        filter = SpecialFilter.include_all()
         assert "hello" in filter
 
     def test_include_none(self):
-        filter = wordchipper.SpecialFilter.include_none()
+        filter = SpecialFilter.include_none()
         assert "hello" not in filter
 
     def test_include_some(self):
-        filter = wordchipper.SpecialFilter.include(["hello", "world"])
+        filter = SpecialFilter.include(["hello", "world"])
         assert "hello" in filter
         assert "world" in filter
         assert "foo" not in filter
@@ -297,35 +304,35 @@ def test_token_to_id_single_bytes(tokenizer):
 # Special Tokens
 
 
-def test_get_special_tokens(tokenizer):
-    specials = tokenizer.get_special_tokens()
-    assert isinstance(specials, list)
-    assert len(specials) > 0
-    for name, token_id in specials:
-        assert isinstance(name, str)
-        assert isinstance(token_id, int)
+def test_get_special_tokens():
+    tokenizer = Tokenizer.from_pretrained("cl100k_base")
+    specials = tokenizer.specials
+    assert isinstance(specials, frozendict)
+
+    expected = frozendict([
+        ("<|endoftext|>", 100257),
+        ("<|fim_prefix|>", 100258),
+        ("<|fim_middle|>", 100259),
+        ("<|fim_suffix|>", 100260),
+        ("<|endofprompt|>", 100276),
+    ])
+
+    assert specials == expected
 
 
 def test_special_tokens_filter(tokenizer):
-    specials = dict(tokenizer.get_special_tokens())
+    specials = tokenizer.specials
 
     eot = "<|endoftext|>"
     eot_token = specials["<|endoftext|>"]
 
     sample = f"abc def {eot}"
 
-    tokens_with_special = tokenizer.encode(sample, special_filter=wordchipper.SpecialFilter.include_all())
+    tokens_with_special = tokenizer.encode(sample, special_filter=SpecialFilter.include_all())
     assert eot_token in tokens_with_special
 
-    tokens_without_special = tokenizer.encode(sample, special_filter=wordchipper.SpecialFilter.include_none())
+    tokens_without_special = tokenizer.encode(sample, special_filter=SpecialFilter.include_none())
     assert eot_token not in tokens_without_special
-
-
-def test_special_tokens_contain_endoftext():
-    tok = Tokenizer.from_pretrained("cl100k_base")
-    specials = tok.get_special_tokens()
-    names = [name for name, _ in specials]
-    assert "<|endoftext|>" in names
 
 
 # Available Models

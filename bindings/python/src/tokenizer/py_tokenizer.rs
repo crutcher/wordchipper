@@ -22,27 +22,30 @@ use crate::{
 };
 
 #[pyclass]
-pub struct Tokenizer {
+pub struct _Tokenizer {
     inner: Arc<wc::Tokenizer<u32>>,
 }
 
 #[pymethods]
-impl Tokenizer {
+impl _Tokenizer {
     #[staticmethod]
-    #[pyo3(signature = (name, options=Default::default()))]
+    #[pyo3(signature = (name, options=None))]
     fn from_pretrained(
         py: Python<'_>,
         name: &str,
-        options: TokenizerOptions,
+        options: Option<Bound<'_, TokenizerOptions>>,
     ) -> PyResult<Self> {
+        let binding: Option<PyRef<TokenizerOptions>> = options.map(|o| o.borrow());
+        let options: wc::TokenizerOptions = binding.map(|o| *o.inner()).unwrap_or_default();
+
         py.detach(|| {
             let mut disk_cache = wc::WordchipperDiskCache::default();
 
             let loaded = wc::load_vocab(name, &mut disk_cache).map_err(to_pyerr)?;
 
-            let inner = options.inner().build(loaded.vocab().clone());
+            let inner = options.build(loaded.vocab().clone());
 
-            Ok(Tokenizer { inner })
+            Ok(_Tokenizer { inner })
         })
     }
 
