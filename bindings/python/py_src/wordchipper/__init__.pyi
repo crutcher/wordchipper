@@ -123,10 +123,11 @@ class Tokenizer:
         """Look up the token string for a token ID. Returns None if not found."""
         ...
 
-    def get_special_tokens(self) -> list[tuple[str, int]]:
-        """Get special tokens as a list of (name, id) tuples.
+    @property
+    def specials(self) -> dict[str, int]:
+        """Get special tokens as a mapping from name to token ID.
 
-        Note: The order of returned tuples is not guaranteed.
+        Note: The order is not guaranteed.
         """
         ...
 

@@ -90,6 +90,17 @@ class Tokenizer:
         tok = _Tokenizer.from_pretrained(name, options)
         return Tokenizer(tok)
 
+    @staticmethod
+    def from_tiktoken_file(
+        path: str,
+        pattern: str,
+        special_tokens: Optional[dict[str, int]] = None,
+        options: Optional[TokenizerOptions] = None,
+    ) -> "Tokenizer":
+        """Load a tokenizer from a tiktoken-format vocabulary file."""
+        tok = _Tokenizer.from_tiktoken_file(path, pattern, special_tokens or {}, options)
+        return Tokenizer(tok)
+
     def __init__(self, tok: _Tokenizer) -> "Tokenizer":
         self._tok = tok
 

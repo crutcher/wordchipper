@@ -107,7 +107,7 @@ impl _Tokenizer {
             let vocab = wc::UnifiedTokenVocab::from_span_vocab(spanning, span_vocab)
                 .map_err(to_pyerr)?;
             let inner = options.inner().build(Arc::new(vocab));
-            Ok(Tokenizer { inner })
+            Ok(_Tokenizer { inner })
         })
     }
 
