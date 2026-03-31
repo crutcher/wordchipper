@@ -13,6 +13,7 @@ Typical migration::
 
 from __future__ import annotations
 
+import functools
 from typing import Any
 
 from wordchipper import Tokenizer
@@ -124,25 +125,26 @@ class Encoding:
     def n_vocab(self) -> int:
         return self._tok.vocab_size
 
-    @property
+    @functools.cached_property
     def eot_token(self) -> int:
-        for tok_name, tok_id in self._tok.get_special_tokens():
-            if tok_name == "<|endoftext|>":
-                return tok_id
-        raise ValueError(f"encoding {self._name!r} has no <|endoftext|> token")
+        try:
+            return self._tok.specials["<|endoftext|>"]
+        except KeyError:
+            raise ValueError(f"encoding {self._name!r} has no <|endoftext|> token")
 
-    @property
+    @functools.cached_property
     def special_tokens_set(self) -> set[str]:
-        return {name for name, _ in self._tok.get_special_tokens()}
+        """The set of special tokens in the encoding."""
+        return set(self._tok.specials.keys())
 
     # -- encode / decode -----------------------------------------------------
 
     def encode(
-        self,
-        text: str,
-        *,
-        allowed_special: Any = _SENTINEL,
-        disallowed_special: Any = _SENTINEL,
+            self,
+            text: str,
+            *,
+            allowed_special: Any = _SENTINEL,
+            disallowed_special: Any = _SENTINEL,
     ) -> list[int]:
         """Encode text to token IDs.
 
@@ -160,11 +162,11 @@ class Encoding:
         return self._tok.encode(text)
 
     def encode_batch(
-        self,
-        text: list[str],
-        *,
-        allowed_special: Any = _SENTINEL,
-        disallowed_special: Any = _SENTINEL,
+            self,
+            text: list[str],
+            *,
+            allowed_special: Any = _SENTINEL,
+            disallowed_special: Any = _SENTINEL,
     ) -> list[list[int]]:
         if allowed_special is not _SENTINEL and allowed_special != set():
             raise NotImplementedError("allowed_special is not supported")
