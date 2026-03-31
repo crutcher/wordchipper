@@ -48,7 +48,16 @@ jobs:
       - run: rustup toolchain install stable --profile minimal
       - uses: Swatinem/rust-cache@v2
       - uses: taiki-e/install-action@cargo-llvm-cov
-      - run: cargo llvm-cov --workspace --lcov --output-path lcov.info
+      - run: >-
+          cargo llvm-cov --workspace
+          --exclude report-tool
+          --exclude sample-timer
+          --exclude wordchipper-bench
+          --exclude wordchipper-data
+          --exclude divan-parser
+          --exclude lexer-equivalence
+          --fail-under-lines 75
+          --lcov --output-path lcov.info
       - uses: codecov/codecov-action@v5
         with:
           files: lcov.info
