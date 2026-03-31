@@ -1,6 +1,8 @@
 use std::sync::Arc;
 
 use pyo3::{
+    Bound,
+    PyRef,
     PyResult,
     Python,
     pyclass,
@@ -15,6 +17,7 @@ use wordchipper::{
 use super::TokenizerOptions;
 use crate::{
     support::to_pyerr,
+    vocab::SpecialFilter,
     wc,
 };
 
@@ -43,23 +46,33 @@ impl Tokenizer {
         })
     }
 
+    #[pyo3(signature = (text, special_filter=None))]
     fn encode(
         &self,
         py: Python<'_>,
         text: &str,
+        special_filter: Option<Bound<'_, SpecialFilter>>,
     ) -> PyResult<Vec<u32>> {
-        py.detach(|| self.inner.try_encode(text, None))
+        let binding: Option<PyRef<SpecialFilter>> = special_filter.map(|filter| filter.borrow());
+        let filter = binding.as_ref().map(|filter| filter.inner());
+
+        py.detach(|| self.inner.try_encode(text, filter))
             .map_err(to_pyerr)
     }
 
+    #[pyo3(signature = (texts, special_filter=None))]
     fn encode_batch(
         &self,
         py: Python<'_>,
         texts: Vec<String>,
+        special_filter: Option<Bound<'_, SpecialFilter>>,
     ) -> PyResult<Vec<Vec<u32>>> {
+        let binding: Option<PyRef<SpecialFilter>> = special_filter.map(|filter| filter.borrow());
+        let filter = binding.as_ref().map(|filter| filter.inner());
+
         py.detach(|| {
             let refs = wc::inner_str_view(&texts);
-            self.inner.try_encode_batch(&refs, None)
+            self.inner.try_encode_batch(&refs, filter)
         })
         .map_err(to_pyerr)
     }

@@ -1,4 +1,3 @@
-from wordchipper._wordchipper import Tokenizer
-from wordchipper._wordchipper import TokenizerOptions
+from wordchipper._wordchipper import (SpecialFilter, Tokenizer, TokenizerOptions)
 
-__all__ = ["Tokenizer", "TokenizerOptions"]
+__all__ = ["SpecialFilter", "Tokenizer", "TokenizerOptions"]

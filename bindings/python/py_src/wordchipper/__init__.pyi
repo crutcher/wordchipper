@@ -1,6 +1,28 @@
 from typing import Optional
 
 
+class SpecialFilter:
+    """A filter for special tokens."""
+
+    @staticmethod
+    def include_all() -> "SpecialFilter":
+        """Include all special tokens."""
+        ...
+
+    @staticmethod
+    def include_none() -> "SpecialFilter":
+        """Exclude all special tokens."""
+        ...
+
+    def include(self, tokens: list[str]) -> "SpecialFilter":
+        """Create a filter that includes only the specified special tokens."""
+        ...
+
+    def __contains__(self, item: str) -> bool:
+        """Checks if the item is in the filter."""
+        ...
+
+
 class TokenizerOptions:
     """Options for building Tokenizer."""
 
@@ -58,11 +80,11 @@ class Tokenizer:
         """
         ...
 
-    def encode(self, text: str) -> list[int]:
+    def encode(self, text: str, special_filter: Optional[SpecialFilter] = None) -> list[int]:
         """Encode a single string to a list of token IDs."""
         ...
 
-    def encode_batch(self, texts: list[str]) -> list[list[int]]:
+    def encode_batch(self, texts: list[str], special_filter: Optional[SpecialFilter] = None) -> list[list[int]]:
         """Encode a batch of strings to a list of lists of token IDs."""
         ...
 

@@ -39,6 +39,7 @@ pub mod utility;
 mod byte_vocab;
 mod pair_vocab;
 mod span_vocab;
+mod special_filter;
 mod special_vocab;
 mod token_vocab;
 mod unified_vocab;
@@ -50,6 +51,8 @@ pub use byte_vocab::*;
 pub use pair_vocab::*;
 #[doc(inline)]
 pub use span_vocab::*;
+#[doc(inline)]
+pub use special_filter::*;
 #[doc(inline)]
 pub use special_vocab::*;
 #[doc(inline)]

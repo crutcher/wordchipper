@@ -3,12 +3,14 @@
 use core::ops::Range;
 
 use crate::{
-    WCHashSet,
     alloc::{
         string::String,
         vec::Vec,
     },
-    vocab::DEFAULT_BYTE_PER_TOKEN_RATIO,
+    vocab::{
+        DEFAULT_BYTE_PER_TOKEN_RATIO,
+        SpecialFilter,
+    },
 };
 
 /// Span Label/Range Reference for [`TextSpanner`].
@@ -65,9 +67,8 @@ pub trait TextSpanner: Send + Sync {
     ///
     /// # Arguments
     /// * `text` - the text to split.
-    /// * `allowed_specials` - a set of special tokens to accept. If `None`, all
-    ///   special tokens are accepted; if `Some(set)` is empty, no special
-    ///   tokens are accepted.
+    /// * `special_filter` - an optional [`SpecialFilter`]. If `None`, all
+    ///   special tokens are accepted.
     /// * `f` - the function to apply to each span; halts when the function
     ///   returns `false`.
     ///
@@ -81,7 +82,7 @@ pub trait TextSpanner: Send + Sync {
     fn for_each_split_span(
         &self,
         text: &str,
-        allowed_specials: Option<&WCHashSet<String>>,
+        special_filter: Option<&SpecialFilter>,
         f: &mut dyn FnMut(SpanRef) -> bool,
     ) -> (bool, usize);
 
@@ -89,21 +90,20 @@ pub trait TextSpanner: Send + Sync {
     ///
     /// ## Arguments
     /// * `text` - The text to split.
-    /// * `allowed_specials` - a set of special tokens to accept. If `None`, all
-    ///   special tokens are accepted; if `Some(set)` is empty, no special
-    ///   tokens are accepted.
+    /// * `special_filter` - an optional [`SpecialFilter`]. If `None`, all
+    ///   special tokens are accepted.
     ///
     /// ## Returns
     /// A vector of `SpanRef` items.
     fn split_spans(
         &self,
         text: &str,
-        allowed_specials: Option<&WCHashSet<String>>,
+        special_filter: Option<&SpecialFilter>,
     ) -> Vec<SpanRef> {
         let capacity = self.expected_span_count(text) * 115 / 100;
         let mut words = Vec::with_capacity(capacity);
 
-        self.for_each_split_span(text, allowed_specials, &mut |span_ref| {
+        self.for_each_split_span(text, special_filter, &mut |span_ref| {
             words.push(span_ref);
             true
         });
@@ -115,18 +115,17 @@ pub trait TextSpanner: Send + Sync {
     ///
     /// ## Arguments
     /// * `text` - The text to rewrite.
-    /// * `allowed_specials` - a set of special tokens to accept. If `None`, all
-    ///   special tokens are accepted; if `Some(set)` is empty, no special
-    ///   tokens are accepted.
+    /// * `special_filter` - an optional [`SpecialFilter`]. If `None`, all
+    ///   special tokens are accepted.
     ///
     /// ## Returns
     /// The rewritten string.
     fn remove_gaps(
         &self,
         text: &str,
-        allowed_specials: Option<&WCHashSet<String>>,
+        special_filter: Option<&SpecialFilter>,
     ) -> String {
-        self.split_spans(text, allowed_specials)
+        self.split_spans(text, special_filter)
             .into_iter()
             .filter_map(|m| match m {
                 SpanRef::Gap(_) => None,
@@ -139,11 +138,11 @@ pub trait TextSpanner: Send + Sync {
     fn batch_remove_gaps(
         &self,
         texts: &[&str],
-        allowed_specials: Option<&WCHashSet<String>>,
+        special_filter: Option<&SpecialFilter>,
     ) -> Vec<String> {
         texts
             .iter()
-            .map(|t| self.remove_gaps(t, allowed_specials))
+            .map(|t| self.remove_gaps(t, special_filter))
             .collect()
     }
 }

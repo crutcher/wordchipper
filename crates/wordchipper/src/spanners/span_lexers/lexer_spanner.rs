@@ -3,15 +3,14 @@
 use core::ops::Range;
 
 use crate::{
-    WCHashSet,
     alloc::sync::Arc,
-    prelude::*,
     spanners::{
         SpanRef,
         TextSpanner,
         span_lexers::SpanLexer,
     },
     support::ranges::offset_range,
+    vocab::SpecialFilter,
 };
 
 /// A [`TextSpanner`] composed over [`SpanLexer`] plugins.
@@ -48,13 +47,15 @@ impl LexerTextSpanner {
     fn next_special_span(
         &self,
         text: &str,
-        allowed_specials: Option<&WCHashSet<String>>,
+        special_filter: Option<&SpecialFilter>,
     ) -> Option<Range<usize>> {
         self.special_lexer.as_ref().and_then(|lexer| {
-            lexer.find_span_iter(text).find(|range| {
-                allowed_specials.is_none()
-                    || allowed_specials.unwrap().contains(&text[range.clone()])
-            })
+            lexer
+                .find_span_iter(text)
+                .find(|range| match special_filter {
+                    None => true,
+                    Some(filter) => filter.contains(&text[range.clone()]),
+                })
         })
     }
 
@@ -113,13 +114,13 @@ impl TextSpanner for LexerTextSpanner {
     fn for_each_split_span(
         &self,
         text: &str,
-        allowed_specials: Option<&WCHashSet<String>>,
+        special_filter: Option<&SpecialFilter>,
         f: &mut dyn FnMut(SpanRef) -> bool,
     ) -> (bool, usize) {
         let mut current = text;
         let mut offset = 0;
 
-        while let Some(Range { start, end }) = self.next_special_span(current, allowed_specials) {
+        while let Some(Range { start, end }) = self.next_special_span(current, special_filter) {
             let pre = &current[..start];
 
             let (cont, used) = self.for_each_word(pre, offset, f);
@@ -144,11 +145,13 @@ mod tests {
     use super::*;
     use crate::{
         TokenType,
+        WCHashSet,
         alloc::{
             boxed::Box,
             vec,
             vec::Vec,
         },
+        prelude::*,
         pretrained::openai::OA_CL100K_BASE_PATTERN,
         spanners::{
             SpanRef,
@@ -169,7 +172,7 @@ mod tests {
     }
 
     #[test]
-    fn test_allowed_specials() {
+    fn test_special_filter() {
         use crate::spanners::text_spanner::SpanRef::*;
         type T = u32;
 
@@ -180,6 +183,7 @@ mod tests {
 
         let mut allowed = WCHashSet::default();
         allowed.insert("<|NORP|>".to_string());
+        let allowed = SpecialFilter::Include(allowed);
 
         let source = "abc 1<|FNORD|> def  <|NORP|> ghi   ";
 
@@ -218,9 +222,8 @@ mod tests {
             ]
         );
 
-        let empty = Default::default();
         assert_eq!(
-            spanner.split_spans(source, Some(&empty)),
+            spanner.split_spans(source, Some(&SpecialFilter::IncludeNone)),
             vec![
                 Word(0..3),
                 Gap(3..4),
