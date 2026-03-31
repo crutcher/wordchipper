@@ -104,6 +104,39 @@ pub(crate) const OA_O200K_BASE_PATTERN_RA: &str = join_patterns!(
     r"\s+",
 );
 
+// ---------------------------------------------------------------------------
+// Qwen3.5 patterns
+// (Shared by all Qwen3.5 sizes; not an OpenAI pattern, but kept here for
+// symmetry with the other compiled-pattern constants.)
+// ---------------------------------------------------------------------------
+
+/// The Qwen3.5 pretrained vocabulary word pattern.
+///
+/// Shared by all Qwen3.5 model sizes (0.6B–72B).
+pub const QWEN35_PATTERN: ConstRegexPattern = ConstRegexPattern::Fancy(join_patterns!(
+    r"(?i:'s|'t|'re|'ve|'m|'ll|'d)",
+    r"[^\r\n\p{L}\p{N}]?[\p{L}\p{M}]+",
+    r"\p{N}",
+    r" ?[^\s\p{L}\p{M}\p{N}]+[\r\n]*",
+    r"\s*[\r\n]+",
+    r"\s+(?!\S)",
+    r"\s+",
+));
+
+/// Transformed Qwen3.5 pattern for `regex-automata` (lookahead removed).
+///
+/// The `\s+(?!\S)` branch is replaced with `\s+`; the `RegexAutomataLexer`
+/// post-processing emulates the lookahead by truncating multi-char whitespace
+/// spans that are not at end-of-input.
+pub(crate) const QWEN35_PATTERN_RA: &str = join_patterns!(
+    r"(?i:'s|'t|'re|'ve|'m|'ll|'d)",
+    r"[^\r\n\p{L}\p{N}]?[\p{L}\p{M}]+",
+    r"\p{N}",
+    r" ?[^\s\p{L}\p{M}\p{N}]+[\r\n]*",
+    r"\s*[\r\n]+",
+    r"\s+",
+);
+
 #[cfg(test)]
 mod test {
     use super::*;

@@ -123,9 +123,17 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
         }
 
         let tokens = span_vocab.tokens();
-        if tokens != pair_vocab.tokens() {
+        // Pair vocab is allowed to be a strict subset of the span vocab: tokens
+        // whose BPE parents were pruned from the final vocabulary (e.g. some
+        // Qwen tokens) have no valid pair decomposition and are omitted from the
+        // pair map.  They remain accessible via the span map and the default
+        // BpeBacktrack encoder handles them correctly.  Pair-based encoders
+        // (BufferSweep, PriorityMerge, …) may produce incorrect output for
+        // such tokens; use BpeBacktrack when loading non-OpenAI vocabularies.
+        let pair_tokens = pair_vocab.tokens();
+        if !pair_tokens.is_subset(&tokens) {
             return Err(WCError::VocabConflict(
-                "span vocab and pair vocab have different token sets".into(),
+                "pair vocab has tokens not present in span vocab".into(),
             ));
         }
 

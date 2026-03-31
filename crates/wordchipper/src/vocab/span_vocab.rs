@@ -227,20 +227,48 @@ impl<T: TokenType> SpanMapVocab<T> {
             .map(|(chunk, &token)| (token, chunk.as_ref()))
             .collect();
 
-        for token in self.tokens() {
+        // Sort tokens by byte-span length (ascending) before building pairs.
+        //
+        // In BPE every merged token is strictly longer (in bytes) than either
+        // of its two parent tokens, so shorter tokens are always parents of
+        // longer ones — never the reverse.  Processing in length order
+        // therefore lets us maintain a `grounded` set: a token is grounded if
+        // it is either a single byte or the target of an already-recorded pair
+        // whose own parents were grounded.
+        //
+        // We only emit a pair `(a, b) -> c` when both `a` and `b` are already
+        // grounded.  Tokens that cannot be decomposed this way (e.g. directly-
+        // added vocabulary items whose BPE parents were pruned from the final
+        // vocab) are simply omitted from the pair map; they remain reachable
+        // via the span map and the default `BpeBacktrack` encoder handles them
+        // correctly without needing pair entries.
+        let mut tokens: Vec<T> = self.tokens().into_iter().collect();
+        tokens.sort_by_key(|t| token_to_span.get(t).map_or(1, |s| s.len()));
+
+        // Seed grounded set with all byte-level tokens.
+        let mut grounded: WCHashSet<T> = byte_vocab.tokens();
+
+        for token in tokens {
             let span = token_to_span[&token];
             if span.len() <= 1 {
                 continue;
             }
+            let mut added = false;
             for p in 1..span.len() {
                 let pre = &span[..p];
                 let post = &span[p..];
 
                 if let Some(a) = self.lookup_token(pre)
                     && let Some(b) = self.lookup_token(post)
+                    && grounded.contains(&a)
+                    && grounded.contains(&b)
                 {
                     pairs.insert((a, b), token);
+                    added = true;
                 }
+            }
+            if added {
+                grounded.insert(token);
             }
         }
 

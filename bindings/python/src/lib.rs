@@ -10,14 +10,23 @@ pub(crate) mod wc {
         TokenizerOptions,
         disk_cache::WordchipperDiskCache,
         load_vocab,
+        spanners::TextSpanningConfig,
         support::{
+            regex::RegexPattern,
             slices::{
                 inner_slice_view,
                 inner_str_view,
             },
             strings::string_from_utf8_lossy,
         },
-        vocab::io::save_base64_span_map_path,
+        vocab::io::{
+            load_base64_span_map_path,
+            save_base64_span_map_path,
+        },
+        vocab::{
+            SpanMapVocab,
+            UnifiedTokenVocab,
+        },
     };
 }
 
