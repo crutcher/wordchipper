@@ -146,8 +146,8 @@ class Encoding:
     # -- encode / decode -----------------------------------------------------
 
     def _allowed_filter(
-            self,
-            allowed_special: Literal["all"] | AbstractSet[str],
+        self,
+        allowed_special: Literal["all"] | AbstractSet[str],
     ) -> SpecialFilter:
         if allowed_special == "all":
             return SpecialFilter.include_all()
@@ -157,9 +157,9 @@ class Encoding:
             return SpecialFilter.include_none()
 
     def _disallowed_specials(
-            self,
-            allowed_filter: SpecialFilter,
-            disallowed_special: Literal["all"] | Collection[str] = "all",
+        self,
+        allowed_filter: SpecialFilter,
+        disallowed_special: Literal["all"] | Collection[str] = "all",
     ) -> frozendict[str, int]:
         if disallowed_special == "all":
             if allowed_filter.is_all():
@@ -175,7 +175,7 @@ class Encoding:
         )
 
     def _check_disallowed(
-            self, tokens: list[int], disallowed: frozendict[str, int]
+        self, tokens: list[int], disallowed: frozendict[str, int]
     ) -> None:
         if disallowed:
             values = set(disallowed.values())
@@ -186,11 +186,11 @@ class Encoding:
                     raise_disallowed_special_token(span)
 
     def encode(
-            self,
-            text: str,
-            *,
-            allowed_special: Literal["all"] | AbstractSet[str] = frozenset(),
-            disallowed_special: Literal["all"] | Collection[str] = "all",
+        self,
+        text: str,
+        *,
+        allowed_special: Literal["all"] | AbstractSet[str] = frozenset(),
+        disallowed_special: Literal["all"] | Collection[str] = "all",
     ) -> list[int]:
         """Encodes a string into tokens.
 
@@ -234,12 +234,12 @@ class Encoding:
         return self._tok.encode(text)
 
     def encode_batch(
-            self,
-            text: list[str],
-            *,
-            num_threads: int = 8,
-            allowed_special: Literal["all"] | AbstractSet[str] = frozenset(),
-            disallowed_special: Literal["all"] | Collection[str] = "all",
+        self,
+        text: list[str],
+        *,
+        num_threads: int = 8,
+        allowed_special: Literal["all"] | AbstractSet[str] = frozenset(),
+        disallowed_special: Literal["all"] | Collection[str] = "all",
     ) -> list[list[int]]:
         """Encodes a list of strings into tokens, in parallel.
 
