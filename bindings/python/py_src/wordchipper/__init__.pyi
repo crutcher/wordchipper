@@ -1,6 +1,5 @@
 from typing import Optional
 
-
 class SpecialFilter:
     """A filter for special tokens."""
 
@@ -21,7 +20,6 @@ class SpecialFilter:
     def __contains__(self, item: str) -> bool:
         """Checks if the item is in the filter."""
         ...
-
 
 class TokenizerOptions:
     """Options for building Tokenizer."""

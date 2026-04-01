@@ -6,7 +6,6 @@ from wordchipper.compat import tiktoken
 from wordchipper.compat.tokenizers import Encoding as HFEncoding
 from wordchipper.compat.tokenizers import Tokenizer as HFTokenizer
 
-
 # ===================================================================
 # tiktoken compat
 # ===================================================================
@@ -107,30 +106,54 @@ class TestTiktokenEncoding:
     def test_decode_empty(self, enc):
         assert enc.decode([]) == ""
 
-    def test_encode_raises_on_allowed_special(self, enc):
-        with pytest.raises(NotImplementedError, match="allowed_special"):
-            enc.encode("hello", allowed_special="all")
+    def test_encode_specials(self, enc):
+        tokens = enc.encode("hello<|endoftext|>", allowed_special="all")
+        assert tokens[-1] == enc.eot_token
 
-    def test_encode_raises_on_disallowed_special(self, enc):
-        with pytest.raises(NotImplementedError, match="disallowed_special"):
-            enc.encode("hello", disallowed_special=())
+    def test_disallowed_specials(self, enc):
+        tokens = enc.encode(
+            "hello<|endoftext|>",
+            allowed_special="all",
+            disallowed_special="all",
+        )
+        assert tokens[-1] == enc.eot_token
 
-    def test_encode_batch_raises_on_allowed_special(self, enc):
-        with pytest.raises(NotImplementedError, match="allowed_special"):
-            enc.encode_batch(["hello"], allowed_special="all")
+        with pytest.raises(ValueError, match="disallowed special token <|endoftext|>"):
+            enc.encode(
+                "hello<|endoftext|>",
+                allowed_special="all",
+                disallowed_special={"<|endoftext|>"},
+            )
 
-    def test_encode_batch_raises_on_disallowed_special(self, enc):
-        with pytest.raises(NotImplementedError, match="disallowed_special"):
-            enc.encode_batch(["hello"], disallowed_special=())
+    def test_batch_disallowed_specials(self, enc):
+        batch = enc.encode_batch(
+            ["hello<|endoftext|>"],
+            allowed_special="all",
+            disallowed_special="all",
+        )
+        assert batch[0][-1] == enc.eot_token
+
+        with pytest.raises(ValueError, match="disallowed special token <|endoftext|>"):
+            enc.encode_batch(
+                ["hello<|endoftext|>"],
+                allowed_special="all",
+                disallowed_special={"<|endoftext|>"},
+            )
 
     def test_encode_accepts_tiktoken_defaults(self, enc):
         # tiktoken's real defaults: allowed_special=set(), disallowed_special="all"
-        tokens = enc.encode("hello", allowed_special=set(), disallowed_special="all")
+        tokens = enc.encode(
+            "hello",
+            allowed_special=set(),
+            disallowed_special="all",
+        )
         assert enc.decode(tokens) == "hello"
 
     def test_encode_batch_accepts_tiktoken_defaults(self, enc):
         results = enc.encode_batch(
-            ["hello"], allowed_special=set(), disallowed_special="all"
+            ["hello"],
+            allowed_special=set(),
+            disallowed_special="all",
         )
         assert enc.decode(results[0]) == "hello"
 
@@ -313,7 +336,6 @@ class TestHFTokenizerMatchesWordchipper:
 # ===================================================================
 
 _real_tiktoken = pytest.importorskip("tiktoken")
-
 
 _CROSS_VALIDATION_TEXTS = [
     "hello world",

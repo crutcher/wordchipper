@@ -41,6 +41,7 @@ def warm_up():
 # Single-string encoding
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize("model", MODELS)
 class TestSingleEncode:
     def test_wordchipper_english(self, benchmark, model, english_text):
@@ -230,6 +231,7 @@ class TestBatchEncode:
         benchmark.extra_info["input_bytes"] = total_bytes
 
         with ThreadPoolExecutor(max_workers=max_threads, initializer=warm_up) as pool:
+
             def encode_batch_threaded(texts):
                 return list(pool.map(tok.encode, texts))
 
@@ -238,7 +240,9 @@ class TestBatchEncode:
 
             benchmark(encode_batch_threaded, texts)
 
-    def test_wordchipper_threadpool_accel(self, benchmark, model, fineweb_batch, max_threads):
+    def test_wordchipper_threadpool_accel(
+        self, benchmark, model, fineweb_batch, max_threads
+    ):
         texts, total_bytes = fineweb_batch
 
         from concurrent.futures import ThreadPoolExecutor
@@ -253,6 +257,7 @@ class TestBatchEncode:
         benchmark.extra_info["input_bytes"] = total_bytes
 
         with ThreadPoolExecutor(max_workers=max_threads, initializer=warm_up) as pool:
+
             def encode_batch_threaded(texts):
                 return list(pool.map(tok.encode, texts))
 
@@ -274,7 +279,9 @@ class TestBatchEncode:
         benchmark.group = f"batch/{model}"
         benchmark.extra_info["input_bytes"] = total_bytes
         num_threads = max_threads or 8
-        benchmark(tok.encode_batch, texts, num_threads=num_threads, allowed_special="all")
+        benchmark(
+            tok.encode_batch, texts, num_threads=num_threads, allowed_special="all"
+        )
 
     def test_tokenizers(self, benchmark, model, fineweb_batch):
         texts, total_bytes = fineweb_batch
