@@ -27,8 +27,19 @@ classifiers = [
 dynamic = ["version"]
 
 [dependency-groups]
-dev = ["pytest>=8", "tiktoken>=0.12", "black>=26.3.1"]
-bench = ["pytest>=8", "pytest-benchmark>=4", "tiktoken>=0.12", "tokenizers>=0.15", "pyarrow>=14"]
+dev = [
+    "pytest>=8",
+    "tiktoken>=0.12",
+    "tokenizers>=0.15",
+    "black>=26.3.1"
+]
+bench = [
+    "pytest>=8",
+    "pytest-benchmark>=4",
+    "tiktoken>=0.12",
+    "tokenizers>=0.15",
+    "pyarrow>=14"
+]
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
