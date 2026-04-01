@@ -36,14 +36,14 @@ impl _Tokenizer {
         options: Option<Bound<'_, TokenizerOptions>>,
     ) -> PyResult<Self> {
         let binding: Option<PyRef<TokenizerOptions>> = options.map(|o| o.borrow());
-        let options: wc::TokenizerOptions = binding.map(|o| *o.inner()).unwrap_or_default();
+        let options = binding.map(|o| o.clone()).unwrap_or_default();
 
         py.detach(|| {
             let mut disk_cache = wc::WordchipperDiskCache::default();
 
             let loaded = wc::load_vocab(name, &mut disk_cache).map_err(to_pyerr)?;
 
-            let inner = options.build(loaded.vocab().clone());
+            let inner = options.inner().build(loaded.vocab().clone());
 
             Ok(_Tokenizer { inner })
         })

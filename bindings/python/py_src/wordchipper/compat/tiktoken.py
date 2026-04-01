@@ -14,9 +14,17 @@ Typical migration::
 from __future__ import annotations
 
 import functools
-from typing import Any
+from typing import Any, Literal, AbstractSet, Collection, NoReturn
 
-from wordchipper import Tokenizer
+from wordchipper import Tokenizer, SpecialFilter
+
+try:
+    frozendict
+except NameError:
+    try:
+        from frozendict import frozendict
+    except ImportError:
+        frozendict = dict
 
 _SENTINEL = object()
 
@@ -94,9 +102,7 @@ MODEL_PREFIX_TO_ENCODING: dict[str, str] = {
 }
 
 _ENCODING_NAMES = [
-    m.split(":", 1)[-1]
-    for m in Tokenizer.available_models()
-    if not m.endswith(":gpt2")
+    m.split(":", 1)[-1] for m in Tokenizer.available_models() if not m.endswith(":gpt2")
 ]
 
 # Encoding cache (keyed by encoding name)
@@ -139,24 +145,90 @@ class Encoding:
 
     # -- encode / decode -----------------------------------------------------
 
+    def _allowed_filter(
+            self,
+            allowed_special: Literal["all"] | AbstractSet[str],
+    ) -> SpecialFilter:
+        if allowed_special == "all":
+            return SpecialFilter.include_all()
+        elif len(allowed_special):
+            return SpecialFilter.include(allowed_special)
+        else:
+            return SpecialFilter.include_none()
+
+    def _disallowed_specials(
+            self,
+            allowed_filter: SpecialFilter,
+            disallowed_special: Literal["all"] | Collection[str] = "all",
+    ) -> frozendict[str, int]:
+        if disallowed_special == "all":
+            if allowed_filter.is_all():
+                return frozendict()
+
+            # every special not in the special filter
+            return frozendict(
+                {k: v for k, v in self._tok.specials.items() if k not in allowed_filter}
+            )
+
+        return frozendict(
+            {k: v for k, v in self._tok.specials.items() if k in disallowed_special}
+        )
+
+    def _check_disallowed(
+            self, tokens: list[int], disallowed: frozendict[str, int]
+    ) -> None:
+        if disallowed:
+            values = set(disallowed.values())
+            for t in tokens:
+                if t in values:
+                    # invert the value-to-key mapping to find the token string for the disallowed token ID
+                    span = next(k for (k, v) in disallowed.items() if v == t)
+                    raise_disallowed_special_token(span)
+
     def encode(
             self,
             text: str,
             *,
-            allowed_special: Any = _SENTINEL,
-            disallowed_special: Any = _SENTINEL,
+            allowed_special: Literal["all"] | AbstractSet[str] = frozenset(),
+            disallowed_special: Literal["all"] | Collection[str] = "all",
     ) -> list[int]:
-        """Encode text to token IDs.
+        """Encodes a string into tokens.
 
-        ``allowed_special`` and ``disallowed_special`` are accepted for API
-        compatibility. Passing tiktoken's own defaults (``set()`` and
-        ``"all"``) is allowed; other values raise :class:`NotImplementedError`.
+        Special tokens are artificial tokens used to unlock capabilities from a model,
+        such as fill-in-the-middle. So we want to be careful about accidentally encoding special
+        tokens, since they can be used to trick a model into doing something we don't want it to do.
+
+        Hence, by default, encode will raise an error if it encounters text that corresponds
+        to a special token. This can be controlled on a per-token level using the `allowed_special`
+        and `disallowed_special` parameters. In particular:
+        - Setting `disallowed_special` to () will prevent this function from raising errors and
+          cause all text corresponding to special tokens to be encoded as natural text.
+        - Setting `allowed_special` to "all" will cause this function to treat all text
+          corresponding to special tokens to be encoded as special tokens.
+
+        ```
+        >>> enc.encode("hello world")
+        [31373, 995]
+        >>> enc.encode("<|endoftext|>", allowed_special={"<|endoftext|>"})
+        [50256]
+        >>> enc.encode("<|endoftext|>", allowed_special="all")
+        [50256]
+        >>> enc.encode("<|endoftext|>")
+        # Raises ValueError
+        >>> enc.encode("<|endoftext|>", disallowed_special=())
+        [27, 91, 437, 1659, 5239, 91, 29]
+        ```
         """
-        if allowed_special is not _SENTINEL and allowed_special != set():
-            raise NotImplementedError("allowed_special is not supported")
-        if disallowed_special is not _SENTINEL and disallowed_special != "all":
-            raise NotImplementedError("disallowed_special is not supported")
-        return self._tok.encode(text)
+        allowed_filter = self._allowed_filter(allowed_special)
+        tokens = self._tok.encode(text, special_filter=allowed_filter)
+
+        disallowed = self._disallowed_specials(
+            allowed_filter=allowed_filter,
+            disallowed_special=disallowed_special,
+        )
+        self._check_disallowed(tokens, disallowed)
+
+        return tokens
 
     def encode_ordinary(self, text: str) -> list[int]:
         return self._tok.encode(text)
@@ -165,14 +237,32 @@ class Encoding:
             self,
             text: list[str],
             *,
-            allowed_special: Any = _SENTINEL,
-            disallowed_special: Any = _SENTINEL,
+            num_threads: int = 8,
+            allowed_special: Literal["all"] | AbstractSet[str] = frozenset(),
+            disallowed_special: Literal["all"] | Collection[str] = "all",
     ) -> list[list[int]]:
-        if allowed_special is not _SENTINEL and allowed_special != set():
-            raise NotImplementedError("allowed_special is not supported")
-        if disallowed_special is not _SENTINEL and disallowed_special != "all":
-            raise NotImplementedError("disallowed_special is not supported")
-        return self._tok.encode_batch(text)
+        """Encodes a list of strings into tokens, in parallel.
+
+        `num_threads` is passed to the underlying tokenizer.
+
+        See `encode` for more details on `allowed_special` and `disallowed_special`.
+
+        ```
+        >>> enc.encode_batch(["hello world", "goodbye world"])
+        [[31373, 995], [11274, 16390, 995]]
+        ```
+        """
+        allowed_filter = self._allowed_filter(allowed_special)
+        batch = self._tok.encode_batch(text, special_filter=allowed_filter)
+
+        disallowed = self._disallowed_specials(
+            allowed_filter=allowed_filter,
+            disallowed_special=disallowed_special,
+        )
+        for tokens in batch:
+            self._check_disallowed(tokens, disallowed)
+
+        return batch
 
     def encode_ordinary_batch(self, text: list[str]) -> list[list[int]]:
         return self._tok.encode_batch(text)
@@ -220,3 +310,14 @@ def encoding_for_model(model_name: str) -> Encoding:
 def list_encoding_names() -> list[str]:
     """Return the list of available encoding names."""
     return list(_ENCODING_NAMES)
+
+
+def raise_disallowed_special_token(token: str) -> NoReturn:
+    raise ValueError(
+        f"Encountered text corresponding to disallowed special token {token!r}.\n"
+        "If you want this text to be encoded as a special token, "
+        f"pass it to `allowed_special`, e.g. `allowed_special={{{token!r}, ...}}`.\n"
+        f"If you want this text to be encoded as normal text, disable the check for this token "
+        f"by passing `disallowed_special=(enc.special_tokens_set - {{{token!r}}})`.\n"
+        "To disable this check for all special tokens, pass `disallowed_special=()`.\n"
+    )

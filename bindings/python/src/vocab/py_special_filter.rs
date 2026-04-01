@@ -42,6 +42,10 @@ impl SpecialFilter {
         })
     }
 
+    fn is_all(&self) -> bool {
+        matches!(self.inner, wc::SpecialFilter::IncludeAll)
+    }
+
     /// Does the given token match the special filter?
     fn __contains__(
         &self,

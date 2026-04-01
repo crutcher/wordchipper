@@ -15,7 +15,9 @@ pub struct TokenizerOptions {
 impl Default for TokenizerOptions {
     fn default() -> Self {
         Self {
-            inner: wc::TokenizerOptions::default().with_parallel(true),
+            inner: wc::TokenizerOptions::default()
+                .with_accelerated_lexers(true)
+                .with_parallel(true),
         }
     }
 }

@@ -1,7 +1,7 @@
 import functools
 from typing import Optional
 
-from wordchipper._wordchipper import (SpecialFilter, _Tokenizer, TokenizerOptions)
+from wordchipper._wordchipper import SpecialFilter, _Tokenizer, TokenizerOptions
 
 try:
     frozendict
@@ -23,7 +23,9 @@ class Tokenizer:
         return _Tokenizer.available_models()
 
     @staticmethod
-    def from_pretrained(name: str, options: Optional[TokenizerOptions] = None) -> "Tokenizer":
+    def from_pretrained(
+        name: str, options: Optional[TokenizerOptions] = None
+    ) -> "Tokenizer":
         """Load a pretrained OpenAI tokenizer by name.
 
         Names: "r50k_base", "p50k_base", "p50k_edit", "cl100k_base",
@@ -66,17 +68,17 @@ class Tokenizer:
         self._tok.save_base64_vocab(path)
 
     def encode(
-            self,
-            text: str,
-            special_filter: Optional[SpecialFilter] = None,
+        self,
+        text: str,
+        special_filter: Optional[SpecialFilter] = None,
     ) -> list[int]:
         """Encode a single string to a list of token IDs."""
         return self._tok.encode(text, special_filter=special_filter)
 
     def encode_batch(
-            self,
-            texts: list[str],
-            special_filter: Optional[SpecialFilter] = None,
+        self,
+        texts: list[str],
+        special_filter: Optional[SpecialFilter] = None,
     ) -> list[list[int]]:
         """Encode a batch of strings to a list of lists of token IDs."""
         return self._tok.encode_batch(texts, special_filter=special_filter)
