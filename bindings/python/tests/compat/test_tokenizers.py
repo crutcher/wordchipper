@@ -5,19 +5,85 @@ import pytest
 import tokenizers
 from wordchipper.compat import tokenizers as wc_tokenizers
 
+# Cache HF tokenizer instances to avoid repeated network requests.
+_hf_cache: dict[str, tokenizers.Tokenizer] = {}
+_wc_cache: dict[str, wc_tokenizers.Tokenizer] = {}
+
+
+def _get_hf(model: str) -> tokenizers.Tokenizer:
+    if model not in _hf_cache:
+        _hf_cache[model] = tokenizers.Tokenizer.from_pretrained(model)
+    return _hf_cache[model]
+
+
+def _get_wc(model: str) -> wc_tokenizers.Tokenizer:
+    if model not in _wc_cache:
+        _wc_cache[model] = wc_tokenizers.Tokenizer.from_pretrained(model)
+    return _wc_cache[model]
+
+
+# Only models that exist on HuggingFace Hub (Xenova/cl100k_base etc. are
+# wordchipper-only mappings, not real HF repos).
+HF_COMPARABLE_MODELS = [
+    "Xenova/gpt-4o",
+    "Xenova/gpt-4",
+]
+
+HF_DIVERSE_TEXTS = [
+    "The quick brown fox jumps over the lazy dog.",
+    "hello world",
+    "",
+    " ",
+    "   multiple   spaces   ",
+    "\t\ttabs\t\t",
+    "\n\nnewlines\n\n",
+    "CJK: \u4f60\u597d\u4e16\u754c",
+    "Emoji: \U0001f600\U0001f680\U0001f30d",
+    "Mixed: Hello \u4e16\u754c! \U0001f389",
+    "Numbers: 12345 3.14159 -42",
+    "Code: def foo(x): return x + 1",
+    "Accented: caf\u00e9 na\u00efve r\u00e9sum\u00e9",
+    "Korean: \uc548\ub155\ud558\uc138\uc694",
+    "Single char: x",
+    "Repeated: aaaaaaaaaa",
+    "Long: " + "word " * 50,
+]
+
 
 class TestHFTokenizerMatchesWordchipper:
-    def test_encode_ids_match(self):
-        ENCODING_NAME = "Xenova/gpt-4o"
+    """Side-by-side comparison: real tokenizers vs wordchipper compat.
 
-        a = tokenizers.Tokenizer.from_pretrained(ENCODING_NAME)
-        b = wc_tokenizers.Tokenizer.from_pretrained(ENCODING_NAME)
+    Compares encode/decode outputs (token IDs and decoded text). Does NOT
+    compare token_to_id/id_to_token/vocab_size because HF tokenizers use
+    GPT-2 byte-level encoding (space -> Ġ, etc.) while wordchipper uses raw
+    bytes, so the token string representations differ by design.
+    """
 
-        text = "The quick brown fox jumps over the lazy dog."
+    @pytest.mark.parametrize("model", HF_COMPARABLE_MODELS)
+    @pytest.mark.parametrize("text", HF_DIVERSE_TEXTS, ids=lambda t: repr(t)[:40])
+    def test_encode_ids_match(self, model, text):
+        a = _get_hf(model)
+        b = _get_wc(model)
         assert a.encode(text).ids == b.encode(text).ids
 
+    @pytest.mark.parametrize("model", HF_COMPARABLE_MODELS)
+    @pytest.mark.parametrize("text", HF_DIVERSE_TEXTS, ids=lambda t: repr(t)[:40])
+    def test_decode_roundtrip_matches(self, model, text):
+        a = _get_hf(model)
+        b = _get_wc(model)
         tokens = a.encode(text).ids
         assert a.decode(tokens) == b.decode(tokens)
+
+    @pytest.mark.parametrize("model", HF_COMPARABLE_MODELS)
+    def test_encode_batch_ids_match(self, model):
+        a = _get_hf(model)
+        b = _get_wc(model)
+        texts = ["hello world", "foo bar", "\u4f60\u597d", ""]
+        a_batch = a.encode_batch(texts)
+        b_batch = b.encode_batch(texts)
+        assert len(a_batch) == len(b_batch)
+        for a_enc, b_enc in zip(a_batch, b_batch):
+            assert a_enc.ids == b_enc.ids
 
 
 class TestHFEncoding:

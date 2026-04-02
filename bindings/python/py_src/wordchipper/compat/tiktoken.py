@@ -122,14 +122,19 @@ class Encoding:
     def name(self) -> str:
         return self._name
 
-    @property
+    @functools.cached_property
     def max_token_value(self) -> int:
-        val = self._tok.max_token
-        return val if val is not None else 0
+        core_max = self._tok.max_token
+        if core_max is None:
+            raise ValueError(
+                f"encoding {self._name!r} has an empty core vocabulary"
+            )
+        special_max = max(self._tok.specials.values()) if self._tok.specials else 0
+        return max(core_max, special_max)
 
     @property
     def n_vocab(self) -> int:
-        return self._tok.vocab_size
+        return self.max_token_value + 1
 
     @functools.cached_property
     def eot_token(self) -> int:
