@@ -33,7 +33,7 @@ impl _Vocab {
 #[pymethods]
 impl _Vocab {
     fn __len__(&self) -> usize {
-        self.inner.len() + self.inner.special_vocab().len()
+        self.n_vocab()
     }
 
     fn __contains__(

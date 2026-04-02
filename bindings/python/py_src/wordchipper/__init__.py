@@ -61,7 +61,7 @@ class Vocab:
 
     def to_dict(self) -> dict[str, int]:
         """Return the full vocabulary as a {token_string: id} dict."""
-        return dict(self._inner.to_dict())
+        return self._inner.to_dict()
 
 
 class Tokenizer:
