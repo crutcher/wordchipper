@@ -85,6 +85,26 @@ class TestHFTokenizerMatchesWordchipper:
         for a_enc, b_enc in zip(a_batch, b_batch):
             assert a_enc.ids == b_enc.ids
 
+    @pytest.mark.parametrize("model", HF_COMPARABLE_MODELS)
+    def test_pair_encode_ids_match(self, model):
+        a = _get_hf(model)
+        b = _get_wc(model)
+        a_enc = a.encode("hello", pair="world")
+        b_enc = b.encode("hello", pair="world")
+        assert a_enc.ids == b_enc.ids
+
+    @pytest.mark.parametrize("model", HF_COMPARABLE_MODELS)
+    def test_encode_add_special_tokens_false_ids_match(self, model):
+        a = _get_hf(model)
+        b = _get_wc(model)
+        a_enc = a.encode("hello", add_special_tokens=False)
+        b_enc = b.encode("hello", add_special_tokens=False)
+        assert a_enc.ids == b_enc.ids
+
+    # Note: get_vocab_size is NOT compared cross-library because HF and
+    # wordchipper have different vocab composition (HF includes all tokens
+    # in its base vocabulary; wordchipper separates core vs special).
+
 
 class TestHFEncoding:
     def test_encoding_dataclass(self):
@@ -192,52 +212,84 @@ class CompatTokenizersTests(TokenizersBaseTests):
         result = tok.encode("hello")
         assert len(result.ids) > 0
 
-    # TODO: these features should be implemented in wc_tokenizers
-
     def test_from_pretrained_unknown(self):
         with pytest.raises(ValueError):
             self.get_module().Tokenizer.from_pretrained("Xenova/totally-unknown")
 
-    def test_encode_raises_on_pair(self):
+    def test_from_pretrained_extra_kwargs_ignored(self):
+        tok = self.get_module().Tokenizer.from_pretrained(
+            "cl100k_base", revision="main"
+        )
+        result = tok.encode("hello")
+        assert len(result.ids) > 0
+
+    def test_encode_pair(self):
         tok = self.get_tok()
-        with pytest.raises(NotImplementedError, match="pair"):
-            tok.encode("hello", pair="world")
+        enc = tok.encode("hello", pair="world")
+        hello_enc = tok.encode("hello")
+        world_enc = tok.encode("world")
+        assert enc.ids == hello_enc.ids + world_enc.ids
+        assert enc.tokens == hello_enc.tokens + world_enc.tokens
+
+    def test_encode_batch_with_pairs(self):
+        tok = self.get_tok()
+        batch = tok.encode_batch([("hello", "world"), "foo"])
+        assert len(batch) == 2
+        pair_enc = tok.encode("hello", pair="world")
+        assert batch[0].ids == pair_enc.ids
+        foo_enc = tok.encode("foo")
+        assert batch[1].ids == foo_enc.ids
+
+    def test_encode_add_special_tokens_false(self):
+        tok = self.get_tok()
+        enc_true = tok.encode("hello", add_special_tokens=True)
+        enc_false = tok.encode("hello", add_special_tokens=False)
+        assert enc_true.ids == enc_false.ids
+
+    def test_encode_batch_add_special_tokens_false(self):
+        tok = self.get_tok()
+        batch_true = tok.encode_batch(["hello"], add_special_tokens=True)
+        batch_false = tok.encode_batch(["hello"], add_special_tokens=False)
+        assert batch_true[0].ids == batch_false[0].ids
 
     def test_encode_raises_on_is_pretokenized(self):
         tok = self.get_tok()
         with pytest.raises(NotImplementedError, match="is_pretokenized"):
             tok.encode("hello", is_pretokenized=True)
 
-    def test_encode_raises_on_add_special_tokens_false(self):
-        tok = self.get_tok()
-        with pytest.raises(NotImplementedError, match="add_special_tokens"):
-            tok.encode("hello", add_special_tokens=False)
-
     def test_encode_batch_raises_on_is_pretokenized(self):
         tok = self.get_tok()
         with pytest.raises(NotImplementedError, match="is_pretokenized"):
             tok.encode_batch(["hello"], is_pretokenized=True)
 
-    def test_encode_batch_raises_on_add_special_tokens_false(self):
+    def test_decode_skip_special_tokens_false(self):
         tok = self.get_tok()
-        with pytest.raises(NotImplementedError, match="add_special_tokens"):
-            tok.encode_batch(["hello"], add_special_tokens=False)
+        text = "hello"
+        ids = tok.encode(text).ids
+        assert tok.decode(ids, skip_special_tokens=False) == text
 
-    def test_decode_raises_on_skip_special_tokens_false(self):
+    def test_decode_batch_skip_special_tokens_false(self):
         tok = self.get_tok()
-        with pytest.raises(NotImplementedError, match="skip_special_tokens"):
-            tok.decode([1, 2], skip_special_tokens=False)
+        texts = ["hello", "world"]
+        batch = tok.encode_batch(texts)
+        decoded = tok.decode_batch(
+            [r.ids for r in batch], skip_special_tokens=False
+        )
+        assert decoded == texts
 
-    def test_decode_batch_raises_on_skip_special_tokens_false(self):
+    def test_decode_skip_special_tokens_filters(self):
         tok = self.get_tok()
-        with pytest.raises(NotImplementedError, match="skip_special_tokens"):
-            tok.decode_batch([[1, 2]], skip_special_tokens=False)
+        hello_ids = tok.encode("hello").ids
+        special_ids = list(tok._tok.specials.values())
+        mixed = hello_ids + special_ids
+        assert tok.decode(mixed, skip_special_tokens=True) == "hello"
+        # False includes the special token text
+        decoded_with = tok.decode(mixed, skip_special_tokens=False)
+        assert len(decoded_with) > len("hello")
 
-    def test_from_pretrained_raises_on_extra_kwargs(self):
-        with pytest.raises(NotImplementedError, match="extra keyword"):
-            self.get_module().Tokenizer.from_pretrained("cl100k_base", revision="main")
-
-    def test_get_vocab_size_raises_on_with_added_tokens_false(self):
+    def test_get_vocab_size_without_added_tokens(self):
         tok = self.get_tok()
-        with pytest.raises(NotImplementedError, match="with_added_tokens"):
-            tok.get_vocab_size(with_added_tokens=False)
+        full = tok.get_vocab_size(with_added_tokens=True)
+        core = tok.get_vocab_size(with_added_tokens=False)
+        assert core <= full
+        assert core == tok._tok.vocab_size

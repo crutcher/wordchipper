@@ -16,7 +16,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from wordchipper import Tokenizer as _WCTokenizer
+from wordchipper import Tokenizer as _WCTokenizer, SpecialFilter
 
 # ---------------------------------------------------------------------------
 # HuggingFace identifier -> wordchipper encoding name
@@ -48,15 +48,20 @@ class Tokenizer:
 
     @classmethod
     def from_pretrained(cls, identifier: str, **kwargs: Any) -> Tokenizer:
-        """Load a tokenizer by HuggingFace identifier or bare encoding name."""
-        if kwargs:
-            raise NotImplementedError(
-                f"extra keyword arguments are not supported: {', '.join(kwargs)}"
-            )
+        """Load a tokenizer by HuggingFace identifier or bare encoding name.
+
+        Extra keyword arguments (e.g. ``revision``) are accepted for API
+        compatibility but ignored.
+        """
         name = HF_TO_WORDCHIPPER.get(identifier, identifier)
         return cls(_WCTokenizer.from_pretrained(name))
 
     # -- encode / decode -----------------------------------------------------
+
+    def _encode_one(self, text: str) -> Encoding:
+        ids = self._tok.encode(text)
+        tokens = [t or "" for t in self._tok.vocab.ids_to_tokens(ids)]
+        return Encoding(ids=ids, tokens=tokens)
 
     def encode(
         self,
@@ -67,36 +72,34 @@ class Tokenizer:
     ) -> Encoding:
         """Encode a string, returning an :class:`Encoding` with ids and tokens.
 
-        ``pair``, ``is_pretokenized``, and ``add_special_tokens`` are accepted
-        for API compatibility but raise :class:`NotImplementedError` if set to
-        non-default values.
+        ``is_pretokenized`` is accepted for API compatibility but raises
+        :class:`NotImplementedError` when set to ``True``.
         """
-        if pair is not None:
-            raise NotImplementedError("pair encoding is not supported")
         if is_pretokenized:
             raise NotImplementedError("is_pretokenized is not supported")
-        if not add_special_tokens:
-            raise NotImplementedError("add_special_tokens=False is not supported")
-        ids = self._tok.encode(sequence)
-        tokens = [t or "" for t in self._tok.vocab.ids_to_tokens(ids)]
-        return Encoding(ids=ids, tokens=tokens)
+        enc = self._encode_one(sequence)
+        if pair is not None:
+            pair_enc = self._encode_one(pair)
+            enc = Encoding(
+                ids=enc.ids + pair_enc.ids,
+                tokens=enc.tokens + pair_enc.tokens,
+            )
+        return enc
 
     def encode_batch(
         self,
-        input: list[str],
+        input: list[str | tuple[str, str]],
         is_pretokenized: bool = False,
         add_special_tokens: bool = True,
     ) -> list[Encoding]:
         if is_pretokenized:
             raise NotImplementedError("is_pretokenized is not supported")
-        if not add_special_tokens:
-            raise NotImplementedError("add_special_tokens=False is not supported")
-        all_ids = self._tok.encode_batch(input)
-        vocab = self._tok.vocab
         result = []
-        for ids in all_ids:
-            tokens = [t or "" for t in vocab.ids_to_tokens(ids)]
-            result.append(Encoding(ids=ids, tokens=tokens))
+        for item in input:
+            if isinstance(item, tuple):
+                result.append(self.encode(item[0], pair=item[1]))
+            else:
+                result.append(self.encode(item))
         return result
 
     def decode(
@@ -106,11 +109,11 @@ class Tokenizer:
     ) -> str:
         """Decode token IDs to a string.
 
-        ``skip_special_tokens`` is accepted for API compatibility but raises
-        :class:`NotImplementedError` if set to ``False``.
+        When ``skip_special_tokens`` is ``True`` (default), special token IDs
+        are filtered out before decoding.
         """
-        if not skip_special_tokens:
-            raise NotImplementedError("skip_special_tokens=False is not supported")
+        if skip_special_tokens:
+            ids = self._filter_specials(ids)
         return self._tok.decode(ids)
 
     def decode_batch(
@@ -118,16 +121,28 @@ class Tokenizer:
         sequences: list[list[int]],
         skip_special_tokens: bool = True,
     ) -> list[str]:
-        if not skip_special_tokens:
-            raise NotImplementedError("skip_special_tokens=False is not supported")
+        if skip_special_tokens:
+            sequences = [self._filter_specials(ids) for ids in sequences]
         return self._tok.decode_batch(sequences)
+
+    def _filter_specials(self, ids: list[int]) -> list[int]:
+        special_ids = self._special_id_set
+        return [i for i in ids if i not in special_ids]
+
+    @property
+    def _special_id_set(self) -> frozenset[int]:
+        try:
+            return self.__special_id_set
+        except AttributeError:
+            self.__special_id_set = frozenset(self._tok.specials.values())
+            return self.__special_id_set
 
     # -- vocab inspection ----------------------------------------------------
 
     def get_vocab_size(self, with_added_tokens: bool = True) -> int:
-        if not with_added_tokens:
-            raise NotImplementedError("with_added_tokens=False is not supported")
-        return self._tok.vocab.n_vocab
+        if with_added_tokens:
+            return self._tok.vocab.n_vocab
+        return self._tok.vocab_size
 
     def token_to_id(self, token: str) -> int | None:
         return self._tok.vocab.token_to_id(token)
