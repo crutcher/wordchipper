@@ -130,7 +130,7 @@ class Tokenizer:
         return self._tok.vocab.n_vocab
 
     def token_to_id(self, token: str) -> int | None:
-        return self._tok.token_to_id(token)
+        return self._tok.vocab.token_to_id(token)
 
     def id_to_token(self, id: int) -> str | None:
-        return self._tok.id_to_token(id)
+        return self._tok.vocab.id_to_token(id)
