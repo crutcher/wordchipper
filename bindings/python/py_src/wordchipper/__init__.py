@@ -50,6 +50,10 @@ class Vocab:
         """Look up the token string for a token ID. Returns None if not found."""
         return self._inner.id_to_token(id)
 
+    def id_to_token_bytes(self, id: int) -> bytes | None:
+        """Look up the raw bytes for a token ID. Returns None if not found."""
+        return self._inner.id_to_token_bytes(id)
+
     def ids_to_tokens(self, ids: list[int]) -> list[str | None]:
         """Look up token strings for a list of token IDs in a single call."""
         return self._inner.ids_to_tokens(ids)

@@ -179,15 +179,15 @@ class Encoding:
         )
 
     def _check_disallowed(
-        self, tokens: list[int], disallowed: frozendict[str, int]
+        self, text: str, disallowed: frozendict[str, int]
     ) -> None:
-        if disallowed:
-            values = set(disallowed.values())
-            for t in tokens:
-                if t in values:
-                    # invert the value-to-key mapping to find the token string for the disallowed token ID
-                    span = next(k for (k, v) in disallowed.items() if v == t)
-                    raise_disallowed_special_token(span)
+        # Scan input text for disallowed special token strings rather than
+        # checking token IDs in encoder output. Checking IDs would require
+        # the encoder to recognize specials, but the default filter excludes
+        # them, so disallowed IDs would never appear in the output.
+        for token_str in disallowed:
+            if token_str in text:
+                raise_disallowed_special_token(token_str)
 
     def encode(
         self,
@@ -223,19 +223,17 @@ class Encoding:
         [27, 91, 437, 1659, 5239, 91, 29]
         ```
         """
-        allowed_filter = self._allowed_filter(allowed_special)
-        tokens = self._tok.encode(text, special_filter=allowed_filter)
-
         disallowed = self._disallowed_specials(
-            allowed_filter=allowed_filter,
+            allowed_filter=self._allowed_filter(allowed_special),
             disallowed_special=disallowed_special,
         )
-        self._check_disallowed(tokens, disallowed)
+        self._check_disallowed(text, disallowed)
 
-        return tokens
+        allowed_filter = self._allowed_filter(allowed_special)
+        return self._tok.encode(text, special_filter=allowed_filter)
 
     def encode_ordinary(self, text: str) -> list[int]:
-        return self._tok.encode(text)
+        return self._tok.encode(text, special_filter=SpecialFilter.include_none())
 
     def encode_batch(
         self,
@@ -256,20 +254,34 @@ class Encoding:
         [[31373, 995], [11274, 16390, 995]]
         ```
         """
-        allowed_filter = self._allowed_filter(allowed_special)
-        batch = self._tok.encode_batch(text, special_filter=allowed_filter)
-
         disallowed = self._disallowed_specials(
-            allowed_filter=allowed_filter,
+            allowed_filter=self._allowed_filter(allowed_special),
             disallowed_special=disallowed_special,
         )
-        for tokens in batch:
-            self._check_disallowed(tokens, disallowed)
+        for t in text:
+            self._check_disallowed(t, disallowed)
 
-        return batch
+        allowed_filter = self._allowed_filter(allowed_special)
+        return self._tok.encode_batch(text, special_filter=allowed_filter)
 
     def encode_ordinary_batch(self, text: list[str]) -> list[list[int]]:
-        return self._tok.encode_batch(text)
+        return self._tok.encode_batch(
+            text, special_filter=SpecialFilter.include_none()
+        )
+
+    def encode_single_token(self, text_or_bytes: str | bytes) -> int:
+        if isinstance(text_or_bytes, bytes):
+            text_or_bytes = text_or_bytes.decode("utf-8")
+        token_id = self._tok.vocab.token_to_id(text_or_bytes)
+        if token_id is None:
+            raise KeyError(text_or_bytes)
+        return token_id
+
+    def decode_single_token_bytes(self, token: int) -> bytes:
+        raw = self._tok.vocab.id_to_token_bytes(token)
+        if raw is None:
+            raise KeyError(token)
+        return raw
 
     def decode(self, tokens: list[int]) -> str:
         return self._tok.decode(tokens)

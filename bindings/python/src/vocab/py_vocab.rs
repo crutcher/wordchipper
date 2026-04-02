@@ -11,6 +11,7 @@ use pyo3::{
     pyclass,
     pymethods,
     types::{
+        PyBytes,
         PyDict,
         PyDictMethods,
     },
@@ -120,6 +121,17 @@ impl _Vocab {
             .dictionary
             .get(&id)
             .map(|bytes| wc::string_from_utf8_lossy(bytes.clone()))
+    }
+
+    fn id_to_token_bytes<'py>(
+        &self,
+        py: Python<'py>,
+        id: u32,
+    ) -> Option<Bound<'py, PyBytes>> {
+        self.cache()
+            .dictionary
+            .get(&id)
+            .map(|bytes| PyBytes::new(py, bytes))
     }
 
     fn ids_to_tokens(

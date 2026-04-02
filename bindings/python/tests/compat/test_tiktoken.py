@@ -80,22 +80,27 @@ class TestTiktokenMatchesWordchipper:
         assert a.encode_ordinary(text) == b.encode_ordinary(text)
 
     @pytest.mark.parametrize("name", COMMON_ENCODINGS)
-    def test_encode_ordinary_special_diverges(self, name):
-        """Document known divergence: encode_ordinary on special token text.
-
-        tiktoken encodes <|endoftext|> as ordinary BPE subword tokens.
-        wordchipper recognizes it as a single special token ID.
-        """
+    def test_encode_ordinary_special_matches(self, name):
+        """encode_ordinary treats special token text as regular BPE subwords."""
         a = tiktoken.get_encoding(name)
         b = wc_tiktoken.get_encoding(name)
         text = "hello <|endoftext|> world"
-        a_tokens = a.encode_ordinary(text)
-        b_tokens = b.encode_ordinary(text)
-        # tiktoken BPE-encodes the special token text as subwords;
-        # wordchipper recognizes it as a single special token ID.
-        assert a_tokens != b_tokens
-        assert b.eot_token in b_tokens
-        assert a.eot_token not in a_tokens
+        assert a.encode_ordinary(text) == b.encode_ordinary(text)
+
+    @pytest.mark.parametrize("name", COMMON_ENCODINGS)
+    def test_encode_single_token_matches(self, name):
+        a = tiktoken.get_encoding(name)
+        b = wc_tiktoken.get_encoding(name)
+        for token_str in ["hello", " world", "\n"]:
+            assert a.encode_single_token(token_str) == b.encode_single_token(token_str)
+            assert a.encode_single_token(token_str.encode()) == b.encode_single_token(token_str.encode())
+
+    @pytest.mark.parametrize("name", COMMON_ENCODINGS)
+    def test_decode_single_token_bytes_matches(self, name):
+        a = tiktoken.get_encoding(name)
+        b = wc_tiktoken.get_encoding(name)
+        for token_id in [0, 1, 100, a.eot_token]:
+            assert a.decode_single_token_bytes(token_id) == b.decode_single_token_bytes(token_id)
 
     def test_special_token_encode_matches(self):
         a = tiktoken.get_encoding("cl100k_base")
@@ -116,18 +121,11 @@ class TestTiktokenMatchesWordchipper:
         with pytest.raises(ValueError):
             enc.encode("hello<|endoftext|>world")
 
-    def test_disallowed_special_diverges(self):
-        """Document known divergence: default disallowed_special handling.
-
-        tiktoken raises ValueError when special token text appears with default
-        params. wordchipper's default encode doesn't recognize special tokens
-        so the disallowed check never triggers.
-        """
+    def test_disallowed_special_matches(self):
+        """Default encode raises ValueError on special token text, matching tiktoken."""
         enc = wc_tiktoken.get_encoding("cl100k_base")
-        # wordchipper does NOT raise here because its default encode treats
-        # <|endoftext|> as ordinary text (SpecialFilter excludes all specials).
-        tokens = enc.encode("hello<|endoftext|>world")
-        assert len(tokens) > 0
+        with pytest.raises(ValueError, match="disallowed special token"):
+            enc.encode("hello<|endoftext|>world")
 
 
 class TiktokenBaseTests(ABC, unittest.TestCase):
@@ -253,6 +251,42 @@ class TiktokenBaseTests(ABC, unittest.TestCase):
     def test_decode_empty(self):
         enc = self.get_encoding()
         assert enc.decode([]) == ""
+
+    def test_encode_single_token(self):
+        enc = self.get_encoding()
+        token_id = enc.encode_single_token("hello")
+        assert isinstance(token_id, int)
+        assert enc.decode([token_id]) == "hello"
+
+    def test_encode_single_token_bytes(self):
+        enc = self.get_encoding()
+        assert enc.encode_single_token(b"hello") == enc.encode_single_token("hello")
+
+    def test_encode_single_token_special(self):
+        enc = self.get_encoding()
+        assert enc.encode_single_token("<|endoftext|>") == enc.eot_token
+
+    def test_encode_single_token_unknown(self):
+        enc = self.get_encoding()
+        with pytest.raises(KeyError):
+            enc.encode_single_token("nonexistent_xyz_123")
+
+    def test_decode_single_token_bytes(self):
+        enc = self.get_encoding()
+        token_id = enc.encode_single_token("hello")
+        raw = enc.decode_single_token_bytes(token_id)
+        assert isinstance(raw, bytes)
+        assert raw == b"hello"
+
+    def test_decode_single_token_bytes_special(self):
+        enc = self.get_encoding()
+        raw = enc.decode_single_token_bytes(enc.eot_token)
+        assert raw == b"<|endoftext|>"
+
+    def test_decode_single_token_bytes_unknown(self):
+        enc = self.get_encoding()
+        with pytest.raises(KeyError):
+            enc.decode_single_token_bytes(999999)
 
     def test_encode_specials(self):
         enc = self.get_encoding()
