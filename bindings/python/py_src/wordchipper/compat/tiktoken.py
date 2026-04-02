@@ -124,7 +124,11 @@ class Encoding:
 
     @functools.cached_property
     def max_token_value(self) -> int:
-        core_max = self._tok.max_token or 0
+        core_max = self._tok.max_token
+        if core_max is None:
+            raise ValueError(
+                f"encoding {self._name!r} has an empty core vocabulary"
+            )
         special_max = max(self._tok.specials.values()) if self._tok.specials else 0
         return max(core_max, special_max)
 

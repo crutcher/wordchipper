@@ -83,8 +83,8 @@ class TestTiktokenMatchesWordchipper:
     def test_encode_ordinary_special_diverges(self, name):
         """Document known divergence: encode_ordinary on special token text.
 
-        tiktoken encodes <|endoftext|> as individual characters.
-        wordchipper recognizes it as a special token ID.
+        tiktoken encodes <|endoftext|> as ordinary BPE subword tokens.
+        wordchipper recognizes it as a single special token ID.
         """
         a = tiktoken.get_encoding(name)
         b = wc_tiktoken.get_encoding(name)
@@ -94,8 +94,9 @@ class TestTiktokenMatchesWordchipper:
         b_tokens = b.encode_ordinary(text)
         assert len(a_tokens) > 0
         assert len(b_tokens) > 0
-        # tiktoken splits the special text into many tokens; wordchipper
-        # produces fewer because it recognizes the special token.
+        # tiktoken produces more tokens because it BPE-encodes the special
+        # token text as subwords; wordchipper produces fewer because it
+        # recognizes the special token as a single ID.
         assert len(a_tokens) > len(b_tokens)
 
     def test_special_token_encode_matches(self):
@@ -126,7 +127,7 @@ class TestTiktokenMatchesWordchipper:
         """
         enc = wc_tiktoken.get_encoding("cl100k_base")
         # wordchipper does NOT raise here because its default encode treats
-        # <|endoftext|> as ordinary text (no SpecialFilter).
+        # <|endoftext|> as ordinary text (SpecialFilter excludes all specials).
         tokens = enc.encode("hello<|endoftext|>world")
         assert len(tokens) > 0
 
