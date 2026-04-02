@@ -1,4 +1,7 @@
-use std::sync::{Arc, OnceLock};
+use std::sync::{
+    Arc,
+    OnceLock,
+};
 
 use pyo3::{
     Bound,
@@ -14,7 +17,10 @@ use pyo3::{
 };
 use wordchipper::{
     VocabIndex,
-    vocab::{TokenSpanMap, UnifiedTokenVocab},
+    vocab::{
+        TokenSpanMap,
+        UnifiedTokenVocab,
+    },
 };
 
 use crate::wc;
