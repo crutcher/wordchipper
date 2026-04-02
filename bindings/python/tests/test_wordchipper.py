@@ -3,7 +3,7 @@ import tempfile
 import unittest
 
 import pytest
-from wordchipper import SpecialFilter, Tokenizer
+from wordchipper import SpecialFilter, Tokenizer, Vocab
 
 try:
     frozendict
@@ -369,3 +369,86 @@ def test_save_base64_vocab(tokenizer):
             line_count = sum(1 for _ in f)
         # span_vocab excludes special tokens and byte-level tokens
         assert 0 < line_count <= tokenizer.vocab_size
+
+
+# Vocab
+
+
+@pytest.fixture(scope="module")
+def vocab():
+    return Tokenizer.from_pretrained("cl100k_base").vocab
+
+
+def test_vocab_len(vocab):
+    assert len(vocab) > 0
+    # cl100k_base: 100256 core + 5 special = 100261
+    assert len(vocab) == 100261
+
+
+def test_vocab_n_vocab(vocab):
+    assert vocab.n_vocab == len(vocab)
+
+
+def test_vocab_max_token(vocab):
+    # Includes special tokens (highest is 100276)
+    assert vocab.max_token == 100276
+
+
+def test_vocab_contains(vocab):
+    assert "hello" in vocab
+    assert "<|endoftext|>" in vocab
+    assert "xyzzy_not_a_token_999" not in vocab
+
+
+def test_vocab_getitem(vocab):
+    assert vocab["hello"] == 15339
+    with pytest.raises(KeyError):
+        vocab["xyzzy_not_a_token_999"]
+
+
+def test_vocab_getitem_special(vocab):
+    assert vocab["<|endoftext|>"] == 100257
+
+
+def test_vocab_token_to_id(vocab):
+    assert vocab.token_to_id("hello") == 15339
+    assert vocab.token_to_id("<|endoftext|>") == 100257
+    assert vocab.token_to_id("xyzzy_not_a_token_999") is None
+
+
+def test_vocab_id_to_token(vocab):
+    assert vocab.id_to_token(15339) == "hello"
+    assert vocab.id_to_token(100257) == "<|endoftext|>"
+    assert vocab.id_to_token(999_999_999) is None
+
+
+def test_vocab_ids_to_tokens(vocab):
+    result = vocab.ids_to_tokens([15339, 1917, 999_999_999])
+    assert result[0] == "hello"
+    assert result[1] == " world"
+    assert result[2] is None
+    assert len(result) == 3
+
+
+def test_vocab_ids_to_tokens_empty(vocab):
+    assert vocab.ids_to_tokens([]) == []
+
+
+def test_vocab_special_tokens(vocab):
+    specials = vocab.special_tokens
+    assert "<|endoftext|>" in specials
+    assert specials["<|endoftext|>"] == 100257
+    assert len(specials) == 5
+
+
+def test_vocab_to_dict(vocab):
+    d = vocab.to_dict()
+    assert isinstance(d, dict)
+    assert len(d) > 0
+    assert d["hello"] == 15339
+    assert d["<|endoftext|>"] == 100257
+
+
+def test_vocab_cached_on_tokenizer():
+    tok = Tokenizer.from_pretrained("cl100k_base")
+    assert tok.vocab is tok.vocab

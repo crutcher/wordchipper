@@ -1,7 +1,7 @@
 import functools
 from typing import Optional
 
-from wordchipper._wordchipper import SpecialFilter, _Tokenizer, TokenizerOptions
+from wordchipper._wordchipper import SpecialFilter, _Tokenizer, _Vocab, TokenizerOptions
 
 try:
     frozendict
@@ -10,6 +10,58 @@ except NameError:
         from frozendict import frozendict
     except ImportError:
         frozendict = dict
+
+
+class Vocab:
+    """Vocabulary for a BPE tokenizer.
+
+    Supports dict-like access: ``vocab["hello"]`` returns the token ID.
+    """
+
+    _inner: _Vocab
+
+    def __init__(self, inner: _Vocab) -> None:
+        self._inner = inner
+
+    def __len__(self) -> int:
+        return len(self._inner)
+
+    def __contains__(self, token: str) -> bool:
+        return token in self._inner
+
+    def __getitem__(self, token: str) -> int:
+        return self._inner[token]
+
+    @property
+    def n_vocab(self) -> int:
+        """Total number of token IDs in the vocabulary (core + special)."""
+        return self._inner.n_vocab
+
+    @property
+    def max_token(self) -> int | None:
+        """Highest token ID across core and special tokens."""
+        return self._inner.max_token
+
+    def token_to_id(self, token: str) -> int | None:
+        """Look up the token ID for a token string. Returns None if not found."""
+        return self._inner.token_to_id(token)
+
+    def id_to_token(self, id: int) -> str | None:
+        """Look up the token string for a token ID. Returns None if not found."""
+        return self._inner.id_to_token(id)
+
+    def ids_to_tokens(self, ids: list[int]) -> list[str | None]:
+        """Look up token strings for a list of token IDs in a single call."""
+        return self._inner.ids_to_tokens(ids)
+
+    @functools.cached_property
+    def special_tokens(self) -> frozendict[str, int]:
+        """Special tokens as a frozen mapping of name to ID."""
+        return frozendict(self._inner.get_special_tokens())
+
+    def to_dict(self) -> dict[str, int]:
+        """Return the full vocabulary as a {token_string: id} dict."""
+        return self._inner.to_dict()
 
 
 class Tokenizer:
@@ -37,14 +89,19 @@ class Tokenizer:
     def __init__(self, tok: _Tokenizer) -> "Tokenizer":
         self._tok = tok
 
+    @functools.cached_property
+    def vocab(self) -> Vocab:
+        """The tokenizer's vocabulary."""
+        return Vocab(self._tok.vocab)
+
     @property
     def vocab_size(self) -> int:
-        """Number of tokens in the vocabulary."""
+        """Number of tokens in the core vocabulary (excludes special tokens)."""
         return self._tok.vocab_size
 
     @property
     def max_token(self) -> int | None:
-        """Highest token ID in the vocabulary, or None if the vocabulary is empty."""
+        """Highest token ID in the core vocabulary, or None if empty."""
         return self._tok.max_token
 
     def token_to_id(self, token: str) -> int | None:
@@ -57,10 +114,7 @@ class Tokenizer:
 
     @functools.cached_property
     def specials(self) -> frozendict[str, int]:
-        """Get special tokens as a list of (name, id) tuples.
-
-        Note: The order of returned tuples is not guaranteed.
-        """
+        """Special tokens as a frozen mapping of name to ID."""
         return frozendict(self._tok.get_special_tokens())
 
     def save_base64_vocab(self, path: str) -> None:
@@ -92,4 +146,4 @@ class Tokenizer:
         return self._tok.decode_batch(batch)
 
 
-__all__ = ["SpecialFilter", "Tokenizer", "TokenizerOptions"]
+__all__ = ["SpecialFilter", "Tokenizer", "TokenizerOptions", "Vocab"]

@@ -17,7 +17,10 @@ use wordchipper::{
 use super::TokenizerOptions;
 use crate::{
     support::to_pyerr,
-    vocab::SpecialFilter,
+    vocab::{
+        _Vocab,
+        SpecialFilter,
+    },
     wc,
 };
 
@@ -115,6 +118,11 @@ impl _Tokenizer {
     #[getter]
     fn max_token(&self) -> Option<u32> {
         self.inner.vocab().max_token()
+    }
+
+    #[getter]
+    fn vocab(&self) -> _Vocab {
+        _Vocab::new(self.inner.vocab().clone())
     }
 
     fn token_to_id(

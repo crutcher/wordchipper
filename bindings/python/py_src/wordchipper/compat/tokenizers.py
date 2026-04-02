@@ -78,7 +78,7 @@ class Tokenizer:
         if not add_special_tokens:
             raise NotImplementedError("add_special_tokens=False is not supported")
         ids = self._tok.encode(sequence)
-        tokens = [self._tok.id_to_token(i) or "" for i in ids]
+        tokens = [t or "" for t in self._tok.vocab.ids_to_tokens(ids)]
         return Encoding(ids=ids, tokens=tokens)
 
     def encode_batch(
@@ -92,9 +92,10 @@ class Tokenizer:
         if not add_special_tokens:
             raise NotImplementedError("add_special_tokens=False is not supported")
         all_ids = self._tok.encode_batch(input)
+        vocab = self._tok.vocab
         result = []
         for ids in all_ids:
-            tokens = [self._tok.id_to_token(i) or "" for i in ids]
+            tokens = [t or "" for t in vocab.ids_to_tokens(ids)]
             result.append(Encoding(ids=ids, tokens=tokens))
         return result
 
@@ -126,10 +127,10 @@ class Tokenizer:
     def get_vocab_size(self, with_added_tokens: bool = True) -> int:
         if not with_added_tokens:
             raise NotImplementedError("with_added_tokens=False is not supported")
-        return self._tok.vocab_size
+        return self._tok.vocab.n_vocab
 
     def token_to_id(self, token: str) -> int | None:
-        return self._tok.token_to_id(token)
+        return self._tok.vocab.token_to_id(token)
 
     def id_to_token(self, id: int) -> str | None:
-        return self._tok.id_to_token(id)
+        return self._tok.vocab.id_to_token(id)
