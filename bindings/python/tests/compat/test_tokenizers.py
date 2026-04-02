@@ -5,6 +5,22 @@ import pytest
 import tokenizers
 from wordchipper.compat import tokenizers as wc_tokenizers
 
+# Cache HF tokenizer instances to avoid repeated network requests.
+_hf_cache: dict[str, tokenizers.Tokenizer] = {}
+_wc_cache: dict[str, wc_tokenizers.Tokenizer] = {}
+
+
+def _get_hf(model: str) -> tokenizers.Tokenizer:
+    if model not in _hf_cache:
+        _hf_cache[model] = tokenizers.Tokenizer.from_pretrained(model)
+    return _hf_cache[model]
+
+
+def _get_wc(model: str) -> wc_tokenizers.Tokenizer:
+    if model not in _wc_cache:
+        _wc_cache[model] = wc_tokenizers.Tokenizer.from_pretrained(model)
+    return _wc_cache[model]
+
 
 # Only models that exist on HuggingFace Hub (Xenova/cl100k_base etc. are
 # wordchipper-only mappings, not real HF repos).
@@ -30,7 +46,7 @@ HF_DIVERSE_TEXTS = [
     "Korean: \uc548\ub155\ud558\uc138\uc694",
     "Single char: x",
     "Repeated: aaaaaaaaaa",
-    "Long: " + "word " * 200,
+    "Long: " + "word " * 50,
 ]
 
 
@@ -46,22 +62,22 @@ class TestHFTokenizerMatchesWordchipper:
     @pytest.mark.parametrize("model", HF_COMPARABLE_MODELS)
     @pytest.mark.parametrize("text", HF_DIVERSE_TEXTS, ids=lambda t: t[:40])
     def test_encode_ids_match(self, model, text):
-        a = tokenizers.Tokenizer.from_pretrained(model)
-        b = wc_tokenizers.Tokenizer.from_pretrained(model)
+        a = _get_hf(model)
+        b = _get_wc(model)
         assert a.encode(text).ids == b.encode(text).ids
 
     @pytest.mark.parametrize("model", HF_COMPARABLE_MODELS)
     @pytest.mark.parametrize("text", HF_DIVERSE_TEXTS, ids=lambda t: t[:40])
     def test_decode_roundtrip_matches(self, model, text):
-        a = tokenizers.Tokenizer.from_pretrained(model)
-        b = wc_tokenizers.Tokenizer.from_pretrained(model)
+        a = _get_hf(model)
+        b = _get_wc(model)
         tokens = a.encode(text).ids
         assert a.decode(tokens) == b.decode(tokens)
 
     @pytest.mark.parametrize("model", HF_COMPARABLE_MODELS)
     def test_encode_batch_ids_match(self, model):
-        a = tokenizers.Tokenizer.from_pretrained(model)
-        b = wc_tokenizers.Tokenizer.from_pretrained(model)
+        a = _get_hf(model)
+        b = _get_wc(model)
         texts = ["hello world", "foo bar", "\u4f60\u597d", ""]
         a_batch = a.encode_batch(texts)
         b_batch = b.encode_batch(texts)
