@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 use pyo3::{
     Bound,
@@ -14,19 +14,45 @@ use pyo3::{
 };
 use wordchipper::{
     VocabIndex,
-    vocab::UnifiedTokenVocab,
+    vocab::{TokenSpanMap, UnifiedTokenVocab},
 };
 
 use crate::wc;
 
+/// Cached values computed lazily from the immutable vocabulary.
+struct VocabCache {
+    n_vocab: usize,
+    max_token: Option<u32>,
+    dictionary: TokenSpanMap<u32>,
+}
+
 #[pyclass(name = "_Vocab")]
 pub struct _Vocab {
     inner: Arc<UnifiedTokenVocab<u32>>,
+    cache: OnceLock<VocabCache>,
 }
 
 impl _Vocab {
     pub fn new(inner: Arc<UnifiedTokenVocab<u32>>) -> Self {
-        Self { inner }
+        Self {
+            inner,
+            cache: OnceLock::new(),
+        }
+    }
+
+    fn cache(&self) -> &VocabCache {
+        self.cache.get_or_init(|| {
+            let n_vocab = self.inner.len() + self.inner.special_vocab().len();
+            let core_max = self.inner.max_token();
+            let special_max = self.inner.special_vocab().max_token();
+            let max_token = [core_max, special_max].into_iter().flatten().max();
+            let dictionary = self.inner.unified_dictionary();
+            VocabCache {
+                n_vocab,
+                max_token,
+                dictionary,
+            }
+        })
     }
 }
 
@@ -63,14 +89,12 @@ impl _Vocab {
 
     #[getter]
     fn n_vocab(&self) -> usize {
-        self.inner.len() + self.inner.special_vocab().len()
+        self.cache().n_vocab
     }
 
     #[getter]
     fn max_token(&self) -> Option<u32> {
-        let core_max = self.inner.max_token();
-        let special_max = self.inner.special_vocab().max_token();
-        [core_max, special_max].into_iter().flatten().max()
+        self.cache().max_token
     }
 
     fn token_to_id(
@@ -86,8 +110,8 @@ impl _Vocab {
         &self,
         id: u32,
     ) -> Option<String> {
-        self.inner
-            .unified_dictionary()
+        self.cache()
+            .dictionary
             .get(&id)
             .map(|bytes| wc::string_from_utf8_lossy(bytes.clone()))
     }
@@ -96,7 +120,7 @@ impl _Vocab {
         &self,
         ids: Vec<u32>,
     ) -> Vec<Option<String>> {
-        let dict = self.inner.unified_dictionary();
+        let dict = &self.cache().dictionary;
         ids.iter()
             .map(|id| {
                 dict.get(id)
@@ -119,8 +143,8 @@ impl _Vocab {
         py: Python<'py>,
     ) -> PyResult<Bound<'py, PyDict>> {
         let dict = PyDict::new(py);
-        for (id, bytes) in self.inner.unified_dictionary() {
-            let key = wc::string_from_utf8_lossy(bytes);
+        for (id, bytes) in &self.cache().dictionary {
+            let key = wc::string_from_utf8_lossy(bytes.clone());
             dict.set_item(key, id)?;
         }
         Ok(dict)
