@@ -54,20 +54,20 @@ class TestHFTokenizerMatchesWordchipper:
     """Side-by-side comparison: real tokenizers vs wordchipper compat.
 
     Compares encode/decode outputs (token IDs and decoded text). Does NOT
-    compare token_to_id/id_to_token/vocab_size because HF tokenizers uses
+    compare token_to_id/id_to_token/vocab_size because HF tokenizers use
     GPT-2 byte-level encoding (space -> Ġ, etc.) while wordchipper uses raw
     bytes, so the token string representations differ by design.
     """
 
     @pytest.mark.parametrize("model", HF_COMPARABLE_MODELS)
-    @pytest.mark.parametrize("text", HF_DIVERSE_TEXTS, ids=lambda t: t[:40])
+    @pytest.mark.parametrize("text", HF_DIVERSE_TEXTS, ids=lambda t: repr(t)[:40])
     def test_encode_ids_match(self, model, text):
         a = _get_hf(model)
         b = _get_wc(model)
         assert a.encode(text).ids == b.encode(text).ids
 
     @pytest.mark.parametrize("model", HF_COMPARABLE_MODELS)
-    @pytest.mark.parametrize("text", HF_DIVERSE_TEXTS, ids=lambda t: t[:40])
+    @pytest.mark.parametrize("text", HF_DIVERSE_TEXTS, ids=lambda t: repr(t)[:40])
     def test_decode_roundtrip_matches(self, model, text):
         a = _get_hf(model)
         b = _get_wc(model)
@@ -81,6 +81,7 @@ class TestHFTokenizerMatchesWordchipper:
         texts = ["hello world", "foo bar", "\u4f60\u597d", ""]
         a_batch = a.encode_batch(texts)
         b_batch = b.encode_batch(texts)
+        assert len(a_batch) == len(b_batch)
         for a_enc, b_enc in zip(a_batch, b_batch):
             assert a_enc.ids == b_enc.ids
 

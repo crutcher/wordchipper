@@ -49,14 +49,14 @@ class TestTiktokenMatchesWordchipper:
         assert a.eot_token == b.eot_token, f"{name}: eot_token"
 
     @pytest.mark.parametrize("name", COMMON_ENCODINGS)
-    @pytest.mark.parametrize("text", DIVERSE_TEXTS, ids=lambda t: t[:40])
+    @pytest.mark.parametrize("text", DIVERSE_TEXTS, ids=lambda t: repr(t)[:40])
     def test_encode_matches(self, name, text):
         a = tiktoken.get_encoding(name)
         b = wc_tiktoken.get_encoding(name)
         assert a.encode(text) == b.encode(text)
 
     @pytest.mark.parametrize("name", COMMON_ENCODINGS)
-    @pytest.mark.parametrize("text", DIVERSE_TEXTS, ids=lambda t: t[:40])
+    @pytest.mark.parametrize("text", DIVERSE_TEXTS, ids=lambda t: repr(t)[:40])
     def test_decode_roundtrip_matches(self, name, text):
         a = tiktoken.get_encoding(name)
         b = wc_tiktoken.get_encoding(name)
@@ -89,15 +89,13 @@ class TestTiktokenMatchesWordchipper:
         a = tiktoken.get_encoding(name)
         b = wc_tiktoken.get_encoding(name)
         text = "hello <|endoftext|> world"
-        # These are expected to differ; just verify both produce valid output.
         a_tokens = a.encode_ordinary(text)
         b_tokens = b.encode_ordinary(text)
-        assert len(a_tokens) > 0
-        assert len(b_tokens) > 0
-        # tiktoken produces more tokens because it BPE-encodes the special
-        # token text as subwords; wordchipper produces fewer because it
-        # recognizes the special token as a single ID.
-        assert len(a_tokens) > len(b_tokens)
+        # tiktoken BPE-encodes the special token text as subwords;
+        # wordchipper recognizes it as a single special token ID.
+        assert a_tokens != b_tokens
+        assert b.eot_token in b_tokens
+        assert a.eot_token not in a_tokens
 
     def test_special_token_encode_matches(self):
         a = tiktoken.get_encoding("cl100k_base")
