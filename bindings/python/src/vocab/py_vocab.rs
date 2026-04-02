@@ -1,13 +1,16 @@
 use std::sync::Arc;
 
 use pyo3::{
-    exceptions::PyKeyError,
-    pyclass,
-    pymethods,
-    types::{PyDict, PyDictMethods},
     Bound,
     PyResult,
     Python,
+    exceptions::PyKeyError,
+    pyclass,
+    pymethods,
+    types::{
+        PyDict,
+        PyDictMethods,
+    },
 };
 use wordchipper::{
     VocabIndex,
@@ -38,7 +41,11 @@ impl _Vocab {
         token: &str,
     ) -> bool {
         self.inner.lookup_token(token.as_bytes()).is_some()
-            || self.inner.special_vocab().lookup_token(token.as_bytes()).is_some()
+            || self
+                .inner
+                .special_vocab()
+                .lookup_token(token.as_bytes())
+                .is_some()
     }
 
     fn __getitem__(

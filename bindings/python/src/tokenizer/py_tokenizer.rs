@@ -17,7 +17,10 @@ use wordchipper::{
 use super::TokenizerOptions;
 use crate::{
     support::to_pyerr,
-    vocab::{SpecialFilter, _Vocab},
+    vocab::{
+        _Vocab,
+        SpecialFilter,
+    },
     wc,
 };
 
