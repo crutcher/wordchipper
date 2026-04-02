@@ -30,5 +30,6 @@ fn _wordchipper(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<tokenizer::TokenizerOptions>()?;
     m.add_class::<tokenizer::_Tokenizer>()?;
     m.add_class::<vocab::SpecialFilter>()?;
+    m.add_class::<vocab::_Vocab>()?;
     Ok(())
 }
