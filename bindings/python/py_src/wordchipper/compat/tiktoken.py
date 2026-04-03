@@ -285,7 +285,10 @@ class Encoding:
 
     def encode_single_token(self, text_or_bytes: str | bytes) -> int:
         if isinstance(text_or_bytes, bytes):
-            text_or_bytes = text_or_bytes.decode("utf-8")
+            try:
+                text_or_bytes = text_or_bytes.decode("utf-8")
+            except UnicodeDecodeError:
+                raise KeyError(text_or_bytes)
         token_id = self._tok.vocab.token_to_id(text_or_bytes)
         if token_id is None:
             raise KeyError(text_or_bytes)

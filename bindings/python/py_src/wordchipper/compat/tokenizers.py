@@ -51,6 +51,8 @@ class Encoding:
         offsets: list[tuple[int, int]] | None = None,
     ) -> None:
         n = len(ids)
+        if len(tokens) != n:
+            raise ValueError(f"tokens length {len(tokens)} != ids length {n}")
         self.ids = ids
         self.tokens = tokens
         self.attention_mask = attention_mask if attention_mask is not None else [1] * n
@@ -210,6 +212,11 @@ class Tokenizer:
     ) -> list[Encoding]:
         if is_pretokenized:
             raise NotImplementedError("is_pretokenized is not supported")
+        # Fast path: all plain strings, use Rust parallel encoder
+        if all(isinstance(item, str) for item in input):
+            all_ids = self._tok.encode_batch(input)
+            return [self._postprocess(self._make_encoding(ids)) for ids in all_ids]
+        # Slow path: mixed strings and tuples
         result = []
         for item in input:
             if isinstance(item, tuple):
@@ -261,6 +268,8 @@ class Tokenizer:
         length: int | None = None,
         pad_to_multiple_of: int | None = None,
     ) -> None:
+        if direction not in ("left", "right"):
+            raise ValueError(f"direction must be 'left' or 'right', got {direction!r}")
         self._padding = {
             "direction": direction,
             "pad_id": pad_id,
@@ -285,6 +294,8 @@ class Tokenizer:
         strategy: str = "longest_first",
         direction: str = "right",
     ) -> None:
+        if direction not in ("left", "right"):
+            raise ValueError(f"direction must be 'left' or 'right', got {direction!r}")
         self._truncation = {
             "max_length": max_length,
             "stride": stride,
