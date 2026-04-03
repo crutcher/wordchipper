@@ -110,8 +110,8 @@ enc.n_vocab                              # 100277
 enc.special_tokens_set                   # {'<|endoftext|>', ...}
 ```
 
-Supported encodings: `cl100k_base`, `o200k_base`, `o200k_harmony`, `p50k_base`, `p50k_edit`,
-`r50k_base`. Model mapping covers GPT-4o, GPT-4, GPT-3.5, o3, o1, and all legacy models.
+Supported encodings: `cl100k_base`, `o200k_base`, `p50k_base`, `p50k_edit`, `r50k_base`.
+Model mapping covers GPT-4o, GPT-4, GPT-3.5, o3, o1, and all legacy models.
 
 ### HuggingFace tokenizers
 
@@ -141,8 +141,8 @@ enc.type_ids                             # [0, 1]
 tok.encode_batch(["hello", ("a", "b")])
 
 # Decode with special token control
-tok.decode(ids, skip_special_tokens=True)
-tok.decode(ids, skip_special_tokens=False)
+tok.decode(enc.ids, skip_special_tokens=True)
+tok.decode(enc.ids, skip_special_tokens=False)
 
 # Padding and truncation
 tok.enable_padding(length=128, pad_id=0)
@@ -155,14 +155,18 @@ tok.token_to_id("hello")                # 24912
 ```
 
 Mapped identifiers: `Xenova/gpt-4o`, `Xenova/gpt-4`, `Xenova/cl100k_base`, `Xenova/o200k_base`.
-You can also pass bare encoding names like `cl100k_base` directly.
+You can also pass bare encoding names like `cl100k_base` directly. All supported identifiers
+resolve to vocabularies embedded in the binary, so `from_pretrained` never makes HTTP requests.
 
 ### Why switch?
 
 - 2-4x faster encoding than tiktoken and HuggingFace tokenizers (see benchmarks above)
-- No network requests on first load (vocabs are embedded in the binary)
+- No network requests on load (vocabs are embedded in the binary)
 - Single dependency, no C compiler needed
 - Both compat layers verified with side-by-side comparison tests against the upstream libraries
+
+A few parameters are accepted for API compatibility but not yet implemented
+(e.g. `is_pretokenized`). These raise `NotImplementedError` when set to non-default values.
 
 ## Development
 
