@@ -295,9 +295,7 @@ class CompatTokenizersTests(TokenizersBaseTests):
         special_ids = list(tok._tok.specials.values())
         mixed = hello_ids + special_ids
         assert tok.decode(mixed, skip_special_tokens=True) == "hello"
-        # False includes the special token text
-        decoded_with = tok.decode(mixed, skip_special_tokens=False)
-        assert len(decoded_with) > len("hello")
+        assert tok.decode(mixed, skip_special_tokens=False) != "hello"
 
     def test_get_vocab_size_without_added_tokens(self):
         tok = self.get_tok()

@@ -235,7 +235,13 @@ class Encoding:
         allowed_special: Literal["all"] | AbstractSet[str] = frozenset(),
         disallowed_special: Literal["all"] | Collection[str] = "all",
     ):
-        import numpy as np
+        try:
+            import numpy as np
+        except ImportError:
+            raise ImportError(
+                "numpy is required for encode_to_numpy(); "
+                "install it with: pip install numpy"
+            )
 
         return np.array(
             self.encode(

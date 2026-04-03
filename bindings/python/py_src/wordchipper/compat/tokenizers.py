@@ -187,8 +187,13 @@ class Tokenizer:
     ) -> Encoding:
         """Encode a string, returning an :class:`Encoding` with ids and tokens.
 
-        ``is_pretokenized`` is accepted for API compatibility but raises
-        :class:`NotImplementedError` when set to ``True``.
+        When ``pair`` is provided, both sequences are encoded and concatenated
+        with ``type_ids=0`` for the first and ``type_ids=1`` for the second.
+
+        ``add_special_tokens`` is accepted for API compatibility but has no
+        effect (GPT-BPE tokenizers do not add special tokens during encoding).
+
+        ``is_pretokenized`` raises :class:`NotImplementedError` when ``True``.
         """
         if is_pretokenized:
             raise NotImplementedError("is_pretokenized is not supported")
@@ -313,7 +318,10 @@ class Tokenizer:
     # -- vocab inspection ----------------------------------------------------
 
     def get_vocab(self, with_added_tokens: bool = True) -> dict[str, int]:
-        return self._tok.vocab.to_dict()
+        vocab = self._tok.vocab.to_dict()
+        if with_added_tokens:
+            return vocab
+        return {tok: tid for tok, tid in vocab.items() if tid < self._tok.vocab_size}
 
     def get_vocab_size(self, with_added_tokens: bool = True) -> int:
         if with_added_tokens:
