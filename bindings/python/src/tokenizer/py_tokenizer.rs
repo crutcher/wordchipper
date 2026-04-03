@@ -7,6 +7,7 @@ use pyo3::{
     Python,
     pyclass,
     pymethods,
+    types::PyBytes,
 };
 use wordchipper::{
     TokenDecoder,
@@ -94,6 +95,37 @@ impl _Tokenizer {
                 .and_then(|r| r.try_result())
         })
         .map_err(to_pyerr)
+    }
+
+    fn decode_bytes<'py>(
+        &self,
+        py: Python<'py>,
+        tokens: Vec<u32>,
+    ) -> PyResult<Bound<'py, PyBytes>> {
+        let bytes = py
+            .detach(|| {
+                self.inner
+                    .try_decode_to_bytes(&tokens)
+                    .and_then(|r| r.try_result())
+            })
+            .map_err(to_pyerr)?;
+        Ok(PyBytes::new(py, &bytes))
+    }
+
+    fn decode_bytes_batch<'py>(
+        &self,
+        py: Python<'py>,
+        batch: Vec<Vec<u32>>,
+    ) -> PyResult<Vec<Bound<'py, PyBytes>>> {
+        let results = py
+            .detach(|| {
+                let refs = wc::inner_slice_view(&batch);
+                self.inner
+                    .try_decode_batch_to_bytes(&refs)
+                    .and_then(|r| r.try_results())
+            })
+            .map_err(to_pyerr)?;
+        Ok(results.iter().map(|b| PyBytes::new(py, b)).collect())
     }
 
     fn decode_batch(

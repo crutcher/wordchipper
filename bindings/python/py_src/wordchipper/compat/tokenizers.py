@@ -13,10 +13,10 @@ Typical migration::
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import functools
 from typing import Any
 
-from wordchipper import Tokenizer as _WCTokenizer
+from wordchipper import Tokenizer as _WCTokenizer, SpecialFilter
 
 # ---------------------------------------------------------------------------
 # HuggingFace identifier -> wordchipper encoding name
@@ -32,12 +32,46 @@ HF_TO_WORDCHIPPER: dict[str, str] = {
 }
 
 
-@dataclass
 class Encoding:
     """Result of a single encode call (mirrors ``tokenizers.Encoding``)."""
 
-    ids: list[int]
-    tokens: list[str]
+    __slots__ = (
+        "ids", "tokens", "attention_mask", "type_ids",
+        "special_tokens_mask", "offsets",
+    )
+
+    def __init__(
+        self,
+        ids: list[int],
+        tokens: list[str],
+        *,
+        attention_mask: list[int] | None = None,
+        type_ids: list[int] | None = None,
+        special_tokens_mask: list[int] | None = None,
+        offsets: list[tuple[int, int]] | None = None,
+    ) -> None:
+        n = len(ids)
+        if len(tokens) != n:
+            raise ValueError(f"tokens length {len(tokens)} != ids length {n}")
+        self.ids = ids
+        self.tokens = tokens
+        self.attention_mask = attention_mask if attention_mask is not None else [1] * n
+        self.type_ids = type_ids if type_ids is not None else [0] * n
+        self.special_tokens_mask = (
+            special_tokens_mask if special_tokens_mask is not None else [0] * n
+        )
+        self.offsets = offsets if offsets is not None else [(0, 0)] * n
+
+    def __len__(self) -> int:
+        return len(self.ids)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Encoding):
+            return NotImplemented
+        return self.ids == other.ids and self.tokens == other.tokens
+
+    def __repr__(self) -> str:
+        return f"Encoding(num_tokens={len(self.ids)})"
 
 
 class Tokenizer:
@@ -45,18 +79,104 @@ class Tokenizer:
 
     def __init__(self, inner: _WCTokenizer) -> None:
         self._tok = inner
+        self._padding: dict | None = None
+        self._truncation: dict | None = None
 
     @classmethod
     def from_pretrained(cls, identifier: str, **kwargs: Any) -> Tokenizer:
-        """Load a tokenizer by HuggingFace identifier or bare encoding name."""
-        if kwargs:
-            raise NotImplementedError(
-                f"extra keyword arguments are not supported: {', '.join(kwargs)}"
-            )
+        """Load a tokenizer by HuggingFace identifier or bare encoding name.
+
+        Extra keyword arguments (e.g. ``revision``) are accepted for API
+        compatibility but ignored.
+        """
         name = HF_TO_WORDCHIPPER.get(identifier, identifier)
         return cls(_WCTokenizer.from_pretrained(name))
 
     # -- encode / decode -----------------------------------------------------
+
+    def _make_encoding(
+        self,
+        ids: list[int],
+        type_id: int = 0,
+    ) -> Encoding:
+        tokens = [t or "" for t in self._tok.vocab.ids_to_tokens(ids)]
+        return Encoding(
+            ids=ids,
+            tokens=tokens,
+            type_ids=[type_id] * len(ids),
+        )
+
+    def _apply_truncation(self, enc: Encoding) -> Encoding:
+        if self._truncation is None:
+            return enc
+        max_length = self._truncation["max_length"]
+        if len(enc.ids) <= max_length:
+            return enc
+        direction = self._truncation.get("direction", "right")
+        if direction == "left":
+            s = len(enc.ids) - max_length
+            return Encoding(
+                ids=enc.ids[s:],
+                tokens=enc.tokens[s:],
+                attention_mask=enc.attention_mask[s:],
+                type_ids=enc.type_ids[s:],
+                special_tokens_mask=enc.special_tokens_mask[s:],
+                offsets=enc.offsets[s:],
+            )
+        return Encoding(
+            ids=enc.ids[:max_length],
+            tokens=enc.tokens[:max_length],
+            attention_mask=enc.attention_mask[:max_length],
+            type_ids=enc.type_ids[:max_length],
+            special_tokens_mask=enc.special_tokens_mask[:max_length],
+            offsets=enc.offsets[:max_length],
+        )
+
+    def _apply_padding(self, enc: Encoding) -> Encoding:
+        if self._padding is None:
+            return enc
+        length = self._padding.get("length")
+        pad_to_multiple = self._padding.get("pad_to_multiple_of")
+        target = length
+        if target is None:
+            target = len(enc.ids)
+        if pad_to_multiple and target % pad_to_multiple:
+            target += pad_to_multiple - (target % pad_to_multiple)
+        if len(enc.ids) >= target:
+            return enc
+        pad_id = self._padding.get("pad_id", 0)
+        pad_token = self._padding.get("pad_token", "[PAD]")
+        pad_type_id = self._padding.get("pad_type_id", 0)
+        pad_n = target - len(enc.ids)
+        direction = self._padding.get("direction", "right")
+        pad_ids = [pad_id] * pad_n
+        pad_tokens = [pad_token] * pad_n
+        pad_mask = [0] * pad_n
+        pad_type = [pad_type_id] * pad_n
+        pad_special = [1] * pad_n
+        pad_offsets = [(0, 0)] * pad_n
+        if direction == "left":
+            return Encoding(
+                ids=pad_ids + enc.ids,
+                tokens=pad_tokens + enc.tokens,
+                attention_mask=pad_mask + enc.attention_mask,
+                type_ids=pad_type + enc.type_ids,
+                special_tokens_mask=pad_special + enc.special_tokens_mask,
+                offsets=pad_offsets + enc.offsets,
+            )
+        return Encoding(
+            ids=enc.ids + pad_ids,
+            tokens=enc.tokens + pad_tokens,
+            attention_mask=enc.attention_mask + pad_mask,
+            type_ids=enc.type_ids + pad_type,
+            special_tokens_mask=enc.special_tokens_mask + pad_special,
+            offsets=enc.offsets + pad_offsets,
+        )
+
+    def _postprocess(self, enc: Encoding) -> Encoding:
+        enc = self._apply_truncation(enc)
+        enc = self._apply_padding(enc)
+        return enc
 
     def encode(
         self,
@@ -67,36 +187,47 @@ class Tokenizer:
     ) -> Encoding:
         """Encode a string, returning an :class:`Encoding` with ids and tokens.
 
-        ``pair``, ``is_pretokenized``, and ``add_special_tokens`` are accepted
-        for API compatibility but raise :class:`NotImplementedError` if set to
-        non-default values.
+        When ``pair`` is provided, both sequences are encoded and concatenated
+        with ``type_ids=0`` for the first and ``type_ids=1`` for the second.
+
+        ``add_special_tokens`` is accepted for API compatibility but has no
+        effect (GPT-BPE tokenizers do not add special tokens during encoding).
+
+        ``is_pretokenized`` raises :class:`NotImplementedError` when ``True``.
         """
-        if pair is not None:
-            raise NotImplementedError("pair encoding is not supported")
         if is_pretokenized:
             raise NotImplementedError("is_pretokenized is not supported")
-        if not add_special_tokens:
-            raise NotImplementedError("add_special_tokens=False is not supported")
         ids = self._tok.encode(sequence)
-        tokens = [t or "" for t in self._tok.vocab.ids_to_tokens(ids)]
-        return Encoding(ids=ids, tokens=tokens)
+        enc = self._make_encoding(ids, type_id=0)
+        if pair is not None:
+            pair_ids = self._tok.encode(pair)
+            pair_enc = self._make_encoding(pair_ids, type_id=1)
+            enc = Encoding(
+                ids=enc.ids + pair_enc.ids,
+                tokens=enc.tokens + pair_enc.tokens,
+                type_ids=enc.type_ids + pair_enc.type_ids,
+            )
+        return self._postprocess(enc)
 
     def encode_batch(
         self,
-        input: list[str],
+        input: list[str | tuple[str, str]],
         is_pretokenized: bool = False,
         add_special_tokens: bool = True,
     ) -> list[Encoding]:
         if is_pretokenized:
             raise NotImplementedError("is_pretokenized is not supported")
-        if not add_special_tokens:
-            raise NotImplementedError("add_special_tokens=False is not supported")
-        all_ids = self._tok.encode_batch(input)
-        vocab = self._tok.vocab
+        # Fast path: all plain strings, use Rust parallel encoder
+        if all(isinstance(item, str) for item in input):
+            all_ids = self._tok.encode_batch(input)
+            return [self._postprocess(self._make_encoding(ids)) for ids in all_ids]
+        # Slow path: mixed strings and tuples
         result = []
-        for ids in all_ids:
-            tokens = [t or "" for t in vocab.ids_to_tokens(ids)]
-            result.append(Encoding(ids=ids, tokens=tokens))
+        for item in input:
+            if isinstance(item, tuple):
+                result.append(self.encode(item[0], pair=item[1]))
+            else:
+                result.append(self.encode(item))
         return result
 
     def decode(
@@ -106,11 +237,11 @@ class Tokenizer:
     ) -> str:
         """Decode token IDs to a string.
 
-        ``skip_special_tokens`` is accepted for API compatibility but raises
-        :class:`NotImplementedError` if set to ``False``.
+        When ``skip_special_tokens`` is ``True`` (default), special token IDs
+        are filtered out before decoding.
         """
-        if not skip_special_tokens:
-            raise NotImplementedError("skip_special_tokens=False is not supported")
+        if skip_special_tokens:
+            ids = self._filter_specials(ids)
         return self._tok.decode(ids)
 
     def decode_batch(
@@ -118,19 +249,90 @@ class Tokenizer:
         sequences: list[list[int]],
         skip_special_tokens: bool = True,
     ) -> list[str]:
-        if not skip_special_tokens:
-            raise NotImplementedError("skip_special_tokens=False is not supported")
+        if skip_special_tokens:
+            sequences = [self._filter_specials(ids) for ids in sequences]
         return self._tok.decode_batch(sequences)
+
+    def _filter_specials(self, ids: list[int]) -> list[int]:
+        special_ids = self._special_id_set
+        return [i for i in ids if i not in special_ids]
+
+    @functools.cached_property
+    def _special_id_set(self) -> frozenset[int]:
+        return frozenset(self._tok.specials.values())
+
+    # -- padding / truncation ------------------------------------------------
+
+    def enable_padding(
+        self,
+        *,
+        direction: str = "right",
+        pad_id: int = 0,
+        pad_type_id: int = 0,
+        pad_token: str = "[PAD]",
+        length: int | None = None,
+        pad_to_multiple_of: int | None = None,
+    ) -> None:
+        if direction not in ("left", "right"):
+            raise ValueError(f"direction must be 'left' or 'right', got {direction!r}")
+        self._padding = {
+            "direction": direction,
+            "pad_id": pad_id,
+            "pad_type_id": pad_type_id,
+            "pad_token": pad_token,
+            "length": length,
+            "pad_to_multiple_of": pad_to_multiple_of,
+        }
+
+    def no_padding(self) -> None:
+        self._padding = None
+
+    @property
+    def padding(self) -> dict | None:
+        return self._padding
+
+    def enable_truncation(
+        self,
+        max_length: int,
+        *,
+        stride: int = 0,
+        strategy: str = "longest_first",
+        direction: str = "right",
+    ) -> None:
+        if direction not in ("left", "right"):
+            raise ValueError(f"direction must be 'left' or 'right', got {direction!r}")
+        self._truncation = {
+            "max_length": max_length,
+            "stride": stride,
+            "strategy": strategy,
+            "direction": direction,
+        }
+
+    def no_truncation(self) -> None:
+        self._truncation = None
+
+    @property
+    def truncation(self) -> dict | None:
+        return self._truncation
 
     # -- vocab inspection ----------------------------------------------------
 
+    def get_vocab(self, with_added_tokens: bool = True) -> dict[str, int]:
+        vocab = self._tok.vocab.to_dict()
+        if with_added_tokens:
+            return vocab
+        return {tok: tid for tok, tid in vocab.items() if tid < self._tok.vocab_size}
+
     def get_vocab_size(self, with_added_tokens: bool = True) -> int:
-        if not with_added_tokens:
-            raise NotImplementedError("with_added_tokens=False is not supported")
-        return self._tok.vocab.n_vocab
+        if with_added_tokens:
+            return self._tok.vocab.n_vocab
+        return self._tok.vocab_size
 
     def token_to_id(self, token: str) -> int | None:
         return self._tok.vocab.token_to_id(token)
 
     def id_to_token(self, id: int) -> str | None:
         return self._tok.vocab.id_to_token(id)
+
+    def num_special_tokens_to_add(self, is_pair: bool) -> int:
+        return 0

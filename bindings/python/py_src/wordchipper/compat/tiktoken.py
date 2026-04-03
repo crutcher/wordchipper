@@ -179,15 +179,11 @@ class Encoding:
         )
 
     def _check_disallowed(
-        self, tokens: list[int], disallowed: frozendict[str, int]
+        self, text: str, disallowed: frozendict[str, int]
     ) -> None:
-        if disallowed:
-            values = set(disallowed.values())
-            for t in tokens:
-                if t in values:
-                    # invert the value-to-key mapping to find the token string for the disallowed token ID
-                    span = next(k for (k, v) in disallowed.items() if v == t)
-                    raise_disallowed_special_token(span)
+        for token_str in disallowed:
+            if token_str in text:
+                raise_disallowed_special_token(token_str)
 
     def encode(
         self,
@@ -224,18 +220,40 @@ class Encoding:
         ```
         """
         allowed_filter = self._allowed_filter(allowed_special)
-        tokens = self._tok.encode(text, special_filter=allowed_filter)
-
         disallowed = self._disallowed_specials(
             allowed_filter=allowed_filter,
             disallowed_special=disallowed_special,
         )
-        self._check_disallowed(tokens, disallowed)
+        self._check_disallowed(text, disallowed)
 
-        return tokens
+        return self._tok.encode(text, special_filter=allowed_filter)
+
+    def encode_to_numpy(
+        self,
+        text: str,
+        *,
+        allowed_special: Literal["all"] | AbstractSet[str] = frozenset(),
+        disallowed_special: Literal["all"] | Collection[str] = "all",
+    ):
+        try:
+            import numpy as np
+        except ImportError:
+            raise ImportError(
+                "numpy is required for encode_to_numpy(); "
+                "install it with: pip install numpy"
+            )
+
+        return np.array(
+            self.encode(
+                text,
+                allowed_special=allowed_special,
+                disallowed_special=disallowed_special,
+            ),
+            dtype=np.uint32,
+        )
 
     def encode_ordinary(self, text: str) -> list[int]:
-        return self._tok.encode(text)
+        return self._tok.encode(text, special_filter=SpecialFilter.include_none())
 
     def encode_batch(
         self,
@@ -257,25 +275,81 @@ class Encoding:
         ```
         """
         allowed_filter = self._allowed_filter(allowed_special)
-        batch = self._tok.encode_batch(text, special_filter=allowed_filter)
-
         disallowed = self._disallowed_specials(
             allowed_filter=allowed_filter,
             disallowed_special=disallowed_special,
         )
-        for tokens in batch:
-            self._check_disallowed(tokens, disallowed)
+        for t in text:
+            self._check_disallowed(t, disallowed)
 
-        return batch
+        return self._tok.encode_batch(text, special_filter=allowed_filter)
 
     def encode_ordinary_batch(self, text: list[str]) -> list[list[int]]:
-        return self._tok.encode_batch(text)
+        return self._tok.encode_batch(
+            text, special_filter=SpecialFilter.include_none()
+        )
 
-    def decode(self, tokens: list[int]) -> str:
-        return self._tok.decode(tokens)
+    def encode_single_token(self, text_or_bytes: str | bytes) -> int:
+        if isinstance(text_or_bytes, bytes):
+            try:
+                text_or_bytes = text_or_bytes.decode("utf-8")
+            except UnicodeDecodeError:
+                raise KeyError(text_or_bytes)
+        token_id = self._tok.vocab.token_to_id(text_or_bytes)
+        if token_id is None:
+            raise KeyError(text_or_bytes)
+        return token_id
 
-    def decode_batch(self, batch: list[list[int]]) -> list[str]:
-        return self._tok.decode_batch(batch)
+    def decode_single_token_bytes(self, token: int) -> bytes:
+        raw = self._tok.vocab.id_to_token_bytes(token)
+        if raw is None:
+            raise KeyError(token)
+        return raw
+
+    def decode_tokens_bytes(self, tokens: list[int]) -> list[bytes]:
+        return [self.decode_single_token_bytes(t) for t in tokens]
+
+    def is_special_token(self, token: int) -> bool:
+        return token in self._special_token_ids
+
+    @functools.cached_property
+    def _special_token_ids(self) -> frozenset[int]:
+        return frozenset(self._tok.specials.values())
+
+    def decode(self, tokens: list[int], errors: str = "replace") -> str:
+        if errors == "replace":
+            return self._tok.decode(tokens)
+        raw = self._tok.decode_bytes(tokens)
+        return raw.decode("utf-8", errors=errors)
+
+    def decode_bytes(self, tokens: list[int]) -> bytes:
+        return self._tok.decode_bytes(tokens)
+
+    def decode_batch(
+        self,
+        batch: list[list[int]],
+        *,
+        errors: str = "replace",
+        num_threads: int = 8,
+    ) -> list[str]:
+        if errors == "replace":
+            return self._tok.decode_batch(batch)
+        raw_batch = self._tok.decode_bytes_batch(batch)
+        return [raw.decode("utf-8", errors=errors) for raw in raw_batch]
+
+    def decode_bytes_batch(
+        self,
+        batch: list[list[int]],
+        *,
+        num_threads: int = 8,
+    ) -> list[bytes]:
+        return self._tok.decode_bytes_batch(batch)
+
+    def token_byte_values(self) -> list[bytes]:
+        return [
+            self._tok.vocab.id_to_token_bytes(i) or b""
+            for i in range(self.max_token_value + 1)
+        ]
 
 
 # ---------------------------------------------------------------------------
