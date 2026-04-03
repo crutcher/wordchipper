@@ -62,30 +62,111 @@ tok.get_special_tokens()
 tok.save_base64_vocab("vocab.tiktoken")
 ```
 
-## Compatibility wrappers
+## Drop-in compatibility
 
-Drop-in replacements for `tiktoken` and HuggingFace `tokenizers`. Change one import line and the
-rest of your code stays the same:
+wordchipper ships drop-in replacements for both `tiktoken` and HuggingFace `tokenizers`.
+Change one import line and the rest of your code stays the same.
+
+### tiktoken
 
 ```python
-# tiktoken compat
+# Before
+import tiktoken
+
+# After
 from wordchipper.compat import tiktoken
-
-enc = tiktoken.get_encoding("cl100k_base")
-enc = tiktoken.encoding_for_model("gpt-4o")
-tokens = enc.encode("hello world")
-
-# HuggingFace tokenizers compat
-from wordchipper.compat.tokenizers import Tokenizer
-
-tok = Tokenizer.from_pretrained("Xenova/gpt-4o")
-output = tok.encode("hello world")
-output.ids  # [24912, 2375]
 ```
 
-Parameters that are accepted for API compatibility but not implemented (e.g. `allowed_special`,
-`disallowed_special`, `is_pretokenized`) will raise `NotImplementedError` when set to non-default
-values.
+Everything you use works out of the box:
+
+```python
+enc = tiktoken.get_encoding("cl100k_base")
+enc = tiktoken.encoding_for_model("gpt-4o")
+
+tokens = enc.encode("hello world")
+text = enc.decode(tokens)
+
+# Special token handling (same defaults as tiktoken)
+enc.encode("<|endoftext|>")              # raises ValueError
+enc.encode("<|endoftext|>", allowed_special="all")  # [100257]
+enc.encode("<|endoftext|>", disallowed_special=())  # BPE subwords
+
+# Single-token operations
+enc.encode_single_token("hello")         # 15339
+enc.decode_single_token_bytes(15339)     # b'hello'
+
+# Byte-level decoding
+enc.decode_bytes(tokens)                 # b'hello world'
+enc.decode_tokens_bytes(tokens)          # [b'hello', b' world']
+
+# Batch operations (parallel via Rust)
+enc.encode_batch(["hello", "world"])
+enc.decode_batch([[15339], [1917]])
+
+# Inspection
+enc.is_special_token(100257)             # True
+enc.token_byte_values()                  # bytes for every token in vocab
+enc.n_vocab                              # 100277
+enc.special_tokens_set                   # {'<|endoftext|>', ...}
+```
+
+Supported encodings: `cl100k_base`, `o200k_base`, `p50k_base`, `p50k_edit`, `r50k_base`.
+Model mapping covers GPT-4o, GPT-4, GPT-3.5, o3, o1, and all legacy models.
+
+### HuggingFace tokenizers
+
+```python
+# Before
+from tokenizers import Tokenizer
+
+# After
+from wordchipper.compat.tokenizers import Tokenizer
+```
+
+```python
+tok = Tokenizer.from_pretrained("Xenova/gpt-4o")
+
+enc = tok.encode("hello world")
+enc.ids                                  # [24912, 2375]
+enc.tokens                               # ['hello', ' world']
+enc.attention_mask                       # [1, 1]
+enc.type_ids                             # [0, 0]
+len(enc)                                 # 2
+
+# Sentence pairs
+enc = tok.encode("hello", pair="world")
+enc.type_ids                             # [0, 1]
+
+# Batch (supports pairs too)
+tok.encode_batch(["hello", ("a", "b")])
+
+# Decode with special token control
+tok.decode(enc.ids, skip_special_tokens=True)
+tok.decode(enc.ids, skip_special_tokens=False)
+
+# Padding and truncation
+tok.enable_padding(length=128, pad_id=0)
+tok.enable_truncation(max_length=512)
+
+# Vocab
+tok.get_vocab()                          # {'hello': 24912, ...}
+tok.get_vocab_size()                     # 200000
+tok.token_to_id("hello")                # 24912
+```
+
+Mapped identifiers: `Xenova/gpt-4o`, `Xenova/gpt-4`, `Xenova/cl100k_base`, `Xenova/o200k_base`.
+You can also pass bare encoding names like `cl100k_base` directly. All supported identifiers
+resolve to vocabularies embedded in the binary, so `from_pretrained` never makes HTTP requests.
+
+### Why switch?
+
+- 2-4x faster encoding than tiktoken and HuggingFace tokenizers (see benchmarks above)
+- No network requests on load (vocabs are embedded in the binary)
+- Single dependency, no C compiler needed
+- Both compat layers verified with side-by-side comparison tests against the upstream libraries
+
+A few parameters are accepted for API compatibility but not yet implemented
+(e.g. `is_pretokenized`). These raise `NotImplementedError` when set to non-default values.
 
 ## Development
 
