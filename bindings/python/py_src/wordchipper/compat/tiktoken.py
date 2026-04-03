@@ -181,10 +181,6 @@ class Encoding:
     def _check_disallowed(
         self, text: str, disallowed: frozendict[str, int]
     ) -> None:
-        # Scan input text for disallowed special token strings rather than
-        # checking token IDs in encoder output. Checking IDs would require
-        # the encoder to recognize specials, but the default filter excludes
-        # them, so disallowed IDs would never appear in the output.
         for token_str in disallowed:
             if token_str in text:
                 raise_disallowed_special_token(token_str)
@@ -223,13 +219,13 @@ class Encoding:
         [27, 91, 437, 1659, 5239, 91, 29]
         ```
         """
+        allowed_filter = self._allowed_filter(allowed_special)
         disallowed = self._disallowed_specials(
-            allowed_filter=self._allowed_filter(allowed_special),
+            allowed_filter=allowed_filter,
             disallowed_special=disallowed_special,
         )
         self._check_disallowed(text, disallowed)
 
-        allowed_filter = self._allowed_filter(allowed_special)
         return self._tok.encode(text, special_filter=allowed_filter)
 
     def encode_to_numpy(
@@ -272,14 +268,14 @@ class Encoding:
         [[31373, 995], [11274, 16390, 995]]
         ```
         """
+        allowed_filter = self._allowed_filter(allowed_special)
         disallowed = self._disallowed_specials(
-            allowed_filter=self._allowed_filter(allowed_special),
+            allowed_filter=allowed_filter,
             disallowed_special=disallowed_special,
         )
         for t in text:
             self._check_disallowed(t, disallowed)
 
-        allowed_filter = self._allowed_filter(allowed_special)
         return self._tok.encode_batch(text, special_filter=allowed_filter)
 
     def encode_ordinary_batch(self, text: list[str]) -> list[list[int]]:

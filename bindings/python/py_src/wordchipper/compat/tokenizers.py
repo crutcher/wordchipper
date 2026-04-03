@@ -13,6 +13,7 @@ Typical migration::
 
 from __future__ import annotations
 
+import functools
 from typing import Any
 
 from wordchipper import Tokenizer as _WCTokenizer, SpecialFilter
@@ -244,13 +245,9 @@ class Tokenizer:
         special_ids = self._special_id_set
         return [i for i in ids if i not in special_ids]
 
-    @property
+    @functools.cached_property
     def _special_id_set(self) -> frozenset[int]:
-        try:
-            return self.__special_id_set
-        except AttributeError:
-            self.__special_id_set = frozenset(self._tok.specials.values())
-            return self.__special_id_set
+        return frozenset(self._tok.specials.values())
 
     # -- padding / truncation ------------------------------------------------
 
