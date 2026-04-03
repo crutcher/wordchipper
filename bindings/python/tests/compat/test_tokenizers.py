@@ -107,10 +107,22 @@ class TestHFTokenizerMatchesWordchipper:
 
 
 class TestHFEncoding:
-    def test_encoding_dataclass(self):
+    def test_encoding_fields(self):
         enc = wc_tokenizers.Encoding(ids=[1, 2, 3], tokens=["a", "b", "c"])
         assert enc.ids == [1, 2, 3]
         assert enc.tokens == ["a", "b", "c"]
+        assert enc.attention_mask == [1, 1, 1]
+        assert enc.type_ids == [0, 0, 0]
+        assert enc.special_tokens_mask == [0, 0, 0]
+        assert enc.offsets == [(0, 0), (0, 0), (0, 0)]
+
+    def test_encoding_len(self):
+        enc = wc_tokenizers.Encoding(ids=[1, 2, 3], tokens=["a", "b", "c"])
+        assert len(enc) == 3
+
+    def test_encoding_repr(self):
+        enc = wc_tokenizers.Encoding(ids=[1, 2], tokens=["a", "b"])
+        assert "num_tokens=2" in repr(enc)
 
 
 class TokenizersBaseTests(ABC, unittest.TestCase):
@@ -293,3 +305,111 @@ class CompatTokenizersTests(TokenizersBaseTests):
         core = tok.get_vocab_size(with_added_tokens=False)
         assert core <= full
         assert core == tok._tok.vocab_size
+
+    def test_get_vocab(self):
+        tok = self.get_tok()
+        vocab = tok.get_vocab()
+        assert isinstance(vocab, dict)
+        assert len(vocab) > 0
+        assert "hello" in vocab
+
+    def test_encoding_has_attention_mask(self):
+        tok = self.get_tok()
+        enc = tok.encode("hello world")
+        assert len(enc.attention_mask) == len(enc.ids)
+        assert all(m == 1 for m in enc.attention_mask)
+
+    def test_encoding_has_type_ids(self):
+        tok = self.get_tok()
+        enc = tok.encode("hello world")
+        assert len(enc.type_ids) == len(enc.ids)
+        assert all(t == 0 for t in enc.type_ids)
+
+    def test_encoding_pair_type_ids(self):
+        tok = self.get_tok()
+        enc = tok.encode("hello", pair="world")
+        hello_len = len(tok.encode("hello").ids)
+        # First sequence has type_id=0, second has type_id=1
+        assert enc.type_ids[:hello_len] == [0] * hello_len
+        assert all(t == 1 for t in enc.type_ids[hello_len:])
+
+    def test_encoding_has_special_tokens_mask(self):
+        tok = self.get_tok()
+        enc = tok.encode("hello world")
+        assert len(enc.special_tokens_mask) == len(enc.ids)
+        assert all(m == 0 for m in enc.special_tokens_mask)
+
+    def test_encoding_len(self):
+        tok = self.get_tok()
+        enc = tok.encode("hello world")
+        assert len(enc) == len(enc.ids)
+
+    def test_enable_padding(self):
+        tok = self.get_tok()
+        unpadded = tok.encode("hello")
+        tok.enable_padding(length=10, pad_id=0, pad_token="[PAD]")
+        enc = tok.encode("hello")
+        assert len(enc.ids) == 10
+        assert enc.attention_mask[-1] == 0
+        assert len(enc.ids) > len(unpadded.ids)
+        tok.no_padding()
+
+    def test_enable_padding_left(self):
+        tok = self.get_tok()
+        tok.enable_padding(length=10, direction="left")
+        enc = tok.encode("hello")
+        assert len(enc.ids) == 10
+        assert enc.attention_mask[0] == 0
+        tok.no_padding()
+
+    def test_no_padding(self):
+        tok = self.get_tok()
+        tok.enable_padding(length=10)
+        tok.no_padding()
+        enc = tok.encode("hello")
+        assert len(enc.ids) < 10
+
+    def test_enable_truncation(self):
+        tok = self.get_tok()
+        tok.enable_truncation(max_length=2)
+        enc = tok.encode("hello world foo bar")
+        assert len(enc.ids) == 2
+        tok.no_truncation()
+
+    def test_enable_truncation_left(self):
+        tok = self.get_tok()
+        tok.enable_truncation(max_length=2, direction="left")
+        full = tok.encode("hello world foo bar")
+        tok.no_truncation()
+        full_ids = tok.encode("hello world foo bar").ids
+        assert full.ids == full_ids[-2:]
+
+    def test_no_truncation(self):
+        tok = self.get_tok()
+        tok.enable_truncation(max_length=2)
+        tok.no_truncation()
+        enc = tok.encode("hello world foo bar")
+        assert len(enc.ids) > 2
+
+    def test_padding_property(self):
+        tok = self.get_tok()
+        assert tok.padding is None
+        tok.enable_padding(length=10)
+        assert tok.padding is not None
+        assert tok.padding["length"] == 10
+        tok.no_padding()
+        assert tok.padding is None
+
+    def test_truncation_property(self):
+        tok = self.get_tok()
+        assert tok.truncation is None
+        tok.enable_truncation(max_length=5)
+        assert tok.truncation is not None
+        assert tok.truncation["max_length"] == 5
+        tok.no_truncation()
+        assert tok.truncation is None
+
+    def test_num_special_tokens_to_add(self):
+        tok = self.get_tok()
+        assert tok.num_special_tokens_to_add(is_pair=False) == 0
+        assert tok.num_special_tokens_to_add(is_pair=True) == 0

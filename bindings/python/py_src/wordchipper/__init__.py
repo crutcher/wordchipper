@@ -145,9 +145,17 @@ class Tokenizer:
         """Decode a list of token IDs to a string."""
         return self._tok.decode(tokens)
 
+    def decode_bytes(self, tokens: list[int]) -> bytes:
+        """Decode a list of token IDs to raw bytes."""
+        return self._tok.decode_bytes(tokens)
+
     def decode_batch(self, batch: list[list[int]]) -> list[str]:
         """Decode a batch of token ID lists to a list of strings."""
         return self._tok.decode_batch(batch)
+
+    def decode_bytes_batch(self, batch: list[list[int]]) -> list[bytes]:
+        """Decode a batch of token ID lists to a list of byte strings."""
+        return self._tok.decode_bytes_batch(batch)
 
 
 __all__ = ["SpecialFilter", "Tokenizer", "TokenizerOptions", "Vocab"]

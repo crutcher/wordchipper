@@ -102,6 +102,27 @@ class TestTiktokenMatchesWordchipper:
         for token_id in [0, 1, 100, a.eot_token]:
             assert a.decode_single_token_bytes(token_id) == b.decode_single_token_bytes(token_id)
 
+    @pytest.mark.parametrize("name", COMMON_ENCODINGS)
+    def test_decode_bytes_matches(self, name):
+        a = tiktoken.get_encoding(name)
+        b = wc_tiktoken.get_encoding(name)
+        tokens = a.encode("hello world")
+        assert a.decode_bytes(tokens) == b.decode_bytes(tokens)
+
+    @pytest.mark.parametrize("name", COMMON_ENCODINGS)
+    def test_decode_tokens_bytes_matches(self, name):
+        a = tiktoken.get_encoding(name)
+        b = wc_tiktoken.get_encoding(name)
+        tokens = a.encode("hello world")
+        assert a.decode_tokens_bytes(tokens) == b.decode_tokens_bytes(tokens)
+
+    @pytest.mark.parametrize("name", COMMON_ENCODINGS)
+    def test_decode_bytes_batch_matches(self, name):
+        a = tiktoken.get_encoding(name)
+        b = wc_tiktoken.get_encoding(name)
+        batch = a.encode_batch(["hello", "world"])
+        assert a.decode_bytes_batch(batch) == b.decode_bytes_batch(batch)
+
     def test_special_token_encode_matches(self):
         a = tiktoken.get_encoding("cl100k_base")
         b = wc_tiktoken.get_encoding("cl100k_base")
@@ -288,6 +309,34 @@ class TiktokenBaseTests(ABC, unittest.TestCase):
         with pytest.raises(KeyError):
             enc.decode_single_token_bytes(999999)
 
+    def test_decode_bytes(self):
+        enc = self.get_encoding()
+        tokens = enc.encode("hello")
+        raw = enc.decode_bytes(tokens)
+        assert isinstance(raw, bytes)
+        assert raw == b"hello"
+
+    def test_decode_tokens_bytes(self):
+        enc = self.get_encoding()
+        tokens = enc.encode("hello world")
+        parts = enc.decode_tokens_bytes(tokens)
+        assert isinstance(parts, list)
+        assert all(isinstance(p, bytes) for p in parts)
+        assert b"".join(parts) == b"hello world"
+
+    def test_decode_bytes_batch(self):
+        enc = self.get_encoding()
+        batch = enc.encode_batch(["hello", "world"])
+        results = enc.decode_bytes_batch(batch)
+        assert results == [b"hello", b"world"]
+
+    def test_decode_errors_param(self):
+        enc = self.get_encoding()
+        tokens = enc.encode("hello")
+        assert enc.decode(tokens, errors="strict") == "hello"
+        assert enc.decode(tokens, errors="ignore") == "hello"
+        assert enc.decode(tokens, errors="replace") == "hello"
+
     def test_encode_specials(self):
         enc = self.get_encoding()
         tokens = enc.encode("hello<|endoftext|>", allowed_special="all")
@@ -357,3 +406,15 @@ class TiktokenEncodingTests(TiktokenBaseTests):
 class CompatTiktokenEncodingTests(TiktokenBaseTests):
     def get_module(self):
         return wc_tiktoken
+
+    def test_is_special_token(self):
+        enc = self.get_encoding()
+        assert enc.is_special_token(enc.eot_token) is True
+        assert enc.is_special_token(0) is False
+
+    def test_token_byte_values(self):
+        enc = self.get_encoding()
+        vals = enc.token_byte_values()
+        assert isinstance(vals, list)
+        assert len(vals) == enc.max_token_value + 1
+        assert all(isinstance(v, bytes) for v in vals[:10])

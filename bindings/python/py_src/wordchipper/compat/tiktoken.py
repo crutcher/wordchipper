@@ -232,6 +232,24 @@ class Encoding:
         allowed_filter = self._allowed_filter(allowed_special)
         return self._tok.encode(text, special_filter=allowed_filter)
 
+    def encode_to_numpy(
+        self,
+        text: str,
+        *,
+        allowed_special: Literal["all"] | AbstractSet[str] = frozenset(),
+        disallowed_special: Literal["all"] | Collection[str] = "all",
+    ):
+        import numpy as np
+
+        return np.array(
+            self.encode(
+                text,
+                allowed_special=allowed_special,
+                disallowed_special=disallowed_special,
+            ),
+            dtype=np.uint32,
+        )
+
     def encode_ordinary(self, text: str) -> list[int]:
         return self._tok.encode(text, special_filter=SpecialFilter.include_none())
 
@@ -283,11 +301,50 @@ class Encoding:
             raise KeyError(token)
         return raw
 
-    def decode(self, tokens: list[int]) -> str:
-        return self._tok.decode(tokens)
+    def decode_tokens_bytes(self, tokens: list[int]) -> list[bytes]:
+        return [self.decode_single_token_bytes(t) for t in tokens]
 
-    def decode_batch(self, batch: list[list[int]]) -> list[str]:
-        return self._tok.decode_batch(batch)
+    def is_special_token(self, token: int) -> bool:
+        return token in self._special_token_ids
+
+    @functools.cached_property
+    def _special_token_ids(self) -> frozenset[int]:
+        return frozenset(self._tok.specials.values())
+
+    def decode(self, tokens: list[int], errors: str = "replace") -> str:
+        if errors == "replace":
+            return self._tok.decode(tokens)
+        raw = self._tok.decode_bytes(tokens)
+        return raw.decode("utf-8", errors=errors)
+
+    def decode_bytes(self, tokens: list[int]) -> bytes:
+        return self._tok.decode_bytes(tokens)
+
+    def decode_batch(
+        self,
+        batch: list[list[int]],
+        *,
+        errors: str = "replace",
+        num_threads: int = 8,
+    ) -> list[str]:
+        if errors == "replace":
+            return self._tok.decode_batch(batch)
+        raw_batch = self._tok.decode_bytes_batch(batch)
+        return [raw.decode("utf-8", errors=errors) for raw in raw_batch]
+
+    def decode_bytes_batch(
+        self,
+        batch: list[list[int]],
+        *,
+        num_threads: int = 8,
+    ) -> list[bytes]:
+        return self._tok.decode_bytes_batch(batch)
+
+    def token_byte_values(self) -> list[bytes]:
+        return [
+            self._tok.vocab.id_to_token_bytes(i) or b""
+            for i in range(self.max_token_value + 1)
+        ]
 
 
 # ---------------------------------------------------------------------------
