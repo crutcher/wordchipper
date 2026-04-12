@@ -26,8 +26,13 @@ book/src/wasm/
 __pycache__/
 *.pyc
 *.so
+*.pyd
 .venv/
 .pytest_cache
+
+# Local custom-model conversion artifacts
+bindings/python/qwen3.5.tiktoken
+tokenizer.json
 
 # WASM build artifacts
 bindings/wasm/pkg/

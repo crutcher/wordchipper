@@ -153,7 +153,7 @@ mod tests {
         use crate::spanners::span_lexers::accelerators::testutil::assert_matches_reference_lexer;
         use crate::support::regex::RegexPattern;
 
-        let ref_lexer = RegexPattern::Fancy(QWEN35_PATTERN.as_str().to_string())
+        let ref_lexer = RegexPattern::Fancy(QWEN35_PATTERN.as_str().into())
             .compile()
             .expect("reference pattern compiles");
 

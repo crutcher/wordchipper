@@ -369,4 +369,21 @@ mod tests {
         assert_eq!(vocab64.lookup_token("at".as_bytes()), Some(300 as u64));
         assert_eq!(vocab64.lookup_token("ate".as_bytes()), Some(301 as u64));
     }
+
+    #[test]
+    fn test_init_accepts_pair_vocab_subset() {
+        type T = u32;
+
+        let mut span_vocab: SpanTokenMap<T> = Default::default();
+        span_vocab.insert("abc".as_bytes().to_vec(), 300);
+
+        let span_vocab: SpanMapVocab<T> = span_vocab.into();
+        let seg_config = TextSpanningConfig::from_pattern(r"\w+");
+
+        let vocab = UnifiedTokenVocab::from_span_vocab(seg_config, span_vocab).unwrap();
+
+        assert_eq!(vocab.lookup_token("abc".as_bytes()), Some(300));
+        assert!(!vocab.pair_vocab().tokens().contains(&300));
+        assert!(vocab.span_vocab().tokens().contains(&300));
+    }
 }

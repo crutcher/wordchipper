@@ -132,8 +132,8 @@ To extract them:
 1. **From HuggingFace**: Look in `tokenizer.json` under `"added_tokens"` or in `tokenizer_config.json`
    under `"chat_template"` and related fields.
 2. **From the model paper or documentation**: Models often list their special tokens.
-3. **Using the conversion script**: `hf_to_tiktoken.py` with `--include-added-tokens` (default True)
-   saves special tokens in the output file's metadata.
+3. **Using the conversion script**: `hf_to_tiktoken.py` includes added tokens by default.
+    Pass `--no-added-tokens` only when you explicitly want to omit them.
 
 ## Case study: Qwen3.5
 

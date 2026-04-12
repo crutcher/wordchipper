@@ -98,6 +98,8 @@ class Tokenizer:
         options: Optional[TokenizerOptions] = None,
     ) -> "Tokenizer":
         """Load a tokenizer from a tiktoken-format vocabulary file."""
+        if options is None:
+            options = TokenizerOptions.default()
         tok = _Tokenizer.from_tiktoken_file(path, pattern, special_tokens or {}, options)
         return Tokenizer(tok)
 

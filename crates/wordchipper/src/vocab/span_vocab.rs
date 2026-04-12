@@ -405,4 +405,18 @@ mod tests {
             .collect::<PairTokenMap<T>>()
         );
     }
+
+    #[test]
+    fn test_build_pair_vocab_omits_undecomposable_span_token() {
+        type T = u32;
+
+        let mut span_map: SpanTokenMap<T> = Default::default();
+        span_map.insert("abc".as_bytes().to_vec(), 300);
+
+        let vocab = SpanMapVocab::from(span_map);
+        let pair_vocab = vocab.to_pair_vocab();
+
+        assert!(pair_vocab.pair_map().is_empty());
+        assert!(!pair_vocab.tokens().contains(&300));
+    }
 }

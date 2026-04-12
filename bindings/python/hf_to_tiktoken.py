@@ -12,8 +12,8 @@ Local file:
 Download from HuggingFace (requires ``huggingface_hub``):
     python hf_to_tiktoken.py Qwen/Qwen3.5-27B qwen3.5.tiktoken
 
-The output is suitable for use with wordchipper's ``Tokenizer.load_path``
-or ``OATokenizer.load_path``.
+The output is suitable for use with wordchipper's
+``Tokenizer.from_tiktoken_file`` loader.
 """
 
 from __future__ import annotations
