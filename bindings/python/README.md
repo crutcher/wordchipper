@@ -62,6 +62,40 @@ tok.get_special_tokens()
 tok.save_base64_vocab("vocab.tiktoken")
 ```
 
+## Custom Models
+
+Load a custom tokenizer from a tiktoken-format file with special tokens:
+
+```python
+from wordchipper import Tokenizer
+
+# Load from tiktoken file (e.g., for Qwen, Llama, or other models)
+tok = Tokenizer.from_tiktoken_file(
+    path="qwen3.5.tiktoken",
+    pattern=r"(?i:'s|'t|'re|'ve|'m|'ll|'d|[^\r\n\p{L}\p{N}]?[\p{L}\p{M}]+|\p{N}| ?[^\s\p{L}\p{M}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+)",
+    special_tokens={"<|im_start|>": 151857, "<|im_end|>": 151858},
+)
+
+tokens = tok.encode("Hello <|im_start|>system")
+```
+
+## Special Tokens Control
+
+Filter which special tokens are included during encoding:
+
+```python
+from wordchipper import SpecialFilter
+
+# Include all special tokens in encoding (default)
+tokens = tok.encode(text, special_filter=SpecialFilter.include_all())
+
+# Exclude all special tokens
+tokens = tok.encode(text, special_filter=SpecialFilter.include_none())
+
+# Include only specific special tokens
+tokens = tok.encode(text, special_filter=SpecialFilter.include(["<|end|>"]))
+```
+
 ## Drop-in compatibility
 
 wordchipper ships drop-in replacements for both `tiktoken` and HuggingFace `tokenizers`.

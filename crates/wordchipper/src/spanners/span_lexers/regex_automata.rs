@@ -31,6 +31,8 @@ use crate::{
         OA_O200K_BASE_PATTERN_RA,
         OA_R50K_BASE_PATTERN,
         OA_R50K_BASE_PATTERN_RA,
+        QWEN35_PATTERN,
+        QWEN35_PATTERN_RA,
     },
     spanners::span_lexers::SpanLexer,
 };
@@ -52,6 +54,11 @@ const KNOWN_TRANSFORMS: &[(&str, &str, bool)] = &[
         OA_O200K_BASE_PATTERN.as_str(),
         OA_O200K_BASE_PATTERN_RA,
         true,
+    ),
+    (
+        QWEN35_PATTERN.as_str(),
+        QWEN35_PATTERN_RA,
+        true, // has \s*[\r\n]+ newline branch
     ),
 ];
 

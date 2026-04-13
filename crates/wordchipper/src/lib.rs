@@ -62,12 +62,13 @@
 //! See [`disk_cache::WordchipperDiskCache`] for details on the disk cache.
 //!
 //! ```rust,no_run
+//! # #[cfg(feature = "download")]
+//! # {
 //! use std::sync::Arc;
 //!
 //! use wordchipper::{
 //!     Tokenizer,
 //!     TokenizerOptions,
-//!     UnifiedTokenVocab,
 //!     WCResult,
 //!     disk_cache::WordchipperDiskCache,
 //!     load_vocab,
@@ -78,6 +79,7 @@
 //!     let loaded = load_vocab("openai:o200k_harmony", &mut disk_cache)?;
 //!     Ok(TokenizerOptions::default().build(loaded.vocab().clone()))
 //! }
+//! # }
 //! ```
 //!
 //! ## Crate Features

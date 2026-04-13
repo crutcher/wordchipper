@@ -123,9 +123,17 @@ impl<T: TokenType> UnifiedTokenVocab<T> {
         }
 
         let tokens = span_vocab.tokens();
-        if tokens != pair_vocab.tokens() {
+        // Pair vocab is allowed to be a strict subset of the span vocab: tokens
+        // whose BPE parents were pruned from the final vocabulary (e.g. some
+        // Qwen tokens) have no valid pair decomposition and are omitted from the
+        // pair map.  They remain accessible via the span map and the default
+        // BpeBacktrack encoder handles them correctly.  Pair-based encoders
+        // (BufferSweep, PriorityMerge, …) may produce incorrect output for
+        // such tokens; use BpeBacktrack when loading non-OpenAI vocabularies.
+        let pair_tokens = pair_vocab.tokens();
+        if !pair_tokens.is_subset(&tokens) {
             return Err(WCError::VocabConflict(
-                "span vocab and pair vocab have different token sets".into(),
+                "pair vocab has tokens not present in span vocab".into(),
             ));
         }
 
@@ -360,5 +368,22 @@ mod tests {
 
         assert_eq!(vocab64.lookup_token("at".as_bytes()), Some(300 as u64));
         assert_eq!(vocab64.lookup_token("ate".as_bytes()), Some(301 as u64));
+    }
+
+    #[test]
+    fn test_init_accepts_pair_vocab_subset() {
+        type T = u32;
+
+        let mut span_vocab: SpanTokenMap<T> = Default::default();
+        span_vocab.insert("abc".as_bytes().to_vec(), 300);
+
+        let span_vocab: SpanMapVocab<T> = span_vocab.into();
+        let seg_config = TextSpanningConfig::from_pattern(r"\w+");
+
+        let vocab = UnifiedTokenVocab::from_span_vocab(seg_config, span_vocab).unwrap();
+
+        assert_eq!(vocab.lookup_token("abc".as_bytes()), Some(300));
+        assert!(!vocab.pair_vocab().tokens().contains(&300));
+        assert!(vocab.span_vocab().tokens().contains(&300));
     }
 }

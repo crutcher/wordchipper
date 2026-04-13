@@ -12,12 +12,13 @@
 //! available to download, cache, and load the vocabulary.
 //!
 //! ```rust,no_run
+//! # #[cfg(feature = "download")]
+//! # {
 //! use std::sync::Arc;
 //!
 //! use wordchipper::{
 //!     Tokenizer,
 //!     TokenizerOptions,
-//!     UnifiedTokenVocab,
 //!     disk_cache::WordchipperDiskCache,
 //!     load_vocab,
 //! };
@@ -31,6 +32,7 @@
 //!
 //!     Ok(tokenizer)
 //! }
+//! # }
 //! ```
 
 pub mod factory;

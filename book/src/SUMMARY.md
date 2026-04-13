@@ -4,6 +4,7 @@
 - [Getting Started](./getting-started.md)
 - [How Tokenizers Work](./how-tokenizers-work.md)
 - [Pretrained Models](./pretrained-models.md)
+- [Loading Custom Models](./loading-custom-models.md)
 - [Training Your Own Tokenizer](./training.md)
 - [Performance](./performance.md)
 - [Building Custom Logos Lexers](./custom-logos-lexers.md)
