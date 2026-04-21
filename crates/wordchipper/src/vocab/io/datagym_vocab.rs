@@ -121,12 +121,13 @@ where
         }
     }
 
-    let mut n = span_map.len();
+    let mut next_token = span_map.len();
+    #[allow(clippy::explicit_counter_loop)]
     for (first, second) in bpe_merges {
         let mut key = mojibake_map.decode_mojibake(first.as_str());
         key.extend(mojibake_map.decode_mojibake(second.as_str()));
-        span_map.insert(key, n);
-        n += 1
+        span_map.insert(key, next_token);
+        next_token += 1
     }
 
     Ok((mojibake_map, span_map))
