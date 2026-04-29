@@ -104,7 +104,7 @@ impl<T: TokenType> PairMapVocab<T> {
 
     /// Convert to a different token type.
     pub fn to_token_type<G: TokenType>(&self) -> WCResult<PairMapVocab<G>> {
-        try_vocab_size::<G>(self.max_token().unwrap().to_usize().unwrap())?;
+        try_vocab_size::<G>(self.max_token().unwrap().to_usize().unwrap() + 1)?;
 
         PairMapVocab::<G>::new(
             self.byte_vocab.to_token_type::<G>()?,

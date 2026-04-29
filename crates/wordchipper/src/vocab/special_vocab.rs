@@ -66,7 +66,7 @@ impl<T: TokenType> SpecialVocab<T> {
     /// Convert to a different token type.
     pub fn to_token_type<G: TokenType>(&self) -> WCResult<SpecialVocab<G>> {
         if let Some(max) = self.max_token() {
-            try_vocab_size::<G>(max.to_usize().unwrap())?;
+            try_vocab_size::<G>(max.to_usize().unwrap() + 1)?;
         }
 
         Ok(SpecialVocab::<G>::from_map(
