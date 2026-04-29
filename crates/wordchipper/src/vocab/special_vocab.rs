@@ -205,4 +205,17 @@ mod tests {
         let rebuild: SpecialVocab<T> = vocab.span_map.clone().into();
         assert_eq!(rebuild, vocab);
     }
+
+    #[test]
+    fn test_to_token_type_accepts_minimum_vocab_size() {
+        let vocab = SpecialVocab::<u32>::from_map(
+            [("special".as_bytes().to_vec(), 255_u32)]
+                .into_iter()
+                .collect(),
+        );
+
+        let converted = vocab.to_token_type::<u8>().unwrap();
+        assert_eq!(converted.max_token(), Some(255));
+        assert_eq!(converted.lookup_token(b"special"), Some(255));
+    }
 }
