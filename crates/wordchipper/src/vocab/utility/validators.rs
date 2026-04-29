@@ -11,10 +11,10 @@ pub const U8_SIZE: usize = u8::MAX as usize + 1;
 /// Validates and returns the vocabulary size, ensuring it's at least the size
 /// of the u8 space.
 pub fn try_vocab_size<T: TokenType>(vocab_size: usize) -> WCResult<usize> {
-    if T::from_usize(vocab_size - 1).is_none() {
-        Err(WCError::VocabSizeOverflow { size: vocab_size })
-    } else if vocab_size < U8_SIZE {
+    if vocab_size < U8_SIZE {
         Err(WCError::VocabSizeTooSmall { size: vocab_size })
+    } else if T::from_usize(vocab_size - 1).is_none() {
+        Err(WCError::VocabSizeOverflow { size: vocab_size })
     } else {
         Ok(vocab_size)
     }
