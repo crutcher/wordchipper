@@ -33,6 +33,10 @@ mod tests {
     fn test_vocab_size() {
         assert_eq!(expect_vocab_size::<u16>(256), 256);
 
+        assert!(matches!(
+            try_vocab_size::<u16>(0),
+            Err(WCError::VocabSizeTooSmall { size: 0 })
+        ));
         assert!(try_vocab_size::<u16>(100).is_err());
 
         assert_eq!(
